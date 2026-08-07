@@ -1,19 +1,23 @@
+import { Outfit } from 'next/font/google';
 import './globals.css';
+import { I18nProvider } from '@/lib/i18n';
+
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata = {
   title: 'AharSetu — Canteen Order Management ERP',
-  description: 'A complete canteen order management system for institutions. Streamline tea, lunch and refreshment orders through multi-level approval workflows.',
-  keywords: 'canteen management, order management, ERP, institution catering',
+  description: 'Smart Canteen Order Management System for Educational Institutions. Streamline food orders, approvals, and billing.',
+  keywords: 'canteen management, order ERP, food ordering, college canteen',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body>{children}</body>
+      <body className={outfit.variable}>
+        <I18nProvider>
+          {children}
+        </I18nProvider>
+      </body>
     </html>
   );
 }

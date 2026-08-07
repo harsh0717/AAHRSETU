@@ -1,148 +1,152 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ROLE_COLORS, ROLE_LABELS, ROLE_ICONS } from '@/lib/constants';
-import { clearSession, setSession } from '@/lib/store';
+import Link from 'next/link';
+import { getSession, logout } from '@/lib/auth';
+import { ROLE_COLORS, ROLE_LABELS, ROLE_ICONS, DEPARTMENTS } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n';
+import NotificationBell from './NotificationBell';
+import LanguageSwitcher from './LanguageSwitcher';
 import styles from './AppShell.module.css';
 
-const ROLE_NAV = {
+const NAV_ITEMS = {
   coordinator: [
-    { label: 'Dashboard',    href: '/coordinator', icon: '🏠' },
-    { label: 'Create Order', href: '/coordinator?tab=create', icon: '➕' },
-    { label: 'My Orders',    href: '/coordinator?tab=orders', icon: '📦' },
+    { labelKey: 'nav.dashboard',    href: '/coordinator',        icon: '🏠' },
+    { labelKey: 'nav.create_order', href: '/coordinator#create', icon: '➕' },
+    { labelKey: 'nav.my_orders',    href: '/coordinator#orders', icon: '📦' },
   ],
   principal: [
-    { label: 'Dashboard',  href: '/principal',              icon: '🏠' },
-    { label: 'Pending',    href: '/principal?tab=pending',  icon: '⏳' },
-    { label: 'History',    href: '/principal?tab=history',  icon: '📜' },
+    { labelKey: 'nav.dashboard',    href: '/principal',          icon: '🏠' },
+    { labelKey: 'nav.pending',      href: '/principal#pending',  icon: '⏳' },
+    { labelKey: 'nav.history',      href: '/principal#history',  icon: '📜' },
   ],
   dcr: [
-    { label: 'Dashboard',  href: '/dcr',              icon: '🏠' },
-    { label: 'Pending',    href: '/dcr?tab=pending',  icon: '⏳' },
-    { label: 'History',    href: '/dcr?tab=history',  icon: '📜' },
+    { labelKey: 'nav.dashboard',    href: '/dcr',                icon: '🏠' },
+    { labelKey: 'nav.pending',      href: '/dcr#pending',        icon: '⏳' },
+    { labelKey: 'nav.history',      href: '/dcr#history',        icon: '📜' },
   ],
   vendor: [
-    { label: 'Dashboard',    href: '/vendor',             icon: '🏠' },
-    { label: 'Orders Queue', href: '/vendor?tab=orders',  icon: '📋' },
-    { label: 'Manage Menu',  href: '/vendor?tab=menu',    icon: '🍽️' },
+    { labelKey: 'nav.dashboard',    href: '/vendor',             icon: '🏠' },
+    { labelKey: 'nav.orders_queue', href: '/vendor#orders',      icon: '📋' },
+    { labelKey: 'nav.manage_menu',  href: '/vendor#menu',        icon: '🍽️' },
+    { labelKey: 'nav.revenue',      href: '/vendor#revenue',     icon: '💰' },
   ],
   admin: [
-    { label: 'Dashboard',  href: '/admin',             icon: '🏠' },
-    { label: 'Reports',    href: '/admin?tab=reports', icon: '📊' },
-    { label: 'All Orders', href: '/admin?tab=orders',  icon: '📦' },
+    { labelKey: 'nav.dashboard',    href: '/admin',              icon: '🏠' },
+    { labelKey: 'nav.reports',      href: '/admin#reports',      icon: '📊' },
+    { labelKey: 'nav.all_orders',   href: '/admin#orders',       icon: '📦' },
+    { labelKey: 'nav.users',        href: '/admin#users',        icon: '👥' },
+    { labelKey: 'nav.vendors',      href: '/admin#vendors',      icon: '🏪' },
   ],
 };
 
-const ROLE_NAMES = {
-  coordinator: 'Priya Sharma',
-  principal:   'Dr. A. Mehta',
-  dcr:         'S. Patil',
-  vendor:      'M. Khan',
-  admin:       'System Admin',
-};
-
-const ALL_ROLES = ['coordinator', 'principal', 'dcr', 'vendor', 'admin'];
-
-export default function AppShell({ role, children, currentPath = '' }) {
+export default function AppShell({ children, role, currentPath }) {
   const router = useRouter();
-  const colors = ROLE_COLORS[role] || ROLE_COLORS.coordinator;
-  const navItems = ROLE_NAV[role] || [];
+  const { t } = useI18n();
+  const [session, setSession] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  function handleSwitchRole(newRole) {
-    const session = { role: newRole, name: ROLE_NAMES[newRole], loginAt: new Date().toISOString() };
-    setSession(session);
-    const roleRoutes = { coordinator: '/coordinator', principal: '/principal', dcr: '/dcr', vendor: '/vendor', admin: '/admin' };
-    router.push(roleRoutes[newRole]);
-  }
+  useEffect(() => {
+    const s = getSession();
+    if (!s) { router.push('/login'); return; }
+    setSession(s);
+  }, []);
 
   function handleLogout() {
-    clearSession();
-    router.push('/');
+    logout();
+    router.push('/login');
   }
 
+  const colors = ROLE_COLORS[role] || ROLE_COLORS.coordinator;
+  const navItems = NAV_ITEMS[role] || [];
+  const deptLabel = session?.department
+    ? DEPARTMENTS.find(d => d.id === session.department)?.name || session.department
+    : null;
+
   return (
-    <div className={styles.shell} style={{ '--role-accent': colors.accent, '--role-sidebar': colors.sidebar, '--role-light': colors.light }}>
+    <div className={styles.shell} style={{ '--role-accent': colors.accent, '--sidebar-bg': colors.sidebar }}>
       {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarBrand}>
-          <div className={styles.brandLogo}>
-            <span>🍱</span>
-          </div>
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}
+        style={{ background: colors.sidebar }}>
+
+        {/* Logo */}
+        <div className={styles.logo}>
+          <span className={styles.logoIcon}>🍱</span>
           <div>
-            <div className={styles.brandName}>AharSetu</div>
-            <div className={styles.brandSub}>Canteen ERP</div>
+            <div className={styles.logoTitle}>AharSetu</div>
+            <div className={styles.logoSub}>ERP Portal</div>
           </div>
         </div>
 
-        <div className={styles.sidebarRole}>
-          <div className={styles.roleAvatar}>{ROLE_ICONS[role]}</div>
-          <div>
-            <div className={styles.roleName}>{ROLE_NAMES[role]}</div>
-            <div className={styles.roleLabel}>{ROLE_LABELS[role]}</div>
+        {/* User card */}
+        {session && (
+          <div className={styles.userCard}>
+            <div className={styles.userAvatar}>
+              {ROLE_ICONS[role] || '👤'}
+            </div>
+            <div className={styles.userInfo}>
+              <div className={styles.userName}>{session.name}</div>
+              <div className={styles.userRole}>
+                {ROLE_LABELS[role]}
+                {deptLabel && <span className={styles.userDept}> · {deptLabel}</span>}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
+        {/* Nav */}
         <nav className={styles.nav}>
           {navItems.map(item => {
-            const isActive = currentPath === item.href || (currentPath.startsWith(item.href.split('?')[0]) && item.href.includes(currentPath.split('?')[1]));
+            const isActive = currentPath === item.href || currentPath?.startsWith(item.href.split('#')[0] + '/');
             return (
-              <button
-                key={item.href}
-                className={`${styles.navItem} ${currentPath === item.href.split('?')[0] && !item.href.includes('?') ? styles.active : ''}`}
-                onClick={() => router.push(item.href)}
-              >
+              <Link key={item.href} href={item.href}
+                className={`${styles.navItem} ${isActive ? styles.navActive : ''}`}
+                onClick={() => setSidebarOpen(false)}>
                 <span className={styles.navIcon}>{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
+                <span>{t(item.labelKey)}</span>
+              </Link>
             );
           })}
         </nav>
 
+        {/* Footer */}
         <div className={styles.sidebarFooter}>
-          <div className={styles.footerLabel}>Switch Role</div>
-          <div className={styles.roleGrid}>
-            {ALL_ROLES.map(r => (
-              <button
-                key={r}
-                onClick={() => handleSwitchRole(r)}
-                className={`${styles.roleChip} ${r === role ? styles.roleChipActive : ''}`}
-                style={r === role ? { background: colors.accent, color: '#fff' } : {}}
-                title={ROLE_LABELS[r]}
-              >
-                {ROLE_ICONS[r]}
-              </button>
-            ))}
-          </div>
-          <button className={styles.logoutBtn} onClick={handleLogout}>
-            🚪 Logout
+          <button onClick={handleLogout} className={styles.logoutBtn}>
+            <span>🚪</span> {t('auth.logout')}
           </button>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Main content */}
       <div className={styles.main}>
         {/* Header */}
-        <header className={styles.header}>
+        <header className={styles.header} style={{ borderBottomColor: colors.accent + '30' }}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerTitle}>{ROLE_LABELS[role]} Dashboard</div>
+            <button className={styles.menuBtn} onClick={() => setSidebarOpen(o => !o)}>☰</button>
+            <div className={styles.pageTitle}>
+              <span style={{ color: colors.accent }}>{ROLE_ICONS[role]}</span>
+              {ROLE_LABELS[role]}
+              {deptLabel && <span style={{ color: 'var(--gray-400)', fontSize: '0.9rem' }}> — {deptLabel}</span>}
+            </div>
           </div>
           <div className={styles.headerRight}>
-            {/* Quick Role Switch Buttons */}
-            <div className={styles.quickSwitch}>
-              {ALL_ROLES.map(r => (
-                <button
-                  key={r}
-                  onClick={() => handleSwitchRole(r)}
-                  className={`${styles.quickRoleBtn} ${r === role ? styles.quickRoleBtnActive : ''}`}
-                  style={r === role ? { background: ROLE_COLORS[r].accent, color: '#fff', borderColor: ROLE_COLORS[r].accent } : {}}
-                  title={`Switch to ${ROLE_LABELS[r]}`}
-                >
-                  {ROLE_ICONS[r]} {ROLE_LABELS[r]}
-                </button>
-              ))}
-            </div>
+            <LanguageSwitcher />
+            {session && (
+              <NotificationBell userId={session.id} role={session.role} />
+            )}
             <div className={styles.headerUser}>
-              <div className={styles.userDot} style={{ background: colors.accent }} />
-              <span className={styles.userName}>{ROLE_NAMES[role]}</span>
+              <div className={styles.headerAvatar} style={{ background: colors.accent }}>
+                {session?.name?.[0] || '?'}
+              </div>
+              <div className={styles.headerUserInfo}>
+                <div className={styles.headerUserName}>{session?.name}</div>
+                <div className={styles.headerUserRole}>{ROLE_LABELS[role]}</div>
+              </div>
             </div>
           </div>
         </header>

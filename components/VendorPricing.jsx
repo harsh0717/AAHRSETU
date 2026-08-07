@@ -1,118 +1,100 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getMenu } from '@/lib/store';
+import { getVendorMenu } from '@/lib/vendors';
+import { useI18n } from '@/lib/i18n';
 
-export default function VendorPricing({ order, onPricesSet }) {
+export default function VendorPricing({ vendorOrder, onPricesSet }) {
+  const { t } = useI18n();
   const [prices, setPrices] = useState({});
-  const menu = typeof window !== 'undefined' ? getMenu() : [];
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Pre-fill prices from menu if available
+    if (!vendorOrder?.items) return;
+    // Pre-fill from vendor's menu
+    const menu = getVendorMenu(vendorOrder.vendorId);
     const initial = {};
-    order.items.forEach(item => {
-      const menuItem = menu.find(m => m.name.toLowerCase() === item.name.toLowerCase());
-      initial[item.name] = item.price > 0 ? item.price : (menuItem ? menuItem.price : 0);
+    vendorOrder.items.forEach(item => {
+      const menuItem = menu.find(m => m.name === item.name);
+      initial[item.name] = item.price > 0 ? item.price : (menuItem?.price || 0);
     });
     setPrices(initial);
-  }, [order.id]);
+    setLoading(false);
+  }, [vendorOrder]);
 
-  function setPrice(name, val) {
-    setPrices(prev => ({ ...prev, [name]: parseFloat(val) || 0 }));
-  }
+  if (loading) return <div style={{ padding: '16px', color: 'var(--gray-500)' }}>{t('common.loading')}</div>;
 
-  const total = order.items.reduce((sum, item) => sum + (item.quantity * (prices[item.name] || 0)), 0);
-  const allSet = order.items.every(item => (prices[item.name] || 0) > 0);
+  const items = vendorOrder?.items || [];
+  const total = items.reduce((s, item) => s + (parseFloat(prices[item.name]) || 0) * item.quantity, 0);
+  const allSet = items.every(item => parseFloat(prices[item.name]) > 0);
 
   return (
-    <div style={{
-      background: '#ECFDF5',
-      border: '1px solid #A7F3D0',
-      borderRadius: '12px',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: '40px', height: '40px',
-          borderRadius: '10px',
-          background: '#059669',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.2rem', color: '#fff',
-        }}>
-          ₹
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, color: '#047857' }}>Set Item Prices</div>
-          <div style={{ fontSize: '0.8125rem', color: 'var(--gray-600)' }}>
-            Prices are pre-filled from your menu. You can edit them.
-          </div>
-        </div>
+    <div>
+      <div style={{ fontSize: '0.8rem', color: '#059669', padding: '8px 12px', background: '#ECFDF5', borderRadius: '8px', marginBottom: '12px' }}>
+        💡 {t('vendor.prices_prefilled')}
       </div>
-
-      <div className="table-wrapper">
+      <div className="table-wrapper" style={{ marginBottom: '14px' }}>
         <table className="table">
           <thead>
             <tr>
-              <th>Item</th>
-              <th style={{ textAlign: 'center' }}>Quantity</th>
-              <th style={{ textAlign: 'right' }}>Price per Unit (₹)</th>
-              <th style={{ textAlign: 'right' }}>Subtotal</th>
+              <th>{t('vendor.item_name')}</th>
+              <th style={{ textAlign: 'center' }}>{t('common.quantity')}</th>
+              <th style={{ textAlign: 'right' }}>{t('vendor.item_price')} (₹)</th>
+              <th style={{ textAlign: 'right' }}>{t('common.subtotal')}</th>
             </tr>
           </thead>
           <tbody>
-            {order.items.map(item => (
-              <tr key={item.name}>
-                <td style={{ fontWeight: 600 }}>{item.name}</td>
-                <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                <td style={{ textAlign: 'right' }}>
-                  <input
-                    type="number"
-                    value={prices[item.name] || ''}
-                    onChange={e => setPrice(item.name, e.target.value)}
-                    placeholder="0"
-                    min={0}
-                    style={{
-                      width: '90px',
-                      padding: '6px 10px',
-                      border: '1.5px solid var(--gray-200)',
-                      borderRadius: '6px',
-                      textAlign: 'right',
-                      fontSize: '0.875rem',
-                    }}
-                  />
-                </td>
-                <td style={{ textAlign: 'right', fontWeight: 600 }}>
-                  ₹{((prices[item.name] || 0) * item.quantity).toFixed(2)}
-                </td>
-              </tr>
-            ))}
+            {items.map(item => {
+              const p = parseFloat(prices[item.name]) || 0;
+              return (
+                <tr key={item.name}>
+                  <td style={{ fontWeight: 600 }}>{item.name}</td>
+                  <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <input
+                      type="number"
+                      min={0}
+                      value={prices[item.name] || ''}
+                      onChange={e => setPrices(prev => ({ ...prev, [item.name]: e.target.value }))}
+                      style={{
+                        width: '80px', padding: '4px 8px', border: '1px solid var(--gray-300)',
+                        borderRadius: '6px', textAlign: 'right', fontSize: '0.875rem',
+                        background: p > 0 ? 'white' : '#FEF2F2',
+                      }}
+                      placeholder="0"
+                    />
+                  </td>
+                  <td style={{ textAlign: 'right', fontWeight: 600, color: p > 0 ? '#047857' : 'var(--gray-400)' }}>
+                    {p > 0 ? `₹${(p * item.quantity).toFixed(0)}` : '—'}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
           <tfoot>
-            <tr style={{ background: '#D1FAE5' }}>
-              <td colSpan={3} style={{ fontWeight: 700, color: '#047857', textAlign: 'right' }}>Total Amount</td>
-              <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '1.125rem', color: '#047857' }}>
-                ₹{total.toFixed(2)}
-              </td>
+            <tr style={{ background: 'var(--gray-50)' }}>
+              <td colSpan={3} style={{ fontWeight: 700, textAlign: 'right' }}>{t('common.total')}</td>
+              <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '1rem', color: '#047857' }}>₹{total}</td>
             </tr>
           </tfoot>
         </table>
       </div>
 
       {!allSet && (
-        <div style={{ fontSize: '0.8125rem', color: '#D97706', fontWeight: 500 }}>
-          ⚠️ Please set prices for all items before confirming.
+        <div style={{ fontSize: '0.8125rem', color: '#C2410C', marginBottom: '10px' }}>
+          ⚠️ {t('vendor.all_prices_required')}
         </div>
       )}
 
       <button
-        className="btn btn-success"
+        onClick={() => allSet && onPricesSet(prices, total)}
         disabled={!allSet}
-        onClick={() => onPricesSet(prices, total)}
-        style={{ alignSelf: 'flex-end' }}
+        style={{
+          padding: '10px 24px', borderRadius: '8px', border: 'none', cursor: allSet ? 'pointer' : 'not-allowed',
+          background: allSet ? '#059669' : 'var(--gray-300)',
+          color: 'white', fontWeight: 700, fontSize: '0.9rem',
+        }}
       >
-        ✅ Confirm Order & Generate Bill
+        ✅ {t('vendor.confirm_order')} — ₹{total}
       </button>
     </div>
   );

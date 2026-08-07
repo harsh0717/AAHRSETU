@@ -1,143 +1,81 @@
 'use client';
 import { useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 export default function ApprovalPanel({ order, role, onApprove, onReject }) {
+  const { t } = useI18n();
   const [remarks, setRemarks] = useState('');
-  const [showRejectForm, setShowRejectForm] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [showReject, setShowReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
 
-  const ROLE_COLORS = {
-    principal: { accent: '#7C3AED', light: '#F5F3FF', border: '#DDD6FE' },
-    dcr:       { accent: '#D97706', light: '#FFFBEB', border: '#FDE68A' },
-  };
-  const colors = ROLE_COLORS[role] || ROLE_COLORS.principal;
+  const title = role === 'principal' ? t('approval.title_principal') : t('approval.title_dcr');
 
-  async function handleApprove() {
-    setLoading(true);
-    await onApprove(remarks);
-    setLoading(false);
+  function handleApprove() {
+    onApprove(remarks);
+    setRemarks('');
   }
 
-  async function handleReject() {
-    if (!remarks.trim()) return;
-    setLoading(true);
-    await onReject(remarks);
-    setLoading(false);
+  function handleReject() {
+    if (!rejectReason.trim()) return;
+    onReject(rejectReason);
+    setRejectReason('');
+    setShowReject(false);
   }
 
   return (
-    <div style={{
-      background: colors.light,
-      border: `1px solid ${colors.border}`,
-      borderRadius: '12px',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: '40px', height: '40px',
-          borderRadius: '10px',
-          background: colors.accent,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.2rem',
-          color: '#fff',
-        }}>
-          {role === 'principal' ? '🎓' : '📋'}
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, color: colors.accent }}>
-            {role === 'principal' ? 'Principal Review' : 'DCR Review'}
-          </div>
-          <div style={{ fontSize: '0.8125rem', color: 'var(--gray-600)' }}>
-            Review order details and approve or reject
-          </div>
-        </div>
+    <div style={{ padding: '16px', background: 'var(--surface-1)', borderRadius: '10px', border: '1px solid var(--gray-200)' }}>
+      <div style={{ fontWeight: 700, marginBottom: '12px', fontSize: '0.9rem' }}>
+        {title}
+      </div>
+      <div style={{ marginBottom: '12px' }}>
+        <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>
+          {t('approval.optional_remarks')}
+        </label>
+        <textarea
+          rows={2}
+          value={remarks}
+          onChange={e => setRemarks(e.target.value)}
+          placeholder={t('approval.optional_ph')}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-300)', fontSize: '0.875rem', resize: 'vertical', boxSizing: 'border-box' }}
+        />
       </div>
 
-      {/* Optional remarks for approval */}
-      {!showRejectForm && (
-        <div className="form-group">
-          <label className="form-label">Remarks (optional)</label>
-          <textarea
-            className="form-textarea"
-            placeholder="Add any notes or conditions for approval..."
-            value={remarks}
-            onChange={e => setRemarks(e.target.value)}
-            rows={2}
-            style={{ '--role-accent': colors.accent }}
-          />
+      {!showReject ? (
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={handleApprove}
+            style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: '#059669', color: 'white', fontWeight: 700 }}>
+            ✅ {t('approval.approve_btn')}
+          </button>
+          <button onClick={() => setShowReject(true)}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #EF4444', cursor: 'pointer', background: 'white', color: '#EF4444', fontWeight: 600 }}>
+            ❌ {t('approval.reject_btn')}
+          </button>
         </div>
-      )}
-
-      {/* Reject form */}
-      {showRejectForm && (
-        <div style={{
-          background: '#FEF2F2',
-          border: '1px solid #FECACA',
-          borderRadius: '10px',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-        }}>
-          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#DC2626' }}>
-            ❌ Rejection Reason
-          </div>
+      ) : (
+        <div style={{ background: '#FEF2F2', padding: '14px', borderRadius: '8px', border: '1px solid #FECACA' }}>
+          <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#B91C1C', display: 'block', marginBottom: '6px' }}>
+            {t('approval.reject_reason')} *
+          </label>
           <textarea
-            className="form-textarea"
-            placeholder="Please provide a reason for rejection (required)..."
-            value={remarks}
-            onChange={e => setRemarks(e.target.value)}
             rows={3}
-            autoFocus
-            style={{ '--role-accent': '#DC2626' }}
+            value={rejectReason}
+            onChange={e => setRejectReason(e.target.value)}
+            placeholder={t('approval.reject_ph')}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #FECACA', fontSize: '0.875rem', resize: 'vertical', marginBottom: '8px', boxSizing: 'border-box' }}
           />
-          <div style={{ fontSize: '0.75rem', color: '#B91C1C' }}>
-            * The coordinator will see this reason and can resubmit after making changes.
+          <div style={{ fontSize: '0.75rem', color: '#B91C1C', marginBottom: '10px' }}>{t('approval.reject_note')}</div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={handleReject} disabled={!rejectReason.trim()}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: rejectReason.trim() ? 'pointer' : 'not-allowed', background: rejectReason.trim() ? '#DC2626' : 'var(--gray-300)', color: 'white', fontWeight: 700 }}>
+              {t('approval.confirm_reject')}
+            </button>
+            <button onClick={() => setShowReject(false)}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--gray-300)', cursor: 'pointer', background: 'white', fontWeight: 600 }}>
+              {t('common.cancel')}
+            </button>
           </div>
         </div>
       )}
-
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        {!showRejectForm ? (
-          <>
-            <button
-              className="btn btn-success"
-              onClick={handleApprove}
-              disabled={loading}
-              style={{ flex: 1 }}
-            >
-              {loading ? '⏳' : '✅'} Approve Order
-            </button>
-            <button
-              className="btn btn-danger"
-              onClick={() => { setShowRejectForm(true); setRemarks(''); }}
-              disabled={loading}
-            >
-              ❌ Reject
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              className="btn btn-danger"
-              onClick={handleReject}
-              disabled={loading || !remarks.trim()}
-              style={{ flex: 1 }}
-            >
-              {loading ? '⏳' : '❌'} Confirm Rejection
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={() => { setShowRejectForm(false); setRemarks(''); }}
-            >
-              Cancel
-            </button>
-          </>
-        )}
-      </div>
     </div>
   );
 }

@@ -1,234 +1,318 @@
 .shell {
   display: flex;
   min-height: 100vh;
-  background: var(--surface-1);
+  background: var(--bg-main);
 }
 
-/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+/* Sidebar */
 .sidebar {
-  width: var(--sidebar-width);
-  min-height: 100vh;
-  background: var(--role-sidebar);
+  width: 240px;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
   bottom: 0;
-  z-index: 100;
+  z-index: 200;
   overflow-y: auto;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
 }
 
-.sidebarBrand {
+/* Logo */
+.logo {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 20px 20px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  gap: 10px;
+  padding: 20px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-.brandLogo {
-  width: 40px; height: 40px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-}
-.brandName { font-size: 1.125rem; font-weight: 800; color: #fff; line-height: 1; }
-.brandSub  { font-size: 0.7rem;   color: rgba(255,255,255,0.6); margin-top: 2px; }
 
-.sidebarRole {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: rgba(255,255,255,0.08);
-  margin: 12px 12px 8px;
-  border-radius: 10px;
+.logoIcon {
+  font-size: 1.8rem;
 }
-.roleAvatar {
-  width: 36px; height: 36px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+.logoTitle {
   font-size: 1.1rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.01em;
+}
+
+.logoSub {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+/* User card */
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  margin: 12px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.userAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
   flex-shrink: 0;
 }
-.roleName  { font-size: 0.8125rem; font-weight: 700; color: #fff;                  line-height: 1.2; }
-.roleLabel { font-size: 0.7rem;    color: rgba(255,255,255,0.6); margin-top: 2px; }
 
+.userInfo {
+  overflow: hidden;
+}
+
+.userName {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userDept {
+  opacity: 0.85;
+}
+
+/* Navigation */
 .nav {
   flex: 1;
-  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 8px 10px;
 }
+
 .navItem {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-radius: 8px;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(255,255,255,0.7);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: left;
-  width: 100%;
+  font-weight: 600;
+  transition: all 0.18s;
 }
-.navItem:hover { background: rgba(255,255,255,0.1); color: #fff; }
-.navItem.active { background: rgba(255,255,255,0.2); color: #fff; font-weight: 600; }
-.navIcon { font-size: 1rem; }
 
-.sidebarFooter {
-  padding: 16px 12px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
 }
-.footerLabel {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 10px;
-  padding: 0 4px;
+
+.navActive {
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
-.roleGrid {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.roleChip {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.1);
-  border: 1.5px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.7);
+
+.navIcon {
   font-size: 1rem;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
 }
-.roleChip:hover { background: rgba(255,255,255,0.2); color: #fff; }
-.roleChipActive { border-color: transparent !important; }
+
+/* Sidebar footer */
+.sidebarFooter {
+  padding: 12px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
 
 .logoutBtn {
   width: 100%;
-  padding: 9px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  color: rgba(255,255,255,0.6);
-  font-size: 0.8125rem;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
-  text-align: center;
+  font-family: var(--font-sans, inherit);
+  transition: all 0.18s;
 }
-.logoutBtn:hover { background: rgba(220,38,38,0.3); color: #fff; border-color: rgba(220,38,38,0.5); }
 
-/* ── Main ────────────────────────────────────────────────────────────────────── */
+.logoutBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #FCA5A5;
+}
+
+/* Mobile overlay */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 190;
+}
+
+/* Main content */
 .main {
   flex: 1;
-  margin-left: var(--sidebar-width);
+  margin-left: 240px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0;
 }
 
+/* Header */
 .header {
-  height: var(--header-height);
-  background: var(--surface-0);
-  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  border-bottom: 2px solid var(--gray-100);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  padding: 0 20px;
+  height: 60px;
+  gap: 12px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
 }
-.headerLeft {}
-.headerTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--gray-900);
-}
-.headerRight {
+
+.headerLeft {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
-.quickSwitch {
+
+.menuBtn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  color: var(--gray-600);
+}
+
+.pageTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--gray-800);
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.quickRoleBtn {
+
+.headerRight {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--gray-100);
-  color: var(--gray-600);
-  border: 1.5px solid var(--gray-200);
-  cursor: pointer;
-  transition: var(--transition);
-  white-space: nowrap;
+  gap: 10px;
 }
-.quickRoleBtn:hover {
-  background: var(--gray-200);
-  color: var(--gray-800);
-}
-.quickRoleBtnActive {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
+
 .headerUser {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
-  background: var(--role-light);
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--role-accent) 20%, transparent);
+  padding: 5px 10px;
+  background: var(--surface-1);
+  border-radius: 24px;
+  border: 1px solid var(--gray-200);
 }
-.userDot {
-  width: 8px; height: 8px;
+
+.headerAvatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 800;
   flex-shrink: 0;
 }
-.userName {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--role-accent);
+
+.headerUserInfo {
+  display: flex;
+  flex-direction: column;
 }
 
+.headerUserName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  line-height: 1.2;
+}
+
+.headerUserRole {
+  font-size: 0.68rem;
+  color: var(--gray-500);
+}
+
+/* Content area */
 .content {
   flex: 1;
-  padding: 28px;
-  max-width: 1400px;
+  padding: 24px 20px;
+  max-width: 1280px;
   width: 100%;
-  margin: 0 auto;
 }
 
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-  .main { margin-left: 0; }
-  .quickSwitch { display: none; }
-  .content { padding: 16px; }
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .overlay {
+    display: block;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+
+  .menuBtn {
+    display: block;
+  }
+
+  .headerUserInfo {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 16px 12px;
+  }
+
+  .header {
+    padding: 0 12px;
+  }
 }

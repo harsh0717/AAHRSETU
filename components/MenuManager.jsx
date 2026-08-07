@@ -1,148 +1,142 @@
 'use client';
-import { useState } from 'react';
-import { getMenu, saveMenu, upsertMenuItem, deleteMenuItem } from '@/lib/store';
-import { DEFAULT_MENU_ITEMS } from '@/lib/constants';
+import { useState, useEffect } from 'react';
+import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem } from '@/lib/vendors';
+import { useI18n } from '@/lib/i18n';
 
-export default function MenuManager() {
-  const [menu, setMenu] = useState(() => typeof window !== 'undefined' ? getMenu() : DEFAULT_MENU_ITEMS);
-  const [editing, setEditing] = useState(null); // { id, name, price, unit }
-  const [newItem, setNewItem] = useState({ name: '', price: '', unit: 'per piece' });
-  const [showAdd, setShowAdd] = useState(false);
+export default function MenuManager({ vendorId, vendorName }) {
+  const { t } = useI18n();
+  const [menu, setMenu] = useState([]);
+  const [form, setForm] = useState({ name: '', price: '', unit: 'per plate', available: true });
+  const [editId, setEditId] = useState(null);
+  const [adding, setAdding] = useState(false);
 
-  function handleSaveNew() {
-    if (!newItem.name.trim() || !newItem.price) return;
+  function load() { setMenu(getVendorMenu(vendorId)); }
+  useEffect(() => { load(); }, [vendorId]);
+
+  function handleSave() {
+    if (!form.name.trim() || !form.price) return;
     const item = {
-      id: 'm' + Date.now(),
-      name: newItem.name.trim(),
-      price: parseFloat(newItem.price),
-      unit: newItem.unit || 'per piece',
+      id: editId || 'mi-' + Date.now().toString(36),
+      vendorId,
+      vendorName,
+      name: form.name.trim(),
+      price: parseFloat(form.price),
+      unit: form.unit || 'per plate',
+      available: form.available,
     };
-    upsertMenuItem(item);
-    setMenu(getMenu());
-    setNewItem({ name: '', price: '', unit: 'per piece' });
-    setShowAdd(false);
+    upsertVendorMenuItem(vendorId, item);
+    setForm({ name: '', price: '', unit: 'per plate', available: true });
+    setEditId(null);
+    setAdding(false);
+    load();
   }
 
-  function handleSaveEdit() {
-    if (!editing.name.trim() || !editing.price) return;
-    upsertMenuItem({ ...editing, price: parseFloat(editing.price) });
-    setMenu(getMenu());
-    setEditing(null);
+  function handleEdit(item) {
+    setForm({ name: item.name, price: String(item.price), unit: item.unit || '', available: item.available });
+    setEditId(item.id);
+    setAdding(true);
   }
 
   function handleDelete(id) {
-    if (!confirm('Remove this item from menu?')) return;
-    deleteMenuItem(id);
-    setMenu(getMenu());
+    if (confirm('Remove this item from the menu?')) {
+      deleteVendorMenuItem(vendorId, id);
+      load();
+    }
   }
 
-  const UNIT_OPTIONS = ['per cup', 'per plate', 'per bottle', 'per pack', 'per piece', 'per portion'];
+  function toggleAvailable(item) {
+    upsertVendorMenuItem(vendorId, { ...item, available: !item.available });
+    load();
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h4 style={{ margin: 0 }}>Menu Items</h4>
-          <p style={{ fontSize: '0.8125rem', margin: '4px 0 0' }}>
-            Prices set here auto-fill in order pricing. {menu.length} items.
-          </p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)} style={{ '--role-accent': '#059669' }}>
-          + Add Item
+    <div style={{ padding: '4px 0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div className="section-title">{t('nav.manage_menu')}</div>
+        <button className="btn btn-primary btn-sm" onClick={() => { setAdding(!adding); setEditId(null); setForm({ name: '', price: '', unit: 'per plate', available: true }); }}
+          style={{ '--role-accent': '#059669' }}>
+          {adding ? `✕ ${t('common.cancel')}` : `➕ ${t('vendor.add_item')}`}
         </button>
       </div>
 
-      {/* Add new item */}
-      {showAdd && (
-        <div style={{
-          padding: '16px',
-          background: '#ECFDF5',
-          border: '1px solid #A7F3D0',
-          borderRadius: '10px',
-          display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end',
-        }}>
-          <div className="form-group" style={{ flex: '2', minWidth: '140px' }}>
-            <label className="form-label">Item Name</label>
-            <input className="form-input" style={{ '--role-accent': '#059669' }} value={newItem.name}
-              onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Samosa" />
+      {adding && (
+        <div style={{ padding: '16px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '10px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>{t('vendor.item_name')} *</label>
+              <input className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. Tea" style={{ '--role-accent': '#059669' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>{t('vendor.item_price')} *</label>
+              <input className="form-input" type="number" min={0} value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                placeholder="10" style={{ '--role-accent': '#059669' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>{t('vendor.item_unit')}</label>
+              <input className="form-input" value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
+                placeholder="per cup" style={{ '--role-accent': '#059669' }} />
+            </div>
           </div>
-          <div className="form-group" style={{ flex: '1', minWidth: '100px' }}>
-            <label className="form-label">Price (₹)</label>
-            <input className="form-input" style={{ '--role-accent': '#059669' }} type="number" value={newItem.price}
-              onChange={e => setNewItem(p => ({ ...p, price: e.target.value }))} placeholder="0" min={0} />
-          </div>
-          <div className="form-group" style={{ flex: '1', minWidth: '120px' }}>
-            <label className="form-label">Unit</label>
-            <select className="form-select" style={{ '--role-accent': '#059669' }} value={newItem.unit}
-              onChange={e => setNewItem(p => ({ ...p, unit: e.target.value }))}>
-              {UNIT_OPTIONS.map(u => <option key={u}>{u}</option>)}
-            </select>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', paddingBottom: '2px' }}>
-            <button className="btn btn-success btn-sm" onClick={handleSaveNew}>Save</button>
-            <button className="btn btn-ghost btn-sm" onClick={() => setShowAdd(false)}>Cancel</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={form.available} onChange={e => setForm(f => ({ ...f, available: e.target.checked }))} />
+              <span>{t('vendor.available')}</span>
+            </label>
+            <button onClick={handleSave} disabled={!form.name.trim() || !form.price}
+              className="btn btn-primary btn-sm" style={{ '--role-accent': '#059669' }}>
+              {editId ? t('common.update') : t('common.add')} Item
+            </button>
           </div>
         </div>
       )}
 
-      {/* Menu table */}
-      <div className="table-wrapper">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Item Name</th>
-              <th>Unit</th>
-              <th style={{ textAlign: 'right' }}>Price (₹)</th>
-              <th style={{ textAlign: 'center' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {menu.map((item, idx) => (
-              <tr key={item.id}>
-                <td style={{ color: 'var(--gray-400)', fontSize: '0.8125rem' }}>{idx + 1}</td>
-                {editing?.id === item.id ? (
-                  <>
-                    <td>
-                      <input className="form-input" style={{ '--role-accent': '#059669', padding: '6px 10px' }}
-                        value={editing.name} onChange={e => setEditing(p => ({ ...p, name: e.target.value }))} />
-                    </td>
-                    <td>
-                      <select className="form-select" style={{ '--role-accent': '#059669', padding: '6px 10px' }}
-                        value={editing.unit} onChange={e => setEditing(p => ({ ...p, unit: e.target.value }))}>
-                        {UNIT_OPTIONS.map(u => <option key={u}>{u}</option>)}
-                      </select>
-                    </td>
-                    <td>
-                      <input type="number" className="form-input" style={{ '--role-accent': '#059669', padding: '6px 10px', textAlign: 'right' }}
-                        value={editing.price} onChange={e => setEditing(p => ({ ...p, price: e.target.value }))} min={0} />
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                        <button className="btn btn-success btn-sm" onClick={handleSaveEdit}>Save</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setEditing(null)}>✕</button>
-                      </div>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td style={{ fontWeight: 600 }}>{item.name}</td>
-                    <td style={{ color: 'var(--gray-500)', fontSize: '0.8125rem' }}>{item.unit}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700, color: '#047857' }}>₹{item.price}</td>
-                    <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                        <button className="btn btn-outline btn-sm" onClick={() => setEditing({ ...item })}
-                          style={{ '--role-accent': '#059669' }}>Edit</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>Del</button>
-                      </div>
-                    </td>
-                  </>
-                )}
+      {menu.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">🍽️</div>
+          <h3>{t('vendor.no_menu')}</h3>
+          <p>Click "Add Item" to add your first menu item.</p>
+        </div>
+      ) : (
+        <div className="table-wrapper">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>{t('vendor.item_name')}</th>
+                <th style={{ textAlign: 'right' }}>{t('vendor.item_price')}</th>
+                <th>{t('vendor.item_unit')}</th>
+                <th style={{ textAlign: 'center' }}>{t('vendor.available')}</th>
+                <th style={{ textAlign: 'center' }}>{t('common.actions')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {menu.map(item => (
+                <tr key={item.id}>
+                  <td style={{ fontWeight: 600 }}>{item.name}</td>
+                  <td style={{ textAlign: 'right', fontWeight: 700, color: '#047857' }}>₹{item.price}</td>
+                  <td style={{ fontSize: '0.8125rem', color: 'var(--gray-500)' }}>{item.unit}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button onClick={() => toggleAvailable(item)} style={{
+                      padding: '2px 10px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+                      background: item.available ? '#DCFCE7' : '#FEF2F2',
+                      color: item.available ? '#166534' : '#DC2626',
+                    }}>
+                      {item.available ? t('vendor.available') : t('vendor.out_of_stock')}
+                    </button>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(item)}>{t('common.edit')}</button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(item.id)}
+                        style={{ color: '#EF4444' }}>✕</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

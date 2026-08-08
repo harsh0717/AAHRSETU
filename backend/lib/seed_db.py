@@ -1,0 +1,300 @@
+from datetime import datetime, timedelta, timezone
+from sqlalchemy.orm import Session
+from backend.core.security import get_password_hash
+from backend.models import (
+    User, Department, Vendor, VendorMenuItem, MasterOrder,
+    VendorOrder, VendorOrderItem, VendorOrderModification, ApprovalHistory, Notification, AuditLog, UserSession
+)
+
+
+def seed_all_database(db: Session):
+    """
+    Clear all database tables and seed them with the structured AharSetu v2.0 demo data.
+    """
+    # 1. Clear existing tables in dependency order
+    db.query(AuditLog).delete()
+    db.query(UserSession).delete()
+    db.query(Notification).delete()
+    db.query(VendorOrderItem).delete()
+    db.query(VendorOrderModification).delete()
+    db.query(VendorOrder).delete()
+    db.query(ApprovalHistory).delete()
+    db.query(MasterOrder).delete()
+    db.query(VendorMenuItem).delete()
+    db.query(User).delete()
+    db.query(Vendor).delete()
+    db.query(Department).delete()
+    db.commit()
+
+    # 2. Seed Departments
+    depts = [
+        Department(id="diploma", name="Diploma", label="Diploma Department"),
+        Department(id="degree", name="Degree", label="Degree Department"),
+        Department(id="pharmacy", name="Pharmacy", label="Pharmacy Department"),
+        Department(id="physiotherapy", name="Physiotherapy", label="Physiotherapy Department"),
+        Department(id="nursing", name="Nursing", label="Nursing Department"),
+        Department(id="bsc", name="B.Sc./Paramedical", label="B.Sc./Paramedical Department"),
+    ]
+    for d in depts:
+        db.add(d)
+    db.commit()
+
+    # 3. Seed Vendors
+    vendors = [
+        Vendor(id="v1", name="Sharma Canteen", owner_name="M. Khan", email="vendor1@aharsetu.edu.in", phone="+91 9911223344", status="open", revenue=150.0),
+        Vendor(id="v2", name="Fresh Bites", owner_name="R. Patel", email="vendor2@aharsetu.edu.in", phone="+91 9922334455", status="open", revenue=450.0),
+        Vendor(id="v3", name="Hot Meals", owner_name="S. Shah", email="vendor3@aharsetu.edu.in", phone="+91 9933445566", status="closed", revenue=0.0),
+        Vendor(id="v4", name="Quick Snacks", owner_name="P. Mehta", email="vendor4@aharsetu.edu.in", phone="+91 9944556677", status="temporarily_unavailable", revenue=0.0),
+    ]
+    for v in vendors:
+        db.add(v)
+    db.commit()
+
+    # 4. Seed Menu Items
+    menu_items = [
+        # Sharma Canteen
+        VendorMenuItem(id="v1m1", vendor_id="v1", name="Tea",      price=10.0,  unit="per cup",   available=True),
+        VendorMenuItem(id="v1m2", vendor_id="v1", name="Samosa",   price=15.0,  unit="per piece", available=True),
+        VendorMenuItem(id="v1m3", vendor_id="v1", name="Kachori",  price=18.0,  unit="per piece", available=True),
+        VendorMenuItem(id="v1m4", vendor_id="v1", name="Coffee",   price=15.0,  unit="per cup",   available=True),
+        VendorMenuItem(id="v1m5", vendor_id="v1", name="Cold Water Bottle", price=20.0, unit="per bottle", available=True),
+        # Fresh Bites
+        VendorMenuItem(id="v2m1", vendor_id="v2", name="Veg Lunch",    price=80.0,  unit="per plate",   available=True),
+        VendorMenuItem(id="v2m2", vendor_id="v2", name="Idli Sambhar", price=40.0,  unit="per plate",   available=True),
+        VendorMenuItem(id="v2m3", vendor_id="v2", name="Poha",         price=25.0,  unit="per plate",   available=True),
+        VendorMenuItem(id="v2m4", vendor_id="v2", name="Fruit Bowl",   price=50.0,  unit="per bowl",    available=True),
+        VendorMenuItem(id="v2m5", vendor_id="v2", name="Lassi",        price=30.0,  unit="per glass",   available=True),
+        # Hot Meals
+        VendorMenuItem(id="v3m1", vendor_id="v3", name="Thali",     price=100.0, unit="per plate",  available=True),
+        VendorMenuItem(id="v3m2", vendor_id="v3", name="Dal Baati", price=120.0, unit="per serving", available=True),
+        # Quick Snacks
+        VendorMenuItem(id="v4m1", vendor_id="v4", name="Sandwich", price=35.0, unit="per piece",  available=True),
+        VendorMenuItem(id="v4m2", vendor_id="v4", name="Chips",    price=20.0, unit="per packet", available=True),
+        VendorMenuItem(id="v4m3", vendor_id="v4", name="Cold Drink", price=25.0, unit="per bottle", available=True),
+    ]
+    for mi in menu_items:
+        db.add(mi)
+    db.commit()
+
+    # 5. Seed Users with hashed passwords
+    pw = get_password_hash("Admin@123")
+    dcr_pw = get_password_hash("DCR@123")
+    p_pw = get_password_hash("Principal@123")
+    c_pw = get_password_hash("Coord@123")
+    v_pw = get_password_hash("Vendor@123")
+
+    users = [
+        # Admin
+        User(name="Rajesh Gupta", email="admin@aharsetu.edu.in", password_hash=pw, role="admin", preferred_language="en"),
+        # DCR
+        User(name="S. Patil", email="dcr@aharsetu.edu.in", password_hash=dcr_pw, role="dcr", preferred_language="en"),
+        
+        # Principals
+        User(name="Dr. Arvind Mehta", email="principal.dd@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="en"),
+        User(name="Dr. Rekha Sharma", email="principal.pharma@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="hi"),
+        User(name="Dr. Sarita Rao", email="principal.nursing@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="en"),
+        User(name="Dr. J. P. Vyas", email="principal.physio@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="gu"),
+        User(name="Dr. B. K. Bansal", email="principal.bsc@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="en"),
+        
+        # Coordinators
+        User(name="Priya Sharma", email="coord.diploma@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="diploma", preferred_language="en"),
+        User(name="Ravi Kumar", email="coord.degree@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="degree", preferred_language="hi"),
+        User(name="Anita Desai", email="coord.pharmacy@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="pharmacy", preferred_language="en"),
+        User(name="Kavita Patel", email="coord.nursing@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="nursing", preferred_language="gu"),
+        User(name="Sanjay Shah", email="coord.physio@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="physiotherapy", preferred_language="gu"),
+        User(name="Amit Verma", email="coord.bsc@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="bsc", preferred_language="en"),
+        
+        # Vendors
+        User(name="Sharma Canteen Manager", email="vendor1@aharsetu.edu.in", password_hash=v_pw, role="vendor", vendor_id="v1", preferred_language="en"),
+        User(name="Fresh Bites Manager", email="vendor2@aharsetu.edu.in", password_hash=v_pw, role="vendor", vendor_id="v2", preferred_language="en"),
+        User(name="Hot Meals Manager", email="vendor3@aharsetu.edu.in", password_hash=v_pw, role="vendor", vendor_id="v3", preferred_language="hi"),
+        User(name="Quick Snacks Manager", email="vendor4@aharsetu.edu.in", password_hash=v_pw, role="vendor", vendor_id="v4", preferred_language="gu"),
+    ]
+    
+    for u in users:
+        db.add(u)
+    db.commit()
+
+    # 6. Map Principal managed departments
+    principal_dd = db.query(User).filter(User.email == "principal.dd@aharsetu.edu.in").first()
+    if principal_dd:
+        d1 = db.query(Department).filter(Department.id == "diploma").first()
+        d2 = db.query(Department).filter(Department.id == "degree").first()
+        if d1: principal_dd.managed_departments.append(d1)
+        if d2: principal_dd.managed_departments.append(d2)
+        
+    principal_pharma = db.query(User).filter(User.email == "principal.pharma@aharsetu.edu.in").first()
+    if principal_pharma:
+        d = db.query(Department).filter(Department.id == "pharmacy").first()
+        if d: principal_pharma.managed_departments.append(d)
+        
+    principal_nursing = db.query(User).filter(User.email == "principal.nursing@aharsetu.edu.in").first()
+    if principal_nursing:
+        d = db.query(Department).filter(Department.id == "nursing").first()
+        if d: principal_nursing.managed_departments.append(d)
+
+    principal_physio = db.query(User).filter(User.email == "principal.physio@aharsetu.edu.in").first()
+    if principal_physio:
+        d = db.query(Department).filter(Department.id == "physiotherapy").first()
+        if d: principal_physio.managed_departments.append(d)
+
+    principal_bsc = db.query(User).filter(User.email == "principal.bsc@aharsetu.edu.in").first()
+    if principal_bsc:
+        d = db.query(Department).filter(Department.id == "bsc").first()
+        if d: principal_bsc.managed_departments.append(d)
+
+    db.commit()
+
+    # 7. Seed Orders
+    # Create coordinator ravi for references
+    ravi = db.query(User).filter(User.email == "coord.degree@aharsetu.edu.in").first()
+    priya = db.query(User).filter(User.email == "coord.diploma@aharsetu.edu.in").first()
+    
+    # 7.1 Seed ORD-001 (Sent for Approval - Waiting for Principal review)
+    ord1 = MasterOrder(
+        id="ORD-001",
+        title="Tea for Morning Meeting",
+        purpose="Staff meeting in main conference room",
+        department_id="diploma",
+        created_by_id=priya.id,
+        status="Sent for Approval",
+        total_bill_amount=0.0
+    )
+    db.add(ord1)
+    db.commit()
+
+    vo1 = VendorOrder(id="VORD-001-1", master_order_id="ORD-001", vendor_id="v1", status="Pending", bill_amount=0.0)
+    db.add(vo1)
+    db.commit()
+
+    item1 = VendorOrderItem(vendor_order_id="VORD-001-1", name="Tea", quantity=15, price=10.0, unit="per cup", menu_item_id="v1m1")
+    db.add(item1)
+    
+    h1 = ApprovalHistory(master_order_id="ORD-001", action="Order Created", role="coordinator", user_id=priya.id, remarks="Created Order draft", timestamp=datetime.now(timezone.utc) - timedelta(hours=2))
+    h2 = ApprovalHistory(master_order_id="ORD-001", action="Submitted for Approval", role="coordinator", user_id=priya.id, remarks="Sent to Principal for review", timestamp=datetime.now(timezone.utc) - timedelta(hours=1))
+    db.add(h1)
+    db.add(h2)
+    db.commit()
+
+    # 7.2 Seed ORD-002 (Principal Approved - Waiting for DCR review)
+    ord2 = MasterOrder(
+        id="ORD-002",
+        title="Lunch for Board Meeting",
+        purpose="Admissions Board Annual Meet",
+        department_id="degree",
+        created_by_id=ravi.id,
+        status="Principal Approved",
+        total_bill_amount=0.0
+    )
+    db.add(ord2)
+    db.commit()
+
+    vo2 = VendorOrder(id="VORD-002-1", master_order_id="ORD-002", vendor_id="v2", status="Pending", bill_amount=0.0)
+    db.add(vo2)
+    db.commit()
+
+    item2 = VendorOrderItem(vendor_order_id="VORD-002-1", name="Veg Lunch", quantity=12, price=80.0, unit="per plate", menu_item_id="v2m1")
+    db.add(item2)
+    
+    h3 = ApprovalHistory(master_order_id="ORD-002", action="Order Created", role="coordinator", user_id=ravi.id, remarks="Created Order draft", timestamp=datetime.now(timezone.utc) - timedelta(hours=5))
+    h4 = ApprovalHistory(master_order_id="ORD-002", action="Submitted for Approval", role="coordinator", user_id=ravi.id, remarks="Sent to Principal", timestamp=datetime.now(timezone.utc) - timedelta(hours=4))
+    h5 = ApprovalHistory(master_order_id="ORD-002", action="Principal Approved", role="principal", user_id=principal_dd.id, remarks="Approved lunch count", timestamp=datetime.now(timezone.utc) - timedelta(hours=3))
+    db.add(h3)
+    db.add(h4)
+    db.add(h5)
+    db.commit()
+
+    # 7.3 Seed ORD-003 (Vendor Processing - Waiting for Vendor Pricing)
+    ord3 = MasterOrder(
+        id="ORD-003",
+        title="Snacks for Training Session",
+        purpose="3-day orientation program",
+        department_id="degree",
+        created_by_id=ravi.id,
+        status="Vendor Processing",
+        total_bill_amount=0.0
+    )
+    db.add(ord3)
+    db.commit()
+
+    vo3 = VendorOrder(id="VORD-003-1", master_order_id="ORD-003", vendor_id="v1", status="Pending", bill_amount=0.0)
+    db.add(vo3)
+    db.commit()
+
+    item3 = VendorOrderItem(vendor_order_id="VORD-003-1", name="Kachori", quantity=25, price=18.0, unit="per piece", menu_item_id="v1m3")
+    db.add(item3)
+    
+    dcr = db.query(User).filter(User.role == "dcr").first()
+    h6 = ApprovalHistory(master_order_id="ORD-003", action="Order Created", role="coordinator", user_id=ravi.id, remarks="Created Order draft", timestamp=datetime.now(timezone.utc) - timedelta(hours=10))
+    h7 = ApprovalHistory(master_order_id="ORD-003", action="Submitted for Approval", role="coordinator", user_id=ravi.id, remarks="Sent to Principal", timestamp=datetime.now(timezone.utc) - timedelta(hours=9))
+    h8 = ApprovalHistory(master_order_id="ORD-003", action="Principal Approved", role="principal", user_id=principal_dd.id, remarks="Approved", timestamp=datetime.now(timezone.utc) - timedelta(hours=8))
+    h9 = ApprovalHistory(master_order_id="ORD-003", action="DCR Approved & Forwarded", role="dcr", user_id=dcr.id, remarks="Budget looks fine", timestamp=datetime.now(timezone.utc) - timedelta(hours=7))
+    db.add(h6)
+    db.add(h7)
+    db.add(h8)
+    db.add(h9)
+    db.commit()
+
+    # 7.4 Seed ORD-004 (Completed - Generated Invoice & Done)
+    ord4 = MasterOrder(
+        id="ORD-004",
+        title="Tea & Coffee for Visitor Day",
+        purpose="VIP visits from partner colleges",
+        department_id="diploma",
+        created_by_id=priya.id,
+        status="Completed",
+        total_bill_amount=600.0,
+        bill_generated_at=datetime.now(timezone.utc) - timedelta(hours=1)
+    )
+    db.add(ord4)
+    db.commit()
+
+    vo4_1 = VendorOrder(id="VORD-004-1", master_order_id="ORD-004", vendor_id="v1", status="Vendor Confirmed", bill_amount=150.0, invoice_number="INV-ORD-004-V1")
+    vo4_2 = VendorOrder(id="VORD-004-2", master_order_id="ORD-004", vendor_id="v2", status="Vendor Confirmed", bill_amount=450.0, invoice_number="INV-ORD-004-V2")
+    db.add(vo4_1)
+    db.add(vo4_2)
+    db.commit()
+
+    item4_1 = VendorOrderItem(vendor_order_id="VORD-004-1", name="Tea", quantity=15, price=10.0, unit="per cup", menu_item_id="v1m1")
+    item4_2 = VendorOrderItem(vendor_order_id="VORD-004-2", name="Fruit Bowl", quantity=9, price=50.0, unit="per bowl", menu_item_id="v2m4")
+    db.add(item4_1)
+    db.add(item4_2)
+    
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    h10 = ApprovalHistory(master_order_id="ORD-004", action="Order Completed", role="admin", user_id=admin_user.id, remarks="Order finalized successfully", timestamp=datetime.now(timezone.utc) - timedelta(minutes=30))
+    db.add(h10)
+    db.commit()
+
+    # 7.5 Seed ORD-005 (Vendor Clarification Required - Vendor requested a change)
+    ord5 = MasterOrder(
+        id="ORD-005",
+        title="Breakfast for Workshop",
+        purpose="National Level Seminar",
+        department_id="degree",
+        created_by_id=ravi.id,
+        status="Vendor Clarification Required",
+        total_bill_amount=0.0
+    )
+    db.add(ord5)
+    db.commit()
+
+    vo5 = VendorOrder(id="VORD-005-1", master_order_id="ORD-005", vendor_id="v2", status="Pending", bill_amount=0.0)
+    db.add(vo5)
+    db.commit()
+
+    item5 = VendorOrderItem(vendor_order_id="VORD-005-1", name="Fruit Bowl", quantity=20, price=50.0, unit="per bowl", menu_item_id="v2m4")
+    db.add(item5)
+    
+    # Request minor modification
+    mod5 = VendorOrderModification(
+        vendor_order_id="VORD-005-1",
+        reason="Fresh fruits are out of stock today. Can replace with apple cups?",
+        type="minor",
+        status="Pending",
+        requested_at=datetime.now(timezone.utc) - timedelta(minutes=10)
+    )
+    db.add(mod5)
+    
+    h11 = ApprovalHistory(master_order_id="ORD-005", action="Vendor Clarification Requested", role="vendor", user_id=ravi.id, remarks="Requested substitution due to fruit stock issue", timestamp=datetime.now(timezone.utc) - timedelta(minutes=8))
+    db.add(h11)
+    db.commit()

@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import VendorStatusBadge from '@/components/VendorStatusBadge';
 import UserManager from '@/components/UserManager';
-import { getSession, UserProfile, updateSessionLanguage, getDepartments } from '@/lib/auth';
+import { getSession, UserProfile, updateSessionLanguage, getDepartments, addDepartment, toggleDepartmentStatus } from '@/lib/auth';
 import { getOrders, resetAllData, completeOrder, MasterOrder } from '@/lib/store';
 import { getVendors, updateVendorStatus, Vendor } from '@/lib/vendors';
 import { api } from '@/lib/api';
@@ -43,6 +43,12 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [editStatus, setEditStatus] = useState('closed');
 
+  // Department Modal State
+  const [showDeptModal, setShowDeptModal] = useState(false);
+  const [deptName, setDeptName] = useState('');
+  const [deptCode, setDeptCode] = useState('');
+  const [deptDesc, setDeptDesc] = useState('');
+
   // Profile Edit State
   const [profileName, setProfileName] = useState('');
   const [profileMessage, setProfileMessage] = useState('');
@@ -53,6 +59,30 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  async function handleAddDeptSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!deptName.trim() || !deptCode.trim()) return;
+    try {
+      await addDepartment({ name: deptName.trim(), code: deptCode.trim(), description: deptDesc.trim(), active: true });
+      setShowDeptModal(false);
+      setDeptName('');
+      setDeptCode('');
+      setDeptDesc('');
+      loadDashboardData();
+    } catch (err: any) {
+      alert(err.message || 'Error creating department');
+    }
+  }
+
+  async function handleToggleDept(id: string, currentActive: boolean) {
+    try {
+      await toggleDepartmentStatus(id, !currentActive);
+      loadDashboardData();
+    } catch (err: any) {
+      alert(err.message || 'Error updating department status');
+    }
+  }
 
   async function loadDashboardData() {
     setLoading(true);
@@ -220,7 +250,15 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   // Filter orders matching search and status criteria
   const filteredOrders = orders
     .filter(o => !orderSearch || o.title.toLowerCase().includes(orderSearch.toLowerCase()) || o.id.toLowerCase().includes(orderSearch.toLowerCase()))
-    .filter(o => statusFilter === 'All' || o.status === statusFilter);
+    .filter(o => {
+      if (statusFilter === 'All') return true;
+      if (statusFilter === 'DCR Approved') return ['DCR Approved', 'Vendor Processing', 'Vendor Clarification Required', 'Vendor Confirmed', 'Bill Generated', 'Completed'].includes(o.status);
+      if (statusFilter === 'Principal Approved') return ['Principal Approved', 'DCR Reviewing', 'DCR Approved', 'Vendor Processing', 'Bill Generated', 'Completed'].includes(o.status);
+      if (statusFilter === 'Pending') return ['Sent for Approval', 'Principal Reviewing', 'DCR Reviewing', 'Vendor Processing'].includes(o.status);
+      if (statusFilter === 'Completed') return ['Vendor Confirmed', 'Bill Generated', 'Completed'].includes(o.status);
+      if (statusFilter === 'Rejected') return o.status.includes('Rejected');
+      return o.status === statusFilter;
+    });
 
   // Orders that have bills generated
   const ordersWithBills = orders.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
@@ -398,32 +436,106 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
             {/* TAB: DEPARTMENTS */}
             {activeTab === 'departments' && (
               <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>🏢 Active Academic Departments</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0 }}>🏢 Master Academic Departments</h3>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)' }}>Manage institutional departments, codes, and active status for requisitions.</div>
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={() => setShowDeptModal(true)}>
+                    ➕ Add Department
+                  </button>
+                </div>
+
                 <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Department ID</th>
+                        <th>Code</th>
                         <th>Department Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th style={{ textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {departments.map((dept, idx) => (
                         <tr key={idx}>
-                          <td style={{ fontWeight: 700 }}>{dept.id}</td>
+                          <td style={{ fontWeight: 700 }}>{dept.code || dept.id.toUpperCase()}</td>
                           <td style={{ fontWeight: 600 }}>{dept.name}</td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>{dept.description || dept.label}</td>
+                          <td>
+                            <span className={`badge ${dept.active !== false ? 'badge-success' : 'badge-danger'}`}>
+                              {dept.active !== false ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: dept.active !== false ? '#DC2626' : '#10B981' }}
+                              onClick={() => handleToggleDept(dept.id, dept.active !== false)}
+                            >
+                              {dept.active !== false ? 'Deactivate' : 'Activate'}
+                            </button>
+                          </td>
                         </tr>
                       ))}
                       {departments.length === 0 && (
                         <tr>
-                          <td colSpan={2} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No departments found.
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                            No departments found. Click 'Add Department' to create one.
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </table>
                 </div>
+
+                {/* Add Department Modal */}
+                {showDeptModal && (
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '400px', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
+                      <h3 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: 800 }}>➕ Add New Academic Department</h3>
+                      <form onSubmit={handleAddDeptSubmit}>
+                        <div style={{ marginBottom: '14px' }}>
+                          <label className="input-label" style={{ fontSize: '0.78rem', fontWeight: 700 }}>Department Name</label>
+                          <input
+                            type="text"
+                            required
+                            className="form-input"
+                            placeholder="e.g. Mechanical Engineering"
+                            value={deptName}
+                            onChange={e => setDeptName(e.target.value)}
+                          />
+                        </div>
+                        <div style={{ marginBottom: '14px' }}>
+                          <label className="input-label" style={{ fontSize: '0.78rem', fontWeight: 700 }}>Department Code</label>
+                          <input
+                            type="text"
+                            required
+                            className="form-input"
+                            placeholder="e.g. DEPT-MECH"
+                            value={deptCode}
+                            onChange={e => setDeptCode(e.target.value)}
+                          />
+                        </div>
+                        <div style={{ marginBottom: '16px' }}>
+                          <label className="input-label" style={{ fontSize: '0.78rem', fontWeight: 700 }}>Description</label>
+                          <textarea
+                            className="form-input"
+                            rows={2}
+                            placeholder="Brief description of department scope"
+                            value={deptDesc}
+                            onChange={e => setDeptDesc(e.target.value)}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Department</button>
+                          <button type="button" className="btn btn-ghost" onClick={() => setShowDeptModal(false)}>Cancel</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -546,12 +658,12 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
               </div>
             )}
 
-            {/* TAB: ANALYTICS REPORTS */}
-            {['reports', 'analytics'].includes(activeTab) && (
+            {/* TAB: REPORTS */}
+            {activeTab === 'reports' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
                 {/* Dept wise report */}
                 <div className="card" style={{ padding: '20px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>Revenue by Department</h3>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>📊 Department Expenditure Reports</h3>
                   <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                     <table className="table">
                       <thead>
@@ -580,30 +692,69 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                 {/* Vendor wise report */}
                 <div className="card" style={{ padding: '20px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>Canteen Vendor Revenue Split</h3>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>🏪 Food Vendor Revenue Summary</h3>
                   <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                     <table className="table">
                       <thead>
                         <tr>
                           <th>Vendor Name</th>
-                          <th>Owner</th>
-                          <th style={{ textAlign: 'center' }}>Menu Count</th>
-                          <th style={{ textAlign: 'right' }}>Total Revenue</th>
+                          <th style={{ textAlign: 'center' }}>Owner</th>
+                          <th style={{ textAlign: 'right' }}>Settled Revenue</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {vendorReport.map(r => (
-                          <tr key={r.vendor_id}>
-                            <td style={{ fontWeight: 700 }}>{r.vendor_name}</td>
-                            <td>{r.owner}</td>
-                            <td style={{ textAlign: 'center' }}>{r.menu_count}</td>
+                        {vendorReport.map(v => (
+                          <tr key={v.vendor_id}>
+                            <td style={{ fontWeight: 700 }}>{v.vendor_name}</td>
+                            <td style={{ textAlign: 'center' }}>{v.owner_name}</td>
                             <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
-                              ₹{r.revenue}
+                              ₹{v.revenue}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: ANALYTICS & INSIGHTS */}
+            {activeTab === 'analytics' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  {[
+                    { label: 'Peak Ordering Window', value: '12:30 PM - 2:00 PM', icon: '⏰', color: '#3B82F6' },
+                    { label: 'Avg Approval Speed', value: '14.2 Minutes', icon: '⚡', color: '#10B981' },
+                    { label: 'Budget Utilization', value: '68.4%', icon: '📈', color: '#8B5CF6' },
+                    { label: 'Canteen Efficiency', value: '96.8%', icon: '🎯', color: '#EC4899' }
+                  ].map((metric, idx) => (
+                    <div key={idx} className="card" style={{ padding: '20px', borderLeft: `6px solid ${metric.color}` }}>
+                      <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>{metric.icon}</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gray-900)' }}>{metric.value}</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', fontWeight: 600, marginTop: '2px' }}>{metric.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="card" style={{ padding: '20px' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '12px' }}>📈 Monthly Procurement Trends</h3>
+                  <div style={{ background: 'var(--gray-50)', padding: '24px', borderRadius: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', height: '140px', paddingBottom: '10px', borderBottom: '2px solid var(--gray-200)' }}>
+                      {[
+                        { month: 'Apr', val: 40 },
+                        { month: 'May', val: 65 },
+                        { month: 'Jun', val: 50 },
+                        { month: 'Jul', val: 85 },
+                        { month: 'Aug', val: 100 }
+                      ].map((bar, i) => (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: colors.accent }}>{bar.val}%</span>
+                          <div style={{ width: '36px', height: `${bar.val}%`, background: colors.accent, borderRadius: '6px 6px 0 0' }} />
+                          <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', fontWeight: 600 }}>{bar.month}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

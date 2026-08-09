@@ -134,14 +134,18 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
   // Splits for orders tabs
   const incomingOrders = vendorOrdersList.filter(o => {
     const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
-    return myVO && myVO.status === 'Pending';
+    return (o.status === 'Vendor Processing' || o.status === 'DCR Approved') && myVO && myVO.status === 'Pending';
   });
 
-  const activeOrders = vendorOrdersList.filter(o => 
-    !['Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Approved', 'Completed'].includes(o.status)
-  );
+  const activeOrders = vendorOrdersList.filter(o => {
+    const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+    return ['Vendor Processing', 'Vendor Clarification Required', 'Coordinator Updated'].includes(o.status) && myVO && myVO.status === 'Pending';
+  });
 
-  const completedOrders = vendorOrdersList.filter(o => o.status === 'Completed');
+  const completedOrders = vendorOrdersList.filter(o => {
+    const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+    return ['Vendor Confirmed', 'Bill Generated', 'Completed'].includes(o.status) || (myVO && myVO.status === 'Vendor Confirmed');
+  });
 
   const modificationRequests = vendorOrdersList.filter(o => {
     const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
@@ -277,6 +281,41 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
       alert(e.message || 'Error saving prices.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleQuickApprove(vendorOrderId: string) {
+    setSaving(true);
+    try {
+      const myVO = orders.flatMap(o => o.vendor_orders).find(v => v.id === vendorOrderId);
+      const pricingPayload: Record<string, number> = {};
+      if (myVO) {
+        myVO.items.forEach(it => {
+          pricingPayload[it.name] = it.price > 0 ? it.price : 15.0;
+        });
+      }
+      await setVendorPrices(vendorOrderId, pricingPayload);
+      alert('Order approved & bill generated in 1-Click!');
+      await loadData(vendorId);
+    } catch (e: any) {
+      alert(e.message || 'Error approving order.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleQuickReject(vendorOrderId: string) {
+    if (confirm('Reject this canteen order?')) {
+      setSaving(true);
+      try {
+        await requestVendorModification(vendorOrderId, 'Vendor unable to fulfill kitchen order.', 'major');
+        alert('Order rejected & returned for review.');
+        await loadData(vendorId);
+      } catch (e: any) {
+        alert(e.message || 'Error rejecting order.');
+      } finally {
+        setSaving(false);
+      }
     }
   }
 
@@ -501,26 +540,16 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         </table>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        {isPricingThis ? (
-                          <>
-                            <button className="btn btn-primary btn-sm" onClick={() => handleSubmitPricing(myVO.id)} disabled={saving}>
-                              {saving ? 'Submitting...' : 'Save Prices & Confirm'}
-                            </button>
-                            <button className="btn btn-ghost btn-sm" onClick={() => setPricingOrderId(null)}>
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button className="btn btn-primary btn-sm" onClick={() => initPricingInput(o)}>
-                              ✍️ Enter Final Pricing
-                            </button>
-                            <button className="btn btn-ghost btn-sm text-danger" onClick={() => initModRequest(myVO.id)}>
-                              🔄 Request Modification
-                            </button>
-                          </>
-                        )}
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button className="btn btn-primary btn-sm" onClick={() => handleQuickApprove(myVO.id)} disabled={saving}>
+                          ✅ Approve Order (1-Click)
+                        </button>
+                        <button className="btn btn-ghost btn-sm" style={{ color: '#DC2626', border: '1px solid #FECACA', background: '#FEF2F2' }} onClick={() => handleQuickReject(myVO.id)} disabled={saving}>
+                          ❌ Reject Order
+                        </button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => initModRequest(myVO.id)} disabled={saving}>
+                          🔄 Request Modification
+                        </button>
                       </div>
                     </div>
                   );

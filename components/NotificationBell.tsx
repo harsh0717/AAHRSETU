@@ -56,6 +56,23 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleToast(e: Event) {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.message) {
+        setToastMessage(customEvent.detail.message);
+        load();
+        setPulse(true);
+        setTimeout(() => setPulse(false), 2000);
+        setTimeout(() => setToastMessage(null), 4500);
+      }
+    }
+    window.addEventListener('aharsetu_toast', handleToast);
+    return () => window.removeEventListener('aharsetu_toast', handleToast);
+  }, []);
+
   const unread = notifs.filter(n => !n.read).length;
 
   async function handleMarkAll() {
@@ -185,6 +202,20 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
         </div>
       )}
 
+      {/* Visual Toast Notification Banner */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed', top: '24px', right: '24px', zIndex: 9999,
+          background: '#0F172A', color: '#F8FAFC', padding: '14px 20px',
+          borderRadius: '14px', boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+          display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.85rem',
+          fontWeight: 600, borderLeft: '6px solid #2563EB', animation: 'slideIn 0.3s ease-out'
+        }}>
+          <span style={{ fontSize: '1.2rem' }}>🔔</span>
+          <div>{toastMessage}</div>
+        </div>
+      )}
+
       {/* Styled animation tags */}
       <style>{`
         @keyframes pulse-ring {
@@ -192,9 +223,9 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
           70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
           100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
         }
-        @keyframes slide-down {
-          from { opacity: 0; transform: translateY(-8px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
         }
       `}</style>
     </div>

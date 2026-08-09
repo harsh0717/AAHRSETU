@@ -215,7 +215,11 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   // Apply search/status filters for orders table
   const filteredOrders = displayedOrders
     .filter(o => !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase()))
-    .filter(o => statusFilter === 'All' || o.status === statusFilter);
+    .filter(o => {
+      if (statusFilter === 'All') return true;
+      if (statusFilter === 'Draft' || statusFilter === 'Created') return o.status === 'Created' || o.status === 'Draft';
+      return o.status === statusFilter;
+    });
 
   // Filter master orders that have invoices generated
   const ordersWithBills = myOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
@@ -227,7 +231,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   const totalRejected = myOrders.filter(o => ['Principal Rejected', 'DCR Rejected'].includes(o.status)).length;
 
   const ALL_STATUSES = [
-    'All', 'Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Approved',
+    'All', 'Draft', 'Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Approved',
     'Principal Rejected', 'DCR Reviewing', 'DCR Approved', 'DCR Rejected', 'Vendor Processing',
     'Vendor Clarification Required', 'Coordinator Updated', 'Vendor Confirmed', 'Bill Generated', 'Completed',
   ];

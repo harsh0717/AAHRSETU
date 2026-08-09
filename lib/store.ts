@@ -1,5 +1,7 @@
 // ── AharSetu Enterprise Order Store Service ──────────────────────────────────
 import { api } from './api';
+import { getSession } from './auth';
+import { pushNotification } from './notifications';
 
 export interface OrderItem {
   id?: number;
@@ -216,16 +218,31 @@ function saveLocalOrders(orders: MasterOrder[]) {
 // ── API Operations ────────────────────────────────────────────────────────────
 
 export async function getOrders(): Promise<MasterOrder[]> {
+  let orders: MasterOrder[] = [];
   try {
     const apiOrders = await api.get<MasterOrder[]>('/orders/');
     if (apiOrders && Array.isArray(apiOrders) && apiOrders.length > 0) {
       saveLocalOrders(apiOrders);
-      return apiOrders;
+      orders = apiOrders;
+    } else {
+      orders = getLocalOrders();
     }
   } catch (err) {
-    // Return local state store silently
+    orders = getLocalOrders();
   }
-  return getLocalOrders();
+
+  const session = getSession();
+  if (!session) return orders;
+
+  if (session.role === 'coordinator') {
+    return orders.filter(o => o.created_by_id === session.id || (session.department_id && o.department_id === session.department_id));
+  } else if (session.role === 'principal') {
+    return orders.filter(o => !session.department_id || o.department_id === session.department_id);
+  } else if (session.role === 'vendor') {
+    return orders.filter(o => o.vendor_orders.some(v => v.vendor_id === session.vendor_id || (session.name && v.vendor_name?.toLowerCase().includes(session.name.toLowerCase()))));
+  }
+
+  return orders;
 }
 
 export async function getOrderById(id: string): Promise<MasterOrder | null> {
@@ -243,33 +260,37 @@ export async function createMasterOrder(orderData: {
   purpose: string;
   items: { menu_item_id: string; quantity: number }[];
 }): Promise<MasterOrder> {
-  try {
-    const res = await api.post<MasterOrder>('/orders/', orderData);
-    if (res) {
-      const localList = getLocalOrders();
-      const idx = localList.findIndex(o => o.id === res.id);
-      if (idx >= 0) localList[idx] = res;
-      else localList.unshift(res);
-      saveLocalOrders(localList);
-      return res;
-    }
-  } catch (err) {
-    // Backend offline, fallback creation
-  }
-  
-  // Local fallback creation
+  const session = getSession();
   const now = new Date().toISOString();
   const newId = 'ORD-' + String(Date.now()).slice(-4);
+  const deptId = session?.department_id || 'diploma';
+  const deptLabel = deptId === 'diploma' ? 'Diploma Department' : deptId === 'degree' ? 'Degree Department' : `${deptId.toUpperCase()} Department`;
+
+  // Calculate bill total and item snapshot from menu prices
+  let totalCalculated = 0;
+  const itemsSnapshot = orderData.items.map((it, idx) => {
+    const unitPrice = 15.0; // Standard menu unit price snapshot
+    const itemSubtotal = unitPrice * it.quantity;
+    totalCalculated += itemSubtotal;
+    return {
+      id: idx + 100,
+      name: `Item #${it.menu_item_id}`,
+      quantity: it.quantity,
+      price: unitPrice,
+      menu_item_id: it.menu_item_id
+    };
+  });
+
   const newOrder: MasterOrder = {
     id: newId,
     title: orderData.title,
     purpose: orderData.purpose,
-    department_id: 'diploma',
-    department_label: 'Diploma Department',
-    created_by_id: 8,
-    created_by_name: 'Priya Sharma',
+    department_id: deptId,
+    department_label: deptLabel,
+    created_by_id: session?.id || 8,
+    created_by_name: session?.name || 'Priya Sharma',
     status: 'Sent for Approval',
-    total_bill_amount: 0,
+    total_bill_amount: totalCalculated,
     bill_generated_at: null,
     created_at: now,
     updated_at: now,
@@ -280,20 +301,36 @@ export async function createMasterOrder(orderData: {
         vendor_id: 'v1',
         vendor_name: 'Sharma Canteen',
         status: 'Pending',
-        bill_amount: 0,
+        bill_amount: totalCalculated,
         invoice_number: null,
-        items: orderData.items.map((it, idx) => ({ id: idx + 100, name: 'Requested Item', quantity: it.quantity, price: 15.0, menu_item_id: it.menu_item_id }))
+        items: itemsSnapshot
       }
     ],
     history: [
-      { action: 'Order Created', role: 'coordinator', user_name: 'Priya Sharma', remarks: 'Created requisition draft', timestamp: now, master_order_id: newId },
-      { action: 'Submitted for Approval', role: 'coordinator', user_name: 'Priya Sharma', remarks: 'Sent to Principal for review', timestamp: now, master_order_id: newId }
+      { action: 'Order Created', role: 'coordinator', user_name: session?.name || 'Coordinator', remarks: 'Requisition created', timestamp: now, master_order_id: newId },
+      { action: 'Submitted for Approval', role: 'coordinator', user_name: session?.name || 'Coordinator', remarks: 'Sent to Principal for review', timestamp: now, master_order_id: newId }
     ]
   };
+
+  try {
+    const res = await api.post<MasterOrder>('/orders/', orderData);
+    if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
+      pushNotification(`New requisition ${res.id} submitted for approval.`, 'principal', res.id);
+      return res;
+    }
+  } catch (err) {
+    // Backend offline, fallback creation
+  }
 
   const localList = getLocalOrders();
   localList.unshift(newOrder);
   saveLocalOrders(localList);
+  pushNotification(`New requisition ${newId} submitted for approval.`, 'principal', newId);
   return newOrder;
 }
 
@@ -353,6 +390,13 @@ export async function principalReview(
       master_order_id: id
     });
     saveLocalOrders(localList);
+
+    if (action === 'approve') {
+      pushNotification(`Requisition ${id} was approved by Principal.`, 'coordinator', id);
+      pushNotification(`New requisition ${id} requires DCR budget audit.`, 'dcr', id);
+    } else {
+      pushNotification(`Requisition ${id} was rejected by Principal. Remarks: ${remarks || 'None'}`, 'coordinator', id);
+    }
     return target;
   }
   throw new Error('Order not found');
@@ -387,6 +431,13 @@ export async function dcrReview(
       master_order_id: id
     });
     saveLocalOrders(localList);
+
+    if (action === 'approve') {
+      pushNotification(`Requisition ${id} cleared DCR audit and dispatched to vendor.`, 'coordinator', id);
+      pushNotification(`New kitchen order ${id} available for canteen processing.`, 'vendor', id);
+    } else {
+      pushNotification(`Requisition ${id} was rejected during DCR audit. Remarks: ${remarks || 'None'}`, 'coordinator', id);
+    }
     return target;
   }
   throw new Error('Order not found');
@@ -420,17 +471,22 @@ export async function setVendorPrices(
       });
       vo.bill_amount = total;
 
-      const allConfirmed = o.vendor_orders.every(v => v.status === 'Vendor Confirmed');
+      const allConfirmed = o.vendor_orders.every(v => v.status === 'Vendor Confirmed' || v.bill_amount > 0);
       if (allConfirmed) {
-        o.status = 'Bill Generated';
+        o.status = 'Completed';
         o.bill_generated_at = new Date().toISOString();
         o.total_bill_amount = o.vendor_orders.reduce((sum, v) => sum + v.bill_amount, 0);
+        pushNotification(`Requisition ${o.id} automatically completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'coordinator', o.id);
+        pushNotification(`Order ${o.id} automatically completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'principal', o.id);
+        pushNotification(`Order ${o.id} automatically completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'dcr', o.id);
+      } else {
+        pushNotification(`Vendor ${vo.vendor_name} confirmed pricing for sub-order ${vo.id}.`, 'coordinator', o.id);
       }
       o.history.push({
-        action: 'Vendor Confirmed Pricing',
+        action: allConfirmed ? 'Order Automatically Completed' : 'Vendor Confirmed Sub-Order',
         role: 'vendor',
         user_name: vo.vendor_name || 'Vendor',
-        remarks: 'Pricing finalized and bill generated',
+        remarks: `Invoice ${vo.invoice_number} generated. Subtotal ₹${total}`,
         timestamp: new Date().toISOString(),
         master_order_id: o.id
       });

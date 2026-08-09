@@ -117,20 +117,26 @@ export async function getOpenVendors(): Promise<Vendor[]> {
 }
 
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
-  try {
-    const res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
-    if (res) return res;
-  } catch (err) {
-    console.warn('[VENDORS] API status update failed, updating locally');
-  }
-
   const vendors = getLocalVendors();
   const v = vendors.find(item => item.id === vendorId);
   if (v) {
     v.status = status;
     saveLocalVendors(vendors);
-    return v;
   }
+
+  try {
+    const res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
+    if (res) {
+      const idx = vendors.findIndex(item => item.id === vendorId);
+      if (idx >= 0) vendors[idx] = res;
+      saveLocalVendors(vendors);
+      return res;
+    }
+  } catch (err) {
+    // Return updated local vendor
+  }
+
+  if (v) return v;
   throw new Error('Vendor not found');
 }
 

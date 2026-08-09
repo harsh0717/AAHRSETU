@@ -190,7 +190,8 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   {[
                     { label: t('dcr.stats_pending', 'Pending Audits'), value: totalPending, color: '#D97706', icon: '⏳' },
                     { label: t('dcr.stats_approved', 'Audited & Cleared'), value: totalApproved, color: '#10B981', icon: '✅' },
-                    { label: t('dcr.stats_rejected', 'Rejected Budgets'), value: totalRejected, color: '#EF4444', icon: '❌' }
+                    { label: t('dcr.stats_rejected', 'Rejected Budgets'), value: totalRejected, color: '#EF4444', icon: '❌' },
+                    { label: 'Total Audited Expenditure (₹)', value: `₹${orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0).toFixed(2)}`, color: '#3B82F6', icon: '💰' }
                   ].map((s, idx) => (
                     <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${s.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
                       <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{s.icon}</div>

@@ -24,19 +24,41 @@ export default function OrderDetailsPage() {
   const [session, setSession] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('details');
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [actioning, setActioning] = useState(false);
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
-    const o = await getOrderById(orderId);
-    if (!o) {
+    setForbidden(false);
+    try {
+      const o = await getOrderById(orderId);
       const s = getSession();
-      if (s) router.push('/' + s.role);
-      return;
+      if (!o) {
+        setForbidden(true);
+        setLoading(false);
+        return;
+      }
+      if (s) {
+        if (s.role === 'coordinator' && o.created_by_id !== s.id && o.department_id !== s.department_id) {
+          setForbidden(true);
+          setLoading(false);
+          return;
+        }
+        if (s.role === 'principal' && s.department_id && o.department_id !== s.department_id) {
+          setForbidden(true);
+          setLoading(false);
+          return;
+        }
+      }
+      setOrder(o);
+    } catch (e: any) {
+      if (e?.status === 403) {
+        setForbidden(true);
+      }
+    } finally {
+      setLoading(false);
     }
-    setOrder(o);
-    setLoading(false);
-  }, [orderId, router]);
+  }, [orderId]);
 
   useEffect(() => {
     const s = getSession();
@@ -47,6 +69,25 @@ export default function OrderDetailsPage() {
     setSession(s);
     loadOrder();
   }, [loadOrder, router]);
+
+  if (forbidden && session) {
+    return (
+      <AppShell role={session.role}>
+        <div className="card" style={{ padding: '40px', textAlign: 'center', margin: '40px auto', maxWidth: '480px' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🚫</div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gray-900)', marginBottom: '8px' }}>
+            Access Restricted (HTTP 403)
+          </h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--gray-600)', marginBottom: '20px' }}>
+            You do not have administrative permission to view requisitions belonging to other academic departments.
+          </p>
+          <Link href={`/${session.role}`} className="btn btn-primary">
+            Return to Dashboard
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!order || !session) {
     return (

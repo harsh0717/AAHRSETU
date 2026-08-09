@@ -100,7 +100,40 @@ export async function markAllRead(): Promise<void> {
   saveLocalNotifs(list);
 }
 
-// Compatibility stubs
-export function notifyCoordinator(order: any, action: string, remarks?: string): void {}
-export function notifyVendorsOnDCRApproval(order: any, users?: any[]): void {}
-export function notifyCoordinatorModification(order: any, vendorName: string): void {}
+export function pushNotification(message: string, recipient_role?: string, order_id?: string) {
+  const notif: NotificationItem = {
+    id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    recipient_id: null,
+    recipient_role: recipient_role || null,
+    message,
+    type: 'order_status',
+    order_id: order_id || null,
+    vendor_order_id: null,
+    read: false,
+    timestamp: new Date().toISOString()
+  };
+
+  const list = getLocalNotifs();
+  list.unshift(notif);
+  saveLocalNotifs(list);
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('aharsetu_toast', { detail: { message } }));
+  }
+}
+
+export function notifyCoordinator(order: any, action: string, remarks?: string): void {
+  pushNotification(`Order ${order?.id || ''} status update: ${action}. ${remarks || ''}`, 'coordinator', order?.id);
+  pushNotification(`Order ${order?.id || ''} status update: ${action}. ${remarks || ''}`, 'admin', order?.id);
+}
+
+export function notifyVendorsOnDCRApproval(order: any): void {
+  pushNotification(`New Order ${order?.id || ''} approved by DCR and dispatched to kitchen vendor.`, 'vendor', order?.id);
+  pushNotification(`Order ${order?.id || ''} approved by DCR.`, 'coordinator', order?.id);
+  pushNotification(`Order ${order?.id || ''} approved by DCR.`, 'admin', order?.id);
+}
+
+export function notifyCoordinatorModification(order: any, vendorName: string): void {
+  pushNotification(`Vendor ${vendorName} requested clarification on Order ${order?.id || ''}.`, 'coordinator', order?.id);
+  pushNotification(`Vendor ${vendorName} requested clarification on Order ${order?.id || ''}.`, 'principal', order?.id);
+}

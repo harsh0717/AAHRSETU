@@ -27,10 +27,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = (localStorage.getItem(LANG_KEY) || 'en') as LangCode;
-      if (['en', 'hi', 'gu'].includes(stored)) {
-        setLangState(stored);
-      }
+      const syncLang = () => {
+        const stored = (localStorage.getItem(LANG_KEY) || 'en') as LangCode;
+        if (['en', 'hi', 'gu'].includes(stored)) {
+          setLangState(stored);
+        }
+      };
+      syncLang();
+      window.addEventListener('aharsetu_lang_change', syncLang);
+      return () => window.removeEventListener('aharsetu_lang_change', syncLang);
     }
   }, []);
 

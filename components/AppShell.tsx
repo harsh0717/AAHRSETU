@@ -138,7 +138,7 @@ export default function AppShell({ children, role }: AppShellProps) {
           <div className={styles.headerRight}>
             <LanguageSwitcher />
             {session && <NotificationBell userId={session.id} role={session.role} />}
-            <div className={styles.headerUser}>
+            <Link href={`/${role}/profile`} className={styles.headerUser} style={{ textDecoration: 'none', cursor: 'pointer' }}>
               <div className={styles.headerAvatar} style={{ background: colors.accent }}>
                 {session?.name?.[0] || '?'}
               </div>
@@ -146,7 +146,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                 <div className={styles.headerUserName}>{session?.name}</div>
                 <div className={styles.headerUserRole}>{ROLE_LABELS[role]}</div>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
 

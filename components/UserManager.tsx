@@ -146,11 +146,11 @@ export default function UserManager({ accentColor = '#DC2626' }: UserManagerProp
     .filter(u => roleFilter === 'all' || u.role === roleFilter);
 
   const ROLE_COLORS_MAP: Record<string, string> = { 
-    admin: '#8B5CF6', 
-    dcr: '#0EA5E9', 
-    principal: '#6366F1', 
-    coordinator: '#3B82F6', 
-    vendor: '#10B981' 
+    admin: '#2563EB', 
+    dcr: '#2563EB', 
+    principal: '#2563EB', 
+    coordinator: '#2563EB', 
+    vendor: '#2563EB' 
   };
 
   if (loading) {

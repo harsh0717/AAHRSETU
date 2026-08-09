@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from backend.api import deps
 from backend.core.database import get_db
@@ -13,6 +13,7 @@ router = APIRouter()
 @router.post("/login", response_model=TokenResponse)
 def login(
     payload: LoginPayload,
+    request: Request,
     db: Session = Depends(get_db)
 ) -> Any:
     """
@@ -36,6 +37,20 @@ def login(
     principal_depts = [d.id for d in user.managed_departments]
     
     session_data = auth_service.login_user(user)
+    
+    # Audit log login event
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    ip_address = request.client.host if request.client else "127.0.0.1"
+    browser = request.headers.get("user-agent", "Unknown")
+    audit_repo.log_action(
+        user_id=user.id,
+        role=user.role,
+        department=user.department_id or "General",
+        action="User Logged In",
+        ip_address=ip_address,
+        browser=browser
+    )
     
     user_resp = UserResponse(
         id=user.id,
@@ -101,11 +116,32 @@ def refresh_token(
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
     payload: TokenRefreshPayload,
+    request: Request,
     db: Session = Depends(get_db)
 ) -> None:
     """
     Invalidate active refresh sessions.
     """
+    # Look up session and user before deletion for auditing
+    from backend.repositories.user import UserRepository
+    from backend.repositories.audit import AuditRepository
+    user_repo = UserRepository(db)
+    session = user_repo.get_session_by_token(payload.refresh_token)
+    if session:
+        user = user_repo.get(session.user_id)
+        if user:
+            ip_address = request.client.host if request.client else "127.0.0.1"
+            browser = request.headers.get("user-agent", "Unknown")
+            audit_repo = AuditRepository(db)
+            audit_repo.log_action(
+                user_id=user.id,
+                role=user.role,
+                department=user.department_id or "General",
+                action="User Logged Out",
+                ip_address=ip_address,
+                browser=browser
+            )
+
     auth_service = AuthService(db)
     auth_service.logout_user(payload.refresh_token)
     return None

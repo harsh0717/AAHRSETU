@@ -12,7 +12,7 @@ const LANG_KEY = 'aharsetu_lang';
 
 interface I18nContextType {
   lang: LangCode;
-  t: (key: string, params?: Record<string, string | number>) => string;
+  t: (key: string, params?: Record<string, string | number> | string) => string;
   setLang: (newLang: LangCode) => void;
 }
 
@@ -42,9 +42,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const t = useCallback((key: string, params: Record<string, string | number> = {}) => {
+  const t = useCallback((key: string, paramsOrFallback?: Record<string, string | number> | string) => {
     const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
-    const str = dict[key] ?? TRANSLATIONS.en[key] ?? key;
+    let str = dict[key] ?? TRANSLATIONS.en[key];
+    if (str === undefined) {
+      if (typeof paramsOrFallback === 'string') {
+        str = paramsOrFallback;
+      } else {
+        str = key;
+      }
+    }
+    const params = typeof paramsOrFallback === 'object' ? paramsOrFallback : {};
     return Object.entries(params).reduce(
       (s, [k, v]) => s.replace(`{${k}}`, String(v)),
       str

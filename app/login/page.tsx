@@ -131,10 +131,10 @@ export default function LoginPage() {
         <div className={styles.heroContent}>
           <span className={styles.heroBadge}>Institutional ERP v2.0</span>
           <h2 className={styles.heroTitle}>
-            Unified Portal for <span>Campus Canteens</span>
+            {t('login.hero_title', 'Unified Portal for')} <span>{t('login.hero_title_highlight', 'Campus Canteens')}</span>
           </h2>
           <p className={styles.heroSub}>
-            A centralized ERP connecting department coordinators, principals, auditors, and vendors for paperless approvals, automated splits, and instant settlements.
+            {t('login.hero_sub', 'A centralized ERP connecting department coordinators, principals, auditors, and vendors for paperless approvals, automated splits, and instant settlements.')}
           </p>
 
           <div className={styles.featuresGrid}>
@@ -169,13 +169,13 @@ export default function LoginPage() {
               <div className={`${styles.stepCircle} ${activeStep >= 1 ? styles.stepActiveCircle : ''} ${activeStep > 1 ? styles.stepDoneCircle : ''}`}>
                 {activeStep > 1 ? '✓' : '1'}
               </div>
-              <span className={`${styles.stepLabel} ${activeStep === 1 ? styles.stepActiveLabel : ''}`}>Role</span>
+              <span className={`${styles.stepLabel} ${activeStep === 1 ? styles.stepActiveLabel : ''}`}>{t('common.role', 'Role')}</span>
             </div>
             <div className={styles.stepNode}>
               <div className={`${styles.stepCircle} ${activeStep >= 2 ? styles.stepActiveCircle : ''} ${activeStep > 2 ? styles.stepDoneCircle : ''}`}>
                 {activeStep > 2 ? '✓' : '2'}
               </div>
-              <span className={`${styles.stepLabel} ${activeStep === 2 ? styles.stepActiveLabel : ''}`}>Dept</span>
+              <span className={`${styles.stepLabel} ${activeStep === 2 ? styles.stepActiveLabel : ''}`}>{t('common.department', 'Dept')}</span>
             </div>
             <div className={styles.stepNode}>
               <div className={`${styles.stepCircle} ${activeStep >= 3 ? styles.stepActiveCircle : ''}`}>
@@ -186,8 +186,8 @@ export default function LoginPage() {
           </div>
 
           <div className={styles.formHeader}>
-            <h3 className={styles.formTitle}>Welcome to AharSetu</h3>
-            <p className={styles.formSub}>Authenticate using your institutional profile credentials</p>
+            <h3 className={styles.formTitle}>{t('login.welcome_title', 'Welcome to AharSetu')}</h3>
+            <p className={styles.formSub}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
           </div>
 
           {error && (
@@ -200,7 +200,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit}>
             {/* Step 1: Role Selection Grid */}
             <div style={{ marginBottom: '20px' }}>
-              <label className={styles.inputLabel}>Step 1: Choose Your Role</label>
+              <label className={styles.inputLabel}>{t('login.step1_title', 'Step 1: Choose Your Role')}</label>
               <div className={styles.roleGrid}>
                 {ROLES_LIST.map((r) => (
                   <div
@@ -213,7 +213,7 @@ export default function LoginPage() {
                   >
                     {role === r.id && <span className={styles.roleSelectedIcon}>✓</span>}
                     <div className={styles.roleIcon}>{r.icon}</div>
-                    <div className={styles.roleName}>{r.label}</div>
+                    <div className={styles.roleName}>{t(`role.${r.id}`, r.label)}</div>
                   </div>
                 ))}
               </div>
@@ -222,7 +222,7 @@ export default function LoginPage() {
             {/* Step 2: Department Selection Chips */}
             {deptRequired && (
               <div style={{ marginBottom: '20px', animation: 'slideDown 0.2s ease-out' }}>
-                <label className={styles.inputLabel}>Step 2: Choose Department</label>
+                <label className={styles.inputLabel}>{t('login.step2_title', 'Step 2: Choose Department')}</label>
                 <div className={styles.deptGrid}>
                   {DEPARTMENTS.map((d) => (
                     <div
@@ -230,7 +230,7 @@ export default function LoginPage() {
                       onClick={() => setDepartmentId(d.id)}
                       className={`${styles.deptChip} ${departmentId === d.id ? styles.deptSelected : ''}`}
                     >
-                      {d.name}
+                      {t(`dept.${d.id}`, d.name)}
                     </div>
                   ))}
                 </div>
@@ -240,7 +240,7 @@ export default function LoginPage() {
             {/* Step 3: Credentials fields */}
             <div style={{ marginBottom: '24px' }}>
               <label className={styles.inputLabel}>
-                {deptRequired ? 'Step 3: Enter Credentials' : 'Step 2: Enter Credentials'}
+                {deptRequired ? t('login.step3_title', 'Step 3: Enter Credentials') : t('login.step2_cred_title', 'Step 2: Enter Credentials')}
               </label>
 
               {/* Email */}
@@ -249,7 +249,7 @@ export default function LoginPage() {
                   <span className={styles.inputIcon}>👤</span>
                   <input
                     type="email"
-                    placeholder="Institutional Email (e.g. name@aharsetu.edu.in)"
+                    placeholder={t('login.email_ph', 'Institutional Email (e.g. name@aharsetu.edu.in)')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={styles.input}
@@ -264,7 +264,7 @@ export default function LoginPage() {
                   <span className={styles.inputIcon}>🔑</span>
                   <input
                     type={showPass ? 'text' : 'password'}
-                    placeholder="Verification Password"
+                    placeholder={t('login.pass_ph', 'Verification Password')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={styles.input}
@@ -289,10 +289,10 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <span className={styles.spinner}></span>
-                  Verifying Identity...
+                  {t('login.verifying_btn', 'Verifying Identity...')}
                 </>
               ) : (
-                'Secure Log In'
+                t('login.secure_btn', 'Secure Log In')
               )}
             </button>
           </form>
@@ -304,7 +304,7 @@ export default function LoginPage() {
               onClick={() => setShowDemo(!showDemo)}
               className={styles.demoTrigger}
             >
-              {showDemo ? '✕ Close Demo Board' : '🔑 Quick Access Demo Accounts'}
+              {showDemo ? t('login.demo_btn_close', '✕ Close Demo Board') : t('login.demo_btn_open', '🔑 Quick Access Demo Accounts')}
             </button>
 
             {showDemo && (

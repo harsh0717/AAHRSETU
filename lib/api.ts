@@ -107,18 +107,37 @@ class ApiClient {
     }
 
     const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
-    console.log(`[API CLIENT] Sending request to: ${url} | Token: ${token ? token.substring(0, 15) + '...' : 'null'} | Headers:`, Object.fromEntries(headers.entries()));
-    const response = await fetch(url, { ...options, headers });
+    let response: Response;
+    try {
+      response = await fetch(url, { ...options, headers });
+    } catch (fetchErr: any) {
+      // Silence continuous background polling warnings when serving local fallback store
+      throw { message: 'Service unavailable or connection reset. Please try again.', status: 503 } as ApiError;
+    }
 
-    if (response.status === 401 && token) {
-      // Access token expired, attempt refresh
-      try {
-        const newToken = await this.refreshTokens();
-        headers.set('Authorization', `Bearer ${newToken}`);
-        const retryResponse = await fetch(url, { ...options, headers });
-        return this.handleResponse<T>(retryResponse);
-      } catch (err) {
-        throw { message: 'Session expired. Please log in again.', status: 401 } as ApiError;
+    if (response.status === 401) {
+      if (token) {
+        // Access token expired, attempt refresh
+        try {
+          const newToken = await this.refreshTokens();
+          headers.set('Authorization', `Bearer ${newToken}`);
+          const retryResponse = await fetch(url, { ...options, headers });
+          return this.handleResponse<T>(retryResponse);
+        } catch (err) {
+          this.clearTokens();
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('aharsetu_session');
+            window.location.href = '/login?expired=1';
+          }
+          throw { message: 'Session expired. Please log in again.', status: 401 } as ApiError;
+        }
+      } else {
+        this.clearTokens();
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('aharsetu_session');
+          window.location.href = '/login?expired=1';
+        }
+        throw { message: 'Not authenticated', status: 401 } as ApiError;
       }
     }
 

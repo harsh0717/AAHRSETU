@@ -70,6 +70,7 @@ export default function BillPage() {
 
   // Generate jsPDF A4 Document
   function generatePDF() {
+    if (!order) return;
     setDownloading(true);
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -224,9 +225,18 @@ export default function BillPage() {
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         
         {/* Navigation & Selection bar */}
+        <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '10px' }}>
+          <Link href={`/${session.role}`} style={{ color: 'var(--gray-500)', textDecoration: 'none' }}>Dashboard</Link> /{' '}
+          {session.role !== 'vendor' && session.role !== 'admin' ? (
+            <>
+              <Link href={`/order/${order.id}`} style={{ color: 'var(--gray-500)', textDecoration: 'none' }}>Order {order.id}</Link> /{' '}
+            </>
+          ) : null}
+          <span>Invoice {invoiceNo}</span>
+        </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-          <Link href={roleBackLink} style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem' }}>
-            ← Back to Portal
+          <Link href={roleBackLink} style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+            ← {session.role === 'vendor' ? 'Back to Dashboard' : (session.role === 'admin' ? 'Back to Admin Portal' : 'Back to Order Details')}
           </Link>
           
           {session.role !== 'vendor' && completedVOs.length > 1 && (

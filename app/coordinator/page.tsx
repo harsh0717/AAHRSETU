@@ -3,30 +3,40 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
-import { getSession, UserProfile } from '@/lib/auth';
+import { getSession, UserProfile, updateSessionLanguage } from '@/lib/auth';
 import { getOrders, createMasterOrder, MasterOrder } from '@/lib/store';
 import { getAvailableMenuByVendor, MenuItem } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
+import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
+import { api } from '@/lib/api';
 import Link from 'next/link';
 
-export default function CoordinatorDashboardPage() {
+export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
   const { t } = useI18n();
   const [session, setSession] = useState<UserProfile | null>(null);
   const colors = ROLE_COLORS.coordinator;
 
-  // Active Tab: create | orders
-  const [activeTab, setActiveTab] = useState('orders');
+  // Active Tab
+  const [activeTab, setActiveTab] = useState(initialTab);
 
-  // Lists
+  // API Data
   const [orders, setOrders] = useState<MasterOrder[]>([]);
   const [menuByVendor, setMenuByVendor] = useState<{ id: string; name: string; menu: MenuItem[] }[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Create Order States
   const [title, setTitle] = useState('');
   const [purpose, setPurpose] = useState('');
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>({}); // menu_item_id -> quantity
+
+  // Profile Edit State
+  const [profileName, setProfileName] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
+
+  // Settings State
+  const [preferredLang, setPreferredLang] = useState('en');
 
   // Search & Filters
   const [search, setSearch] = useState('');
@@ -38,39 +48,66 @@ export default function CoordinatorDashboardPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [oList, mList] = await Promise.all([
-        getOrders(),
-        getAvailableMenuByVendor()
-      ]);
+      const oList = await getOrders().catch((err) => {
+        console.error('Error fetching orders:', err);
+        return [];
+      });
+      const mList = await getAvailableMenuByVendor().catch((err) => {
+        console.error('Error fetching menus:', err);
+        return [];
+      });
+      const nList = await getNotifications().catch((err) => {
+        console.error('Error fetching notifications:', err);
+        return [];
+      });
       setOrders(oList);
       setMenuByVendor(mList);
+      setNotifications(nList);
     } catch (err) {
-      console.error('Error fetching coordinator data:', err);
+      console.error('Error in coordinator loadData:', err);
     } finally {
       setLoading(false);
     }
   }
 
+  // Load session & initial data
   useEffect(() => {
     const s = getSession();
-    if (!s || s.role !== 'coordinator') {
+    if (!s) {
       window.location.href = '/login';
       return;
     }
-    setSession(s);
-    loadData();
-
-    // Check hash route for tab selector
-    if (window.location.hash === '#create') {
-      setActiveTab('create');
-    } else if (window.location.hash === '#orders') {
-      setActiveTab('orders');
+    if (s.role !== 'coordinator') {
+      window.location.href = `/${s.role}`;
+      return;
     }
+    setSession(s);
+    setProfileName(s.name);
+    setPreferredLang(s.preferred_language || 'en');
+    loadData();
   }, []);
 
-  // Sync hash with state
+  // Listen to hash changes for sidebar navigation
   useEffect(() => {
-    window.location.hash = activeTab;
+    if (typeof window === 'undefined') return;
+    const handleHash = () => {
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        setActiveTab(hash);
+      } else {
+        setActiveTab('dashboard');
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  // Sync state changes back to hash
+  useEffect(() => {
+    if (activeTab && window.location.hash !== '#' + activeTab) {
+      window.location.hash = activeTab;
+    }
   }, [activeTab]);
 
   function handleQtyChange(itemId: string, qty: number) {
@@ -85,7 +122,7 @@ export default function CoordinatorDashboardPage() {
   async function handleCreateOrder(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !purpose.trim()) {
-      alert('Please fill out title and purpose.');
+      alert(t('coord.required_fields', 'Please fill out title and purpose.'));
       return;
     }
 
@@ -95,7 +132,7 @@ export default function CoordinatorDashboardPage() {
     }));
 
     if (itemsPayload.length === 0) {
-      alert('Please select at least one menu item.');
+      alert(t('coord.select_item_err', 'Please select at least one menu item.'));
       return;
     }
 
@@ -106,11 +143,12 @@ export default function CoordinatorDashboardPage() {
         purpose: purpose.trim(),
         items: itemsPayload
       });
-      alert('Order drafted successfully! Redirecting to orders pipeline.');
+      alert(t('coord.order_drafted', 'Order drafted successfully!'));
       setTitle('');
       setPurpose('');
       setSelectedItems({});
       setActiveTab('orders');
+      router.push('/coordinator/orders');
       await loadData();
     } catch (err: any) {
       alert(err.message || 'Failed to create order.');
@@ -119,12 +157,74 @@ export default function CoordinatorDashboardPage() {
     }
   }
 
+  async function handleUpdateProfile(e: React.FormEvent) {
+    e.preventDefault();
+    if (!profileName.trim() || !session) return;
+    setSubmitting(true);
+    setProfileMessage('');
+    try {
+      const updatedUser = await api.put<UserProfile>(`/users/${session.id}`, { name: profileName.trim() });
+      const newSession = { ...session, name: updatedUser.name };
+      setSession(newSession);
+      localStorage.setItem('aharsetu_session', JSON.stringify(newSession));
+      setProfileMessage(t('profile.updated_success', 'Profile updated successfully!'));
+      setTimeout(() => setProfileMessage(''), 3000);
+    } catch (err: any) {
+      setProfileMessage(err.message || 'Failed to update profile.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleLanguageChange(lang: string) {
+    setPreferredLang(lang);
+    if (session) {
+      await updateSessionLanguage(lang);
+      // Force page reload to re-instantiate translations instantly
+      window.location.reload();
+    }
+  }
+
+  async function handleMarkNotification(id: string) {
+    await markNotificationRead(id);
+    const nList = await getNotifications();
+    setNotifications(nList);
+  }
+
+  async function handleMarkAllNotifications() {
+    await markAllRead();
+    const nList = await getNotifications();
+    setNotifications(nList);
+  }
+
   if (!session) return null;
 
+  // Filter orders created by this coordinator
   const myOrders = orders.filter(o => o.created_by_id === session.id);
-  const filteredOrders = myOrders
+
+  // Apply tab filters
+  let displayedOrders = myOrders;
+  if (activeTab === 'pending') {
+    displayedOrders = myOrders.filter(o => !['Completed', 'Principal Rejected', 'DCR Rejected'].includes(o.status));
+  } else if (activeTab === 'completed') {
+    displayedOrders = myOrders.filter(o => o.status === 'Completed');
+  } else if (activeTab === 'rejected') {
+    displayedOrders = myOrders.filter(o => ['Principal Rejected', 'DCR Rejected'].includes(o.status));
+  }
+
+  // Apply search/status filters for orders table
+  const filteredOrders = displayedOrders
     .filter(o => !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase()))
     .filter(o => statusFilter === 'All' || o.status === statusFilter);
+
+  // Filter master orders that have invoices generated
+  const ordersWithBills = myOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
+
+  // Compute Stats for Dashboard tab
+  const totalMyOrders = myOrders.length;
+  const totalPending = myOrders.filter(o => !['Completed', 'Principal Rejected', 'DCR Rejected'].includes(o.status)).length;
+  const totalCompleted = myOrders.filter(o => o.status === 'Completed').length;
+  const totalRejected = myOrders.filter(o => ['Principal Rejected', 'DCR Rejected'].includes(o.status)).length;
 
   const ALL_STATUSES = [
     'All', 'Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Approved',
@@ -136,109 +236,73 @@ export default function CoordinatorDashboardPage() {
     <AppShell role="coordinator" currentPath="/coordinator">
       <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
         
-        {/* Title */}
+        {/* Header Section */}
         <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px' }}>
-            {t('coord.dashboard_title')}
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
+            {t(`coord.tab_title_${activeTab}`, t('coord.dashboard_title', 'Coordinator Dashboard'))}
           </h1>
           <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-            {t('coord.dashboard_sub')}
+            {t(`coord.tab_sub_${activeTab}`, t('coord.dashboard_sub', 'Institutional order requisition, approvals tracking and billing pipeline.'))}
           </div>
-        </div>
-
-        {/* Tab Selection */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '2px solid var(--gray-200)' }}>
-          {[
-            { key: 'orders', label: t('coord.my_submissions'), icon: '📦' },
-            { key: 'create', label: t('coord.draft_order'), icon: '➕' }
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              style={{
-                padding: '10px 18px', border: 'none', background: 'transparent', cursor: 'pointer',
-                fontWeight: 700, fontSize: '0.85rem',
-                color: activeTab === tab.key ? colors.accent : 'var(--gray-500)',
-                borderBottom: activeTab === tab.key ? `3px solid ${colors.accent}` : '3px solid transparent',
-                marginBottom: '-2px', transition: 'all 0.15s'
-              }}
-            >
-              <span style={{ marginRight: '6px' }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
         </div>
 
         {/* Loading Spinner */}
-        {loading && activeTab === 'orders' ? (
+        {loading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500)' }}>
             <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
-            <div>Loading orders and menus...</div>
+            <div>{t('common.loading', 'Loading details...')}</div>
           </div>
         ) : (
           <div>
-            {/* Tab 1: My Submissions */}
-            {activeTab === 'orders' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                  <input
-                    className="form-input"
-                    style={{ maxWidth: '240px' }}
-                    placeholder={t('coord.search_ph')}
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                  <select
-                    className="form-input"
-                    style={{ maxWidth: '180px' }}
-                    value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value)}
-                  >
-                    {ALL_STATUSES.map(s => (
-                      <option key={s} value={s}>
-                        {s === 'All' ? t('common.all') : (t(`status.${s}`) !== `status.${s}` ? t(`status.${s}`) : s)}
-                      </option>
-                    ))}
-                  </select>
+            {/* TAB: DASHBOARD OVERVIEW */}
+            {activeTab === 'dashboard' && (
+              <div>
+                {/* Stats Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                  {[
+                    { label: t('coord.stats_total', 'Total Drafts'), value: totalMyOrders, color: '#0284C7', icon: '📦' },
+                    { label: t('coord.stats_pending', 'Pending Approvals'), value: totalPending, color: '#EAB308', icon: '⏳' },
+                    { label: t('coord.stats_completed', 'Completed Orders'), value: totalCompleted, color: '#10B981', icon: '✅' },
+                    { label: t('coord.stats_rejected', 'Rejected Requests'), value: totalRejected, color: '#EF4444', icon: '❌' },
+                  ].map((stat, idx) => (
+                    <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${stat.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
+                      <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{stat.icon}</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gray-900)', lineHeight: '1.2' }}>{stat.value}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', fontWeight: 600, marginTop: '2px' }}>{stat.label}</div>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>{t('coord.order_id')}</th>
-                        <th>{t('coord.title_desc')}</th>
-                        <th>{t('common.purpose')}</th>
-                        <th>{t('coord.created_date')}</th>
-                        <th>{t('common.status')}</th>
-                        <th style={{ textAlign: 'right' }}>{t('coord.total_bill')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredOrders.map(o => (
-                        <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>{o.purpose}</td>
-                          <td style={{ fontSize: '0.8rem' }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
-                          <td><StatusBadge status={o.status} size="sm" /></td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                        </tr>
+                {/* Quick actions & recent items */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
+                  <div className="card" style={{ padding: '20px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🚀 Quick Requisitions</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>Need catering for an official event or guest meeting? Open a new requisition instantly.</p>
+                    <button className="btn btn-primary" onClick={() => setActiveTab('create')}>
+                      ➕ Draft New Requisition
+                    </button>
+                  </div>
+
+                  <div className="card" style={{ padding: '20px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🔔 Recent Notifications</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {notifications.slice(0, 3).map(n => (
+                        <div key={n.id} style={{ display: 'flex', gap: '8px', fontSize: '0.8rem', borderBottom: '1px solid var(--gray-100)', paddingBottom: '6px' }}>
+                          <span>🔔</span>
+                          <span style={{ color: n.read ? 'var(--gray-600)' : 'var(--gray-900)', fontWeight: n.read ? 500 : 700 }}>{n.message}</span>
+                        </div>
                       ))}
-                      {filteredOrders.length === 0 && (
-                        <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            {t('coord.no_orders')}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      {notifications.length === 0 && <div style={{ fontSize: '0.8rem', color: 'var(--gray-400)' }}>No notifications.</div>}
+                      <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start', padding: 0 }} onClick={() => setActiveTab('notifications')}>
+                        View all notifications
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Tab 2: Create Order */}
+            {/* TAB: CREATE REQUISITION */}
             {activeTab === 'create' && (
               <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start' }}>
                 {/* Menu items list */}
@@ -293,24 +357,24 @@ export default function CoordinatorDashboardPage() {
                   ))}
                   {menuByVendor.length === 0 && (
                     <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500)', background: 'white', borderRadius: '12px', border: '1px solid var(--gray-200)' }}>
-                      {t('coord.no_vendors')}
+                      {t('coord.no_vendors', 'No vendors are currently open with available menu items.')}
                     </div>
                   )}
                 </div>
 
                 {/* Form parameters */}
                 <div className="card" style={{ padding: '20px', position: 'sticky', top: '80px' }}>
-                  <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px' }}>{t('coord.draft_specs')}</h3>
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px' }}>{t('coord.draft_specs', 'Draft Specifications')}</h3>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div>
                       <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                        {t('coord.event_title')}
+                        {t('coord.event_title', 'Event Title')}
                       </label>
                       <input
                         type="text"
                         className="form-input"
-                        placeholder={t('coord.event_title_ph')}
+                        placeholder={t('coord.event_title_ph', 'e.g. Faculty Senate Meeting')}
                         value={title}
                         onChange={e => setTitle(e.target.value)}
                       />
@@ -318,12 +382,12 @@ export default function CoordinatorDashboardPage() {
 
                     <div>
                       <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                        {t('coord.meeting_purpose')}
+                        {t('coord.meeting_purpose', 'Purpose of Meeting')}
                       </label>
                       <textarea
                         className="form-input"
                         style={{ height: '80px', resize: 'none' }}
-                        placeholder={t('coord.meeting_ph')}
+                        placeholder={t('coord.meeting_ph', 'Brief description of official event')}
                         value={purpose}
                         onChange={e => setPurpose(e.target.value)}
                       />
@@ -336,12 +400,193 @@ export default function CoordinatorDashboardPage() {
                         className="btn btn-primary"
                         style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '6px' }}
                       >
-                        {submitting ? t('coord.drafting_btn') : `🚀 ${t('coord.draft_btn')}`}
+                        {submitting ? t('coord.drafting_btn', 'Drafting...') : `🚀 ${t('coord.draft_btn', 'Draft Requisition')}`}
                       </button>
                     </div>
                   </div>
                 </div>
               </form>
+            )}
+
+            {/* TAB: LIST REQUISITIONS (My Orders, Pending, Completed, Rejected) */}
+            {['orders', 'pending', 'completed', 'rejected'].includes(activeTab) && (
+              <div className="card" style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                  <input
+                    className="form-input"
+                    style={{ maxWidth: '240px' }}
+                    placeholder={t('coord.search_ph', 'Search by title or ID...')}
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                  <select
+                    className="form-input"
+                    style={{ maxWidth: '180px' }}
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                  >
+                    {ALL_STATUSES.map(s => (
+                      <option key={s} value={s}>
+                        {s === 'All' ? t('common.all', 'All Statuses') : (t(`status.${s}`) !== `status.${s}` ? t(`status.${s}`) : s)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>{t('coord.order_id', 'Order ID')}</th>
+                        <th>{t('coord.title_desc', 'Title & Description')}</th>
+                        <th>{t('common.purpose', 'Purpose')}</th>
+                        <th>{t('coord.created_date', 'Created Date')}</th>
+                        <th>{t('common.status', 'Status')}</th>
+                        <th style={{ textAlign: 'right' }}>{t('coord.total_bill', 'Estimated Bill')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredOrders.map(o => (
+                        <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                          <td style={{ fontWeight: 700 }}>{o.id}</td>
+                          <td style={{ fontWeight: 600 }}>{o.title}</td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>{o.purpose}</td>
+                          <td style={{ fontSize: '0.8rem' }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                          <td><StatusBadge status={o.status} size="sm" /></td>
+                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                        </tr>
+                      ))}
+                      {filteredOrders.length === 0 && (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                            {t('coord.no_orders', 'No requisition records found.')}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: BILLS / INVOICES */}
+            {activeTab === 'bills' && (
+              <div className="card" style={{ padding: '20px' }}>
+                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>{t('coord.order_id', 'Order ID')}</th>
+                        <th>{t('coord.title_desc', 'Title')}</th>
+                        <th>{t('coord.created_date', 'Billing Date')}</th>
+                        <th style={{ textAlign: 'right' }}>{t('coord.total_bill', 'Bill Amount')}</th>
+                        <th style={{ textAlign: 'center' }}>{t('common.actions', 'Actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ordersWithBills.map(o => (
+                        <tr key={o.id}>
+                          <td style={{ fontWeight: 700 }}>{o.id}</td>
+                          <td style={{ fontWeight: 600 }}>{o.title}</td>
+                          <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
+                              🧾 Print Bill
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                      {ordersWithBills.length === 0 && (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                            No invoice sheets have been generated yet. Invoices are generated once vendors finalize pricing.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: NOTIFICATIONS CENTER */}
+            {activeTab === 'notifications' && (
+              <div className="card" style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>🔔 Received Alerts</h3>
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <button className="btn btn-ghost btn-sm text-primary" onClick={handleMarkAllNotifications}>
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {notifications.map(n => (
+                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? '#FAFAFA' : 'var(--sidebar-bg)', border: '1px solid var(--sidebar-border)', borderRadius: '10px' }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '1.2rem' }}>🔔</span>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: n.read ? 500 : 700, color: 'var(--gray-800)' }}>{n.message}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--gray-400)', marginTop: '2px' }}>{new Date(n.timestamp).toLocaleString()}</div>
+                        </div>
+                      </div>
+                      {!n.read && (
+                        <button className="btn btn-ghost btn-sm" style={{ color: colors.accent }} onClick={() => handleMarkNotification(n.id)}>
+                          Check Read
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {notifications.length === 0 && (
+                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)' }}>
+                      No alerts or notifications recorded.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB: PROFILE */}
+            {activeTab === 'profile' && (
+              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>👤 Coordinator Profile</h3>
+                <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Name</label>
+                    <input type="text" className="form-input" value={profileName} onChange={e => setProfileName(e.target.value)} required />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Email Address</label>
+                    <input type="email" className="form-input" value={session.email} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Assigned Department</label>
+                    <input type="text" className="form-input" value={session.department_id || ''} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)', textTransform: 'capitalize' }} />
+                  </div>
+                  <button type="submit" disabled={submitting} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
+                    {submitting ? 'Updating...' : 'Save Profile'}
+                  </button>
+                  {profileMessage && <div style={{ fontSize: '0.8rem', fontWeight: 600, color: profileMessage.includes('successfully') ? '#10B981' : '#EF4444', marginTop: '6px' }}>{profileMessage}</div>}
+                </form>
+              </div>
+            )}
+
+            {/* TAB: SETTINGS */}
+            {activeTab === 'settings' && (
+              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>⚙️ Dashboard Settings</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Preferred Language / भाषा पसंद</label>
+                    <select className="form-input" value={preferredLang} onChange={e => handleLanguageChange(e.target.value)}>
+                      <option value="en">English (English)</option>
+                      <option value="hi">हिन्दी (Hindi)</option>
+                      <option value="gu">ગુજરાતી (Gujarati)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}

@@ -6,7 +6,10 @@ class VendorMenuItemBase(BaseModel):
     name: str
     price: float
     unit: str = "per plate"
+    description: Optional[str] = None
+    category: str = "General"
     available: bool = True
+    active: bool = True
 
 
 class VendorMenuItemCreate(VendorMenuItemBase):

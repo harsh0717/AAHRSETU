@@ -90,6 +90,17 @@ def create_user(
         
     principal_depts = [d.id for d in db_user.managed_departments]
     
+    # Audit log user creation
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="User Created",
+        new_value=f"ID: {db_user.id}, Email: {db_user.email}, Role: {db_user.role}"
+    )
+    
     return UserResponse(
         id=db_user.id,
         name=db_user.name,
@@ -109,7 +120,7 @@ def update_user(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(["admin"]))
+    current_user: User = Depends(deps.get_current_user)
 ) -> Any:
     """
     Update an existing user account (Admin-only).
@@ -120,6 +131,13 @@ def update_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
+        )
+
+    # Restrict users from updating other user accounts unless they are admins
+    if current_user.role != "admin" and current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this profile"
         )
         
     # Check email conflict
@@ -133,12 +151,24 @@ def update_user(
             
     # Update fields
     update_data = payload.model_dump(exclude_unset=True)
+    
+    # If not admin, sanitize update payload to prevent escalation
+    if current_user.role != "admin":
+        update_data.pop("role", None)
+        update_data.pop("department_id", None)
+        update_data.pop("vendor_id", None)
+        update_data.pop("active", None)
+        update_data.pop("principal_depts", None)
     if "password" in update_data and update_data["password"]:
         update_data["password_hash"] = get_password_hash(update_data.pop("password"))
     else:
         update_data.pop("password", None)
         
     principal_depts_list = update_data.pop("principal_depts", None)
+    
+    old_name = db_user.name
+    old_email = db_user.email
+    old_lang = db_user.preferred_language
     
     # Perform update
     user_repo.update(db_user, update_data)
@@ -147,6 +177,18 @@ def update_user(
         user_repo.set_managed_departments(db_user, principal_depts_list)
         
     principal_depts = [d.id for d in db_user.managed_departments]
+    
+    # Audit log user update
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="User Updated",
+        old_value=f"ID: {db_user.id}, Name: {old_name}, Email: {old_email}, Language: {old_lang}",
+        new_value=f"Name: {db_user.name}, Email: {db_user.email}, Language: {db_user.preferred_language}"
+    )
     
     return UserResponse(
         id=db_user.id,
@@ -178,10 +220,24 @@ def delete_user(
         )
         
     user_repo = UserRepository(db)
+    target_user = user_repo.get(user_id)
+    target_email = target_user.email if target_user else str(user_id)
+    
     removed = user_repo.remove(user_id)
     if not removed:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+        
+    # Audit log user deletion
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="User Deleted",
+        old_value=f"ID: {user_id}, Email: {target_email}"
+    )
     return None

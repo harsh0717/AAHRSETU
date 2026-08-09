@@ -61,6 +61,7 @@ export default function OrderDetailsPage() {
 
   // Action wrappers
   async function handleCoordinatorSubmit() {
+    if (!order) return;
     setActioning(true);
     try {
       await submitForApproval(order.id);
@@ -73,6 +74,7 @@ export default function OrderDetailsPage() {
   }
 
   async function handlePrincipalReview(action: 'approve' | 'reject', remarks: string) {
+    if (!order) return;
     setActioning(true);
     try {
       await principalReview(order.id, action, remarks);
@@ -85,6 +87,7 @@ export default function OrderDetailsPage() {
   }
 
   async function handleDCRReview(action: 'approve' | 'reject', remarks: string) {
+    if (!order) return;
     setActioning(true);
     try {
       await dcrReview(order.id, action, remarks);
@@ -97,6 +100,7 @@ export default function OrderDetailsPage() {
   }
 
   async function handleComplete() {
+    if (!order) return;
     setActioning(true);
     try {
       await completeOrder(order.id);
@@ -144,7 +148,10 @@ export default function OrderDetailsPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <Link href={`/${role}`} style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '6px' }}>
+              <Link href={`/${role}`} style={{ color: 'var(--gray-500)', textDecoration: 'none' }}>Dashboard</Link> / <Link href={`/${role}#orders`} style={{ color: 'var(--gray-500)', textDecoration: 'none' }}>Orders</Link> / <span>{order.id}</span>
+            </div>
+            <Link href={`/${role}`} style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
               ← Back to Dashboard
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>

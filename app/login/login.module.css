@@ -9,7 +9,7 @@
 /* Left Hero Section */
 .hero {
   width: 45%;
-  background: linear-gradient(135deg, #0A0A16 0%, #111126 50%, #1A1A3A 100%);
+  background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #2563EB 100%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -130,6 +130,7 @@
   line-height: 1.15;
   letter-spacing: -0.03em;
   margin: 0 0 16px;
+  color: #F8FAFC;
 }
 
 .heroTitle span {

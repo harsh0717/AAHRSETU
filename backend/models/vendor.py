@@ -32,7 +32,10 @@ class VendorMenuItem(Base):
     name = Column(String(150), nullable=False)
     price = Column(Float, nullable=False)
     unit = Column(String(50), default="per plate", nullable=False)
+    description = Column(String(500), nullable=True)
+    category = Column(String(100), default="General", nullable=False)
     available = Column(Boolean, default=True, nullable=False)
+    active = Column(Boolean, default=True, nullable=False)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

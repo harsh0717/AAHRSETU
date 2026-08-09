@@ -43,12 +43,72 @@ export const ROLE_LABELS: Record<string, string> = {
   admin:       'System / Admin',
 };
 
-export const ROLE_COLORS: Record<string, { accent: string; sidebar: string; light: string; text: string }> = {
-  coordinator: { accent: '#2563EB', sidebar: '#1E3A8A', light: '#EFF6FF', text: '#1D4ED8' },
-  principal:   { accent: '#7C3AED', sidebar: '#4C1D95', light: '#F5F3FF', text: '#6D28D9' },
-  dcr:         { accent: '#D97706', sidebar: '#92400E', light: '#FFFBEB', text: '#B45309' },
-  vendor:      { accent: '#059669', sidebar: '#064E3B', light: '#ECFDF5', text: '#047857' },
-  admin:       { accent: '#DC2626', sidebar: '#7F1D1D', light: '#FEF2F2', text: '#B91C1C' },
+export const ROLE_COLORS: Record<string, { 
+  accent: string; 
+  sidebar: string; 
+  sidebarText: string;
+  sidebarTextMuted: string;
+  sidebarHoverBg: string;
+  sidebarActiveBg: string;
+  sidebarBorder: string;
+  light: string; 
+  text: string;
+}> = {
+  coordinator: { 
+    accent: '#2563EB',
+    sidebar: '#EFF6FF',
+    sidebarText: '#1E3A8A',
+    sidebarTextMuted: '#3B82F6',
+    sidebarHoverBg: '#DBEAFE',
+    sidebarActiveBg: '#DBEAFE',
+    sidebarBorder: '#BFDBFE',
+    light: '#EFF6FF', 
+    text: '#1E3A8A' 
+  },
+  principal: { 
+    accent: '#2563EB',
+    sidebar: '#EFF6FF',
+    sidebarText: '#1E3A8A',
+    sidebarTextMuted: '#3B82F6',
+    sidebarHoverBg: '#DBEAFE',
+    sidebarActiveBg: '#DBEAFE',
+    sidebarBorder: '#BFDBFE',
+    light: '#EFF6FF', 
+    text: '#1E3A8A' 
+  },
+  dcr: { 
+    accent: '#2563EB',
+    sidebar: '#EFF6FF',
+    sidebarText: '#1E3A8A',
+    sidebarTextMuted: '#3B82F6',
+    sidebarHoverBg: '#DBEAFE',
+    sidebarActiveBg: '#DBEAFE',
+    sidebarBorder: '#BFDBFE',
+    light: '#EFF6FF', 
+    text: '#1E3A8A' 
+  },
+  vendor: { 
+    accent: '#2563EB',
+    sidebar: '#EFF6FF',
+    sidebarText: '#1E3A8A',
+    sidebarTextMuted: '#3B82F6',
+    sidebarHoverBg: '#DBEAFE',
+    sidebarActiveBg: '#DBEAFE',
+    sidebarBorder: '#BFDBFE',
+    light: '#EFF6FF', 
+    text: '#1E3A8A' 
+  },
+  admin: { 
+    accent: '#2563EB',
+    sidebar: '#EFF6FF',
+    sidebarText: '#1E3A8A',
+    sidebarTextMuted: '#3B82F6',
+    sidebarHoverBg: '#DBEAFE',
+    sidebarActiveBg: '#DBEAFE',
+    sidebarBorder: '#BFDBFE',
+    light: '#EFF6FF', 
+    text: '#1E3A8A' 
+  },
 };
 
 export const ROLE_ICONS: Record<string, string> = {

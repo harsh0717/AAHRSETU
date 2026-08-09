@@ -13,27 +13,42 @@ from backend.repositories.user import UserRepository
 TRANSLATIONS = {
     "en": {
         "new_order": "New order received from {dept} Department: \"{title}\"",
+        "order_submitted": "Master order \"{title}\" has been submitted for approval.",
         "approved": "Your order \"{title}\" has been approved.",
         "rejected": "Your order \"{title}\" has been rejected: {remarks}",
+        "dcr_approved": "DCR has approved your order \"{title}\".",
+        "dcr_rejected": "DCR has rejected your order \"{title}\": {remarks}",
         "mod_requested": "{vendor} has requested a modification for order \"{title}\".",
-        "bill_generated": "Master Invoice generated for order \"{title}\". Total: ₹{amount}",
-        "completed": "Your order \"{title}\" has been marked as completed."
+        "vendor_confirmed": "{vendor} has confirmed pricing for order \"{title}\".",
+        "bill_generated": "Invoice generated for order \"{title}\". Total: ₹{amount}",
+        "completed": "Your order \"{title}\" has been marked as completed.",
+        "administrative": "Administrative notice: {message}"
     },
     "hi": {
         "new_order": "{dept} विभाग से नया ऑर्डर प्राप्त हुआ: \"{title}\"",
+        "order_submitted": "मास्टर ऑर्डर \"{title}\" अनुमोदन के लिए जमा कर दिया गया है।",
         "approved": "आपका ऑर्डर \"{title}\" स्वीकृत हो गया है।",
         "rejected": "आपका ऑर्डर \"{title}\" अस्वीकृत हो गया है: {remarks}",
+        "dcr_approved": "DCR ने आपके ऑर्डर \"{title}\" को मंजूरी दे दी है।",
+        "dcr_rejected": "DCR ने आपके ऑर्डर \"{title}\" को खारिज कर दिया है: {remarks}",
         "mod_requested": "{vendor} ने ऑर्डर \"{title}\" के लिए संशोधन का अनुरोध किया है।",
-        "bill_generated": "ऑर्डर \"{title}\" का मास्टर चालान बनाया गया। कुल: ₹{amount}",
-        "completed": "आपका ऑर्डर \"{title}\" पूर्ण चिह्नित किया गया है।"
+        "vendor_confirmed": "{vendor} ने ऑर्डर \"{title}\" के लिए मूल्य की पुष्टि कर दी है।",
+        "bill_generated": "ऑर्डर \"{title}\" का चालान बनाया गया। कुल: ₹{amount}",
+        "completed": "आपका ऑर्डर \"{title}\" पूर्ण चिह्नित किया गया है।",
+        "administrative": "प्रशासनिक सूचना: {message}"
     },
     "gu": {
         "new_order": "{dept} વિભાગ તરફથી નવો ઑર્ડર મળ્યો: \"{title}\"",
+        "order_submitted": "માસ્ટર ઑર્ડર \"{title}\" મંજૂરી માટે સબમિટ કરવામાં આવ્યો છે.",
         "approved": "તમારો ઑર્ડર \"{title}\" મંજૂર થઈ ગયો છે.",
         "rejected": "તમારો ઑર્ડર \"{title}\" નામંજૂર થયો છે: {remarks}",
+        "dcr_approved": "DCR એ તમારા ઑર્ડર \"{title}\" ને મંજૂરી આપી દીધી છે.",
+        "dcr_rejected": "DCR એ તમારા ઑર્ડર \"{title}\" ને નકારી કાઢ્યો છે: {remarks}",
         "mod_requested": "{vendor} એ ઑર્ડર \"{title}\" માટે સુધારા વિનંતી કરી છે.",
-        "bill_generated": "ઑર્ડર \"{title}\" નો માસ્ટર બિલ બન્યો છે. કુલ: ₹{amount}",
-        "completed": "તમારો ઑર્ડર \"{title}\" પૂર્ણ તરીકે ચિહ્નિત થયો છે."
+        "vendor_confirmed": "{vendor} એ ઑર્ડર \"{title}\" માટે કિંમતની પુષ્ટિ કરી છે.",
+        "bill_generated": "ઑર્ડર \"{title}\" નું બિલ બન્યું છે. કુલ: ₹{amount}",
+        "completed": "તમારો ઑર્ડર \"{title}\" પૂર્ણ તરીકે ચિહ્નિત થયો છે.",
+        "administrative": "વહીવટી સૂચના: {message}"
     }
 }
 
@@ -108,6 +123,7 @@ class NotificationService:
         msg_type: str,
         recipient_id: Optional[int] = None,
         recipient_role: Optional[str] = None,
+        vendor_id: Optional[str] = None,
         order_id: Optional[str] = None,
         vendor_order_id: Optional[str] = None
     ) -> List[Notification]:
@@ -121,8 +137,10 @@ class NotificationService:
             if user:
                 recipients.append(user)
         elif recipient_role:
-            # Fetch users by role
-            recipients = self.db.query(User).filter(User.role == recipient_role, User.active == True).all()
+            query = self.db.query(User).filter(User.role == recipient_role, User.active == True)
+            if recipient_role == "vendor" and vendor_id:
+                query = query.filter(User.vendor_id == vendor_id)
+            recipients = query.all()
 
         for user in recipients:
             lang = user.preferred_language or "en"

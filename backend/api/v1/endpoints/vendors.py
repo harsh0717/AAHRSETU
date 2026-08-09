@@ -50,7 +50,20 @@ def update_vendor_status(
             detail="Vendor not found"
         )
         
+    old_status = vendor.status
     vendor_repo.update(vendor, {"status": payload.status})
+    
+    # Audit log status update
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Vendor Status Updated",
+        old_value=old_status,
+        new_value=payload.status
+    )
     return vendor
 
 

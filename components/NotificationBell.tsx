@@ -35,7 +35,7 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
       try {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-200.wav');
         audio.volume = 0.2;
-        audio.play();
+        audio.play().catch(() => {});
       } catch (e) {
         // Ignored if browser blocks audio autoplay
       }
@@ -149,9 +149,9 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
                 <div style={{ fontSize: '0.8rem' }}>No notifications yet</div>
               </div>
             ) : (
-              notifs.map(n => (
+              notifs.map((n, idx) => (
                 <div
-                  key={n.id}
+                  key={`${n.id}-${idx}`}
                   onClick={() => !n.read && handleRead(n.id)}
                   style={{
                     padding: '12px 16px', borderBottom: '1px solid var(--gray-100)',

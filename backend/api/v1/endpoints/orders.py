@@ -235,6 +235,17 @@ def create_order(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+        
+    # Audit log order creation
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Order Created",
+        new_value=f"Order ID: {order.id}, Title: {order.title}"
+    )
     return read_order_by_id(order.id, db, current_user)
 
 
@@ -266,6 +277,17 @@ async def submit_for_approval(
         order_id=order.id
     )
     
+    # Audit log order submission
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Order Submitted for Approval",
+        old_value=order.status,
+        new_value="Sent for Approval"
+    )
     return read_order_by_id(order.id, db, current_user)
 
 
@@ -316,6 +338,16 @@ async def principal_review(
             order_id=order.id
         )
         
+    # Audit log principal review decision
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action=f"Principal Review: {action.upper()}",
+        new_value=f"Order ID: {order.id}, Remarks: {payload.remarks}"
+    )
     return read_order_by_id(order.id, db, current_user)
 
 
@@ -370,6 +402,16 @@ async def dcr_review(
             order_id=order.id
         )
         
+    # Audit log DCR review decision
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action=f"DCR Review: {action.upper()}",
+        new_value=f"Order ID: {order.id}, Remarks: {payload.remarks}"
+    )
     return read_order_by_id(order.id, db, current_user)
 
 
@@ -403,6 +445,16 @@ async def set_vendor_pricing(
             order_id=vo.master_order_id
         )
         
+    # Audit log pricing confirmation
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Vendor Sub-Order Pricing Confirmed",
+        new_value=f"Sub-order ID: {vo.id}, Bill Amount: {vo.bill_amount}"
+    )
     return read_order_by_id(vo.master_order_id, db, current_user)
 
 
@@ -441,6 +493,16 @@ async def request_vendor_modification(
         vendor_order_id=vo.id
     )
     
+    # Audit log modification request
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Vendor Order Modification Requested",
+        new_value=f"Sub-order ID: {vo.id}, Reason: {payload.reason}, Type: {payload.type}"
+    )
     return read_order_by_id(vo.master_order_id, db, current_user)
 
 
@@ -494,6 +556,16 @@ async def resolve_modification(
             order_id=master.id
         )
         
+    # Audit log resolved modification
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action=f"Modification Resolved: {resolution.upper()}",
+        new_value=f"Sub-order ID: {vendor_order_id}, Master Order ID: {master.id}"
+    )
     return read_order_by_id(master.id, db, current_user)
 
 
@@ -525,6 +597,16 @@ async def complete_order(
         order_id=order.id
     )
     
+    # Audit log completed order
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Order Completed & Settled",
+        new_value=f"Master Order ID: {order.id}, Total Revenue: {order.total_bill_amount}"
+    )
     return read_order_by_id(order.id, db, current_user)
 
 

@@ -8,27 +8,27 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Semantic shortcuts */
-  --bg-main: #FAFBFD;
-  --primary: #4F46E5;
+  --bg-main: #F8FAFC;
+  --primary: #2563EB;
 
-  /* Neutral scale - Stripe/Linear inspired warm/cool grays */
+  /* Neutral scale - Slate/Blue inspired grays */
   --gray-50:  #FAFAFA;
   --gray-100: #F4F4F5;
-  --gray-200: #E4E4E7;
-  --gray-300: #D4D4D8;
-  --gray-400: #A1A1AA;
-  --gray-500: #71717A;
-  --gray-600: #52525B;
-  --gray-700: #3F3F46;
-  --gray-800: #27272A;
-  --gray-900: #18181B;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
 
-  /* Role accents - Soft Professional Tones */
-  --color-coordinator: #3B82F6; /* Soft Blue */
-  --color-principal:   #6366F1; /* Soft Indigo */
-  --color-dcr:         #0EA5E9; /* Cool Cyan */
-  --color-vendor:      #10B981; /* Mint Green */
-  --color-admin:       #8B5CF6; /* Soft Purple */
+  /* Unified Blue Role accents */
+  --color-coordinator: #2563EB;
+  --color-principal:   #2563EB;
+  --color-dcr:         #2563EB;
+  --color-vendor:      #2563EB;
+  --color-admin:       #2563EB;
 
   /* Semantic - Muted Pastel alerts */
   --color-success: #10B981;

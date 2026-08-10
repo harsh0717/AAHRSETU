@@ -54,6 +54,33 @@ const FALLBACK_MENUS: Record<string, MenuItem[]> = {
   ]
 };
 
+export function getMenuItemName(menuItemId: string | null | undefined): string {
+  if (!menuItemId) return 'Canteen Special Item';
+  const cleanId = menuItemId.replace('Item #', '').trim();
+
+  for (const list of Object.values(FALLBACK_MENUS)) {
+    const item = list.find(m => m.id === cleanId || m.id === menuItemId);
+    if (item) return item.name;
+  }
+
+  if (cleanId.includes('v1m1')) return 'Masala Tea';
+  if (cleanId.includes('v1m2')) return 'Samosa';
+  if (cleanId.includes('v1m3')) return 'Kachori';
+  if (cleanId.includes('v1m4')) return 'Coffee';
+  if (cleanId.includes('v1m5')) return 'Cold Drink / Juice';
+  if (cleanId.includes('v2m1')) return 'Veg Lunch';
+  if (cleanId.includes('v2m2')) return 'Idli Sambhar';
+  if (cleanId.includes('v2m3')) return 'Fruit Bowl';
+  if (cleanId.includes('v3m1')) return 'Special Thali';
+  if (cleanId.includes('v4m1')) return 'Grilled Sandwich';
+
+  if (/^[a-z][0-9][a-z][0-9]+/i.test(cleanId) || /^v\d+m\d+/i.test(cleanId)) {
+    return 'Special Canteen Refreshment';
+  }
+
+  return cleanId;
+}
+
 function getLocalVendors(): Vendor[] {
   if (typeof window === 'undefined') return FALLBACK_VENDORS;
   try {
@@ -116,12 +143,30 @@ export async function getOpenVendors(): Promise<Vendor[]> {
   return vendors.filter((v) => v.status === 'open');
 }
 
+export async function getAvailableVendors(): Promise<Vendor[]> {
+  const vendors = await getVendors();
+  const openVendors = vendors.filter((v) => v.status === 'open');
+  const result: Vendor[] = [];
+
+  for (const v of openVendors) {
+    const menu = await getVendorMenu(v.id);
+    const hasAvailableItems = menu.some((m) => m.available && m.active);
+    if (hasAvailableItems) {
+      result.push({ ...v, menu_items: menu.filter((m) => m.available && m.active) });
+    }
+  }
+  return result;
+}
+
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
   const vendors = getLocalVendors();
   const v = vendors.find(item => item.id === vendorId);
   if (v) {
     v.status = status;
     saveLocalVendors(vendors);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status } }));
+    }
   }
 
   try {
@@ -130,6 +175,9 @@ export async function updateVendorStatus(vendorId: string, status: string): Prom
       const idx = vendors.findIndex(item => item.id === vendorId);
       if (idx >= 0) vendors[idx] = res;
       saveLocalVendors(vendors);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status } }));
+      }
       return res;
     }
   } catch (err) {

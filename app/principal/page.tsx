@@ -136,10 +136,13 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
   // Filter orders matching principal's managed departments
   const managedDepts = session.principal_depts || [];
-  const deptOrders = orders.filter(o => o.department_id && managedDepts.includes(o.department_id));
+  const deptOrders = orders.filter(o => !session.department_id || !o.department_id || session.department_id === o.department_id || managedDepts.includes(o.department_id));
 
-  // Tab splits
-  const pendingQueue = deptOrders.filter(o => ['Sent for Approval', 'Principal Reviewing'].includes(o.status));
+  // Orders created by this Principal
+  const myOrders = orders.filter(o => o.created_by_id === session.id || o.order_source === 'PRINCIPAL');
+
+  // Approval queue (Excludes Principal self-created orders to prevent self-approval)
+  const pendingQueue = deptOrders.filter(o => o.created_by_id !== session.id && ['Sent for Approval', 'Principal Reviewing'].includes(o.status));
   const approvedOrders = deptOrders.filter(o => o.history.some(h => h.role === 'principal' && h.action === 'Principal Approved'));
   const rejectedOrders = deptOrders.filter(o => o.history.some(h => h.role === 'principal' && h.action === 'Principal Rejected'));
   const historyOrders = deptOrders.filter(o => !['Created', 'Sent for Approval', 'Principal Reviewing'].includes(o.status));
@@ -147,21 +150,26 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
   // Compute Stats
   const totalPending = pendingQueue.length;
+  const totalMyOrders = myOrders.length;
   const totalApproved = approvedOrders.length;
-  const totalRejected = rejectedOrders.length;
 
   return (
     <AppShell role="principal" currentPath="/principal">
       <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
         
-        {/* Title Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-            {t(`principal.tab_title_${activeTab}`, 'Principal Dashboard')}
-          </h1>
-          <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-            {t(`principal.tab_sub_${activeTab}`, 'Institutional order approvals, rejection records and billing overview.')}
+        {/* Title Section with Create Order Button */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
+              {t(`principal.tab_title_${activeTab}`, 'Principal Dashboard')}
+            </h1>
+            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
+              {t(`principal.tab_sub_${activeTab}`, 'Institutional order approvals, Principal requisitions and budget oversight.')}
+            </div>
           </div>
+          <Link href="/coordinator/orders/create" className="btn btn-primary">
+            ➕ Create Requisition
+          </Link>
         </div>
 
         {/* Loading Spinner */}
@@ -179,8 +187,8 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                   {[
                     { label: t('principal.stats_pending', 'Pending Approvals'), value: totalPending, color: '#818CF8', icon: '⏳' },
+                    { label: t('principal.stats_my_orders', 'My Requisitions'), value: totalMyOrders, color: '#3B82F6', icon: '📝' },
                     { label: t('principal.stats_approved', 'Approved Orders'), value: totalApproved, color: '#10B981', icon: '✅' },
-                    { label: t('principal.stats_rejected', 'Rejected Orders'), value: totalRejected, color: '#EF4444', icon: '❌' }
                   ].map((s, idx) => (
                     <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${s.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
                       <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{s.icon}</div>

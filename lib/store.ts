@@ -2,6 +2,7 @@
 import { api } from './api';
 import { getSession } from './auth';
 import { pushNotification } from './notifications';
+import { getMenuItemName } from './vendors';
 
 export interface OrderItem {
   id?: number;
@@ -43,6 +44,8 @@ export interface ApprovalHistory {
 
 export interface MasterOrder {
   id: string;
+  order_reference?: string;
+  order_source?: 'COORDINATOR' | 'PRINCIPAL' | 'ADMIN';
   title: string;
   purpose: string;
   department_id: string | null;
@@ -196,17 +199,35 @@ const FALLBACK_ORDERS: MasterOrder[] = [
   }
 ];
 
+function sanitizeOrderItems(orders: MasterOrder[]): MasterOrder[] {
+  return orders.map(o => ({
+    ...o,
+    order_reference: o.order_reference || `AS-2026-${o.id.replace(/[^0-9]/g, '').slice(-4) || '0101'}`,
+    vendor_orders: o.vendor_orders.map(vo => ({
+      ...vo,
+      items: vo.items.map(it => {
+        const resolvedName = getMenuItemName(it.name) !== it.name ? getMenuItemName(it.name) : getMenuItemName(it.menu_item_id);
+        return {
+          ...it,
+          name: resolvedName
+        };
+      })
+    }))
+  }));
+}
+
 function getLocalOrders(): MasterOrder[] {
-  if (typeof window === 'undefined') return FALLBACK_ORDERS;
+  if (typeof window === 'undefined') return sanitizeOrderItems(FALLBACK_ORDERS);
   try {
     const raw = localStorage.getItem(LOCAL_ORDERS_KEY);
     if (!raw) {
       localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(FALLBACK_ORDERS));
-      return FALLBACK_ORDERS;
+      return sanitizeOrderItems(FALLBACK_ORDERS);
     }
-    return JSON.parse(raw);
+    const list = JSON.parse(raw);
+    return sanitizeOrderItems(Array.isArray(list) ? list : FALLBACK_ORDERS);
   } catch {
-    return FALLBACK_ORDERS;
+    return sanitizeOrderItems(FALLBACK_ORDERS);
   }
 }
 
@@ -230,6 +251,8 @@ export async function getOrders(): Promise<MasterOrder[]> {
   } catch (err) {
     orders = getLocalOrders();
   }
+
+  orders = sanitizeOrderItems(orders);
 
   const session = getSession();
   if (!session) return orders;
@@ -261,54 +284,102 @@ export async function createMasterOrder(orderData: {
   items: { menu_item_id: string; quantity: number }[];
 }): Promise<MasterOrder> {
   const session = getSession();
+
+  // Validate target vendor open status
+  const targetMenuItemId = orderData.items[0]?.menu_item_id || 'v1m1';
+  const targetVendorId = targetMenuItemId.startsWith('v2') ? 'v2' : targetMenuItemId.startsWith('v3') ? 'v3' : targetMenuItemId.startsWith('v4') ? 'v4' : 'v1';
+  
+  if (typeof window !== 'undefined') {
+    const rawVendors = localStorage.getItem('aharsetu_vendors_v3');
+    if (rawVendors) {
+      try {
+        const vendorList = JSON.parse(rawVendors);
+        const targetV = vendorList.find((v: any) => v.id === targetVendorId);
+        if (targetV && targetV.status !== 'open') {
+          throw new Error('Vendor is currently unavailable for new orders.');
+        }
+      } catch (err: any) {
+        if (err.message?.includes('unavailable')) throw err;
+      }
+    }
+  }
+
   const now = new Date().toISOString();
   const newId = 'ORD-' + String(Date.now()).slice(-4);
   const deptId = session?.department_id || 'diploma';
   const deptLabel = deptId === 'diploma' ? 'Diploma Department' : deptId === 'degree' ? 'Degree Department' : `${deptId.toUpperCase()} Department`;
 
-  // Calculate bill total and item snapshot from menu prices
+  // Calculate bill total and group items snapshot by vendor ID
+  const vendorNameMap: Record<string, string> = {
+    v1: 'Sharma Canteen',
+    v2: 'Fresh Bites',
+    v3: 'Hot Meals',
+    v4: 'Quick Snacks'
+  };
+
+  const itemsByVendor: Record<string, any[]> = {};
   let totalCalculated = 0;
-  const itemsSnapshot = orderData.items.map((it, idx) => {
+
+  orderData.items.forEach((it, idx) => {
+    let vId = 'v1';
+    if (it.menu_item_id.startsWith('v2')) vId = 'v2';
+    else if (it.menu_item_id.startsWith('v3')) vId = 'v3';
+    else if (it.menu_item_id.startsWith('v4')) vId = 'v4';
+
     const unitPrice = 15.0; // Standard menu unit price snapshot
     const itemSubtotal = unitPrice * it.quantity;
     totalCalculated += itemSubtotal;
-    return {
+    const readableName = getMenuItemName(it.menu_item_id);
+
+    if (!itemsByVendor[vId]) itemsByVendor[vId] = [];
+    itemsByVendor[vId].push({
       id: idx + 100,
-      name: `Item #${it.menu_item_id}`,
+      name: readableName,
       quantity: it.quantity,
       price: unitPrice,
       menu_item_id: it.menu_item_id
+    });
+  });
+
+  const vendorOrdersSnapshot = Object.keys(itemsByVendor).map((vId, idx) => {
+    const vItems = itemsByVendor[vId];
+    const vTotal = vItems.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+    return {
+      id: `VORD-${newId}-${idx + 1}`,
+      master_order_id: newId,
+      vendor_id: vId,
+      vendor_name: vendorNameMap[vId] || `Vendor ${vId.toUpperCase()}`,
+      status: 'Pending',
+      bill_amount: vTotal,
+      invoice_number: null,
+      items: vItems
     };
   });
 
+  const isPrincipal = session?.role === 'principal';
+  const initialStatus = isPrincipal ? 'Principal Approved' : 'Sent for Approval';
+  const orderSource = isPrincipal ? 'PRINCIPAL' : 'COORDINATOR';
+  const refNo = `AS-2026-${String(Date.now()).slice(-4)}`;
+
   const newOrder: MasterOrder = {
     id: newId,
+    order_reference: refNo,
+    order_source: orderSource,
     title: orderData.title,
     purpose: orderData.purpose,
     department_id: deptId,
     department_label: deptLabel,
-    created_by_id: session?.id || 8,
-    created_by_name: session?.name || 'Priya Sharma',
-    status: 'Sent for Approval',
+    created_by_id: session?.id || (isPrincipal ? 3 : 8),
+    created_by_name: session?.name || (isPrincipal ? 'Dr. Arvind Mehta' : 'Priya Sharma'),
+    status: initialStatus,
     total_bill_amount: totalCalculated,
     bill_generated_at: null,
     created_at: now,
     updated_at: now,
-    vendor_orders: [
-      {
-        id: `VORD-${newId}-1`,
-        master_order_id: newId,
-        vendor_id: 'v1',
-        vendor_name: 'Sharma Canteen',
-        status: 'Pending',
-        bill_amount: totalCalculated,
-        invoice_number: null,
-        items: itemsSnapshot
-      }
-    ],
+    vendor_orders: vendorOrdersSnapshot,
     history: [
-      { action: 'Order Created', role: 'coordinator', user_name: session?.name || 'Coordinator', remarks: 'Requisition created', timestamp: now, master_order_id: newId },
-      { action: 'Submitted for Approval', role: 'coordinator', user_name: session?.name || 'Coordinator', remarks: 'Sent to Principal for review', timestamp: now, master_order_id: newId }
+      { action: 'Order Created', role: session?.role || 'coordinator', user_name: session?.name || 'User', remarks: `Requisition created (${refNo})`, timestamp: now, master_order_id: newId },
+      { action: isPrincipal ? 'Submitted directly for DCR Audit' : 'Submitted for Principal Approval', role: session?.role || 'coordinator', user_name: session?.name || 'User', remarks: isPrincipal ? 'Forwarded to DCR for budget clearance' : 'Sent to Principal for review', timestamp: now, master_order_id: newId }
     ]
   };
 
@@ -320,7 +391,11 @@ export async function createMasterOrder(orderData: {
       if (idx >= 0) localList[idx] = res;
       else localList.unshift(res);
       saveLocalOrders(localList);
-      pushNotification(`New requisition ${res.id} submitted for approval.`, 'principal', res.id);
+      if (isPrincipal) {
+        pushNotification(`New requisition ${res.id} created by Principal requiring DCR audit.`, 'dcr', res.id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
+      } else {
+        pushNotification(`New requisition ${res.id} submitted for approval.`, 'principal', res.id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
+      }
       return res;
     }
   } catch (err) {
@@ -330,7 +405,11 @@ export async function createMasterOrder(orderData: {
   const localList = getLocalOrders();
   localList.unshift(newOrder);
   saveLocalOrders(localList);
-  pushNotification(`New requisition ${newId} submitted for approval.`, 'principal', newId);
+  if (isPrincipal) {
+    pushNotification(`New requisition ${newId} created by Principal requiring DCR audit.`, 'dcr', newId, { type: 'ORDER_SUBMITTED_FOR_DCR' });
+  } else {
+    pushNotification(`New requisition ${newId} submitted for approval.`, 'principal', newId, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
+  }
   return newOrder;
 }
 
@@ -471,22 +550,75 @@ export async function setVendorPrices(
       });
       vo.bill_amount = total;
 
-      const allConfirmed = o.vendor_orders.every(v => v.status === 'Vendor Confirmed' || v.bill_amount > 0);
-      if (allConfirmed) {
+      // Master order is ONLY completed when ALL active non-rejected vendors have confirmed
+      const activeVOs = o.vendor_orders.filter(v => v.status !== 'Vendor Rejected');
+      const allActiveConfirmed = activeVOs.length > 0 && activeVOs.every(v => v.status === 'Vendor Confirmed');
+
+      if (allActiveConfirmed) {
         o.status = 'Completed';
         o.bill_generated_at = new Date().toISOString();
-        o.total_bill_amount = o.vendor_orders.reduce((sum, v) => sum + v.bill_amount, 0);
-        pushNotification(`Requisition ${o.id} automatically completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'coordinator', o.id);
-        pushNotification(`Order ${o.id} automatically completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'principal', o.id);
-        pushNotification(`Order ${o.id} automatically completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'dcr', o.id);
+        const confirmedVOs = o.vendor_orders.filter(v => v.status === 'Vendor Confirmed');
+        o.total_bill_amount = confirmedVOs.reduce((sum, v) => sum + v.bill_amount, 0);
+        pushNotification(`Requisition ${o.id} automatically completed after all vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'coordinator', o.id);
+        pushNotification(`Order ${o.id} completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'principal', o.id);
+        pushNotification(`Order ${o.id} completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'dcr', o.id);
       } else {
-        pushNotification(`Vendor ${vo.vendor_name} confirmed pricing for sub-order ${vo.id}.`, 'coordinator', o.id);
+        o.status = 'Vendor Processing';
+        pushNotification(`Vendor ${vo.vendor_name} confirmed sub-order ${vo.id}. Awaiting remaining canteen confirmations.`, 'coordinator', o.id);
       }
+
       o.history.push({
-        action: allConfirmed ? 'Order Automatically Completed' : 'Vendor Confirmed Sub-Order',
+        action: allActiveConfirmed ? 'Order Automatically Completed' : 'Vendor Confirmed Sub-Order',
         role: 'vendor',
         user_name: vo.vendor_name || 'Vendor',
         remarks: `Invoice ${vo.invoice_number} generated. Subtotal ₹${total}`,
+        timestamp: new Date().toISOString(),
+        master_order_id: o.id
+      });
+      updatedMaster = o;
+      break;
+    }
+  }
+  if (updatedMaster) {
+    saveLocalOrders(localList);
+    return updatedMaster;
+  }
+  throw new Error('Vendor order not found');
+}
+
+export async function rejectVendorOrder(
+  vendorOrderId: string,
+  reason: string
+): Promise<MasterOrder> {
+  const localList = getLocalOrders();
+  let updatedMaster: MasterOrder | null = null;
+  for (const o of localList) {
+    const vo = o.vendor_orders.find(v => v.id === vendorOrderId);
+    if (vo) {
+      vo.status = 'Vendor Rejected';
+      vo.bill_amount = 0;
+
+      const activeVOs = o.vendor_orders.filter(v => v.status !== 'Vendor Rejected');
+      const confirmedVOs = o.vendor_orders.filter(v => v.status === 'Vendor Confirmed');
+
+      if (activeVOs.length === 0) {
+        o.status = 'Vendor Rejected';
+        pushNotification(`Requisition ${o.id} was rejected by all canteen vendors. Reason: ${reason}`, 'coordinator', o.id);
+      } else if (confirmedVOs.length > 0 && activeVOs.every(v => v.status === 'Vendor Confirmed')) {
+        o.status = 'Completed';
+        o.bill_generated_at = new Date().toISOString();
+        o.total_bill_amount = confirmedVOs.reduce((sum, v) => sum + v.bill_amount, 0);
+        pushNotification(`Requisition ${o.id} completed with ${confirmedVOs.length} confirmed canteen bill(s). Sub-order ${vo.id} rejected by ${vo.vendor_name}.`, 'coordinator', o.id);
+      } else {
+        o.status = 'Vendor Processing';
+        pushNotification(`Vendor ${vo.vendor_name} rejected sub-order ${vo.id}. Reason: ${reason}`, 'coordinator', o.id);
+      }
+
+      o.history.push({
+        action: 'Vendor Rejected Sub-Order',
+        role: 'vendor',
+        user_name: vo.vendor_name || 'Vendor',
+        remarks: `Sub-order rejected. Reason: ${reason}`,
         timestamp: new Date().toISOString(),
         master_order_id: o.id
       });

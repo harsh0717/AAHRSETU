@@ -8,6 +8,9 @@ import { NAVIGATION_CONFIG } from '@/lib/navigationConfig';
 import { useI18n } from '@/lib/i18n';
 import NotificationBell from './NotificationBell';
 import LanguageSwitcher from './LanguageSwitcher';
+import PushPrompt from './PushPrompt';
+import CommandPalette from './CommandPalette';
+import ToastContainer from './Toast';
 import styles from './AppShell.module.css';
 
 interface AppShellProps {
@@ -22,6 +25,7 @@ export default function AppShell({ children, role }: AppShellProps) {
   const { t } = useI18n();
   const [session, setSession] = useState<UserProfile | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showCmdPalette, setShowCmdPalette] = useState(false);
 
   useEffect(() => {
     const s = getSession();
@@ -30,6 +34,10 @@ export default function AppShell({ children, role }: AppShellProps) {
       return;
     }
     setSession(s);
+
+    const handleOpenCmd = () => setShowCmdPalette(true);
+    window.addEventListener('open_command_palette', handleOpenCmd);
+    return () => window.removeEventListener('open_command_palette', handleOpenCmd);
   }, [router]);
 
   async function handleLogout() {
@@ -136,6 +144,25 @@ export default function AppShell({ children, role }: AppShellProps) {
             </div>
           </div>
           <div className={styles.headerRight}>
+            <button
+              onClick={() => setShowCmdPalette(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px',
+                background: '#F1F5F9',
+                border: '1px solid #CBD5E1',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: '#475569',
+                cursor: 'pointer'
+              }}
+            >
+              <span>🔍</span>
+              <span>Search (Cmd + K)</span>
+            </button>
             <LanguageSwitcher />
             {session && <NotificationBell userId={session.id} role={session.role} />}
             <Link href={`/${role}/profile`} className={styles.headerUser} style={{ textDecoration: 'none', cursor: 'pointer' }}>
@@ -153,6 +180,9 @@ export default function AppShell({ children, role }: AppShellProps) {
         {/* Content */}
         <main className={styles.content}>{children}</main>
       </div>
+      <CommandPalette isOpen={showCmdPalette} onClose={() => setShowCmdPalette(false)} />
+      <ToastContainer />
+      <PushPrompt />
     </div>
   );
 }

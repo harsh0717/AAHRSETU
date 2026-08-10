@@ -18,24 +18,33 @@ class ApiClient {
 
   private getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return sessionStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
   private getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return sessionStorage.getItem(REFRESH_TOKEN_KEY);
   }
 
   public setTokens(access: string, refresh: string) {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(ACCESS_TOKEN_KEY, access);
-    localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, access);
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+    // Purge any legacy shared localStorage keys
+    try {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+    } catch {}
   }
 
   public clearTokens() {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    try {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+    } catch {}
   }
 
   private subscribeTokenRefresh(cb: (token: string) => void) {
@@ -84,10 +93,6 @@ class ApiClient {
       return data.access_token;
     } catch (err) {
       this.isRefreshing = false;
-      this.clearTokens();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login?expired=1';
-      }
       throw err;
     }
   }
@@ -117,26 +122,15 @@ class ApiClient {
 
     if (response.status === 401) {
       if (token) {
-        // Access token expired, attempt refresh
         try {
           const newToken = await this.refreshTokens();
           headers.set('Authorization', `Bearer ${newToken}`);
           const retryResponse = await fetch(url, { ...options, headers });
           return this.handleResponse<T>(retryResponse);
         } catch (err) {
-          this.clearTokens();
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('aharsetu_session');
-            window.location.href = '/login?expired=1';
-          }
           throw { message: 'Session expired. Please log in again.', status: 401 } as ApiError;
         }
       } else {
-        this.clearTokens();
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('aharsetu_session');
-          window.location.href = '/login?expired=1';
-        }
         throw { message: 'Not authenticated', status: 401 } as ApiError;
       }
     }
@@ -146,13 +140,6 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      if (response.status === 401) {
-        this.clearTokens();
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('aharsetu_session');
-          window.location.href = '/login?expired=1';
-        }
-      }
       let message = 'An error occurred';
       let code = undefined;
       try {

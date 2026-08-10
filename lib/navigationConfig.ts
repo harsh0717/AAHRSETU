@@ -23,6 +23,7 @@ export const NAVIGATION_CONFIG: Record<string, NavItem[]> = {
   ],
   principal: [
     { id: 'dashboard',    labelKey: 'nav.dashboard',        href: '/principal',                   icon: '🏠', role: 'principal' },
+    { id: 'create',       labelKey: 'nav.create_order',     href: '/coordinator/orders/create',   icon: '➕', role: 'principal' },
     { id: 'queue',        labelKey: 'nav.approval_queue',   href: '/principal/approvals',         icon: '⏳', role: 'principal' },
     { id: 'approved',     labelKey: 'nav.approved_orders',  href: '/principal/approved',          icon: '✅', role: 'principal' },
     { id: 'rejected',     labelKey: 'nav.rejected_orders',  href: '/principal/rejected',          icon: '❌', role: 'principal' },

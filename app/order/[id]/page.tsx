@@ -12,6 +12,7 @@ import {
   resolveModification, MasterOrder, VendorOrder
 } from '@/lib/store';
 import { useI18n } from '@/lib/i18n';
+import { showToast } from '@/components/Toast';
 import Link from 'next/link';
 
 export default function OrderDetailsPage() {
@@ -40,11 +41,6 @@ export default function OrderDetailsPage() {
       }
       if (s) {
         if (s.role === 'coordinator' && o.created_by_id !== s.id && o.department_id !== s.department_id) {
-          setForbidden(true);
-          setLoading(false);
-          return;
-        }
-        if (s.role === 'principal' && s.department_id && o.department_id !== s.department_id) {
           setForbidden(true);
           setLoading(false);
           return;
@@ -119,9 +115,10 @@ export default function OrderDetailsPage() {
     setActioning(true);
     try {
       await principalReview(order.id, action, remarks);
+      showToast(action === 'approve' ? 'Requisition approved successfully & forwarded for DCR Audit' : 'Requisition rejected by Principal', action === 'approve' ? 'success' : 'warning');
       await loadOrder();
     } catch (e: any) {
-      alert(e.message || 'Error executing review');
+      showToast(e.message || 'Error executing review', 'error');
     } finally {
       setActioning(false);
     }

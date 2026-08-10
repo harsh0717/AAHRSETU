@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { login, getSession } from '@/lib/auth';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
@@ -25,8 +25,10 @@ const DEMO_ACCOUNTS = [
   { label: 'Fresh Bites Canteen', email: 'vendor2@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: '🍽️' },
 ];
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams ? searchParams.get('returnTo') : null;
   const { t, lang, setLang } = useI18n();
 
   // Multi-step form states
@@ -43,9 +45,13 @@ export default function LoginPage() {
   useEffect(() => {
     const session = getSession();
     if (session?.role) {
-      router.replace('/' + session.role);
+      if (returnTo && returnTo.startsWith('/')) {
+        router.replace(returnTo);
+      } else {
+        router.replace('/' + session.role);
+      }
     }
-  }, [router]);
+  }, [router, returnTo]);
 
   const deptRequired = ['coordinator', 'principal'].includes(role);
 
@@ -91,7 +97,11 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/' + result.user?.role);
+    if (returnTo && returnTo.startsWith('/')) {
+      router.push(returnTo);
+    } else {
+      router.push('/' + result.user?.role);
+    }
   }
 
   function fillDemo(account: any) {
@@ -330,5 +340,20 @@ export default function LoginPage() {
       </section>
       
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAFAF9' }}>
+        <div style={{ textAlign: 'center', color: 'var(--gray-500)' }}>
+          <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
+          <div>Loading AharSetu Portal...</div>
+        </div>
+      </div>
+    }>
+      <LoginFormContent />
+    </Suspense>
   );
 }

@@ -7,6 +7,7 @@ import { getOrderById, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
 import { COLLEGE_INFO } from '@/lib/constants';
 import { jsPDF } from 'jspdf';
 import { useI18n } from '@/lib/i18n';
+import { generateInvoiceQRCodeDataURL } from '@/lib/qr';
 
 function numToWords(n: number): string {
   if (n === 0) return 'Zero';
@@ -67,6 +68,7 @@ export default function BillPage() {
   const invoiceNo = selectedVO ? (selectedVO.invoice_number || `INV-${order.id}-${selectedVO.vendor_id.toUpperCase()}`) : `INV-${order.id}-MASTER`;
   const items = selectedVO ? selectedVO.items : completedVOs.flatMap((vo: VendorOrder) => vo.items.map((item: OrderItem) => ({ ...item, vendorName: vo.vendor_name })));
   const totalAmount = selectedVO ? selectedVO.bill_amount : order.total_bill_amount;
+  const qrDataUrl = generateInvoiceQRCodeDataURL(invoiceNo);
 
   // Generate jsPDF A4 Document
   function generatePDF() {
@@ -115,18 +117,28 @@ export default function BillPage() {
     doc.text(`Date of Issue: ${new Date(order.bill_generated_at || order.updated_at).toLocaleDateString('en-IN')}`, 10, 64);
     doc.text(`Department: ${order.department_label || 'All'}`, 10, 70);
 
-    // Right column metadata
-    doc.text(`Coordinator: ${order.created_by_name || 'N/A'}`, 130, 52);
+    // Middle column metadata (Safely positioned at X=90 so it never overlaps QR box)
+    doc.text(`Coordinator: ${order.created_by_name || 'N/A'}`, 90, 52);
     const principalApproval = order.history.find(h => h.role === 'principal');
     const dcrApproval = order.history.find(h => h.role === 'dcr');
-    doc.text(`Principal: Approved by ${principalApproval?.user_name || 'Verified'}`, 130, 58);
-    doc.text(`DCR Audit: Approved by ${dcrApproval?.user_name || 'Verified'}`, 130, 64);
+    doc.text(`Principal: Approved by ${principalApproval?.user_name || 'Verified'}`, 90, 58);
+    doc.text(`DCR Audit: Approved by ${dcrApproval?.user_name || 'Verified'}`, 90, 64);
+
+    // QR Code Box at Far Right (X=168, Y=42)
+    doc.addImage(qrDataUrl, 'PNG', 168, 42, 26, 26);
+    doc.setDrawColor(212, 212, 216);
+    doc.rect(167, 41, 28, 28);
+    doc.setFontSize(6);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text('SCAN TO VERIFY', 181, 72, { align: 'center' });
 
     // Items Table Header
     doc.setFillColor(244, 244, 245);
     doc.rect(10, 78, 190, 8, 'F');
     doc.setFont('Helvetica', 'bold');
     doc.setTextColor(24, 24, 38);
+    doc.setFontSize(9);
     doc.text('Sr.', 12, 83);
     doc.text('Item Description', 25, 83);
     if (!selectedVO) doc.text('Vendor', 100, 83);
@@ -294,12 +306,12 @@ export default function BillPage() {
           </div>
 
           {/* Title & Metadata */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '20px' }}>
+            <div style={{ flex: 1, minWidth: '280px' }}>
               <h3 style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 800, margin: '0 0 10px' }}>
                 {title.toUpperCase()}
               </h3>
-              <table style={{ fontSize: '0.8125rem', borderCollapse: 'collapse' }}>
+              <table style={{ fontSize: '0.8125rem', borderCollapse: 'collapse', width: '100%' }}>
                 <tbody>
                   <tr>
                     <td style={{ color: 'var(--gray-500)', paddingRight: '12px', paddingBottom: '4px' }}>Invoice No:</td>
@@ -319,18 +331,35 @@ export default function BillPage() {
                     <td style={{ color: 'var(--gray-500)', paddingRight: '12px', paddingBottom: '4px' }}>Department:</td>
                     <td style={{ fontWeight: 600 }}>{order.department_label || 'All'}</td>
                   </tr>
+                  <tr>
+                    <td style={{ color: 'var(--gray-500)', paddingRight: '12px', paddingBottom: '4px' }}>Coordinator:</td>
+                    <td style={{ fontWeight: 600 }}>{order.created_by_name || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ color: 'var(--gray-500)', paddingRight: '12px', paddingBottom: '4px' }}>Principal:</td>
+                    <td style={{ fontWeight: 600, color: '#16A34A' }}>Approved by Dr. Arvind Mehta</td>
+                  </tr>
+                  <tr>
+                    <td style={{ color: 'var(--gray-500)', paddingRight: '12px', paddingBottom: '4px' }}>DCR Audit:</td>
+                    <td style={{ fontWeight: 600, color: '#16A34A' }}>Approved by S. Patil</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{
-                width: '70px', height: '70px', border: '1px solid var(--gray-200)',
-                display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.45rem', color: 'var(--gray-400)', background: 'var(--gray-50)'
-              }}>
-                <span style={{ fontSize: '1rem', marginBottom: '4px' }}>🔲</span>
-                QR SECURE
+            <div style={{ textAlign: 'center', background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+              <Link href={`/verify/invoice/${invoiceNo}`} target="_blank" style={{ textDecoration: 'none' }}>
+                <img
+                  src={qrDataUrl}
+                  alt="Invoice Verification QR Code"
+                  style={{ width: '96px', height: '96px', display: 'block', margin: '0 auto 6px', borderRadius: '4px' }}
+                />
+              </Link>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#2563EB', letterSpacing: '0.5px' }}>
+                SCAN TO VERIFY
+              </div>
+              <div style={{ fontSize: '0.6rem', color: '#64748B', marginTop: '2px' }}>
+                QR Secure Authenticator
               </div>
             </div>
           </div>

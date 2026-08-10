@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { getNotifications, markAllRead, markNotificationRead, NotificationItem } from '@/lib/notifications';
 import { useWebSocket } from '@/lib/useWebSocket';
 import { useI18n } from '@/lib/i18n';
@@ -10,6 +11,7 @@ interface NotificationBellProps {
 }
 
 export default function NotificationBell({ userId, role }: NotificationBellProps) {
+  const router = useRouter();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [notifs, setNotifs] = useState<NotificationItem[]>([]);
@@ -169,11 +171,17 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
               notifs.map((n, idx) => (
                 <div
                   key={`${n.id}-${idx}`}
-                  onClick={() => !n.read && handleRead(n.id)}
+                  onClick={() => {
+                    handleRead(n.id);
+                    setOpen(false);
+                    if (n.action_url) {
+                      router.push(n.action_url);
+                    }
+                  }}
                   style={{
                     padding: '12px 16px', borderBottom: '1px solid var(--gray-100)',
                     background: n.read ? 'white' : '#F0F9FF',
-                    cursor: n.read ? 'default' : 'pointer',
+                    cursor: 'pointer',
                     display: 'flex', gap: '10px',
                     transition: 'background 0.15s'
                   }}
@@ -191,8 +199,13 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
                     }}>
                       {n.message}
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--gray-400)', marginTop: '4px' }}>
-                      {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--gray-400)' }}>
+                        {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#2563EB', fontWeight: 700 }}>
+                        {n.action_label || 'View Details →'}
+                      </span>
                     </div>
                   </div>
                 </div>

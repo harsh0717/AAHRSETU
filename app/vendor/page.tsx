@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, UserProfile, updateSessionLanguage } from '@/lib/auth';
-import { getOrders, setVendorPrices, requestVendorModification, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
+import { getOrders, setVendorPrices, requestVendorModification, rejectVendorOrder, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
 import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, MenuItem, Vendor } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
@@ -308,8 +308,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     if (confirm('Reject this canteen order?')) {
       setSaving(true);
       try {
-        await requestVendorModification(vendorOrderId, 'Vendor unable to fulfill kitchen order.', 'major');
-        alert('Order rejected & returned for review.');
+        await rejectVendorOrder(vendorOrderId, 'Vendor unable to fulfill kitchen order.');
+        alert('Canteen sub-order rejected successfully.');
         await loadData(vendorId);
       } catch (e: any) {
         alert(e.message || 'Error rejecting order.');

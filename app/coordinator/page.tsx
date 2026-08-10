@@ -85,6 +85,18 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     setProfileName(s.name);
     setPreferredLang(s.preferred_language || 'en');
     loadData();
+
+    const handleStatusChange = () => {
+      getAvailableMenuByVendor().then(mList => setMenuByVendor(mList)).catch(() => {});
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
+      }
+    };
   }, []);
 
   // Listen to hash changes for sidebar navigation

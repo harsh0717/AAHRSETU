@@ -1,5 +1,5 @@
-// ── AharSetu Enterprise Authentication & User Service ─────────────────────────
 import { api } from './api';
+import { updateVendorStatus } from './vendors';
 
 const SESSION_KEY = 'aharsetu_session';
 
@@ -221,6 +221,16 @@ export async function login(payload: any): Promise<{ success: boolean; user?: Us
 }
 
 export async function logout() {
+  const session = getSession();
+  if (session && session.role === 'vendor') {
+    const vendorId = session.vendor_id || 'v1';
+    try {
+      updateVendorStatus(vendorId, 'closed');
+    } catch (e) {
+      console.warn('[AUTH] Automated vendor status close on logout failed:', e);
+    }
+  }
+
   const refresh = typeof window !== 'undefined' ? localStorage.getItem('aharsetu_refresh_token') : null;
   if (refresh && !refresh.startsWith('mock-token')) {
     try {
@@ -240,19 +250,30 @@ export async function logout() {
 export function getSession(): UserProfile | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(SESSION_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
 export function setSession(session: UserProfile) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  // Purge any legacy shared localStorage auth objects
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('aharsetu_access_token');
+    localStorage.removeItem('aharsetu_refresh_token');
+  } catch {}
 }
 
 export function clearSession() {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('aharsetu_access_token');
+    localStorage.removeItem('aharsetu_refresh_token');
+  } catch {}
 }
 
 export async function updateSessionLanguage(lang: string) {

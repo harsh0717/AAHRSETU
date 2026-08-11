@@ -168,12 +168,13 @@ export async function toggleDepartmentStatus(id: string, active: boolean): Promi
 // ── Authentication & Session ──────────────────────────────────────────────────
 
 export async function login(payload: any): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
+  const rememberDevice = Boolean(payload.remember_device);
   try {
     const data = await api.post<any>('/auth/login', payload);
     if (data && data.access_token && data.user) {
       api.setTokens(data.access_token, data.refresh_token);
       const sessionUser: UserProfile = data.user;
-      setSession(sessionUser);
+      setSession(sessionUser, rememberDevice);
       if (typeof window !== 'undefined') {
         localStorage.setItem('aharsetu_lang', sessionUser.preferred_language || 'en');
       }
@@ -192,7 +193,7 @@ export async function login(payload: any): Promise<{ success: boolean; user?: Us
     
     const mockToken = `mock-token-${userToUse.id}-${Date.now()}`;
     api.setTokens(mockToken, mockToken);
-    setSession(userToUse);
+    setSession(userToUse, rememberDevice);
     if (typeof window !== 'undefined') {
       localStorage.setItem('aharsetu_lang', userToUse.preferred_language || 'en');
     }
@@ -216,7 +217,7 @@ export async function login(payload: any): Promise<{ success: boolean; user?: Us
 
   const mockToken = `mock-token-${demoSession.id}-${Date.now()}`;
   api.setTokens(mockToken, mockToken);
-  setSession(demoSession);
+  setSession(demoSession, rememberDevice);
   return { success: true, user: demoSession };
 }
 
@@ -251,19 +252,36 @@ export function getSession(): UserProfile | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (raw) return JSON.parse(raw);
+    
+    // Check persistent device session if sessionStorage is uninitialized in new tab/browser restart
+    const isRemembered = localStorage.getItem('aharsetu_remember_device') === 'true';
+    if (isRemembered) {
+      const pRaw = localStorage.getItem('aharsetu_persistent_session');
+      if (pRaw) {
+        const pUser = JSON.parse(pRaw);
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(pUser));
+        return pUser;
+      }
+    }
+    return null;
   } catch { return null; }
 }
 
-export function setSession(session: UserProfile) {
+export function setSession(session: UserProfile, rememberDevice = false) {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  // Purge any legacy shared localStorage auth objects
-  try {
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem('aharsetu_access_token');
-    localStorage.removeItem('aharsetu_refresh_token');
-  } catch {}
+  if (rememberDevice) {
+    try {
+      localStorage.setItem('aharsetu_remember_device', 'true');
+      localStorage.setItem('aharsetu_persistent_session', JSON.stringify(session));
+    } catch {}
+  } else {
+    try {
+      localStorage.removeItem('aharsetu_remember_device');
+      localStorage.removeItem('aharsetu_persistent_session');
+    } catch {}
+  }
 }
 
 export function clearSession() {
@@ -271,6 +289,8 @@ export function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
   try {
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('aharsetu_remember_device');
+    localStorage.removeItem('aharsetu_persistent_session');
     localStorage.removeItem('aharsetu_access_token');
     localStorage.removeItem('aharsetu_refresh_token');
   } catch {}

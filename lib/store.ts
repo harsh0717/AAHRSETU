@@ -258,9 +258,10 @@ export async function getOrders(): Promise<MasterOrder[]> {
   if (!session) return orders;
 
   if (session.role === 'coordinator') {
-    return orders.filter(o => o.created_by_id === session.id || (session.department_id && o.department_id === session.department_id));
+    return orders.filter(o => o.created_by_id === session.id || o.created_by_name === session.name || (session.department_id && o.department_id === session.department_id));
   } else if (session.role === 'principal') {
-    return orders.filter(o => !session.department_id || o.department_id === session.department_id);
+    // Principals can view all campus requisitions across departments
+    return orders;
   } else if (session.role === 'vendor') {
     return orders.filter(o => o.vendor_orders.some(v => v.vendor_id === session.vendor_id || (session.name && v.vendor_name?.toLowerCase().includes(session.name.toLowerCase()))));
   }

@@ -7,7 +7,7 @@ import { getOrderById, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
 import { COLLEGE_INFO } from '@/lib/constants';
 import { jsPDF } from 'jspdf';
 import { useI18n } from '@/lib/i18n';
-import { generateInvoiceQRCodeDataURL } from '@/lib/qr';
+import { generateInvoiceQRCodeDataURL, generateInvoiceQRCodePNGDataURL } from '@/lib/qr';
 
 function numToWords(n: number): string {
   if (n === 0) return 'Zero';
@@ -71,9 +71,13 @@ export default function BillPage() {
   const qrDataUrl = generateInvoiceQRCodeDataURL(invoiceNo);
 
   // Generate jsPDF A4 Document
-  function generatePDF() {
+  async function generatePDF() {
     if (!order) return;
     setDownloading(true);
+    
+    // Generate valid base64 PNG Data URL for jsPDF compatibility
+    const qrPngUrl = await generateInvoiceQRCodePNGDataURL(invoiceNo, 200);
+
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -125,7 +129,13 @@ export default function BillPage() {
     doc.text(`DCR Audit: Approved by ${dcrApproval?.user_name || 'Verified'}`, 90, 64);
 
     // QR Code Box at Far Right (X=168, Y=42)
-    doc.addImage(qrDataUrl, 'PNG', 168, 42, 26, 26);
+    if (qrPngUrl && (qrPngUrl.startsWith('data:image/png;base64,') || qrPngUrl.startsWith('data:image/jpeg;base64,'))) {
+      try {
+        doc.addImage(qrPngUrl, 'PNG', 168, 42, 26, 26);
+      } catch (err) {
+        console.warn('[PDF] QR rendering fallback skipped:', err);
+      }
+    }
     doc.setDrawColor(212, 212, 216);
     doc.rect(167, 41, 28, 28);
     doc.setFontSize(6);

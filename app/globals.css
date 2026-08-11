@@ -63,7 +63,7 @@
 /* ── Reset ──────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { font-size: 16px; scroll-behavior: smooth; }
+html { font-size: 16px; scroll-behavior: smooth; overflow-x: hidden; max-width: 100vw; }
 
 body {
   font-family: var(--font-sans);
@@ -73,6 +73,8 @@ body {
   background: var(--surface-1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -513,4 +515,27 @@ p  { color: var(--gray-600); line-height: 1.7; }
   color: var(--gray-600);
   font-style: italic;
   border-left: 3px solid var(--gray-300);
+}
+
+/* ── Mobile Responsive Grid Overrides ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .grid, .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 16px;
+  }
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .card {
+    padding: 16px !important;
+  }
 }

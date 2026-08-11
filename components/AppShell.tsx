@@ -11,6 +11,8 @@ import LanguageSwitcher from './LanguageSwitcher';
 import PushPrompt from './PushPrompt';
 import CommandPalette from './CommandPalette';
 import ToastContainer from './Toast';
+import BrandLogo from './BrandLogo';
+import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
 import styles from './AppShell.module.css';
 
 interface AppShellProps {
@@ -26,6 +28,7 @@ export default function AppShell({ children, role }: AppShellProps) {
   const [session, setSession] = useState<UserProfile | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCmdPalette, setShowCmdPalette] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     const s = getSession();
@@ -73,12 +76,8 @@ export default function AppShell({ children, role }: AppShellProps) {
         style={{ background: colors.sidebar }}
       >
         {/* Logo */}
-        <div className={styles.logo}>
-          <span className={styles.logoIcon}>🍱</span>
-          <div>
-            <div className={styles.logoTitle}>{t('app.title', 'AharSetu')}</div>
-            <div className={styles.logoSub}>{t('app.subtitle', 'ERP Portal')}</div>
-          </div>
+        <div className={styles.logo} style={{ padding: '16px 20px', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0' }}>
+          <BrandLogo size={46} />
         </div>
 
         {/* User card */}
@@ -137,43 +136,102 @@ export default function AppShell({ children, role }: AppShellProps) {
             </button>
             <div className={styles.pageTitle}>
               <span style={{ color: colors.accent }}>{ROLE_ICONS[role]}</span>
-              {ROLE_LABELS[role]}
+              <span>{ROLE_LABELS[role]}</span>
               {deptLabel && (
-                <span style={{ color: 'var(--gray-400)', fontSize: '0.9rem' }}> — {deptLabel}</span>
+                <span className={styles.headerDeptLabel} style={{ color: 'var(--gray-400)', fontSize: '0.85rem' }}> — {deptLabel}</span>
               )}
             </div>
           </div>
           <div className={styles.headerRight}>
             <button
               onClick={() => setShowCmdPalette(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 12px',
-                background: '#F1F5F9',
-                border: '1px solid #CBD5E1',
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: '#475569',
-                cursor: 'pointer'
-              }}
+              className={styles.cmdSearchBtn}
             >
               <span>🔍</span>
-              <span>Search (Cmd + K)</span>
+              <span className={styles.cmdSearchLabel}>Search (Cmd + K)</span>
             </button>
             <LanguageSwitcher />
             {session && <NotificationBell userId={session.id} role={session.role} />}
-            <Link href={`/${role}/profile`} className={styles.headerUser} style={{ textDecoration: 'none', cursor: 'pointer' }}>
-              <div className={styles.headerAvatar} style={{ background: colors.accent }}>
-                {session?.name?.[0] || '?'}
+            <div style={{ position: 'relative' }}>
+              <div
+                onClick={() => setProfileMenuOpen(o => !o)}
+                className={styles.headerUser}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+              >
+                <div className={styles.headerAvatar} style={{ background: colors.accent }}>
+                  {session?.name?.[0] || '?'}
+                </div>
+                <div className={styles.headerUserInfo}>
+                  <div className={styles.headerUserName}>{session?.name}</div>
+                  <div className={styles.headerUserRole}>{ROLE_LABELS[role]}</div>
+                </div>
               </div>
-              <div className={styles.headerUserInfo}>
-                <div className={styles.headerUserName}>{session?.name}</div>
-                <div className={styles.headerUserRole}>{ROLE_LABELS[role]}</div>
-              </div>
-            </Link>
+
+              {profileMenuOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '46px',
+                  right: 0,
+                  width: '180px',
+                  background: 'white',
+                  borderRadius: '12px',
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                  zIndex: 1000,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '6px'
+                }}>
+                  <Link
+                    href={`/${role}/profile`}
+                    onClick={() => setProfileMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 12px',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#EFF6FF'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    ⚙️ Settings & Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 12px',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#DC2626',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      width: '100%',
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    🚪 Fast Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -183,6 +241,7 @@ export default function AppShell({ children, role }: AppShellProps) {
       <CommandPalette isOpen={showCmdPalette} onClose={() => setShowCmdPalette(false)} />
       <ToastContainer />
       <PushPrompt />
+      <FirstTimeOnboardingModal />
     </div>
   );
 }

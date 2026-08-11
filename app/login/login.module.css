@@ -9,7 +9,7 @@
 /* Left Hero Section */
 .hero {
   width: 45%;
-  background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #2563EB 100%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%), url('/images/food_login_bg.jpg') center/cover no-repeat;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

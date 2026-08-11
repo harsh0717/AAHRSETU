@@ -11,6 +11,7 @@ import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -77,7 +78,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       window.location.href = '/login';
       return;
     }
-    if (s.role !== 'coordinator') {
+    if (s.role !== 'coordinator' && s.role !== 'principal' && s.role !== 'admin') {
       window.location.href = `/${s.role}`;
       return;
     }
@@ -252,14 +253,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     <AppShell role="coordinator" currentPath="/coordinator">
       <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
         
-        {/* Header Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-            {t(`coord.tab_title_${activeTab}`, t('coord.dashboard_title', 'Coordinator Dashboard'))}
-          </h1>
-          <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-            {t(`coord.tab_sub_${activeTab}`, t('coord.dashboard_sub', 'Institutional order requisition, approvals tracking and billing pipeline.'))}
+        {/* Header Section with Official Brand Logo */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
+              {t(`coord.tab_title_${activeTab}`, t('coord.dashboard_title', 'Coordinator Dashboard'))}
+            </h1>
+            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
+              {t(`coord.tab_sub_${activeTab}`, t('coord.dashboard_sub', 'Institutional order requisition, approvals tracking and billing pipeline.'))}
+            </div>
           </div>
+          <BrandLogo size={52} />
         </div>
 
         {/* Loading Spinner */}
@@ -274,7 +278,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
             {activeTab === 'dashboard' && (
               <div>
                 {/* Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
                   {[
                     { label: t('coord.stats_total', 'Total Drafts'), value: totalMyOrders, color: '#0284C7', icon: '📦' },
                     { label: t('coord.stats_pending', 'Pending Approvals'), value: totalPending, color: '#EAB308', icon: '⏳' },
@@ -565,11 +569,67 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
             {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
-              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>👤 Coordinator Profile</h3>
+              <div className="card" style={{ padding: '24px', maxWidth: '560px', background: 'white', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '1.6rem',
+                    fontWeight: 800,
+                    overflow: 'hidden'
+                  }}>
+                    {typeof window !== 'undefined' && localStorage.getItem(`aharsetu_avatar_${session.id}`) ? (
+                      <img src={localStorage.getItem(`aharsetu_avatar_${session.id}`)!} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      session.name[0]
+                    )}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      {session.name}
+                    </h3>
+                    <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, marginTop: '2px' }}>
+                      🟢 Verified Campus Coordinator
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Name</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Profile Photo</label>
+                    <label style={{ cursor: 'pointer', background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', padding: '6px 14px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800, display: 'inline-block' }}>
+                      📷 Change Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              const res = evt.target?.result as string;
+                              if (res && typeof window !== 'undefined') {
+                                localStorage.setItem(`aharsetu_avatar_${session.id}`, res);
+                                alert('Profile photo updated successfully!');
+                                window.location.reload();
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Full Name</label>
                     <input type="text" className="form-input" value={profileName} onChange={e => setProfileName(e.target.value)} required />
                   </div>
                   <div>
@@ -578,7 +638,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Assigned Department</label>
-                    <input type="text" className="form-input" value={session.department_id || ''} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)', textTransform: 'capitalize' }} />
+                    <input type="text" className="form-input" value={session.department_id || 'Diploma Department'} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)', textTransform: 'capitalize' }} />
                   </div>
                   <button type="submit" disabled={submitting} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
                     {submitting ? 'Updating...' : 'Save Profile'}

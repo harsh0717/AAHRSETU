@@ -4,12 +4,13 @@ import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, UserProfile, updateSessionLanguage } from '@/lib/auth';
 import { getOrders, setVendorPrices, requestVendorModification, rejectVendorOrder, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
-import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, MenuItem, Vendor } from '@/lib/vendors';
+import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, saveCustomFoodImage, MenuItem, Vendor } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 
 import { useRouter } from 'next/navigation';
 
@@ -41,6 +42,10 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     available: true,
     active: true
   });
+
+  // Menu Manager Zomato Search & Category Filters
+  const [menuCategoryFilter, setMenuCategoryFilter] = useState('All');
+  const [menuSearchQuery, setMenuSearchQuery] = useState('');
 
   // Order pricing input states
   const [pricingOrderId, setPricingOrderId] = useState<string | null>(null);
@@ -384,14 +389,17 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     <AppShell role="vendor" currentPath="/vendor">
       <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
         
-        {/* Header Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-            {vendorDetails?.name || 'Canteen Vendor Portal'} — {t(`vendor.tab_title_${activeTab}`, 'Dashboard')}
-          </h1>
-          <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-            {t(`vendor.tab_sub_${activeTab}`, 'Manage canteen menu availability, incoming orders, and revenue settlement.')}
+        {/* Header Section with Official Brand Logo */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
+              {vendorDetails?.name || 'Canteen Vendor Portal'} — {t(`vendor.tab_title_${activeTab}`, 'Dashboard')}
+            </h1>
+            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
+              {t(`vendor.tab_sub_${activeTab}`, 'Manage canteen menu availability, incoming orders, and revenue settlement.')}
+            </div>
           </div>
+          <BrandLogo size={52} />
         </div>
 
         {/* Loading Spinner */}
@@ -406,80 +414,70 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
             {activeTab === 'dashboard' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
-                {/* SETUP VALIDATION COMPONENT */}
-                <div className="card" style={{ padding: '20px', borderLeft: `6px solid ${vendorDetails?.status === 'open' ? '#10B981' : '#EF4444'}`, background: '#FFFFFF' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '8px' }}>⚙️ Canteen Operational Status</h3>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                {/* FRIENDLY CANTEEN STATUS BANNER */}
+                <div className="card" style={{
+                  padding: '24px',
+                  borderRadius: '16px',
+                  background: vendorDetails?.status === 'open' 
+                    ? 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' 
+                    : 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
+                  border: `1px solid ${vendorDetails?.status === 'open' ? '#A7F3D0' : '#FECACA'}`,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800)' }}>
-                        Canteen State: <span style={{ color: vendorDetails?.status === 'open' ? '#10B981' : '#EF4444', textTransform: 'capitalize' }}>{vendorDetails?.status}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '1.8rem' }}>{vendorDetails?.status === 'open' ? '🟢' : '🔴'}</span>
+                        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                          {vendorDetails?.name || 'Canteen'} is {vendorDetails?.status === 'open' ? 'OPEN for Orders' : 'CLOSED'}
+                        </h2>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', marginTop: '4px' }}>
-                        {vendorDetails?.status === 'open' 
-                          ? 'Your canteen is open. Coordinators can order menu items.' 
-                          : 'Your canteen is closed. Coordinators cannot select your menu for new orders.'}
-                      </div>
+                      <p style={{ margin: '6px 0 0 0', fontSize: '0.88rem', color: '#475569' }}>
+                        {vendorDetails?.status === 'open'
+                          ? 'Coordinators can place canteen orders. New orders will appear on your screen instantly.'
+                          : 'Canteen is currently closed. Open canteen to start receiving orders.'}
+                      </p>
                     </div>
-                    {vendorDetails?.status === 'closed' && (
-                      <button className="btn btn-primary" onClick={() => handleToggleStatus('open')}>
-                        🔓 Open Canteen
-                      </button>
-                    )}
-                    {vendorDetails?.status === 'open' && (
-                      <button className="btn btn-ghost" style={{ border: '1px solid #EF4444', color: '#EF4444' }} onClick={() => handleToggleStatus('closed')}>
-                        🔒 Close Canteen
-                      </button>
-                    )}
+
+                    <button
+                      onClick={() => handleToggleStatus(vendorDetails?.status === 'open' ? 'closed' : 'open')}
+                      style={{
+                        background: vendorDetails?.status === 'open' ? '#DC2626' : '#16A34A',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '10px 20px',
+                        fontSize: '0.9rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      {vendorDetails?.status === 'open' ? '🔒 Close Canteen' : '🔓 Open Canteen'}
+                    </button>
                   </div>
-
-                  <hr style={{ margin: '16px 0', borderColor: 'var(--gray-100)' }} />
-
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '8px' }}>🍽️ Menu Requisite Status</h3>
-                  {totalMenuItemsCount === 0 ? (
-                    <div style={{ background: '#FEF2F2', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#DC2626', fontWeight: 600 }}>⚠️ No menu items found. Please define at least one menu item.</span>
-                      <button className="btn btn-primary btn-sm" onClick={() => { setActiveTab('menu'); openAddMenuItem(); }}>
-                        🍽️ Create Menu Item
-                      </button>
-                    </div>
-                  ) : activeItemsCount > 0 && availableItemsCount === 0 ? (
-                    <div style={{ background: '#FFFBEB', padding: '12px', borderRadius: '8px', color: '#D97706', fontSize: '0.8rem', fontWeight: 600 }}>
-                      ⚠️ All menu items are currently marked Out-of-Stock. Please update availability.
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                      <div style={{ background: 'var(--gray-50)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{totalMenuItemsCount}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>Total Seeded Items</div>
-                      </div>
-                      <div style={{ background: '#ECFDF5', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669' }}>{activeItemsCount}</div>
-                        <div style={{ fontSize: '0.7rem', color: '#059669' }}>Active Items</div>
-                      </div>
-                      <div style={{ background: '#EFF6FF', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2563EB' }}>{availableItemsCount}</div>
-                        <div style={{ fontSize: '0.7rem', color: '#2563EB' }}>Available / In Stock</div>
-                      </div>
-                      <div style={{ background: '#FEF2F2', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#DC2626' }}>{outOfStockItemsCount}</div>
-                        <div style={{ fontSize: '0.7rem', color: '#DC2626' }}>Out of Stock</div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                {/* FRIENDLY STATS CARDS */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                   {[
-                    { label: 'Incoming Orders (Pending Price)', value: pendingPricingCount, color: '#D97706', icon: '📥' },
-                    { label: 'Active Processing Orders', value: activeOrdersCount, color: '#3B82F6', icon: '📋' },
-                    { label: 'Settled Completed Orders', value: completedOrdersCount, color: '#10B981', icon: '✅' },
-                    { label: 'Consolidated Earnings', value: `₹${totalEarnings.toFixed(2)}`, color: '#10B981', icon: '💰' }
+                    { label: 'New Orders Waiting', value: pendingPricingCount, color: '#F59E0B', icon: '📥', action: () => setActiveTab('incoming') },
+                    { label: 'Kitchen In-Progress', value: activeOrdersCount, color: '#2563EB', icon: '👨‍🍳', action: () => setActiveTab('incoming') },
+                    { label: 'Orders Completed Today', value: completedOrdersCount, color: '#10B981', icon: '✅', action: () => setActiveTab('incoming') },
+                    { label: 'Today\'s Earnings', value: `₹${totalEarnings.toFixed(0)}`, color: '#059669', icon: '💰', action: () => {} }
                   ].map((s, idx) => (
-                    <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${s.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{s.icon}</div>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gray-900)' }}>{s.value}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', fontWeight: 600 }}>{s.label}</div>
+                    <div key={idx} onClick={s.action} style={{
+                      background: 'white',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)',
+                      cursor: 'pointer',
+                      borderTop: `4px solid ${s.color}`
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>{s.icon}</div>
+                      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0F172A' }}>{s.value}</div>
+                      <div style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600, marginTop: '2px' }}>{s.label}</div>
                     </div>
                   ))}
                 </div>
@@ -497,58 +495,83 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                   const isPricingThis = pricingOrderId === o.id;
 
                   return (
-                    <div key={o.id} style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div key={o.id} style={{
+                      background: 'white',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      marginBottom: '16px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                         <div>
-                          <strong style={{ fontSize: '0.9rem', color: 'var(--gray-800)' }}>{o.title}</strong>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>Order ID: {o.id} | Department: {o.department_label}</div>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
+                            🍕 Order #{o.order_reference || o.id}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
+                            🏢 Department: <strong>{o.department_label}</strong> • Requested by {o.created_by_name}
+                          </div>
                         </div>
                         <StatusBadge status={myVO.status} size="sm" />
                       </div>
 
-                      <div style={{ background: 'var(--gray-50)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                          <thead>
-                            <tr style={{ borderBottom: '1px solid var(--gray-200)', color: 'var(--gray-500)', textAlign: 'left' }}>
-                              <th style={{ paddingBottom: '6px' }}>Item Name</th>
-                              <th style={{ paddingBottom: '6px', textAlign: 'center' }}>Quantity</th>
-                              <th style={{ paddingBottom: '6px', textAlign: 'right' }}>Unit price</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {myVO.items.map((item, idx) => (
-                              <tr key={idx} style={{ borderBottom: '1px solid var(--gray-100)' }}>
-                                <td style={{ padding: '6px 0', fontWeight: 600 }}>{item.name}</td>
-                                <td style={{ padding: '6px 0', textAlign: 'center' }}>{item.quantity} {item.unit ? `(${item.unit})` : ''}</td>
-                                <td style={{ padding: '6px 0', textAlign: 'right' }}>
-                                  {isPricingThis ? (
-                                    <input
-                                      type="number"
-                                      step="0.01"
-                                      className="form-input"
-                                      style={{ width: '80px', textAlign: 'right', display: 'inline-block', padding: '4px' }}
-                                      value={pricesInput[item.name] || ''}
-                                      onChange={e => setPricesInput({ ...pricesInput, [item.name]: e.target.value })}
-                                    />
-                                  ) : (
-                                    <span>₹{item.price || 'Pending'}</span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      {/* Food Items List */}
+                      <div style={{ background: '#F8FAFC', padding: '14px 16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                          Items Requested:
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {myVO.items.map((item, idx) => (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                              <span style={{ fontWeight: 700, color: '#0F172A' }}>
+                                • {item.name}
+                              </span>
+                              <span style={{ fontWeight: 800, color: '#2563EB', background: '#EFF6FF', padding: '2px 10px', borderRadius: '999px' }}>
+                                × {item.quantity} {item.unit || 'qty'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ borderTop: '1px dashed #CBD5E1', marginTop: '12px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Total Estimated Amount:</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#059669' }}>₹{myVO.bill_amount > 0 ? myVO.bill_amount.toFixed(2) : (myVO.items.reduce((acc, i) => acc + (i.price * i.quantity), 0) || 150).toFixed(2)}</span>
+                        </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button className="btn btn-primary btn-sm" onClick={() => handleQuickApprove(myVO.id)} disabled={saving}>
-                          ✅ Approve Order (1-Click)
+                      {/* Easy 1-Click Action Buttons */}
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleQuickApprove(myVO.id)}
+                          disabled={saving}
+                          style={{
+                            background: '#10B981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '10px 20px',
+                            fontSize: '0.88rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            flex: 1
+                          }}
+                        >
+                          ✓ Accept & Start Cooking
                         </button>
-                        <button className="btn btn-ghost btn-sm" style={{ color: '#DC2626', border: '1px solid #FECACA', background: '#FEF2F2' }} onClick={() => handleQuickReject(myVO.id)} disabled={saving}>
-                          ❌ Reject Order
-                        </button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => initModRequest(myVO.id)} disabled={saving}>
-                          🔄 Request Modification
+                        <button
+                          onClick={() => handleQuickReject(myVO.id)}
+                          disabled={saving}
+                          style={{
+                            background: '#FEF2F2',
+                            color: '#DC2626',
+                            border: '1px solid #FECACA',
+                            borderRadius: '10px',
+                            padding: '10px 16px',
+                            fontSize: '0.88rem',
+                            fontWeight: 800,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ✖ Reject Order
                         </button>
                       </div>
                     </div>
@@ -670,70 +693,233 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
               </div>
             )}
 
-            {/* TAB: MENU MANAGEMENT */}
+            {/* TAB: MENU MANAGEMENT (ZOMATO & HOTEL STYLE DISH MANAGER) */}
             {activeTab === 'menu' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>🍽️ Canteen Menu Sheet</h3>
-                  <button className="btn btn-primary btn-sm" onClick={openAddMenuItem}>
-                    ➕ Create Menu Item
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Header & Main Add Action */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      🍽️ Restaurant Menu Manager
+                    </h2>
+                    <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '4px 0 0 0' }}>
+                      Manage your canteen dishes, upload food photos, and toggle instant stock availability.
+                    </p>
+                  </div>
+                  <button
+                    onClick={openAddMenuItem}
+                    style={{
+                      background: '#2563EB',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '10px 20px',
+                      fontSize: '0.88rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
+                    }}
+                  >
+                    ➕ Add New Dish
                   </button>
                 </div>
 
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Category</th>
-                        <th>Item Name</th>
-                        <th>Description</th>
-                        <th>Price</th>
-                        <th>Unit</th>
-                        <th>Stock status</th>
-                        <th>Active status</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {menu.map(item => (
-                        <tr key={item.id}>
-                          <td style={{ fontWeight: 600, textTransform: 'capitalize' }}>{item.category}</td>
-                          <td style={{ fontWeight: 700 }}>{item.name}</td>
-                          <td style={{ fontSize: '0.78rem', color: 'var(--gray-500)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description || 'No description'}</td>
-                          <td style={{ fontWeight: 700 }}>₹{item.price}</td>
-                          <td>{item.unit}</td>
-                          <td>
-                            <span style={{ 
-                              padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700,
-                              background: item.available ? '#DCFCE7' : '#FEF2F2',
-                              color: item.available ? '#15803D' : '#991B1B'
+                {/* Zomato-Style Search & Category Chips */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'white', padding: '16px 20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Search dish by name..."
+                    value={menuSearchQuery}
+                    onChange={e => setMenuSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      borderRadius: '10px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.9rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingTop: '4px' }}>
+                    {['All', 'Beverages', 'Snacks', 'Meals', 'Breakfast', 'Desserts'].map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setMenuCategoryFilter(cat)}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '999px',
+                          border: menuCategoryFilter === cat ? 'none' : '1px solid #E2E8F0',
+                          background: menuCategoryFilter === cat ? '#2563EB' : '#F8FAFC',
+                          color: menuCategoryFilter === cat ? 'white' : '#475569',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Zomato Dish Cards Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                  {menu
+                    .filter(item => {
+                      const matchesCat = menuCategoryFilter === 'All' || item.category?.toLowerCase() === menuCategoryFilter.toLowerCase();
+                      const matchesSearch = item.name.toLowerCase().includes(menuSearchQuery.toLowerCase());
+                      return matchesCat && matchesSearch;
+                    })
+                    .map(item => {
+                      const customImg = typeof window !== 'undefined' ? (localStorage.getItem('aharsetu_custom_food_images_v1') ? JSON.parse(localStorage.getItem('aharsetu_custom_food_images_v1') || '{}')[item.id] : null) : null;
+                      const defaultEmoji = item.name.toLowerCase().includes('tea') || item.name.toLowerCase().includes('coffee')
+                        ? '☕' : item.name.toLowerCase().includes('lunch') || item.name.toLowerCase().includes('thali')
+                        ? '🍱' : item.name.toLowerCase().includes('sandwich') || item.name.toLowerCase().includes('burger')
+                        ? '🥪' : item.name.toLowerCase().includes('samosa') || item.name.toLowerCase().includes('snack')
+                        ? '🥟' : '🍽️';
+
+                      return (
+                        <div key={item.id} style={{
+                          background: 'white',
+                          border: '1px solid #E2E8F0',
+                          borderRadius: '16px',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.04)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          position: 'relative'
+                        }}>
+                          {/* Dish Image Header */}
+                          <div style={{
+                            height: '140px',
+                            background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            fontSize: '3.5rem'
+                          }}>
+                            {customImg ? (
+                              <img src={customImg} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <span>{defaultEmoji}</span>
+                            )}
+                            
+                            {/* Photo Upload Overlay Button */}
+                            <label style={{
+                              position: 'absolute',
+                              top: '10px',
+                              right: '10px',
+                              background: 'rgba(15, 23, 42, 0.75)',
+                              color: 'white',
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              backdropFilter: 'blur(4px)'
                             }}>
-                              {item.available ? 'In Stock' : 'Out of Stock'}
-                            </span>
-                          </td>
-                          <td>
-                            <span style={{ 
-                              padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700,
-                              background: item.active ? '#EFF6FF' : '#F4F4F5',
-                              color: item.active ? '#1E40AF' : '#52525B'
+                              📷 Photo
+                              <input
+                                type="file"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (evt) => {
+                                      const res = evt.target?.result as string;
+                                      if (res) {
+                                        saveCustomFoodImage(item.id, res);
+                                        alert(`Food photo updated for ${item.name}!`);
+                                        window.location.reload();
+                                      }
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                            </label>
+
+                            {/* Category Tag */}
+                            <span style={{
+                              position: 'absolute',
+                              bottom: '10px',
+                              left: '10px',
+                              fontSize: '0.7rem',
+                              fontWeight: 800,
+                              padding: '3px 10px',
+                              borderRadius: '6px',
+                              background: 'rgba(37, 99, 235, 0.9)',
+                              color: 'white',
+                              backdropFilter: 'blur(4px)'
                             }}>
-                              {item.active ? 'Active' : 'Inactive'}
+                              {item.category || 'General'}
                             </span>
-                          </td>
-                          <td style={{ textAlign: 'center' }}>
-                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                              <button className="btn btn-ghost btn-sm" style={{ padding: '2px 8px' }} onClick={() => openEditMenuItem(item)}>
-                                ✏️
-                              </button>
-                              <button className="btn btn-ghost btn-sm" style={{ padding: '2px 8px', color: '#EF4444' }} onClick={() => handleDeleteMenuItem(item.id)}>
-                                🗑️
-                              </button>
+                          </div>
+
+                          {/* Dish Details */}
+                          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                                {item.name}
+                              </h3>
+                              <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#2563EB' }}>
+                                ₹{item.price}
+                              </span>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+
+                            <p style={{ fontSize: '0.78rem', color: '#64748B', margin: '0 0 14px 0', flex: 1, lineHeight: 1.4 }}>
+                              {item.description || `Fresh ${item.name.toLowerCase()} prepared in canteen.`}
+                            </p>
+
+                            {/* Instant Stock Toggle Switch */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid #F1F5F9' }}>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await upsertVendorMenuItem(vendorId, { ...item, available: !item.available });
+                                    const updated = await getVendorMenu(vendorId);
+                                    setMenu(updated);
+                                  } catch (e: any) {
+                                    alert('Error updating stock status');
+                                  }
+                                }}
+                                style={{
+                                  background: item.available ? '#ECFDF5' : '#FEF2F2',
+                                  color: item.available ? '#059669' : '#DC2626',
+                                  border: `1px solid ${item.available ? '#A7F3D0' : '#FECACA'}`,
+                                  borderRadius: '999px',
+                                  padding: '4px 12px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 800,
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {item.available ? '🟢 In Stock' : '🔴 Out of Stock'}
+                              </button>
+
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  onClick={() => openEditMenuItem(item)}
+                                  style={{ background: '#F1F5F9', border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8rem', cursor: 'pointer' }}
+                                >
+                                  ✏️ Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMenuItem(item.id)}
+                                  style={{ background: '#FEF2F2', color: '#DC2626', border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8rem', cursor: 'pointer' }}
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -892,16 +1078,76 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
             {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
-              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>👤 Canteen Manager Profile</h3>
+              <div className="card" style={{ padding: '24px', maxWidth: '560px', background: 'white', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '1.6rem',
+                    fontWeight: 800,
+                    overflow: 'hidden'
+                  }}>
+                    {typeof window !== 'undefined' && localStorage.getItem(`aharsetu_avatar_${session.id}`) ? (
+                      <img src={localStorage.getItem(`aharsetu_avatar_${session.id}`)!} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      session.name[0]
+                    )}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      {session.name}
+                    </h3>
+                    <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, marginTop: '2px' }}>
+                      🟢 Verified Canteen Vendor Manager
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Name</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Profile Photo</label>
+                    <label style={{ cursor: 'pointer', background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', padding: '6px 14px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800, display: 'inline-block' }}>
+                      📷 Change Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              const res = evt.target?.result as string;
+                              if (res && typeof window !== 'undefined') {
+                                localStorage.setItem(`aharsetu_avatar_${session.id}`, res);
+                                alert('Profile photo updated successfully!');
+                                window.location.reload();
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Full Name</label>
                     <input type="text" className="form-input" value={profileName} onChange={e => setProfileName(e.target.value)} required />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Email Address</label>
                     <input type="email" className="form-input" value={session.email} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Canteen Name</label>
+                    <input type="text" className="form-input" value={vendorDetails?.name || 'Main Campus Canteen'} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
                   </div>
                   <button type="submit" disabled={saving} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
                     {saving ? 'Updating...' : 'Save Profile'}

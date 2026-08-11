@@ -115,6 +115,33 @@ function getLocalMenu(vendorId: string): MenuItem[] {
   }
 }
 
+// ── CUSTOM FOOD PHOTO STORAGE UTILITY ──────────────────────────────────────────
+const CUSTOM_FOOD_IMAGES_KEY = 'aharsetu_custom_food_images_v1';
+
+export function saveCustomFoodImage(itemId: string, dataUrl: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(CUSTOM_FOOD_IMAGES_KEY);
+    const store = raw ? JSON.parse(raw) : {};
+    store[itemId] = dataUrl;
+    localStorage.setItem(CUSTOM_FOOD_IMAGES_KEY, JSON.stringify(store));
+  } catch (err) {
+    console.error('Error saving custom food image:', err);
+  }
+}
+
+export function getCustomFoodImage(itemId: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CUSTOM_FOOD_IMAGES_KEY);
+    if (!raw) return null;
+    const store = JSON.parse(raw);
+    return store[itemId] || null;
+  } catch {
+    return null;
+  }
+}
+
 function saveLocalMenu(vendorId: string, items: MenuItem[]) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(`${LOCAL_MENUS_KEY}_${vendorId}`, JSON.stringify(items));

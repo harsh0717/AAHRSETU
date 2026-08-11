@@ -70,3 +70,45 @@ export function generateInvoiceQRCodeDataURL(invoiceNo: string, size = 120): str
   const svg = generateInvoiceQRCodeSVG(invoiceNo, size);
   return `data:image/svg+xml;base64,${typeof window !== 'undefined' ? btoa(svg) : Buffer.from(svg).toString('base64')}`;
 }
+
+/**
+ * Renders QR matrix to an HTML5 Canvas and returns a genuine PNG base64 Data URL starting with data:image/png;base64,
+ * specifically formatted for jsPDF doc.addImage compatibility.
+ */
+export async function generateInvoiceQRCodePNGDataURL(invoiceNo: string, size = 200): Promise<string> {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return new Promise((resolve) => {
+    try {
+      const svgString = generateInvoiceQRCodeSVG(invoiceNo, size);
+      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve('');
+          return;
+        }
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0);
+        const pngDataUrl = canvas.toDataURL('image/png');
+        resolve(pngDataUrl);
+      };
+
+      img.onerror = () => {
+        resolve('');
+      };
+
+      img.src = svgDataUrl;
+    } catch {
+      resolve('');
+    }
+  });
+}

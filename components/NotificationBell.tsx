@@ -174,7 +174,9 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
                   onClick={() => {
                     handleRead(n.id);
                     setOpen(false);
-                    if (n.action_url) {
+                    if (role === 'vendor') {
+                      router.push('/vendor/orders/incoming');
+                    } else if (n.action_url) {
                       router.push(n.action_url);
                     }
                   }}

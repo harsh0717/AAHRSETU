@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { login, getSession } from '@/lib/auth';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
+import BrandLogo from '@/components/BrandLogo';
 import styles from './login.module.css';
 
 const ROLES_LIST = [
@@ -37,6 +38,7 @@ function LoginFormContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(true);
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -89,6 +91,7 @@ function LoginFormContent() {
       department_id: deptRequired ? departmentId : null,
       email: email.trim(),
       password: password.trim(),
+      remember_device: rememberDevice,
     });
     setLoading(false);
 
@@ -119,10 +122,7 @@ function LoginFormContent() {
       {/* 1. Left Panel - Creative Hero */}
       <section className={styles.hero}>
         <div className={styles.heroHeader}>
-          <div className={styles.heroLogo}>
-            <span className={styles.heroLogoIcon}>🍱</span>
-            <span>AharSetu ERP</span>
-          </div>
+          <BrandLogo size={64} />
           
           <div className={styles.langRow}>
             {LANGUAGES.map((l) => (
@@ -139,25 +139,40 @@ function LoginFormContent() {
         </div>
 
         <div className={styles.heroContent}>
-          <span className={styles.heroBadge}>Institutional ERP v2.0</span>
+          <span className={styles.heroBadge}>🍱 Campus Food Platform</span>
           <h2 className={styles.heroTitle}>
-            {t('login.hero_title', 'Unified Portal for')} <span>{t('login.hero_title_highlight', 'Campus Canteens')}</span>
+            Good Food.<br />
+            <span>Better Campus.</span>
           </h2>
           <p className={styles.heroSub}>
-            {t('login.hero_sub', 'A centralized ERP connecting department coordinators, principals, auditors, and vendors for paperless approvals, automated splits, and instant settlements.')}
+            Your campus food, connected from requisition to plate. Seamless multi-vendor ordering, principal approvals, and instant settlements.
           </p>
 
           <div className={styles.featuresGrid}>
             {[
-              { icon: '📋', title: 'Multi-Vendor Splits', desc: 'Coordinator requests are auto-grouped by canteens' },
-              { icon: '🛡️', title: 'Supervisor Pipelines', desc: 'Approved orders are validated against department budgets' },
-              { icon: '⚡', title: 'Real-Time Alerts', desc: 'WebSockets push status modifications immediately' },
+              { icon: '🍕', tag: 'CHEF\'S SPECIAL', title: 'Artisanal Pepperoni Pizza', price: '₹120', vendor: 'Fresh Bites Canteen' },
+              { icon: '🍔', tag: 'POPULAR TODAY', title: 'Gourmet Cheeseburger & Fries', price: '₹95', vendor: 'Fresh Bites Canteen' },
+              { icon: '🍵', tag: 'MORNING REFRESHMENT', title: 'Masala Tea & Samosa', price: '₹25', vendor: 'Sharma Canteen' },
             ].map((f, idx) => (
-              <div key={idx} className={styles.featureCard}>
-                <div className={styles.featureIcon}>{f.icon}</div>
-                <div className={styles.featureText}>
-                  <h4>{f.title}</h4>
-                  <p>{f.desc}</p>
+              <div key={idx} className={styles.featureCard} style={{
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '16px',
+                padding: '14px 18px',
+                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ fontSize: '2rem', background: 'rgba(255, 255, 255, 0.2)', padding: '8px', borderRadius: '12px' }}>{f.icon}</div>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#F59E0B', letterSpacing: '0.05em' }}>{f.tag}</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'white' }}>{f.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>🏪 {f.vendor}</div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -289,6 +304,17 @@ function LoginFormContent() {
                   </button>
                 </div>
               </div>
+
+              {/* Remember this device */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: '#475569', cursor: 'pointer', marginTop: '12px' }}>
+                <input
+                  type="checkbox"
+                  checked={rememberDevice}
+                  onChange={(e) => setRememberDevice(e.target.checked)}
+                  style={{ width: '16px', height: '16px', borderRadius: '4px', accentColor: '#2563EB' }}
+                />
+                <span>Remember this device</span>
+              </label>
             </div>
 
             <button

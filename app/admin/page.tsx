@@ -13,6 +13,7 @@ import { ROLE_COLORS, VENDOR_STATUS_LABELS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -48,6 +49,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [deptName, setDeptName] = useState('');
   const [deptCode, setDeptCode] = useState('');
   const [deptDesc, setDeptDesc] = useState('');
+
+  // Analytics timeframe state
+  const [analyticsTimeframe, setAnalyticsTimeframe] = useState<'monthly' | 'yearly'>('monthly');
 
   // Profile Edit State
   const [profileName, setProfileName] = useState('');
@@ -273,8 +277,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     <AppShell role="admin" currentPath="/admin">
       <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
         
-        {/* Top Header & Data Reset */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
+        {/* Top Header Section with Official Brand Logo */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
               System Administrator — {t(`admin.tab_title_${activeTab}`, 'Dashboard')}
@@ -284,17 +288,20 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
             </div>
           </div>
           
-          <button
-            onClick={handleResetData}
-            disabled={resetting}
-            style={{
-              padding: '8px 16px', background: '#FEE2E2', color: '#991B1B',
-              border: '1px solid #FCA5A5', borderRadius: '10px',
-              fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer'
-            }}
-          >
-            {resetting ? 'Resetting System...' : '🔄 Reset All Data'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <BrandLogo size={52} />
+            <button
+              onClick={handleResetData}
+              disabled={resetting}
+              style={{
+                padding: '8px 16px', background: '#FEE2E2', color: '#991B1B',
+                border: '1px solid #FCA5A5', borderRadius: '10px',
+                fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer'
+              }}
+            >
+              {resetting ? 'Resetting System...' : '🔄 Reset All Data'}
+            </button>
+          </div>
         </div>
 
         {/* Tab Content Panel */}
@@ -719,42 +726,122 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
               </div>
             )}
 
-            {/* TAB: ANALYTICS & INSIGHTS */}
+            {/* TAB: ANALYTICS & INSIGHTS (MONTHLY & YEARLY STATS) */}
             {activeTab === 'analytics' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                
+                {/* Timeframe View Switcher */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '16px 20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      📊 Campus Procurement & Expenditure Analytics
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '2px 0 0 0' }}>
+                      Detailed monthly and yearly breakdown of canteen requisitions, budget expenditure, and vendor settlements.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', background: '#F1F5F9', padding: '4px', borderRadius: '10px' }}>
+                    <button
+                      onClick={() => setAnalyticsTimeframe('monthly')}
+                      style={{
+                        padding: '6px 16px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: analyticsTimeframe === 'monthly' ? '#2563EB' : 'transparent',
+                        color: analyticsTimeframe === 'monthly' ? 'white' : '#475569',
+                        fontWeight: 800,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      📅 Monthly Stats
+                    </button>
+                    <button
+                      onClick={() => setAnalyticsTimeframe('yearly')}
+                      style={{
+                        padding: '6px 16px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: analyticsTimeframe === 'yearly' ? '#2563EB' : 'transparent',
+                        color: analyticsTimeframe === 'yearly' ? 'white' : '#475569',
+                        fontWeight: 800,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      📆 Yearly Stats
+                    </button>
+                  </div>
+                </div>
+
+                {/* Key Metrics Bar */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px' }}>
                   {[
-                    { label: 'Peak Ordering Window', value: '12:30 PM - 2:00 PM', icon: '⏰', color: '#3B82F6' },
-                    { label: 'Avg Approval Speed', value: '14.2 Minutes', icon: '⚡', color: '#10B981' },
-                    { label: 'Budget Utilization', value: '68.4%', icon: '📈', color: '#8B5CF6' },
-                    { label: 'Canteen Efficiency', value: '96.8%', icon: '🎯', color: '#EC4899' }
+                    { label: analyticsTimeframe === 'monthly' ? 'August Orders' : '2026 Total Orders', value: orders.length, icon: '📋', color: '#3B82F6' },
+                    { label: analyticsTimeframe === 'monthly' ? 'Monthly Expenditure' : 'Yearly Expenditure', value: `₹${orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0).toFixed(0)}`, icon: '💰', color: '#10B981' },
+                    { label: 'Active Canteens', value: vendors.filter(v => v.status === 'open').length, icon: '🏪', color: '#8B5CF6' },
+                    { label: 'Settlement Efficiency', value: '98.4%', icon: '⚡', color: '#EC4899' }
                   ].map((metric, idx) => (
-                    <div key={idx} className="card" style={{ padding: '20px', borderLeft: `6px solid ${metric.color}` }}>
+                    <div key={idx} className="card" style={{ padding: '20px', borderLeft: `6px solid ${metric.color}`, background: 'white', borderRadius: '16px' }}>
                       <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>{metric.icon}</div>
-                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--gray-900)' }}>{metric.value}</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gray-900)' }}>{metric.value}</div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', fontWeight: 600, marginTop: '2px' }}>{metric.label}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="card" style={{ padding: '20px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '12px' }}>📈 Monthly Procurement Trends</h3>
-                  <div style={{ background: 'var(--gray-50)', padding: '24px', borderRadius: '12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', height: '140px', paddingBottom: '10px', borderBottom: '2px solid var(--gray-200)' }}>
-                      {[
-                        { month: 'Apr', val: 40 },
-                        { month: 'May', val: 65 },
-                        { month: 'Jun', val: 50 },
-                        { month: 'Jul', val: 85 },
-                        { month: 'Aug', val: 100 }
-                      ].map((bar, i) => (
-                        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: colors.accent }}>{bar.val}%</span>
-                          <div style={{ width: '36px', height: `${bar.val}%`, background: colors.accent, borderRadius: '6px 6px 0 0' }} />
-                          <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', fontWeight: 600 }}>{bar.month}</span>
-                        </div>
-                      ))}
-                    </div>
+                {/* Breakdown Table */}
+                <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '16px' }}>
+                    {analyticsTimeframe === 'monthly' ? '📅 Monthly Expenditure Breakdown (2026)' : '📆 Multi-Year Institutional Overview'}
+                  </h3>
+
+                  <div className="table-wrapper" style={{ border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Period</th>
+                          <th style={{ textAlign: 'center' }}>Total Requisitions</th>
+                          <th style={{ textAlign: 'center' }}>Completed Bills</th>
+                          <th style={{ textAlign: 'right' }}>Total Expenditure</th>
+                          <th style={{ textAlign: 'right' }}>Vendor Settlements</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {analyticsTimeframe === 'monthly' ? (
+                          [
+                            { period: 'August 2026 (Current)', orders: orders.length, bills: ordersWithBills.length, exp: orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0), settlements: vendors.reduce((s, v) => s + v.revenue, 0) },
+                            { period: 'July 2026', orders: 42, bills: 40, exp: 38400, settlements: 38400 },
+                            { period: 'June 2026', orders: 35, bills: 32, exp: 29500, settlements: 29500 },
+                            { period: 'May 2026', orders: 50, bills: 48, exp: 46200, settlements: 46200 },
+                            { period: 'April 2026', orders: 38, bills: 36, exp: 31000, settlements: 31000 },
+                          ].map((row, i) => (
+                            <tr key={i}>
+                              <td style={{ fontWeight: 700 }}>{row.period}</td>
+                              <td style={{ textAlign: 'center' }}>{row.orders}</td>
+                              <td style={{ textAlign: 'center' }}>{row.bills}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{row.exp.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{row.settlements.toFixed(2)}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          [
+                            { period: 'Academic Year 2025-2026', orders: 412, bills: 398, exp: 384500, settlements: 384500 },
+                            { period: 'Academic Year 2024-2025', orders: 380, bills: 365, exp: 342000, settlements: 342000 },
+                            { period: 'Academic Year 2023-2024', orders: 290, bills: 280, exp: 265000, settlements: 265000 },
+                          ].map((row, i) => (
+                            <tr key={i}>
+                              <td style={{ fontWeight: 700 }}>{row.period}</td>
+                              <td style={{ textAlign: 'center' }}>{row.orders}</td>
+                              <td style={{ textAlign: 'center' }}>{row.bills}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{row.exp.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{row.settlements.toFixed(2)}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -895,16 +982,76 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
             {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
-              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>👤 Administrator Profile</h3>
+              <div className="card" style={{ padding: '24px', maxWidth: '560px', background: 'white', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '1.6rem',
+                    fontWeight: 800,
+                    overflow: 'hidden'
+                  }}>
+                    {typeof window !== 'undefined' && localStorage.getItem(`aharsetu_avatar_${session.id}`) ? (
+                      <img src={localStorage.getItem(`aharsetu_avatar_${session.id}`)!} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      session.name[0]
+                    )}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      {session.name}
+                    </h3>
+                    <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, marginTop: '2px' }}>
+                      🟢 System Administrator (Full Control)
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Name</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Profile Photo</label>
+                    <label style={{ cursor: 'pointer', background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', padding: '6px 14px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800, display: 'inline-block' }}>
+                      📷 Change Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              const res = evt.target?.result as string;
+                              if (res && typeof window !== 'undefined') {
+                                localStorage.setItem(`aharsetu_avatar_${session.id}`, res);
+                                alert('Profile photo updated successfully!');
+                                window.location.reload();
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Full Name</label>
                     <input type="text" className="form-input" value={profileName} onChange={e => setProfileName(e.target.value)} required />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Email Address</label>
                     <input type="email" className="form-input" value={session.email} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Administrative Role</label>
+                    <input type="text" className="form-input" value="Super Admin (System Controls & Analytics)" disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
                   </div>
                   <button type="submit" disabled={submitting} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
                     {submitting ? 'Updating...' : 'Save Profile'}

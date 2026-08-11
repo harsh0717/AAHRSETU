@@ -139,13 +139,13 @@ function LoginFormContent() {
         </div>
 
         <div className={styles.heroContent}>
-          <span className={styles.heroBadge}>🍱 Campus Food Platform</span>
+          <span className={styles.heroBadge}>{t('login.hero_badge', '🍱 Campus Food Platform')}</span>
           <h2 className={styles.heroTitle}>
-            Good Food.<br />
-            <span>Better Campus.</span>
+            {t('login.hero_title', 'Good Food.')}<br />
+            <span>{t('login.hero_title_span', 'Better Campus.')}</span>
           </h2>
           <p className={styles.heroSub}>
-            Your campus food, connected from requisition to plate. Seamless multi-vendor ordering, principal approvals, and instant settlements.
+            {t('login.hero_sub', 'Your campus food, connected from requisition to plate. Seamless multi-vendor ordering, principal approvals, and instant settlements.')}
           </p>
 
           <div className={styles.featuresGrid}>

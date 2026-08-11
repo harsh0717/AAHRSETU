@@ -26,6 +26,7 @@ export default function FirstTimeOnboardingModal() {
 
     if (avatarPreview && typeof window !== 'undefined') {
       localStorage.setItem(`aharsetu_avatar_${session.id}`, avatarPreview);
+      window.dispatchEvent(new Event('aharsetu_avatar_changed'));
     }
     if (typeof window !== 'undefined') {
       localStorage.setItem(`aharsetu_verified_${session.id}`, 'true');

@@ -148,16 +148,28 @@ function saveLocalMenu(vendorId: string, items: MenuItem[]) {
 }
 
 export async function getVendors(): Promise<Vendor[]> {
+  let vendorList: Vendor[] = [];
   try {
     const res = await api.get<Vendor[]>('/vendors/');
     if (res && Array.isArray(res) && res.length > 0) {
       saveLocalVendors(res);
-      return res;
+      vendorList = res;
+    } else {
+      vendorList = getLocalVendors();
     }
   } catch (err) {
-    // Return local fallback vendors silently
+    vendorList = getLocalVendors();
   }
-  return getLocalVendors();
+
+  // Apply persistent status overrides
+  if (typeof window !== 'undefined') {
+    vendorList = vendorList.map(v => {
+      const overrideStatus = localStorage.getItem(`aharsetu_vendor_status_${v.id}`);
+      return overrideStatus ? { ...v, status: overrideStatus } : v;
+    });
+  }
+
+  return vendorList;
 }
 
 export async function getVendorById(id: string): Promise<Vendor | null> {
@@ -186,6 +198,10 @@ export async function getAvailableVendors(): Promise<Vendor[]> {
 }
 
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`aharsetu_vendor_status_${vendorId}`, status);
+  }
+
   const vendors = getLocalVendors();
   const v = vendors.find(item => item.id === vendorId);
   if (v) {
@@ -205,13 +221,13 @@ export async function updateVendorStatus(vendorId: string, status: string): Prom
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status } }));
       }
-      return res;
+      return { ...res, status };
     }
   } catch (err) {
     // Return updated local vendor
   }
 
-  if (v) return v;
+  if (v) return { ...v, status };
   throw new Error('Vendor not found');
 }
 

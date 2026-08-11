@@ -617,21 +617,48 @@
 @media (max-width: 992px) {
   .page {
     flex-direction: column;
+    min-height: auto;
   }
   .hero {
     width: 100%;
-    padding: 32px 24px;
+    padding: 24px 16px;
+    min-height: auto;
   }
   .heroContent {
-    margin-top: 20px;
+    margin-top: 16px;
   }
   .heroTitle {
-    font-size: 2rem;
+    font-size: 1.75rem;
+  }
+  .heroSub {
+    font-size: 0.88rem;
   }
   .featuresGrid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .featureCard {
+    padding: 12px 14px !important;
   }
   .formPanel {
-    padding: 32px 20px;
+    padding: 24px 16px;
+    width: 100%;
+  }
+  .formCard {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .stepsHeader {
+    gap: 4px;
+  }
+  .stepLabel {
+    font-size: 0.65rem;
+  }
+  .stepCircle {
+    width: 24px;
+    height: 24px;
+    font-size: 0.72rem;
   }
 }

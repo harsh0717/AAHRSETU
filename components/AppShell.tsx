@@ -13,6 +13,7 @@ import CommandPalette from './CommandPalette';
 import ToastContainer from './Toast';
 import BrandLogo from './BrandLogo';
 import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
+import AvatarImage from './AvatarImage';
 import styles from './AppShell.module.css';
 
 interface AppShellProps {
@@ -83,7 +84,7 @@ export default function AppShell({ children, role }: AppShellProps) {
         {/* User card */}
         {session && (
           <div className={styles.userCard}>
-            <div className={styles.userAvatar}>{ROLE_ICONS[role] || '👤'}</div>
+            <AvatarImage userId={session.id} name={session.name} size={36} />
             <div className={styles.userInfo}>
               <div className={styles.userName}>{session.name}</div>
               <div className={styles.userRole}>
@@ -158,9 +159,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                 className={styles.headerUser}
                 style={{ cursor: 'pointer', userSelect: 'none' }}
               >
-                <div className={styles.headerAvatar} style={{ background: colors.accent }}>
-                  {session?.name?.[0] || '?'}
-                </div>
+                <AvatarImage userId={session?.id} name={session?.name} size={32} />
                 <div className={styles.headerUserInfo}>
                   <div className={styles.headerUserName}>{session?.name}</div>
                   <div className={styles.headerUserRole}>{ROLE_LABELS[role]}</div>

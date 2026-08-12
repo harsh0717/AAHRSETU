@@ -116,7 +116,7 @@ def create_user(
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-def update_user(
+async def update_user(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db),
@@ -193,6 +193,18 @@ def update_user(
         old_value=f"ID: {db_user.id}, Name: {old_name}, Email: {old_email}, Language: {old_lang}",
         new_value=f"Name: {db_user.name}, Email: {db_user.email}, Language: {db_user.preferred_language}"
     )
+
+    # Broadcast PROFILE_UPDATED to WebSocket clients
+    try:
+        from backend.services.notification import manager
+        await manager.broadcast({
+            "type": "PROFILE_UPDATED",
+            "user_id": db_user.id,
+            "avatar_url": db_user.avatar_url,
+            "avatar_version": db_user.avatar_version or 1
+        })
+    except Exception as err:
+        print(f"[WS BROADCAST ERROR] Failed to broadcast profile update: {err}")
     
     return UserResponse(
         id=db_user.id,

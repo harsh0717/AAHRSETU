@@ -24,7 +24,7 @@ def read_vendors(
 
 
 @router.put("/{vendor_id}/status", response_model=VendorResponse)
-def update_vendor_status(
+async def update_vendor_status(
     vendor_id: str,
     payload: VendorStatusUpdate,
     db: Session = Depends(get_db),
@@ -67,16 +67,15 @@ def update_vendor_status(
 
     # Broadcast real-time status update to all connected WebSocket clients
     try:
-        import asyncio
         from backend.services.notification import manager
-        asyncio.create_task(manager.broadcast({
+        await manager.broadcast({
             "type": "VENDOR_STATUS_UPDATED",
             "vendor_id": vendor.id,
             "status": payload.status,
             "vendor_name": vendor.name
-        }))
-    except Exception:
-        pass
+        })
+    except Exception as err:
+        print(f"[WS BROADCAST ERROR] Failed to broadcast vendor status: {err}")
 
     return vendor
 

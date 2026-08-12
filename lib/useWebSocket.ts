@@ -42,10 +42,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
   }, []);
 
-  // Poll notifications as a fallback
+  // Poll notifications & vendor status as fallback
   const startFallbackPolling = useCallback(() => {
     if (fallbackPollingIntervalRef.current) return;
-    console.log('[WS CLIENT] Starting fallback polling for notifications...');
+    console.log('[WS CLIENT] Starting fallback polling for notifications & vendor status...');
     
     // Immediate initial poll
     getNotifications().then((list) => {
@@ -56,10 +56,20 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       try {
         const list = await getNotifications();
         list.forEach(handleNotification);
+
+        // Periodically refetch vendors from PostgreSQL backend
+        const { getVendors } = await import('./vendors');
+        const vendors = await getVendors();
+        if (typeof window !== 'undefined' && vendors && vendors.length > 0) {
+          vendors.forEach(v => {
+            localStorage.setItem(`aharsetu_vendor_status_${v.id}`, v.status);
+          });
+          window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendors } }));
+        }
       } catch (err) {
         console.error('[WS CLIENT] Fallback polling error:', err);
       }
-    }, 10000); // Poll every 10 seconds
+    }, 5000); // Poll every 5 seconds for instant cross-device updates
   }, [handleNotification]);
 
   const stopFallbackPolling = useCallback(() => {
@@ -81,6 +91,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     let wsUrl = '';
     if (process.env.NEXT_PUBLIC_WS_URL) {
       wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`;
+    } else if (process.env.NEXT_PUBLIC_API_URL) {
+      const apiHost = process.env.NEXT_PUBLIC_API_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const protocol = process.env.NEXT_PUBLIC_API_URL.startsWith('https') ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${apiHost}/api/v1/notifications/ws?token=${token}`;
     } else {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.hostname === 'localhost' ? '127.0.0.1:8000' : window.location.host;
@@ -108,9 +122,26 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     socket.onmessage = (event) => {
       if (event.data === 'pong') return;
       try {
-        const notif = JSON.parse(event.data);
-        console.log('[WS CLIENT] Received notification payload:', notif);
-        handleNotification(notif);
+        const payload = JSON.parse(event.data);
+        console.log('[WS CLIENT] Received payload:', payload);
+
+        if (payload.type === 'VENDOR_STATUS_UPDATED') {
+          if (typeof window !== 'undefined') {
+            if (payload.vendor_id && payload.status) {
+              localStorage.setItem(`aharsetu_vendor_status_${payload.vendor_id}`, payload.status);
+            }
+            window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: payload }));
+          }
+        } else if (payload.type === 'PROFILE_UPDATED') {
+          if (typeof window !== 'undefined') {
+            if (payload.avatar_url) {
+              localStorage.setItem(`aharsetu_avatar_${payload.user_id}`, payload.avatar_url);
+            }
+            window.dispatchEvent(new Event('aharsetu_avatar_changed'));
+          }
+        } else {
+          handleNotification(payload);
+        }
       } catch (err) {
         console.error('[WS CLIENT] Failed to parse WebSocket message:', err);
       }

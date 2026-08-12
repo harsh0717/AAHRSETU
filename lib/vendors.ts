@@ -150,23 +150,28 @@ function saveLocalMenu(vendorId: string, items: MenuItem[]) {
 export async function getVendors(): Promise<Vendor[]> {
   let vendorList: Vendor[] = [];
   try {
-    const res = await api.get<Vendor[]>('/vendors/');
-    if (res && Array.isArray(res) && res.length > 0) {
-      saveLocalVendors(res);
-      vendorList = res;
+    const apiVendors = await api.get<Vendor[]>('/vendors/');
+    if (apiVendors && Array.isArray(apiVendors) && apiVendors.length > 0) {
+      vendorList = apiVendors;
+      // Sync fresh server status to local storage
+      if (typeof window !== 'undefined') {
+        vendorList.forEach(v => {
+          localStorage.setItem(`aharsetu_vendor_status_${v.id}`, v.status);
+        });
+      }
+      saveLocalVendors(vendorList);
     } else {
       vendorList = getLocalVendors();
     }
   } catch (err) {
     vendorList = getLocalVendors();
-  }
-
-  // Apply persistent status overrides
-  if (typeof window !== 'undefined') {
-    vendorList = vendorList.map(v => {
-      const overrideStatus = localStorage.getItem(`aharsetu_vendor_status_${v.id}`);
-      return overrideStatus ? { ...v, status: overrideStatus } : v;
-    });
+    // Fallback to local storage override only on network/API failure
+    if (typeof window !== 'undefined') {
+      vendorList = vendorList.map(v => {
+        const overrideStatus = localStorage.getItem(`aharsetu_vendor_status_${v.id}`);
+        return overrideStatus ? { ...v, status: overrideStatus } : v;
+      });
+    }
   }
 
   return vendorList;

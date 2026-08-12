@@ -324,7 +324,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
             {/* TAB: CREATE REQUISITION */}
             {activeTab === 'create' && (
-              <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '20px', alignItems: 'start' }}>
+              <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: typeof window !== 'undefined' && window.innerWidth < 900 ? '1fr' : '2fr 1fr', gap: '20px', alignItems: 'start' }}>
                 {/* Step 1 & 2: Menu items list */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {menuByVendor.map(v => (

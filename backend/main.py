@@ -20,16 +20,21 @@ try:
     Base.metadata.create_all(bind=engine)
     logger.info("Database schema initialized successfully.")
     
-    # Auto-seed if database is empty
+    # Auto-seed and migration check
     db = SessionLocal()
     try:
+        from sqlalchemy import text
+        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500);"))
+        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_version INTEGER DEFAULT 1;"))
+        db.commit()
+
         user_count = db.query(User).count()
         if user_count == 0:
             logger.info("Database is empty. Seeding AharSetu v2.0 baseline data...")
             seed_all_database(db)
             logger.info("Database successfully seeded.")
         else:
-            logger.info(f"Database already contains {user_count} user(s). Skipping seeding.")
+            logger.info(f"Database already contains {user_count} user(s). Migration checked successfully.")
     finally:
         db.close()
 except Exception as e:

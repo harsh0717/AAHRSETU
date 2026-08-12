@@ -649,6 +649,17 @@
   }
 }
 
+@media (max-width: 640px) {
+  .demoGrid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  .demoCard {
+    padding: 12px 14px;
+    width: 100%;
+  }
+}
+
 @media (max-width: 480px) {
   .stepsHeader {
     gap: 4px;

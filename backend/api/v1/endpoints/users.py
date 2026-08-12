@@ -170,6 +170,10 @@ def update_user(
     old_email = db_user.email
     old_lang = db_user.preferred_language
     
+    if "avatar_url" in update_data and update_data["avatar_url"]:
+        db_user.avatar_version = (db_user.avatar_version or 1) + 1
+        update_data["avatar_version"] = db_user.avatar_version
+
     # Perform update
     user_repo.update(db_user, update_data)
     
@@ -198,6 +202,8 @@ def update_user(
         department_id=db_user.department_id,
         vendor_id=db_user.vendor_id,
         preferred_language=db_user.preferred_language,
+        avatar_url=db_user.avatar_url,
+        avatar_version=db_user.avatar_version or 1,
         active=db_user.active,
         principal_depts=principal_depts,
         created_at=db_user.created_at

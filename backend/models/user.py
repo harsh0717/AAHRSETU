@@ -38,6 +38,8 @@ class User(Base):
     vendor_id = Column(String(50), ForeignKey("vendors.id", ondelete="SET NULL"), nullable=True)
     
     preferred_language = Column(String(10), default="en", nullable=False)
+    avatar_url = Column(String(500), nullable=True)
+    avatar_version = Column(Integer, default=1, nullable=False)
     active = Column(Boolean, default=True, nullable=False)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

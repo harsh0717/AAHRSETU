@@ -95,8 +95,13 @@ class ConnectionManager:
                     pass # Closed connections handled gracefully
 
     async def broadcast_to_role(self, message: dict, role: str):
-        if role in self.role_connections:
-            for connection in self.role_connections[role]:
+                    await connection.send_json(message)
+                except Exception:
+                    pass
+
+    async def broadcast(self, message: dict):
+        for user_conns in self.active_connections.values():
+            for connection in user_conns:
                 try:
                     await connection.send_json(message)
                 except Exception:

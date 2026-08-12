@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { getSession } from '@/lib/auth';
 
 interface AvatarImageProps {
   userId?: number | string | null;
@@ -19,12 +20,25 @@ export default function AvatarImage({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userId || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
     const loadAvatar = () => {
-      const stored = localStorage.getItem(`aharsetu_avatar_${userId}`);
+      const activeUser = getSession();
+      const currentId = userId || activeUser?.id;
+      if (!currentId) return;
+
+      const stored = localStorage.getItem(`aharsetu_avatar_${currentId}`);
+      const ver = localStorage.getItem(`aharsetu_avatar_ver_${currentId}`) || activeUser?.avatar_version || '1';
+
       if (stored) {
-        setAvatarUrl(stored);
+        // Append cache buster if URL (non-base64)
+        if (stored.startsWith('http')) {
+          setAvatarUrl(`${stored}?v=${ver}`);
+        } else {
+          setAvatarUrl(stored);
+        }
+      } else if (activeUser?.avatar_url) {
+        setAvatarUrl(`${activeUser.avatar_url}?v=${activeUser.avatar_version || 1}`);
       } else {
         setAvatarUrl(null);
       }

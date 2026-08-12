@@ -64,6 +64,20 @@ def update_vendor_status(
         old_value=old_status,
         new_value=payload.status
     )
+
+    # Broadcast real-time status update to all connected WebSocket clients
+    try:
+        import asyncio
+        from backend.services.notification import manager
+        asyncio.create_task(manager.broadcast({
+            "type": "VENDOR_STATUS_UPDATED",
+            "vendor_id": vendor.id,
+            "status": payload.status,
+            "vendor_name": vendor.name
+        }))
+    except Exception:
+        pass
+
     return vendor
 
 

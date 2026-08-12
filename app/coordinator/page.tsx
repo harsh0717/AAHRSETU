@@ -324,47 +324,82 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
             {/* TAB: CREATE REQUISITION */}
             {activeTab === 'create' && (
-              <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start' }}>
-                {/* Menu items list */}
+              <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '20px', alignItems: 'start' }}>
+                {/* Step 1 & 2: Menu items list */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {menuByVendor.map(v => (
-                    <div key={v.id} className="card" style={{ padding: '20px' }}>
-                      <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px', color: 'var(--gray-800)', borderBottom: '1px solid var(--gray-100)', paddingBottom: '6px' }}>
-                        🏪 {v.name}
-                      </h3>
+                    <div key={v.id} className="card" style={{ padding: '20px', borderRadius: '16px', background: 'white' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--gray-100)', paddingBottom: '10px' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-800)', margin: 0 }}>
+                          🏪 {v.name}
+                        </h3>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A', background: '#DCFCE7', padding: '3px 8px', borderRadius: '12px' }}>
+                          🟢 OPEN
+                        </span>
+                      </div>
                       
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                         {v.menu.map(item => {
                           const nameKey = `menu.${item.name}`;
                           const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
                           const formattedUnit = item.unit.toLowerCase().replace(' ', '_');
                           const unitKey = `unit.${formattedUnit}`;
                           const translatedUnit = t(unitKey) !== unitKey ? t(unitKey) : item.unit;
+                          const qty = selectedItems[item.id] || 0;
                           
                           return (
-                            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                            <div key={item.id} style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '12px',
+                              borderRadius: '12px',
+                              background: qty > 0 ? '#EFF6FF' : '#F8FAFC',
+                              border: qty > 0 ? '1px solid #BFDBFE' : '1px solid #F1F5F9',
+                              transition: 'all 0.15s'
+                            }}>
                               <div>
-                                <strong style={{ color: 'var(--gray-800)' }}>{translatedName}</strong>
-                                <div style={{ fontSize: '0.72rem', color: 'var(--gray-400)' }}>₹{item.price} / {translatedUnit}</div>
+                                <strong style={{ color: '#0F172A', fontSize: '0.9rem', display: 'block' }}>{translatedName}</strong>
+                                <div style={{ fontSize: '0.78rem', color: '#2563EB', fontWeight: 700, marginTop: '2px' }}>₹{item.price} / {translatedUnit}</div>
                               </div>
                               
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <button
                                   type="button"
-                                  className="btn btn-ghost btn-sm"
-                                  style={{ width: '28px', height: '28px', padding: 0 }}
-                                  onClick={() => handleQtyChange(item.id, (selectedItems[item.id] || 0) - 1)}
+                                  className="btn btn-ghost"
+                                  style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    padding: 0,
+                                    borderRadius: '10px',
+                                    background: 'white',
+                                    border: '1px solid var(--gray-300)',
+                                    fontWeight: 800,
+                                    fontSize: '1.1rem',
+                                    color: qty > 0 ? '#2563EB' : 'var(--gray-500)'
+                                  }}
+                                  onClick={() => handleQtyChange(item.id, qty - 1)}
                                 >
                                   -
                                 </button>
-                                <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 700 }}>
-                                  {selectedItems[item.id] || 0}
+                                <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: 800, fontSize: '0.95rem' }}>
+                                  {qty}
                                 </span>
                                 <button
                                   type="button"
-                                  className="btn btn-ghost btn-sm"
-                                  style={{ width: '28px', height: '28px', padding: 0 }}
-                                  onClick={() => handleQtyChange(item.id, (selectedItems[item.id] || 0) + 1)}
+                                  className="btn btn-ghost"
+                                  style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    padding: 0,
+                                    borderRadius: '10px',
+                                    background: '#2563EB',
+                                    color: 'white',
+                                    fontWeight: 800,
+                                    fontSize: '1.1rem',
+                                    border: 'none'
+                                  }}
+                                  onClick={() => handleQtyChange(item.id, qty + 1)}
                                 >
                                   +
                                 </button>
@@ -376,17 +411,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                     </div>
                   ))}
                   {menuByVendor.length === 0 && (
-                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500)', background: 'white', borderRadius: '12px', border: '1px solid var(--gray-200)' }}>
+                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500)', background: 'white', borderRadius: '16px', border: '1px solid var(--gray-200)' }}>
                       {t('coord.no_vendors', 'No vendors are currently open with available menu items.')}
                     </div>
                   )}
                 </div>
 
-                {/* Form parameters */}
-                <div className="card" style={{ padding: '20px', position: 'sticky', top: '80px' }}>
-                  <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px' }}>{t('coord.draft_specs', 'Draft Specifications')}</h3>
+                {/* Step 3: Form parameters & Order Summary */}
+                <div className="card" style={{ padding: '20px', borderRadius: '16px', background: 'white', position: 'sticky', top: '80px' }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px', color: '#0F172A' }}>{t('coord.draft_specs', 'Draft Requisition Details')}</h3>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
                       <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                         {t('coord.event_title', 'Event Title')}
@@ -397,6 +432,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                         placeholder={t('coord.event_title_ph', 'e.g. Faculty Senate Meeting')}
                         value={title}
                         onChange={e => setTitle(e.target.value)}
+                        required
                       />
                     </div>
 
@@ -410,15 +446,20 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                         placeholder={t('coord.meeting_ph', 'Brief description of official event')}
                         value={purpose}
                         onChange={e => setPurpose(e.target.value)}
+                        required
                       />
                     </div>
 
-                    <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '10px', marginTop: '10px' }}>
+                    <div style={{ borderTop: '1px solid var(--gray-200)', paddingTop: '14px', marginTop: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem', fontWeight: 800 }}>
+                        <span>Total Items:</span>
+                        <span>{Object.values(selectedItems).reduce((a, b) => a + b, 0)} items</span>
+                      </div>
                       <button
                         type="submit"
                         disabled={submitting}
                         className="btn btn-primary"
-                        style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '6px' }}
+                        style={{ width: '100%', padding: '12px', fontSize: '0.9rem', fontWeight: 800, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', borderRadius: '12px' }}
                       >
                         {submitting ? t('coord.drafting_btn', 'Drafting...') : `🚀 ${t('coord.draft_btn', 'Draft Requisition')}`}
                       </button>

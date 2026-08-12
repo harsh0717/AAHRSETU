@@ -37,6 +37,8 @@ class UserUpdate(BaseModel):
     department_id: Optional[str] = None
     vendor_id: Optional[str] = None
     preferred_language: Optional[str] = None
+    avatar_url: Optional[str] = None
+    avatar_version: Optional[int] = None
     active: Optional[bool] = None
     principal_depts: Optional[List[str]] = None
 
@@ -45,6 +47,8 @@ class UserResponse(UserBase):
     id: int
     department_id: Optional[str] = None
     vendor_id: Optional[str] = None
+    avatar_url: Optional[str] = None
+    avatar_version: int = 1
     principal_depts: List[str] = []
     created_at: datetime
 

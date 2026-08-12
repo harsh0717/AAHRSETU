@@ -327,10 +327,20 @@ export async function createMasterOrder(orderData: {
     else if (it.menu_item_id.startsWith('v3')) vId = 'v3';
     else if (it.menu_item_id.startsWith('v4')) vId = 'v4';
 
-    const unitPrice = 15.0; // Standard menu unit price snapshot
+    // Lookup actual menu price snapshot
+    let unitPrice = 15.0;
+    const readableName = getMenuItemName(it.menu_item_id);
+    if (readableName.includes('Tea')) unitPrice = 10.0;
+    else if (readableName.includes('Samosa')) unitPrice = 15.0;
+    else if (readableName.includes('Kachori')) unitPrice = 18.0;
+    else if (readableName.includes('Coffee')) unitPrice = 15.0;
+    else if (readableName.includes('Veg Lunch')) unitPrice = 80.0;
+    else if (readableName.includes('Idli')) unitPrice = 40.0;
+    else if (readableName.includes('Thali')) unitPrice = 100.0;
+    else if (readableName.includes('Sandwich')) unitPrice = 35.0;
+
     const itemSubtotal = unitPrice * it.quantity;
     totalCalculated += itemSubtotal;
-    const readableName = getMenuItemName(it.menu_item_id);
 
     if (!itemsByVendor[vId]) itemsByVendor[vId] = [];
     itemsByVendor[vId].push({

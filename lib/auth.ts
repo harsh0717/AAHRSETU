@@ -256,7 +256,20 @@ export function getSession(): UserProfile | null {
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (raw) return JSON.parse(raw);
     
-    // Check persistent device session if sessionStorage is uninitialized in new tab/browser restart
+    // Determine path role context if available
+    const path = window.location.pathname;
+    const pathRole = path.split('/')[1];
+
+    if (pathRole && ['coordinator', 'principal', 'dcr', 'vendor', 'admin'].includes(pathRole)) {
+      const roleRaw = localStorage.getItem(`aharsetu_remember_${pathRole}`);
+      if (roleRaw) {
+        const roleUser = JSON.parse(roleRaw);
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(roleUser));
+        return roleUser;
+      }
+    }
+
+    // Check fallback persistent device session
     const isRemembered = localStorage.getItem('aharsetu_remember_device') === 'true';
     if (isRemembered) {
       const pRaw = localStorage.getItem('aharsetu_persistent_session');
@@ -273,15 +286,12 @@ export function getSession(): UserProfile | null {
 export function setSession(session: UserProfile, rememberDevice = false) {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(`aharsetu_remember_${session.role}`, JSON.stringify(session));
+
   if (rememberDevice) {
     try {
       localStorage.setItem('aharsetu_remember_device', 'true');
       localStorage.setItem('aharsetu_persistent_session', JSON.stringify(session));
-    } catch {}
-  } else {
-    try {
-      localStorage.removeItem('aharsetu_remember_device');
-      localStorage.removeItem('aharsetu_persistent_session');
     } catch {}
   }
 }

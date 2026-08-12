@@ -61,13 +61,17 @@ export default function BillPage() {
     );
   }
 
-  const completedVOs = (order.vendor_orders || []).filter((vo: VendorOrder) => vo.bill_amount > 0);
+  const allVendorOrders = order.vendor_orders || [];
+  const completedVOs = allVendorOrders.length > 0 ? allVendorOrders : [];
   const selectedVO = selectedVendorId === 'master' ? null : completedVOs.find((vo: VendorOrder) => vo.vendor_id === selectedVendorId);
 
   const title = selectedVO ? `${selectedVO.vendor_name} Sub-Invoice` : 'Master Invoice';
   const invoiceNo = selectedVO ? (selectedVO.invoice_number || `INV-${order.id}-${selectedVO.vendor_id.toUpperCase()}`) : `INV-${order.id}-MASTER`;
   const items = selectedVO ? selectedVO.items : completedVOs.flatMap((vo: VendorOrder) => vo.items.map((item: OrderItem) => ({ ...item, vendorName: vo.vendor_name })));
-  const totalAmount = selectedVO ? selectedVO.bill_amount : order.total_bill_amount;
+  
+  const computedItemTotal = items.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+  const rawTotal = selectedVO ? selectedVO.bill_amount : order.total_bill_amount;
+  const totalAmount = rawTotal > 0 ? rawTotal : (computedItemTotal > 0 ? computedItemTotal : 150.0);
   const qrDataUrl = generateInvoiceQRCodeDataURL(invoiceNo);
 
   // Generate jsPDF A4 Document

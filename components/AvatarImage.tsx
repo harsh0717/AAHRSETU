@@ -46,11 +46,18 @@ export default function AvatarImage({
 
     loadAvatar();
 
-    // Listen for avatar updates
+    // Heartbeat sync every 3 seconds for cross-device avatar updates
+    const avatarInterval = setInterval(loadAvatar, 3000);
+
+    // Listen for avatar updates & tab focus
     const handleAvatarUpdate = () => loadAvatar();
     window.addEventListener('aharsetu_avatar_changed', handleAvatarUpdate);
+    window.addEventListener('focus', handleAvatarUpdate);
+
     return () => {
+      clearInterval(avatarInterval);
       window.removeEventListener('aharsetu_avatar_changed', handleAvatarUpdate);
+      window.removeEventListener('focus', handleAvatarUpdate);
     };
   }, [userId]);
 

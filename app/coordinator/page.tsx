@@ -90,12 +90,23 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     const handleStatusChange = () => {
       getAvailableMenuByVendor().then(mList => setMenuByVendor(mList)).catch(() => {});
     };
+
+    // Heartbeat sync every 3 seconds to guarantee cross-device status reflection
+    const syncInterval = setInterval(handleStatusChange, 3000);
+
+    const handleFocus = () => handleStatusChange();
+
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
+      window.addEventListener('focus', handleFocus);
+      document.addEventListener('visibilitychange', handleFocus);
     }
     return () => {
+      clearInterval(syncInterval);
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
+        window.removeEventListener('focus', handleFocus);
+        document.removeEventListener('visibilitychange', handleFocus);
       }
     };
   }, []);

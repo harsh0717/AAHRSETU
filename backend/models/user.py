@@ -40,6 +40,8 @@ class User(Base):
     preferred_language = Column(String(10), default="en", nullable=False)
     avatar_url = Column(String(500), nullable=True)
     avatar_version = Column(Integer, default=1, nullable=False)
+    mobile_number = Column(String(15), nullable=True)
+    profile_setup_completed = Column(Boolean, default=False, nullable=False)
     active = Column(Boolean, default=True, nullable=False)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

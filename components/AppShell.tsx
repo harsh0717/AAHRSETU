@@ -41,7 +41,20 @@ export default function AppShell({ children, role }: AppShellProps) {
 
     const handleOpenCmd = () => setShowCmdPalette(true);
     window.addEventListener('open_command_palette', handleOpenCmd);
-    return () => window.removeEventListener('open_command_palette', handleOpenCmd);
+
+    // Re-read session whenever profile is updated (from any device via WS or same-device)
+    const handleProfileChange = () => {
+      const updated = getSession();
+      if (updated) setSession(updated);
+    };
+    window.addEventListener('aharsetu_profile_changed', handleProfileChange);
+    window.addEventListener('focus', handleProfileChange);
+
+    return () => {
+      window.removeEventListener('open_command_palette', handleOpenCmd);
+      window.removeEventListener('aharsetu_profile_changed', handleProfileChange);
+      window.removeEventListener('focus', handleProfileChange);
+    };
   }, [router]);
 
   async function handleLogout() {

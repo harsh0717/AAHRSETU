@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, EmailStr
+import re
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class DepartmentBase(BaseModel):
@@ -39,8 +40,20 @@ class UserUpdate(BaseModel):
     preferred_language: Optional[str] = None
     avatar_url: Optional[str] = None
     avatar_version: Optional[int] = None
+    mobile_number: Optional[str] = None
+    profile_setup_completed: Optional[bool] = None
     active: Optional[bool] = None
     principal_depts: Optional[List[str]] = None
+
+    @field_validator("mobile_number", mode="before")
+    @classmethod
+    def validate_mobile_number(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        digits_only = re.sub(r"\D", "", str(v))
+        if len(digits_only) != 10:
+            raise ValueError("Mobile number must be exactly 10 digits")
+        return digits_only
 
 
 class UserResponse(UserBase):
@@ -49,6 +62,8 @@ class UserResponse(UserBase):
     vendor_id: Optional[str] = None
     avatar_url: Optional[str] = None
     avatar_version: int = 1
+    mobile_number: Optional[str] = None
+    profile_setup_completed: bool = False
     principal_depts: List[str] = []
     created_at: datetime
 

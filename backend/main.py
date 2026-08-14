@@ -1,6 +1,8 @@
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from backend.core.config import settings
 from backend.core.database import engine, Base, SessionLocal
 from backend.api.v1.api import api_router
@@ -27,6 +29,8 @@ try:
         if engine.dialect.name != "sqlite":
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500);"))
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_version INTEGER DEFAULT 1;"))
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(15);"))
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_setup_completed BOOLEAN DEFAULT FALSE;"))
             db.commit()
 
         user_count = db.query(User).count()
@@ -75,6 +79,11 @@ app.add_middleware(
 @app.get("/health", tags=["system"])
 def health_check():
     return {"status": "healthy", "service": settings.PROJECT_NAME}
+
+# Serve uploaded avatar images as static files
+uploads_dir = os.path.join(os.path.dirname(__file__), "..", "public", "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # Include API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)

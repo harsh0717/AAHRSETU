@@ -85,7 +85,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     const session = getSession();
     if (!session) return;
 
-    const token = localStorage.getItem('aharsetu_access_token');
+    // Tokens are stored in sessionStorage by api.ts; check there first, then localStorage fallback
+    const token =
+      sessionStorage.getItem('aharsetu_access_token') ||
+      localStorage.getItem('aharsetu_access_token');
     if (!token) return;
 
     let wsUrl = '';
@@ -119,7 +122,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       }, 10000);
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       if (event.data === 'pong') return;
       try {
         const payload = JSON.parse(event.data);
@@ -133,11 +136,22 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: payload }));
           }
         } else if (payload.type === 'PROFILE_UPDATED') {
+          // Update the session cache so all components get fresh data
           if (typeof window !== 'undefined') {
-            if (payload.avatar_url) {
-              localStorage.setItem(`aharsetu_avatar_${payload.user_id}`, payload.avatar_url);
+            const { getSession, setSession } = await import('./auth');
+            const currentSession = getSession();
+            if (currentSession && currentSession.id === payload.user_id) {
+              const updatedSession = {
+                ...currentSession,
+                name: payload.name ?? currentSession.name,
+                mobile_number: payload.mobile_number ?? currentSession.mobile_number,
+                avatar_url: payload.avatar_url ?? currentSession.avatar_url,
+                avatar_version: payload.avatar_version ?? currentSession.avatar_version,
+                profile_setup_completed: payload.profile_setup_completed ?? currentSession.profile_setup_completed,
+              };
+              setSession(updatedSession, true);
+              window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updatedSession }));
             }
-            window.dispatchEvent(new Event('aharsetu_avatar_changed'));
           }
         } else {
           handleNotification(payload);

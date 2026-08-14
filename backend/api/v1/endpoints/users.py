@@ -1,5 +1,8 @@
+import os
+import uuid
+import shutil
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
 from backend.api import deps
 from backend.core.database import get_db
@@ -9,6 +12,31 @@ from backend.repositories.user import UserRepository
 from backend.schemas.user import UserCreate, UserResponse, UserUpdate, DepartmentResponse
 
 router = APIRouter()
+
+# Allowed image MIME types for profile photos
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024  # 5MB
+
+
+def _user_to_response(u: User) -> UserResponse:
+    """Convert a User ORM object to a UserResponse schema."""
+    principal_depts = [d.id for d in u.managed_departments]
+    return UserResponse(
+        id=u.id,
+        name=u.name,
+        email=u.email,
+        role=u.role,
+        department_id=u.department_id,
+        vendor_id=u.vendor_id,
+        preferred_language=u.preferred_language,
+        avatar_url=u.avatar_url,
+        avatar_version=u.avatar_version or 1,
+        mobile_number=u.mobile_number,
+        profile_setup_completed=u.profile_setup_completed or False,
+        active=u.active,
+        principal_depts=principal_depts,
+        created_at=u.created_at,
+    )
 
 
 @router.get("/departments", response_model=List[DepartmentResponse])
@@ -34,25 +62,7 @@ def read_users(
     """
     user_repo = UserRepository(db)
     users = user_repo.get_multi(skip=skip, limit=limit)
-    
-    response = []
-    for u in users:
-        principal_depts = [d.id for d in u.managed_departments]
-        response.append(
-            UserResponse(
-                id=u.id,
-                name=u.name,
-                email=u.email,
-                role=u.role,
-                department_id=u.department_id,
-                vendor_id=u.vendor_id,
-                preferred_language=u.preferred_language,
-                active=u.active,
-                principal_depts=principal_depts,
-                created_at=u.created_at
-            )
-        )
-    return response
+    return [_user_to_response(u) for u in users]
 
 
 @router.post("/", response_model=UserResponse)
@@ -71,7 +81,7 @@ def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A user with this email already exists."
         )
-        
+
     db_user = User(
         name=payload.name,
         email=payload.email,
@@ -83,14 +93,10 @@ def create_user(
         active=payload.active
     )
     user_repo.create(db_user)
-    
-    # Save principal departments if principal role
+
     if payload.role == "principal" and payload.principal_depts:
         user_repo.set_managed_departments(db_user, payload.principal_depts)
-        
-    principal_depts = [d.id for d in db_user.managed_departments]
-    
-    # Audit log user creation
+
     from backend.repositories.audit import AuditRepository
     audit_repo = AuditRepository(db)
     audit_repo.log_action(
@@ -100,19 +106,8 @@ def create_user(
         action="User Created",
         new_value=f"ID: {db_user.id}, Email: {db_user.email}, Role: {db_user.role}"
     )
-    
-    return UserResponse(
-        id=db_user.id,
-        name=db_user.name,
-        email=db_user.email,
-        role=db_user.role,
-        department_id=db_user.department_id,
-        vendor_id=db_user.vendor_id,
-        preferred_language=db_user.preferred_language,
-        active=db_user.active,
-        principal_depts=principal_depts,
-        created_at=db_user.created_at
-    )
+
+    return _user_to_response(db_user)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -123,7 +118,8 @@ async def update_user(
     current_user: User = Depends(deps.get_current_user)
 ) -> Any:
     """
-    Update an existing user account (Admin-only).
+    Update an existing user account.
+    Admins can update any user. Users can update their own profile fields only.
     """
     user_repo = UserRepository(db)
     db_user = user_repo.get(user_id)
@@ -133,14 +129,12 @@ async def update_user(
             detail="User not found"
         )
 
-    # Restrict users from updating other user accounts unless they are admins
     if current_user.role != "admin" and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update this profile"
         )
-        
-    # Check email conflict
+
     if payload.email and payload.email != db_user.email:
         conflict = user_repo.get_by_email(payload.email)
         if conflict:
@@ -148,41 +142,36 @@ async def update_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="A user with this email already exists."
             )
-            
-    # Update fields
+
     update_data = payload.model_dump(exclude_unset=True)
-    
-    # If not admin, sanitize update payload to prevent escalation
+
     if current_user.role != "admin":
         update_data.pop("role", None)
         update_data.pop("department_id", None)
         update_data.pop("vendor_id", None)
         update_data.pop("active", None)
         update_data.pop("principal_depts", None)
+
     if "password" in update_data and update_data["password"]:
         update_data["password_hash"] = get_password_hash(update_data.pop("password"))
     else:
         update_data.pop("password", None)
-        
+
     principal_depts_list = update_data.pop("principal_depts", None)
-    
+
     old_name = db_user.name
     old_email = db_user.email
     old_lang = db_user.preferred_language
-    
+
     if "avatar_url" in update_data and update_data["avatar_url"]:
         db_user.avatar_version = (db_user.avatar_version or 1) + 1
         update_data["avatar_version"] = db_user.avatar_version
 
-    # Perform update
     user_repo.update(db_user, update_data)
-    
+
     if principal_depts_list is not None and db_user.role == "principal":
         user_repo.set_managed_departments(db_user, principal_depts_list)
-        
-    principal_depts = [d.id for d in db_user.managed_departments]
-    
-    # Audit log user update
+
     from backend.repositories.audit import AuditRepository
     audit_repo = AuditRepository(db)
     audit_repo.log_action(
@@ -194,32 +183,133 @@ async def update_user(
         new_value=f"Name: {db_user.name}, Email: {db_user.email}, Language: {db_user.preferred_language}"
     )
 
-    # Broadcast PROFILE_UPDATED to WebSocket clients
+    # Broadcast PROFILE_UPDATED to WebSocket clients with full profile data
     try:
         from backend.services.notification import manager
         await manager.broadcast({
             "type": "PROFILE_UPDATED",
             "user_id": db_user.id,
+            "name": db_user.name,
+            "mobile_number": db_user.mobile_number,
             "avatar_url": db_user.avatar_url,
-            "avatar_version": db_user.avatar_version or 1
+            "avatar_version": db_user.avatar_version or 1,
+            "profile_setup_completed": db_user.profile_setup_completed or False
         })
     except Exception as err:
         print(f"[WS BROADCAST ERROR] Failed to broadcast profile update: {err}")
-    
-    return UserResponse(
-        id=db_user.id,
-        name=db_user.name,
-        email=db_user.email,
-        role=db_user.role,
-        department_id=db_user.department_id,
-        vendor_id=db_user.vendor_id,
-        preferred_language=db_user.preferred_language,
-        avatar_url=db_user.avatar_url,
-        avatar_version=db_user.avatar_version or 1,
-        active=db_user.active,
-        principal_depts=principal_depts,
-        created_at=db_user.created_at
+
+    return _user_to_response(db_user)
+
+
+@router.post("/{user_id}/avatar", response_model=UserResponse)
+async def upload_avatar(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Upload a profile photo for a user.
+    Validates file type (JPEG/PNG/WEBP) and size (max 5MB).
+    Saves to persistent storage and updates the user's avatar_url in the database.
+    """
+    if current_user.role != "admin" and current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this user's avatar"
+        )
+
+    # Validate MIME type
+    content_type = file.content_type or ""
+    if content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file type '{content_type}'. Only JPEG, PNG, and WEBP images are allowed."
+        )
+
+    # Read and validate file size
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_AVATAR_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size exceeds the 5MB limit."
+        )
+
+    # Validate file signature (magic bytes)
+    if content_type == "image/jpeg" and not file_bytes[:3] == b'\xff\xd8\xff':
+        raise HTTPException(status_code=400, detail="Invalid JPEG file.")
+    elif content_type == "image/png" and not file_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+        raise HTTPException(status_code=400, detail="Invalid PNG file.")
+
+    user_repo = UserRepository(db)
+    db_user = user_repo.get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # New avatar version
+    new_version = (db_user.avatar_version or 1) + 1
+
+    # Determine extension from content type
+    ext_map = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+    ext = ext_map.get(content_type, "jpg")
+
+    # Build persistent storage path
+    uploads_dir = os.path.join(
+        os.path.dirname(__file__), "..", "..", "..", "..", "public", "uploads", "avatars"
     )
+    os.makedirs(uploads_dir, exist_ok=True)
+
+    # Delete old avatar file if it exists
+    if db_user.avatar_url:
+        old_filename = os.path.basename(db_user.avatar_url.split("?")[0])
+        old_path = os.path.join(uploads_dir, old_filename)
+        if os.path.exists(old_path):
+            try:
+                os.remove(old_path)
+            except Exception:
+                pass
+
+    filename = f"user_{user_id}_v{new_version}_{uuid.uuid4().hex[:8]}.{ext}"
+    file_path = os.path.join(uploads_dir, filename)
+
+    with open(file_path, "wb") as f:
+        f.write(file_bytes)
+
+    # Build public URL (accessible via /uploads/avatars/{filename})
+    avatar_url = f"/uploads/avatars/{filename}"
+
+    # Update database
+    user_repo.update(db_user, {
+        "avatar_url": avatar_url,
+        "avatar_version": new_version
+    })
+
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Avatar Updated",
+        new_value=f"User ID: {user_id}, URL: {avatar_url}"
+    )
+
+    # Broadcast PROFILE_UPDATED with full profile data
+    try:
+        from backend.services.notification import manager
+        await manager.broadcast({
+            "type": "PROFILE_UPDATED",
+            "user_id": db_user.id,
+            "name": db_user.name,
+            "mobile_number": db_user.mobile_number,
+            "avatar_url": avatar_url,
+            "avatar_version": new_version,
+            "profile_setup_completed": db_user.profile_setup_completed or False
+        })
+    except Exception as err:
+        print(f"[WS BROADCAST ERROR] Failed to broadcast avatar update: {err}")
+
+    return _user_to_response(db_user)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -236,19 +326,18 @@ def delete_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Self-deletion is prohibited."
         )
-        
+
     user_repo = UserRepository(db)
     target_user = user_repo.get(user_id)
     target_email = target_user.email if target_user else str(user_id)
-    
+
     removed = user_repo.remove(user_id)
     if not removed:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-        
-    # Audit log user deletion
+
     from backend.repositories.audit import AuditRepository
     audit_repo = AuditRepository(db)
     audit_repo.log_action(

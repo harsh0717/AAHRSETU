@@ -18,27 +18,29 @@ export default function AvatarImage({
   style
 }: AvatarImageProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(name ?? null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const loadAvatar = () => {
       const activeUser = getSession();
-      const currentId = userId || activeUser?.id;
-      if (!currentId) return;
+      // Only show avatar if this component is for the currently logged-in user
+      const isCurrentUser = !userId || userId === activeUser?.id;
+      if (!isCurrentUser || !activeUser) {
+        setAvatarUrl(null);
+        return;
+      }
 
-      const stored = localStorage.getItem(`aharsetu_avatar_${currentId}`);
-      const ver = localStorage.getItem(`aharsetu_avatar_ver_${currentId}`) || activeUser?.avatar_version || '1';
+      setDisplayName(activeUser.name || name || null);
 
-      if (stored) {
-        // Append cache buster if URL (non-base64)
-        if (stored.startsWith('http')) {
-          setAvatarUrl(`${stored}?v=${ver}`);
-        } else {
-          setAvatarUrl(stored);
-        }
-      } else if (activeUser?.avatar_url) {
-        setAvatarUrl(`${activeUser.avatar_url}?v=${activeUser.avatar_version || 1}`);
+      if (activeUser.avatar_url) {
+        const version = activeUser.avatar_version || 1;
+        // Cache-bust with version number so browser fetches updated photo
+        const url = activeUser.avatar_url.startsWith('http')
+          ? `${activeUser.avatar_url}?v=${version}`
+          : `${activeUser.avatar_url}?v=${version}`;
+        setAvatarUrl(url);
       } else {
         setAvatarUrl(null);
       }
@@ -46,26 +48,22 @@ export default function AvatarImage({
 
     loadAvatar();
 
-    // Heartbeat sync every 3 seconds for cross-device avatar updates
-    const avatarInterval = setInterval(loadAvatar, 3000);
-
-    // Listen for avatar updates & tab focus
-    const handleAvatarUpdate = () => loadAvatar();
-    window.addEventListener('aharsetu_avatar_changed', handleAvatarUpdate);
-    window.addEventListener('focus', handleAvatarUpdate);
+    // Listen for profile updates dispatched by auth.ts and useWebSocket.ts
+    const handleProfileChange = () => loadAvatar();
+    window.addEventListener('aharsetu_profile_changed', handleProfileChange);
+    window.addEventListener('focus', handleProfileChange);
 
     return () => {
-      clearInterval(avatarInterval);
-      window.removeEventListener('aharsetu_avatar_changed', handleAvatarUpdate);
-      window.removeEventListener('focus', handleAvatarUpdate);
+      window.removeEventListener('aharsetu_profile_changed', handleProfileChange);
+      window.removeEventListener('focus', handleProfileChange);
     };
-  }, [userId]);
+  }, [userId, name]);
 
   if (avatarUrl) {
     return (
       <img
         src={avatarUrl}
-        alt={name || 'User Avatar'}
+        alt={displayName || 'User Avatar'}
         style={{
           width: `${size}px`,
           height: `${size}px`,
@@ -76,11 +74,12 @@ export default function AvatarImage({
           ...style
         }}
         className={className}
+        onError={() => setAvatarUrl(null)}
       />
     );
   }
 
-  const initial = name?.[0]?.toUpperCase() || '?';
+  const initial = (displayName || name)?.[0]?.toUpperCase() || '?';
 
   return (
     <div

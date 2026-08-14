@@ -13,6 +13,8 @@ export interface UserProfile {
   preferred_language: string;
   avatar_url?: string | null;
   avatar_version?: number;
+  mobile_number?: string | null;
+  profile_setup_completed?: boolean;
   active: boolean;
   principal_depts: string[];
   created_at: string;
@@ -327,32 +329,43 @@ export async function updateSessionLanguage(lang: string) {
   }
 }
 
-export async function updateUserProfile(payload: { name?: string; avatar_url?: string }): Promise<UserProfile> {
+export async function updateUserProfile(payload: {
+  name?: string;
+  mobile_number?: string | null;
+  profile_setup_completed?: boolean;
+  avatar_url?: string;
+}): Promise<UserProfile> {
   const session = getSession();
   if (!session) throw new Error('No active session');
 
-  let updated = { ...session, ...payload };
+  // Call backend API - this is the source of truth
+  const res = await api.put<UserProfile>(`/users/${session.id}`, payload);
+  const updated = res || { ...session, ...payload };
 
-  // Store avatar locally in localStorage as base64 backup / immediate preview
-  if (payload.avatar_url && typeof window !== 'undefined') {
-    localStorage.setItem(`aharsetu_avatar_${session.id}`, payload.avatar_url);
-    const ver = (session.avatar_version || 1) + 1;
-    updated.avatar_version = ver;
-    localStorage.setItem(`aharsetu_avatar_ver_${session.id}`, String(ver));
-  }
-
-  try {
-    const res = await api.put<UserProfile>(`/users/${session.id}`, payload);
-    if (res) {
-      updated = { ...updated, ...res };
-    }
-  } catch (err) {
-    // Return updated local session if API call fails
-  }
-
+  // Update session cache with backend response
   setSession(updated, true);
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('aharsetu_avatar_changed'));
+    window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updated }));
+  }
+  return updated;
+}
+
+export async function uploadAvatar(file: File): Promise<UserProfile> {
+  const session = getSession();
+  if (!session) throw new Error('No active session');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await api.request<UserProfile>(`/users/${session.id}/avatar`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const updated = res || session;
+  setSession(updated, true);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updated }));
   }
   return updated;
 }

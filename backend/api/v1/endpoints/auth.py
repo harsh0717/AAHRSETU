@@ -60,6 +60,8 @@ def login(
         department_id=user.department_id,
         vendor_id=user.vendor_id,
         preferred_language=user.preferred_language,
+        avatar_url=user.avatar_url,
+        avatar_version=user.avatar_version or 1,
         active=user.active,
         principal_depts=principal_depts,
         created_at=user.created_at
@@ -100,6 +102,8 @@ def refresh_token(
         department_id=user.department_id,
         vendor_id=user.vendor_id,
         preferred_language=user.preferred_language,
+        avatar_url=user.avatar_url,
+        avatar_version=user.avatar_version or 1,
         active=user.active,
         principal_depts=principal_depts,
         created_at=user.created_at
@@ -163,6 +167,8 @@ def get_me(
         department_id=current_user.department_id,
         vendor_id=current_user.vendor_id,
         preferred_language=current_user.preferred_language,
+        avatar_url=current_user.avatar_url,
+        avatar_version=current_user.avatar_version or 1,
         active=current_user.active,
         principal_depts=principal_depts,
         created_at=current_user.created_at

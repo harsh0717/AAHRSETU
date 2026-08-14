@@ -140,6 +140,29 @@ def read_order_by_id(
         )
         
     role = current_user.role
+
+    # Enforce IDOR protection: Coordinators, Principals, & Vendors can only view authorized orders
+    if role == "coordinator":
+        if o.created_by_id != current_user.id and (current_user.department_id and o.department_id != current_user.department_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this department's order"
+            )
+    elif role == "principal":
+        managed_ids = [d.id for d in current_user.managed_departments]
+        if o.department_id not in managed_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this department's order"
+            )
+    elif role == "vendor":
+        vendor_match = any(vo.vendor_id == current_user.vendor_id for vo in o.vendor_orders)
+        if not vendor_match:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this vendor order"
+            )
+
     vendor_orders_resp = []
     for vo in o.vendor_orders:
         if role == "vendor" and vo.vendor_id != current_user.vendor_id:

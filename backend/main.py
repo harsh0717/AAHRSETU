@@ -24,9 +24,10 @@ try:
     db = SessionLocal()
     try:
         from sqlalchemy import text
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500);"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_version INTEGER DEFAULT 1;"))
-        db.commit()
+        if engine.dialect.name != "sqlite":
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500);"))
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_version INTEGER DEFAULT 1;"))
+            db.commit()
 
         user_count = db.query(User).count()
         if user_count == 0:
@@ -40,10 +41,21 @@ try:
 except Exception as e:
     logger.error(f"Error initializing database: {e}")
 
+tags_metadata = [
+    {"name": "system", "description": "System health check and operational status endpoints."},
+    {"name": "auth", "description": "Authentication, JWT session tokens, refresh, and profile endpoints."},
+    {"name": "users", "description": "User account management, profile updates, and role assignments."},
+    {"name": "vendors", "description": "Canteen vendor management, status availability, and menu items."},
+    {"name": "orders", "description": "Master requisitions, department approvals, DCR audits, vendor confirmation, and billing."},
+    {"name": "notifications", "description": "User notifications, unread counts, and real-time WebSocket connection."},
+    {"name": "reports", "description": "Institutional expenditure, department audit metrics, vendor revenue, and audit logs."}
+]
+
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description="AharSetu Canteen Order Management ERP REST APIs",
+    title="AharSetu Enterprise ERP API",
+    description="AharSetu Campus Canteen Order Management & Institutional Billing ERP REST APIs",
     version="2.0.0",
+    openapi_tags=tags_metadata,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",

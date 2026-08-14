@@ -33,6 +33,7 @@ def _user_to_response(u: User) -> UserResponse:
         avatar_version=u.avatar_version or 1,
         mobile_number=u.mobile_number,
         profile_setup_completed=u.profile_setup_completed or False,
+        profile_setup_skipped=u.profile_setup_skipped or False,
         active=u.active,
         principal_depts=principal_depts,
         created_at=u.created_at,
@@ -193,7 +194,8 @@ async def update_user(
             "mobile_number": db_user.mobile_number,
             "avatar_url": db_user.avatar_url,
             "avatar_version": db_user.avatar_version or 1,
-            "profile_setup_completed": db_user.profile_setup_completed or False
+            "profile_setup_completed": db_user.profile_setup_completed or False,
+            "profile_setup_skipped": db_user.profile_setup_skipped or False
         })
     except Exception as err:
         print(f"[WS BROADCAST ERROR] Failed to broadcast profile update: {err}")
@@ -304,7 +306,8 @@ async def upload_avatar(
             "mobile_number": db_user.mobile_number,
             "avatar_url": avatar_url,
             "avatar_version": new_version,
-            "profile_setup_completed": db_user.profile_setup_completed or False
+            "profile_setup_completed": db_user.profile_setup_completed or False,
+            "profile_setup_skipped": db_user.profile_setup_skipped or False
         })
     except Exception as err:
         print(f"[WS BROADCAST ERROR] Failed to broadcast avatar update: {err}")

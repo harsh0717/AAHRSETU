@@ -11,6 +11,7 @@ export interface MenuItem {
   category?: string;
   available: boolean;
   active: boolean;
+  image_url?: string | null;
 }
 
 export interface Vendor {
@@ -148,33 +149,17 @@ function saveLocalMenu(vendorId: string, items: MenuItem[]) {
 }
 
 export async function getVendors(): Promise<Vendor[]> {
-  let vendorList: Vendor[] = [];
   try {
     const apiVendors = await api.get<Vendor[]>('/vendors/');
     if (apiVendors && Array.isArray(apiVendors) && apiVendors.length > 0) {
-      vendorList = apiVendors;
-      // Sync fresh server status to local storage
-      if (typeof window !== 'undefined') {
-        vendorList.forEach(v => {
-          localStorage.setItem(`aharsetu_vendor_status_${v.id}`, v.status);
-        });
-      }
-      saveLocalVendors(vendorList);
-    } else {
-      vendorList = getLocalVendors();
+      // Backend is source of truth — do NOT apply any localStorage overrides
+      return apiVendors;
     }
   } catch (err) {
-    vendorList = getLocalVendors();
-    // Fallback to local storage override only on network/API failure
-    if (typeof window !== 'undefined') {
-      vendorList = vendorList.map(v => {
-        const overrideStatus = localStorage.getItem(`aharsetu_vendor_status_${v.id}`);
-        return overrideStatus ? { ...v, status: overrideStatus } : v;
-      });
-    }
+    console.warn('[VENDORS] API fetch failed, using local fallback:', err);
   }
-
-  return vendorList;
+  // True offline fallback — use FALLBACK_VENDORS (hardcoded seed data)
+  return FALLBACK_VENDORS;
 }
 
 export async function getVendorById(id: string): Promise<Vendor | null> {
@@ -203,50 +188,28 @@ export async function getAvailableVendors(): Promise<Vendor[]> {
 }
 
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(`aharsetu_vendor_status_${vendorId}`, status);
-  }
-
-  const vendors = getLocalVendors();
-  const v = vendors.find(item => item.id === vendorId);
-  if (v) {
-    v.status = status;
-    saveLocalVendors(vendors);
+  // API call is the source of truth — update backend first
+  const res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
+  if (res) {
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status } }));
+      window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status, vendor: res } }));
     }
+    return res;
   }
-
-  try {
-    const res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
-    if (res) {
-      const idx = vendors.findIndex(item => item.id === vendorId);
-      if (idx >= 0) vendors[idx] = res;
-      saveLocalVendors(vendors);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status } }));
-      }
-      return { ...res, status };
-    }
-  } catch (err) {
-    // Return updated local vendor
-  }
-
-  if (v) return { ...v, status };
-  throw new Error('Vendor not found');
+  throw new Error('Failed to update vendor status');
 }
 
 export async function getVendorMenu(vendorId: string): Promise<MenuItem[]> {
+  // Always prefer API — backend is source of truth for menu state
   try {
     const res = await api.get<MenuItem[]>(`/vendors/${vendorId}/menu`);
     if (res && Array.isArray(res)) {
-      saveLocalMenu(vendorId, res);
       return res;
     }
   } catch (err) {
-    console.warn(`[VENDORS] API menu fetch for ${vendorId} failed, serving local menu`);
+    console.warn(`[VENDORS] API menu fetch for ${vendorId} failed, serving local fallback`);
   }
-  return getLocalMenu(vendorId);
+  return FALLBACK_MENUS[vendorId] || [];
 }
 
 export async function upsertVendorMenuItem(vendorId: string, item: any): Promise<MenuItem> {
@@ -259,6 +222,7 @@ export async function upsertVendorMenuItem(vendorId: string, item: any): Promise
     category: item.category || 'General',
     available: item.available !== false,
     active: item.active !== false,
+    image_url: item.image_url || null,
   };
 
   try {
@@ -278,7 +242,8 @@ export async function upsertVendorMenuItem(vendorId: string, item: any): Promise
     description: payload.description,
     category: payload.category,
     available: payload.available,
-    active: payload.active
+    active: payload.active,
+    image_url: payload.image_url,
   };
 
   const idx = menu.findIndex(m => m.id === newItem.id);

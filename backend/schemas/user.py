@@ -42,6 +42,7 @@ class UserUpdate(BaseModel):
     avatar_version: Optional[int] = None
     mobile_number: Optional[str] = None
     profile_setup_completed: Optional[bool] = None
+    profile_setup_skipped: Optional[bool] = None
     active: Optional[bool] = None
     principal_depts: Optional[List[str]] = None
 
@@ -64,6 +65,7 @@ class UserResponse(UserBase):
     avatar_version: int = 1
     mobile_number: Optional[str] = None
     profile_setup_completed: bool = False
+    profile_setup_skipped: bool = False
     principal_depts: List[str] = []
     created_at: datetime
 

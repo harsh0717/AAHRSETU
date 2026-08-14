@@ -93,7 +93,7 @@ def get_vendor_menu(
 
 
 @router.post("/{vendor_id}/menu", response_model=VendorMenuItemResponse)
-def upsert_menu_item(
+async def upsert_menu_item(
     vendor_id: str,
     payload: VendorMenuItemCreate,
     db: Session = Depends(get_db),
@@ -136,14 +136,32 @@ def upsert_menu_item(
             name=payload.name,
             price=payload.price,
             unit=payload.unit,
-            available=payload.available
+            description=payload.description or None,
+            category=payload.category or 'General',
+            available=payload.available,
+            active=payload.active,
+            image_url=payload.image_url or None,
         )
         vendor_repo.create_menu_item(db_item)
-        return db_item
+
+    # Broadcast MENU_UPDATED so coordinators get a real-time refresh signal
+    try:
+        from backend.services.notification import manager
+        import asyncio
+        from datetime import datetime, timezone
+        asyncio.create_task(manager.broadcast({
+            "type": "MENU_UPDATED",
+            "vendor_id": vendor_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }))
+    except Exception:
+        pass
+
+    return db_item
 
 
 @router.delete("/{vendor_id}/menu/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_menu_item(
+async def delete_menu_item(
     vendor_id: str,
     item_id: str,
     db: Session = Depends(get_db),
@@ -168,4 +186,32 @@ def delete_menu_item(
         )
         
     vendor_repo.remove_menu_item(vendor_id, item_id)
+
+    # Broadcast MENU_UPDATED
+    try:
+        from backend.services.notification import manager
+        import asyncio
+        from datetime import datetime, timezone
+        asyncio.create_task(manager.broadcast({
+            "type": "MENU_UPDATED",
+            "vendor_id": vendor_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }))
+    except Exception:
+        pass
+
     return None
+
+
+@router.patch("/{vendor_id}/availability", response_model=VendorResponse)
+async def patch_vendor_availability(
+    vendor_id: str,
+    payload: VendorStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    PATCH /vendors/{vendor_id}/availability — update vendor open/closed status.
+    Alias for PUT /vendors/{vendor_id}/status for RESTful naming compliance.
+    """
+    return await update_vendor_status(vendor_id, payload, db, current_user)

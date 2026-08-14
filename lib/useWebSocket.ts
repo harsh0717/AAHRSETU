@@ -148,10 +148,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
                 avatar_url: payload.avatar_url ?? currentSession.avatar_url,
                 avatar_version: payload.avatar_version ?? currentSession.avatar_version,
                 profile_setup_completed: payload.profile_setup_completed ?? currentSession.profile_setup_completed,
+                profile_setup_skipped: payload.profile_setup_skipped ?? currentSession.profile_setup_skipped,
               };
               setSession(updatedSession, true);
               window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updatedSession }));
             }
+          }
+        } else if (payload.type === 'MENU_UPDATED') {
+          // Signal all open coordinator/principal pages to refetch vendor menus
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aharsetu_menu_updated', { detail: payload }));
           }
         } else {
           handleNotification(payload);

@@ -64,6 +64,7 @@ def login(
         avatar_version=user.avatar_version or 1,
         mobile_number=user.mobile_number,
         profile_setup_completed=user.profile_setup_completed or False,
+        profile_setup_skipped=user.profile_setup_skipped or False,
         active=user.active,
         principal_depts=principal_depts,
         created_at=user.created_at
@@ -108,6 +109,7 @@ def refresh_token(
         avatar_version=user.avatar_version or 1,
         mobile_number=user.mobile_number,
         profile_setup_completed=user.profile_setup_completed or False,
+        profile_setup_skipped=user.profile_setup_skipped or False,
         active=user.active,
         principal_depts=principal_depts,
         created_at=user.created_at
@@ -175,6 +177,7 @@ def get_me(
         avatar_version=current_user.avatar_version or 1,
         mobile_number=current_user.mobile_number,
         profile_setup_completed=current_user.profile_setup_completed or False,
+        profile_setup_skipped=current_user.profile_setup_skipped or False,
         active=current_user.active,
         principal_depts=principal_depts,
         created_at=current_user.created_at

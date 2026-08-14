@@ -15,6 +15,7 @@ export interface UserProfile {
   avatar_version?: number;
   mobile_number?: string | null;
   profile_setup_completed?: boolean;
+  profile_setup_skipped?: boolean;
   active: boolean;
   principal_depts: string[];
   created_at: string;
@@ -333,6 +334,7 @@ export async function updateUserProfile(payload: {
   name?: string;
   mobile_number?: string | null;
   profile_setup_completed?: boolean;
+  profile_setup_skipped?: boolean;
   avatar_url?: string;
 }): Promise<UserProfile> {
   const session = getSession();

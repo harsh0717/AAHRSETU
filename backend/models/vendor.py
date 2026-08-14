@@ -36,6 +36,7 @@ class VendorMenuItem(Base):
     category = Column(String(100), default="General", nullable=False)
     available = Column(Boolean, default=True, nullable=False)
     active = Column(Boolean, default=True, nullable=False)
+    image_url = Column(String(500), nullable=True)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

@@ -31,6 +31,8 @@ try:
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_version INTEGER DEFAULT 1;"))
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(15);"))
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_setup_completed BOOLEAN DEFAULT FALSE;"))
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_setup_skipped BOOLEAN DEFAULT FALSE;"))
+            db.execute(text("ALTER TABLE vendor_menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
             db.commit()
 
         user_count = db.query(User).count()

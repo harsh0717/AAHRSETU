@@ -10,6 +10,7 @@ class VendorMenuItemBase(BaseModel):
     category: str = "General"
     available: bool = True
     active: bool = True
+    image_url: Optional[str] = None
 
 
 class VendorMenuItemCreate(VendorMenuItemBase):

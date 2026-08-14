@@ -30,8 +30,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/images/aharsetu_official_logo.png" />
-        <link rel="apple-touch-icon" href="/images/aharsetu_official_logo.png" />
+        <link rel="icon" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
       <body>
         <I18nProvider>

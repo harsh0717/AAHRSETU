@@ -1,0 +1,36 @@
+# ================================================================
+# AharSetu — Render deployment configuration
+# ================================================================
+# Docs: https://render.com/docs/render-yaml-spec
+# Place this file at the project root and connect the repo
+# in the Render dashboard to auto-deploy.
+#
+# Required Render Environment Variables (set in dashboard, NOT here):
+#   DATABASE_URL        — Neon PostgreSQL connection string
+#   SECRET_KEY          — random 64-char hex JWT secret
+#   BACKEND_CORS_ORIGINS — your Vercel URL(s), comma-separated
+
+services:
+  - type: web
+    name: aharsetu-api
+    runtime: python
+    region: oregon   # pick closest to your users
+    plan: free       # upgrade to starter for always-on (no cold start)
+    rootDir: .       # project root
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+
+    envVars:
+      # These are documented here; set actual values in the Render dashboard
+      - key: DATABASE_URL
+        sync: false   # secret — set in dashboard
+      - key: SECRET_KEY
+        sync: false   # secret — set in dashboard
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      - key: BACKEND_CORS_ORIGINS
+        sync: false   # set in dashboard — include your Vercel URL
+      # Render injects PORT automatically; uvicorn reads it above

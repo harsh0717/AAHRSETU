@@ -18,22 +18,25 @@ class ApiClient {
 
   private getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+    // Try sessionStorage first (current tab), then fall back to localStorage
+    // (restored after page reload when session is remembered)
+    return sessionStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
   private getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem(REFRESH_TOKEN_KEY);
+    return sessionStorage.getItem(REFRESH_TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY);
   }
 
   public setTokens(access: string, refresh: string) {
     if (typeof window === 'undefined') return;
     sessionStorage.setItem(ACCESS_TOKEN_KEY, access);
     sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh);
-    // Purge any legacy shared localStorage keys
+    // Also persist to localStorage so tokens survive page reload
+    // (sessionStorage is tab-scoped and cleared on tab close/reload)
     try {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.setItem(ACCESS_TOKEN_KEY, access);
+      localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
     } catch {}
   }
 
@@ -144,7 +147,19 @@ class ApiClient {
       let code = undefined;
       try {
         const errorData = await response.json();
-        message = errorData.detail || errorData.message || message;
+        // FastAPI Pydantic validation errors return detail as an array of objects:
+        // [{ "loc": [...], "msg": "...", "type": "..." }]
+        if (Array.isArray(errorData.detail)) {
+          // Extract the first human-readable message from validation errors
+          const firstError = errorData.detail[0];
+          message = firstError?.msg || firstError?.message || message;
+          // Strip the Pydantic "Value error, " prefix if present
+          message = message.replace(/^Value error,\s*/i, '');
+        } else if (typeof errorData.detail === 'string') {
+          message = errorData.detail;
+        } else if (typeof errorData.message === 'string') {
+          message = errorData.message;
+        }
         code = errorData.code;
       } catch (e) {
         // Fallback for non-JSON errors

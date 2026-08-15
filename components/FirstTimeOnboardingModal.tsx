@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { getSession, uploadAvatar, updateUserProfile, UserProfile } from '@/lib/auth';
+import { getSession, setSession as persistSession, uploadAvatar, updateUserProfile, UserProfile } from '@/lib/auth';
+import { api } from '@/lib/api';
 
 export default function FirstTimeOnboardingModal() {
   const [showModal, setShowModal] = useState(false);
@@ -15,19 +16,40 @@ export default function FirstTimeOnboardingModal() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const s = getSession();
-    if (!s) return;
+    async function checkOnboardingState() {
+      const s = getSession();
+      if (!s) return;
 
-    // Show modal ONLY when:
-    //  1. Profile setup not yet completed (profile_setup_completed = false)
-    //  2. User has NOT previously clicked Skip (profile_setup_skipped = false)
-    const shouldShow = s.profile_setup_completed !== true && s.profile_setup_skipped !== true;
-    if (shouldShow) {
+      // First check local session — fast path, avoids network on every mount
+      if (s.profile_setup_completed === true || s.profile_setup_skipped === true) return;
+
+      // Verify with backend — the localStorage 'remember' snapshot may be stale
+      // (e.g. user skipped in another tab/device but the remembered session is old)
+      try {
+        const freshUser = await api.get<UserProfile>('/auth/me');
+        if (freshUser) {
+          // Update session cache with authoritative backend state
+          persistSession(freshUser, true);
+          if (freshUser.profile_setup_completed === true || freshUser.profile_setup_skipped === true) {
+            return; // Already done — don't show modal
+          }
+          setSession(freshUser);
+          setName(freshUser.name || '');
+          setPhone(freshUser.mobile_number || '');
+          setShowModal(true);
+          return;
+        }
+      } catch {
+        // Backend unreachable — fall through to local session decision
+      }
+
+      // Fallback: trust local session
       setSession(s);
       setName(s.name || '');
       setPhone(s.mobile_number || '');
       setShowModal(true);
     }
+    checkOnboardingState();
   }, []);
 
   const validatePhone = (value: string): boolean => {
@@ -46,11 +68,21 @@ export default function FirstTimeOnboardingModal() {
     if (skipping) return;
     setSkipping(true);
     setShowModal(false); // close immediately for snappy UX
+
+    // ── OPTIMISTIC UPDATE: write to session cache IMMEDIATELY ──────────────
+    // This guarantees the modal does NOT reappear during the async API call
+    // or if the user navigates before it completes.
+    const currentSession = getSession();
+    if (currentSession) {
+      const optimistic = { ...currentSession, profile_setup_skipped: true };
+      persistSession(optimistic, true);
+    }
+
     try {
-      // Persist skip decision to PostgreSQL so it survives navigation, refresh, logout/login
+      // Persist skip decision to PostgreSQL so it survives logout/login
       await updateUserProfile({ profile_setup_skipped: true });
     } catch {
-      // Silently ignore — modal is already closed, not critical
+      // Silently ignore — modal is already closed, optimistic state is written
     } finally {
       setSkipping(false);
     }
@@ -64,20 +96,39 @@ export default function FirstTimeOnboardingModal() {
     setSaving(true);
     setError('');
 
+    // ── OPTIMISTIC UPDATE: close modal and update session cache immediately ──
+    // Prevents the modal from flashing again if the user navigates mid-save.
+    const digits = phone.replace(/\D/g, '');
+    const optimistic = {
+      ...session,
+      name: name.trim() || session.name,
+      mobile_number: digits || session.mobile_number || null,
+      profile_setup_completed: true,
+      profile_setup_skipped: false,
+    };
+    persistSession(optimistic, true);
+    setShowModal(false);
+
     try {
       if (avatarFile) {
         await uploadAvatar(avatarFile);
       }
-      const digits = phone.replace(/\D/g, '');
       await updateUserProfile({
         name: name.trim() || session.name,
         mobile_number: digits || null,
         profile_setup_completed: true,
         profile_setup_skipped: false,
       });
-      setShowModal(false);
     } catch (err: any) {
-      setError(err?.message || 'Failed to save profile. Please try again.');
+      // If the API call fails, re-open the modal with an error message
+      // and revert the optimistic session update
+      persistSession(session, true);
+      setShowModal(true);
+      setError(
+        typeof err?.message === 'string'
+          ? err.message
+          : 'Failed to save profile. Please check your details and try again.'
+      );
     } finally {
       setSaving(false);
     }

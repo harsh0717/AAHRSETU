@@ -188,15 +188,26 @@ export async function getAvailableVendors(): Promise<Vendor[]> {
 }
 
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
-  // API call is the source of truth — update backend first
-  const res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
-  if (res) {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status, vendor: res } }));
+  try {
+    // API call is the source of truth — update backend first
+    const res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
+    if (res) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status, vendor: res } }));
+      }
+      return res;
     }
-    return res;
+    throw new Error('No response from server');
+  } catch (err: any) {
+    // Provide clear error for authentication failures
+    if (err?.status === 401) {
+      throw new Error('Session expired. Please log in again to update vendor status.');
+    }
+    if (err?.status === 403) {
+      throw new Error('You do not have permission to update this vendor\'s status.');
+    }
+    throw err;
   }
-  throw new Error('Failed to update vendor status');
 }
 
 export async function getVendorMenu(vendorId: string): Promise<MenuItem[]> {

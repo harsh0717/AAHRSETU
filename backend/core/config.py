@@ -1,6 +1,6 @@
 import json
-from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from typing import List, Union, Optional
+from pydantic import AnyHttpUrl, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,16 +16,48 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgrespassword@localhost:5432/aharsetu"
     
-    BACKEND_CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ]
+    
+    FRONTEND_URL: Optional[str] = None
+    ALLOWED_ORIGINS: Optional[str] = None
 
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    @model_validator(mode="after")
+    def assemble_cors_origins(self) -> "Settings":
+        origins = []
+        raw_origins = self.BACKEND_CORS_ORIGINS
+        if isinstance(raw_origins, str):
+            if raw_origins.startswith("["):
+                try:
+                    origins = json.loads(raw_origins)
+                except Exception:
+                    origins = [i.strip() for i in raw_origins.split(",")]
+            else:
+                origins = [i.strip() for i in raw_origins.split(",")]
+        elif isinstance(raw_origins, list):
+            origins = list(raw_origins)
+
+        # Merge FRONTEND_URL if set
+        if self.FRONTEND_URL:
+            origins.append(self.FRONTEND_URL.strip())
+            
+        # Merge ALLOWED_ORIGINS if set (comma-separated list)
+        if self.ALLOWED_ORIGINS:
+            origins.extend([i.strip() for i in self.ALLOWED_ORIGINS.split(",") if i.strip()])
+
+        # Deduplicate and ensure no trailing slashes on origins
+        clean_origins = []
+        for o in origins:
+            clean = o.rstrip("/")
+            if clean and clean not in clean_origins:
+                clean_origins.append(clean)
+
+        self.BACKEND_CORS_ORIGINS = clean_origins
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

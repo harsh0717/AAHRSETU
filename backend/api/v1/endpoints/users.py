@@ -51,7 +51,7 @@ def get_departments(
     return user_repo.get_departments()
 
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("", response_model=List[UserResponse])
 def read_users(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -66,7 +66,7 @@ def read_users(
     return [_user_to_response(u) for u in users]
 
 
-@router.post("/", response_model=UserResponse)
+@router.post("", response_model=UserResponse)
 def create_user(
     payload: UserCreate,
     db: Session = Depends(get_db),

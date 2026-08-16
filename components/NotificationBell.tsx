@@ -1,8 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getNotifications, markAllRead, markNotificationRead, NotificationItem } from '@/lib/notifications';
-import { useWebSocket } from '@/lib/useWebSocket';
+import { useNotification } from '@/components/NotificationProvider';
 import { useI18n } from '@/lib/i18n';
 
 interface NotificationBellProps {
@@ -14,39 +13,21 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
   const router = useRouter();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  const [notifs, setNotifs] = useState<NotificationItem[]>([]);
   const [pulse, setPulse] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  async function load() {
-    const list = await getNotifications();
-    setNotifs(list);
-  }
+  const { notifications: notifs, unreadCount: unread, markAsRead, markAllAsRead, refresh } = useNotification();
+  const prevUnreadRef = useRef(unread);
 
-  // Hook into WebSockets for real-time instant alerts
-  useWebSocket({
-    onNotificationReceived: (notif) => {
-      // Add notification to state immediately
-      setNotifs((prev) => [notif, ...prev]);
-      
-      // Pulse animation trigger for premium UI micro-animations
-      setPulse(true);
-      setTimeout(() => setPulse(false), 2000);
-      
-      // Play a subtle notification ping sound (standard browser capability)
-      try {
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-200.wav');
-        audio.volume = 0.2;
-        audio.play().catch(() => {});
-      } catch (e) {
-        // Ignored if browser blocks audio autoplay
-      }
-    }
-  });
-
+  // Trigger pulse micro-animation when unread count increases
   useEffect(() => {
-    load();
-  }, [userId, role]);
+    if (unread > prevUnreadRef.current) {
+      setPulse(true);
+      const t = setTimeout(() => setPulse(false), 2000);
+      return () => clearTimeout(t);
+    }
+    prevUnreadRef.current = unread;
+  }, [unread]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -65,26 +46,20 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
       const customEvent = e as CustomEvent;
       if (customEvent.detail?.message) {
         setToastMessage(customEvent.detail.message);
-        load();
-        setPulse(true);
-        setTimeout(() => setPulse(false), 2000);
+        refresh();
         setTimeout(() => setToastMessage(null), 4500);
       }
     }
     window.addEventListener('aharsetu_toast', handleToast);
     return () => window.removeEventListener('aharsetu_toast', handleToast);
-  }, []);
-
-  const unread = notifs.filter(n => !n.read).length;
+  }, [refresh]);
 
   async function handleMarkAll() {
-    await markAllRead();
-    await load();
+    await markAllAsRead();
   }
 
   async function handleRead(id: string) {
-    await markNotificationRead(id);
-    await load();
+    await markAsRead(id);
   }
 
   const TYPE_ICONS: Record<string, string> = {

@@ -59,7 +59,7 @@ export function saveCustomUser(user: UserProfile) {
 
 export async function getUsers(): Promise<UserProfile[]> {
   try {
-    const res = await api.get<UserProfile[]>('/users/');
+    const res = await api.get<UserProfile[]>('/users');
     if (res && Array.isArray(res) && res.length > 0) return res;
   } catch (err) {
     // Serve local users directory
@@ -82,7 +82,7 @@ export async function createUser(userData: any): Promise<UserProfile> {
   };
 
   try {
-    const res = await api.post<UserProfile>('/users/', userData);
+    const res = await api.post<UserProfile>('/users', userData);
     if (res) {
       saveCustomUser(res);
       return res;

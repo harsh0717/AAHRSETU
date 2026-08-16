@@ -241,7 +241,7 @@ function saveLocalOrders(orders: MasterOrder[]) {
 export async function getOrders(): Promise<MasterOrder[]> {
   let orders: MasterOrder[] = [];
   try {
-    const apiOrders = await api.get<MasterOrder[]>('/orders/');
+    const apiOrders = await api.get<MasterOrder[]>('/orders');
     if (apiOrders && Array.isArray(apiOrders) && apiOrders.length > 0) {
       saveLocalOrders(apiOrders);
       orders = apiOrders;
@@ -395,7 +395,7 @@ export async function createMasterOrder(orderData: {
   };
 
   try {
-    const res = await api.post<MasterOrder>('/orders/', orderData);
+    const res = await api.post<MasterOrder>('/orders', orderData);
     if (res) {
       const localList = getLocalOrders();
       const idx = localList.findIndex(o => o.id === res.id);

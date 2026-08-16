@@ -11,7 +11,7 @@ from backend.schemas.vendor import VendorResponse, VendorMenuItemResponse, Vendo
 router = APIRouter()
 
 
-@router.get("/", response_model=List[VendorResponse])
+@router.get("", response_model=List[VendorResponse])
 def read_vendors(
     db: Session = Depends(get_db)
 ) -> Any:

@@ -17,7 +17,7 @@ from backend.lib.seed_db import seed_all_database
 router = APIRouter()
 
 
-@router.get("/", response_model=List[MasterOrderResponse])
+@router.get("", response_model=List[MasterOrderResponse])
 def read_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
@@ -235,7 +235,7 @@ def read_order_by_id(
     )
 
 
-@router.post("/", response_model=MasterOrderResponse)
+@router.post("", response_model=MasterOrderResponse)
 def create_order(
     payload: MasterOrderCreate,
     db: Session = Depends(get_db),

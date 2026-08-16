@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { NotificationProvider } from '@/components/NotificationProvider';
+
 interface RootLayoutProps {
   children: React.ReactNode;
 }
@@ -36,9 +38,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body>
         <I18nProvider>
-          <BootGate>
-            {children}
-          </BootGate>
+          <NotificationProvider>
+            <BootGate>
+              {children}
+            </BootGate>
+          </NotificationProvider>
         </I18nProvider>
       </body>
     </html>

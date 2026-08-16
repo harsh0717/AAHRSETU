@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, HTTPException
 from sqlalchemy.orm import Session
 from backend.api import deps
@@ -13,7 +13,7 @@ from backend.core.config import settings
 router = APIRouter()
 
 
-@router.get("/", response_model=List[NotificationResponse])
+@router.get("", response_model=List[NotificationResponse])
 def get_my_notifications(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -70,24 +70,43 @@ def mark_all_as_read(
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    token: str,
+    token: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
     WebSocket endpoint for real-time notifications.
     Authenticates token, registers connection with ConnectionManager.
+    Supports secure token transmission via Sec-WebSocket-Protocol subprotocols.
     """
-    # 1. Authenticate user from query parameter token
+    actual_token = token
+    subprotocol_selected = None
+    
+    if not actual_token:
+        subprotocols = websocket.scope.get("subprotocols", [])
+        for sub in subprotocols:
+            if sub.startswith("token_"):
+                actual_token = sub.replace("token_", "")
+                subprotocol_selected = sub
+                break
+
+    import logging
+    logger = logging.getLogger("aharsetu-api")
+    if actual_token:
+        safe_token = actual_token[:15] + "..." if len(actual_token) > 15 else "short-token"
+        logger.info(f"[WS AUTH] Initiating WebSocket connection (Token hint: {safe_token})")
+    else:
+        logger.warning("[WS AUTH] WebSocket connection initiated without token")
+
     user_id = 1
     user_role = "coordinator"
     try:
-        if token and token.startswith("demo-"):
-            # Handle demo sessions smoothly
+        if actual_token and actual_token.startswith("demo-"):
             user_id = 1
-        elif token:
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        elif actual_token:
+            payload = jwt.decode(actual_token, settings.SECRET_KEY, algorithms=["HS256"])
             user_id = int(payload.get("sub", 1))
-    except Exception:
+    except Exception as err:
+        logger.warning(f"[WS AUTH] JWT verification failed: {err}")
         user_id = 1
 
     user = db.query(User).filter(User.id == user_id).first()
@@ -95,20 +114,23 @@ async def websocket_endpoint(
         user_id = 1
         user_role = "coordinator"
     else:
+        user_id = user.id
         user_role = user.role
 
-    # 2. Register connection
+    # Accept connection and reply with selected subprotocol if applicable
+    if subprotocol_selected:
+        await websocket.accept(subprotocol=subprotocol_selected)
+    else:
+        await websocket.accept()
+        
     await manager.connect(websocket, user_id, user_role)
     
-    # 3. Handle connection lifecycle
     try:
         while True:
-            # Maintain connection (wait for client keepalives or close)
             data = await websocket.receive_text()
-            # Respond to ping
             if data == "ping":
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
-        manager.disconnect(websocket, user.id, user.role)
+        manager.disconnect(websocket, user_id, user_role)
     except Exception:
-        manager.disconnect(websocket, user.id, user.role)
+        manager.disconnect(websocket, user_id, user_role)

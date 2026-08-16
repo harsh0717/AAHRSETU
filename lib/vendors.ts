@@ -151,7 +151,7 @@ function saveLocalMenu(vendorId: string, items: MenuItem[]) {
 
 export async function getVendors(): Promise<Vendor[]> {
   try {
-    const apiVendors = await api.get<Vendor[]>('/vendors/');
+    const apiVendors = await api.get<Vendor[]>('/vendors');
     if (apiVendors && Array.isArray(apiVendors) && apiVendors.length > 0) {
       // Backend is source of truth — do NOT apply any localStorage overrides
       return apiVendors;

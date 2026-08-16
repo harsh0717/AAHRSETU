@@ -157,7 +157,7 @@ export async function getNotifications(): Promise<NotificationItem[]> {
   let list: NotificationItem[] = [];
 
   try {
-    const res = await api.get<NotificationItem[]>('/notifications/');
+    const res = await api.get<NotificationItem[]>('/notifications');
     if (res && Array.isArray(res)) {
       saveLocalNotifs(res);
       list = res;

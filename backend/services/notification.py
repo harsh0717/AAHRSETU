@@ -60,8 +60,8 @@ class ConnectionManager:
         # Maps role -> List[WebSocket]
         self.role_connections: Dict[str, List[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket, user_id: int, role: str):
-        await websocket.accept()
+    async def connect(self, websocket: WebSocket, user_id: int, role: str, subprotocol: Optional[str] = None):
+        await websocket.accept(subprotocol=subprotocol)
         
         # User ID connection registration
         if user_id not in self.active_connections:

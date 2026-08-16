@@ -117,13 +117,8 @@ async def websocket_endpoint(
         user_id = user.id
         user_role = user.role
 
-    # Accept connection and reply with selected subprotocol if applicable
-    if subprotocol_selected:
-        await websocket.accept(subprotocol=subprotocol_selected)
-    else:
-        await websocket.accept()
-        
-    await manager.connect(websocket, user_id, user_role)
+    # Register connection and accept handshake
+    await manager.connect(websocket, user_id, user_role, subprotocol=subprotocol_selected)
     
     try:
         while True:

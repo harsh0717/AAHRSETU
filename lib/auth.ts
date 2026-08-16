@@ -231,7 +231,7 @@ export async function logout() {
   if (session && session.role === 'vendor') {
     const vendorId = session.vendor_id || 'v1';
     try {
-      updateVendorStatus(vendorId, 'closed');
+      await updateVendorStatus(vendorId, 'closed');
     } catch (e) {
       console.warn('[AUTH] Automated vendor status close on logout failed:', e);
     }
@@ -370,4 +370,32 @@ export async function uploadAvatar(file: File): Promise<UserProfile> {
     window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updated }));
   }
   return updated;
+}
+
+export async function initializeApplication(): Promise<UserProfile | null> {
+  const session = getSession();
+  if (!session) {
+    return null;
+  }
+  
+  try {
+    const freshUser = await api.get<UserProfile>('/auth/me');
+    if (freshUser) {
+      setSession(freshUser, true);
+      if (freshUser.preferred_language) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('aharsetu_lang', freshUser.preferred_language);
+        }
+      }
+      return freshUser;
+    }
+  } catch (err: any) {
+    if (err?.status === 401) {
+      clearSession();
+      return null;
+    }
+    console.warn('[INIT] Backend validation failed, using cached session fallback:', err);
+    return session;
+  }
+  return null;
 }

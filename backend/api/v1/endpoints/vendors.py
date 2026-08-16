@@ -23,6 +23,67 @@ def read_vendors(
     return vendors
 
 
+@router.patch("/me/availability", response_model=VendorResponse)
+async def update_my_vendor_status(
+    payload: VendorStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Update the authenticated vendor's canteen status (open, closed, temporarily unavailable).
+    Determines vendor identity strictly from the authenticated JWT session context.
+    """
+    if current_user.role != "vendor" or not current_user.vendor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only authenticated vendors can update availability."
+        )
+    
+    vendor_repo = VendorRepository(db)
+    vendor = vendor_repo.get(current_user.vendor_id)
+    if not vendor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendor profile not found for the user."
+        )
+        
+    old_status = vendor.status
+    new_status = payload.status.lower().strip()
+    if new_status not in ["open", "closed", "temporarily_unavailable"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid status value. Allowed: open, closed, temporarily_unavailable"
+        )
+        
+    vendor_repo.update(vendor, {"status": new_status})
+    
+    # Audit log status update
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department="General",
+        action="Vendor Status Updated",
+        old_value=old_status,
+        new_value=new_status
+    )
+
+    # Broadcast real-time status update to all connected WebSocket clients
+    try:
+        from backend.services.notification import manager
+        await manager.broadcast({
+            "type": "VENDOR_STATUS_UPDATED",
+            "vendor_id": vendor.id,
+            "status": new_status,
+            "vendor_name": vendor.name
+        })
+    except Exception as err:
+        print(f"[WS BROADCAST ERROR] Failed to broadcast vendor status: {err}")
+
+    return vendor
+
+
 @router.put("/{vendor_id}/status", response_model=VendorResponse)
 async def update_vendor_status(
     vendor_id: str,
@@ -51,7 +112,14 @@ async def update_vendor_status(
         )
         
     old_status = vendor.status
-    vendor_repo.update(vendor, {"status": payload.status})
+    new_status = payload.status.lower().strip()
+    if new_status not in ["open", "closed", "temporarily_unavailable"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid status value. Allowed: open, closed, temporarily_unavailable"
+        )
+
+    vendor_repo.update(vendor, {"status": new_status})
     
     # Audit log status update
     from backend.repositories.audit import AuditRepository
@@ -62,7 +130,7 @@ async def update_vendor_status(
         department=current_user.department_id or "General",
         action="Vendor Status Updated",
         old_value=old_status,
-        new_value=payload.status
+        new_value=new_status
     )
 
     # Broadcast real-time status update to all connected WebSocket clients
@@ -71,7 +139,7 @@ async def update_vendor_status(
         await manager.broadcast({
             "type": "VENDOR_STATUS_UPDATED",
             "vendor_id": vendor.id,
-            "status": payload.status,
+            "status": new_status,
             "vendor_name": vendor.name
         })
     except Exception as err:

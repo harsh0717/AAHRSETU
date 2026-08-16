@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import VendorStatusBadge from '@/components/VendorStatusBadge';
@@ -11,8 +12,8 @@ import { getVendors, updateVendorStatus, Vendor } from '@/lib/vendors';
 import { ROLE_COLORS, VENDOR_STATUS_LABELS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
-import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
+import ImageCropperModal from '@/components/ImageCropperModal';
 import { api } from '@/lib/api';
 
 export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
@@ -60,6 +61,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
   const [profileAvatarPreview, setProfileAvatarPreview] = useState<string | null>(null);
   const [profileMessage, setProfileMessage] = useState('');
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
@@ -1027,10 +1029,15 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                             const file = e.target.files?.[0];
                             if (!file) return;
                             if (file.size > 5 * 1024 * 1024) { setProfileMessage('Image must be less than 5MB.'); return; }
-                            setProfileAvatarFile(file);
                             const reader = new FileReader();
-                            reader.onload = (evt) => setProfileAvatarPreview(evt.target?.result as string);
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                setCropSrc(evt.target.result as string);
+                              }
+                            };
                             reader.readAsDataURL(file);
+                            setProfileMessage('');
+                            e.target.value = '';
                           }}
                         />
                       </label>
@@ -1058,6 +1065,17 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       </div>
                     )}
                   </form>
+                  {cropSrc && (
+                    <ImageCropperModal
+                      imageSrc={cropSrc}
+                      onCrop={(croppedFile) => {
+                        setProfileAvatarFile(croppedFile);
+                        setProfileAvatarPreview(URL.createObjectURL(croppedFile));
+                        setCropSrc(null);
+                      }}
+                      onCancel={() => setCropSrc(null)}
+                    />
+                  )}
                 </div>
               </div>
             )}

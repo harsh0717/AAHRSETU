@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
@@ -8,8 +9,8 @@ import { getOrders, MasterOrder } from '@/lib/store';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
-import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
+import ImageCropperModal from '@/components/ImageCropperModal';
 
 export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
   const [profileAvatarPreview, setProfileAvatarPreview] = useState<string | null>(null);
   const [profileMessage, setProfileMessage] = useState('');
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
@@ -548,10 +550,15 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                             const file = e.target.files?.[0];
                             if (!file) return;
                             if (file.size > 5 * 1024 * 1024) { setProfileMessage('Image must be less than 5MB.'); return; }
-                            setProfileAvatarFile(file);
                             const reader = new FileReader();
-                            reader.onload = (evt) => setProfileAvatarPreview(evt.target?.result as string);
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                setCropSrc(evt.target.result as string);
+                              }
+                            };
                             reader.readAsDataURL(file);
+                            setProfileMessage('');
+                            e.target.value = '';
                           }}
                         />
                       </label>
@@ -579,6 +586,17 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                       </div>
                     )}
                   </form>
+                  {cropSrc && (
+                    <ImageCropperModal
+                      imageSrc={cropSrc}
+                      onCrop={(croppedFile) => {
+                        setProfileAvatarFile(croppedFile);
+                        setProfileAvatarPreview(URL.createObjectURL(croppedFile));
+                        setCropSrc(null);
+                      }}
+                      onCancel={() => setCropSrc(null)}
+                    />
+                  )}
                 </div>
               </div>
             )}

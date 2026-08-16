@@ -22,6 +22,44 @@ interface AppShellProps {
   currentPath?: string;
 }
 
+const BOTTOM_NAV_CONFIG: Record<string, { label: string; href: string; icon: string; id: string }[]> = {
+  coordinator: [
+    { id: 'home', label: 'Home', href: '/coordinator', icon: '🏠' },
+    { id: 'create', label: 'New Order', href: '/coordinator/orders/create', icon: '➕' },
+    { id: 'orders', label: 'Orders', href: '/coordinator/orders', icon: '📦' },
+    { id: 'notifications', label: 'Alerts', href: '/coordinator/notifications', icon: '🔔' },
+    { id: 'profile', label: 'Profile', href: '/coordinator/profile', icon: '👤' },
+  ],
+  vendor: [
+    { id: 'home', label: 'Home', href: '/vendor', icon: '🏠' },
+    { id: 'incoming', label: 'Incoming', href: '/vendor/orders/incoming', icon: '📥' },
+    { id: 'menu', label: 'Menu', href: '/vendor/menu', icon: '🍽️' },
+    { id: 'notifications', label: 'Alerts', href: '/vendor/notifications', icon: '🔔' },
+    { id: 'profile', label: 'Profile', href: '/vendor/profile', icon: '👤' },
+  ],
+  principal: [
+    { id: 'home', label: 'Home', href: '/principal', icon: '🏠' },
+    { id: 'approvals', label: 'Approvals', href: '/principal/approvals', icon: '⏳' },
+    { id: 'history', label: 'Orders', href: '/principal/history', icon: '📜' },
+    { id: 'notifications', label: 'Alerts', href: '/principal/notifications', icon: '🔔' },
+    { id: 'profile', label: 'Profile', href: '/principal/profile', icon: '👤' },
+  ],
+  dcr: [
+    { id: 'home', label: 'Home', href: '/dcr', icon: '🏠' },
+    { id: 'approvals', label: 'Audit', href: '/dcr/approvals', icon: '📋' },
+    { id: 'history', label: 'Orders', href: '/dcr/history', icon: '📜' },
+    { id: 'notifications', label: 'Alerts', href: '/dcr/notifications', icon: '🔔' },
+    { id: 'profile', label: 'Profile', href: '/dcr/profile', icon: '👤' },
+  ],
+  admin: [
+    { id: 'home', label: 'Home', href: '/admin', icon: '🏠' },
+    { id: 'users', label: 'Users', href: '/admin/users', icon: '👥' },
+    { id: 'orders', label: 'Orders', href: '/admin/orders', icon: '📦' },
+    { id: 'reports', label: 'Reports', href: '/admin/reports', icon: '📊' },
+    { id: 'more', label: 'More', href: '#more', icon: '☰' },
+  ]
+};
+
 export default function AppShell({ children, role }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -30,6 +68,17 @@ export default function AppShell({ children, role }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCmdPalette, setShowCmdPalette] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [moreDrawerOpen, setMoreDrawerOpen] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }
+  }, []);
 
   useEffect(() => {
     const s = getSession();
@@ -145,9 +194,28 @@ export default function AppShell({ children, role }: AppShellProps) {
         {/* Header */}
         <header className={styles.header} style={{ borderBottomColor: colors.accent + '30' }}>
           <div className={styles.headerLeft}>
-            <button className={styles.menuBtn} onClick={() => setSidebarOpen((o) => !o)}>
-              ☰
-            </button>
+            {isMobileDevice && pathname && pathname !== `/${role}` && pathname !== `/${role}/` ? (
+              <button
+                onClick={() => router.back()}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.4rem',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: 'var(--role-accent)',
+                  marginRight: '8px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                ←
+              </button>
+            ) : (
+              <button className={styles.menuBtn} onClick={() => setSidebarOpen((o) => !o)}>
+                ☰
+              </button>
+            )}
             <div className={styles.pageTitle}>
               <span style={{ color: colors.accent }}>{ROLE_ICONS[role]}</span>
               <span>{ROLE_LABELS[role]}</span>
@@ -157,18 +225,29 @@ export default function AppShell({ children, role }: AppShellProps) {
             </div>
           </div>
           <div className={styles.headerRight}>
-            <button
-              onClick={() => setShowCmdPalette(true)}
-              className={styles.cmdSearchBtn}
-            >
-              <span>🔍</span>
-              <span className={styles.cmdSearchLabel}>Search (Cmd + K)</span>
-            </button>
-            <LanguageSwitcher />
-            {session && <NotificationBell userId={session.id} role={session.role} />}
+            {!isMobileDevice && (
+              <>
+                <button
+                  onClick={() => setShowCmdPalette(true)}
+                  className={styles.cmdSearchBtn}
+                >
+                  <span>🔍</span>
+                  <span className={styles.cmdSearchLabel}>Search (Cmd + K)</span>
+                </button>
+                <LanguageSwitcher />
+                {session && <NotificationBell userId={session.id} role={session.role} />}
+              </>
+            )}
+            
             <div style={{ position: 'relative' }}>
               <div
-                onClick={() => setProfileMenuOpen(o => !o)}
+                onClick={() => {
+                  if (isMobileDevice) {
+                    setMoreDrawerOpen(true);
+                  } else {
+                    setProfileMenuOpen((o) => !o);
+                  }
+                }}
                 className={styles.headerUser}
                 style={{ cursor: 'pointer', userSelect: 'none' }}
               >
@@ -179,7 +258,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                 </div>
               </div>
 
-              {profileMenuOpen && (
+              {!isMobileDevice && profileMenuOpen && (
                 <div style={{
                   position: 'absolute',
                   top: '46px',
@@ -250,6 +329,155 @@ export default function AppShell({ children, role }: AppShellProps) {
         {/* Content */}
         <main className={styles.content}>{children}</main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      {isMobileDevice && session && (
+        <div className={styles.bottomNav}>
+          {(BOTTOM_NAV_CONFIG[role] || []).map((item) => {
+            const isItemActive =
+              item.id === 'more'
+                ? moreDrawerOpen
+                : pathname === item.href || (item.href !== `/${role}` && pathname?.startsWith(item.href));
+
+            if (item.id === 'more') {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setMoreDrawerOpen((o) => !o)}
+                  className={`${styles.bottomNavItem} ${isItemActive ? styles.bottomNavItemActive : ''}`}
+                >
+                  <span className={styles.bottomNavIcon}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.bottomNavItem} ${isItemActive ? styles.bottomNavItemActive : ''}`}
+              >
+                <span className={styles.bottomNavIcon}>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Mobile "More" Bottom Sheet Drawer */}
+      {isMobileDevice && session && (
+        <>
+          <div
+            className={`${styles.moreDrawerOverlay} ${moreDrawerOpen ? styles.open : ''}`}
+            onClick={() => setMoreDrawerOpen(false)}
+          />
+          <div className={`${styles.moreDrawer} ${moreDrawerOpen ? styles.open : ''}`}>
+            {/* Grab handle for sliding feel */}
+            <div style={{ width: '40px', height: '4px', background: '#CBD5E1', borderRadius: '2px', margin: '0 auto 20px auto' }} />
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <AvatarImage userId={session.id} name={session.name} size={44} />
+              <div>
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{session.name}</h4>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--role-accent)', marginTop: '2px' }}>
+                  {ROLE_ICONS[role]} {ROLE_LABELS[role]}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Link
+                href={`/${role}/profile`}
+                onClick={() => setMoreDrawerOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  background: '#F8FAFC',
+                  color: '#334155',
+                  textDecoration: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.9rem'
+                }}
+              >
+                ⚙️ Settings & Languages
+              </Link>
+
+              {role !== 'admin' && (
+                <Link
+                  href={`/${role}/bills`}
+                  onClick={() => setMoreDrawerOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px 16px',
+                    borderRadius: '12px',
+                    background: '#F8FAFC',
+                    color: '#334155',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  🧾 Institutional Bills
+                </Link>
+              )}
+
+              {role === 'admin' && (
+                <Link
+                  href="/admin/system-health"
+                  onClick={() => setMoreDrawerOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px 16px',
+                    borderRadius: '12px',
+                    background: '#F8FAFC',
+                    color: '#334155',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  ❤️ System Health Status
+                </Link>
+              )}
+
+              <button
+                onClick={() => {
+                  setMoreDrawerOpen(false);
+                  handleLogout();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  background: '#FEF2F2',
+                  color: '#DC2626',
+                  border: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                  marginTop: '12px'
+                }}
+              >
+                🚪 Sign Out of Session
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       <CommandPalette isOpen={showCmdPalette} onClose={() => setShowCmdPalette(false)} />
       <ToastContainer />
       <PushPrompt />

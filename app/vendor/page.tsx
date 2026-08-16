@@ -8,10 +8,11 @@ import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendor
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
-import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
+import ImageCropperModal from '@/components/ImageCropperModal';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function VendorDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -62,6 +63,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
   const [profileAvatarPreview, setProfileAvatarPreview] = useState<string | null>(null);
   const [profileMessage, setProfileMessage] = useState('');
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
@@ -1122,10 +1124,15 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                             const file = e.target.files?.[0];
                             if (!file) return;
                             if (file.size > 5 * 1024 * 1024) { setProfileMessage('Image must be less than 5MB.'); return; }
-                            setProfileAvatarFile(file);
                             const reader = new FileReader();
-                            reader.onload = (evt) => setProfileAvatarPreview(evt.target?.result as string);
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                setCropSrc(evt.target.result as string);
+                              }
+                            };
                             reader.readAsDataURL(file);
+                            setProfileMessage('');
+                            e.target.value = '';
                           }}
                         />
                       </label>
@@ -1153,6 +1160,17 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     </button>
                     {profileMessage && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: profileMessage.includes('success') ? '#10B981' : '#EF4444' }}>{profileMessage}</div>}
                   </form>
+                  {cropSrc && (
+                    <ImageCropperModal
+                      imageSrc={cropSrc}
+                      onCrop={(croppedFile) => {
+                        setProfileAvatarFile(croppedFile);
+                        setProfileAvatarPreview(URL.createObjectURL(croppedFile));
+                        setCropSrc(null);
+                      }}
+                      onCancel={() => setCropSrc(null)}
+                    />
+                  )}
                 </div>
               </div>
             )}

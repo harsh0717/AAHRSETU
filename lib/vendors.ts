@@ -1,5 +1,6 @@
 // ── AharSetu Enterprise Vendor & Menu Service ───────────────────────────────
 import { api } from './api';
+import { getSession } from './auth';
 
 export interface MenuItem {
   id: string;
@@ -189,8 +190,17 @@ export async function getAvailableVendors(): Promise<Vendor[]> {
 
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
   try {
-    // API call is the source of truth — update backend first
-    const res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
+    const session = getSession();
+    let res;
+    if (session?.role === 'vendor') {
+      res = await api.request<Vendor>('/vendors/me/availability', {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+    } else {
+      res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
+    }
+
     if (res) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status, vendor: res } }));

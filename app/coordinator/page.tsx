@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import AvatarImage from '@/components/AvatarImage';
@@ -10,8 +11,8 @@ import { getAvailableMenuByVendor, MenuItem } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
-import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
+import ImageCropperModal from '@/components/ImageCropperModal';
 
 export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -31,6 +32,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   const [title, setTitle] = useState('');
   const [purpose, setPurpose] = useState('');
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>({}); // menu_item_id -> quantity
+  const [createOrderStep, setCreateOrderStep] = useState(1);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   // Profile Edit State
   const [profileName, setProfileName] = useState('');
@@ -39,6 +42,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
   const [profileAvatarPreview, setProfileAvatarPreview] = useState<string | null>(null);
   const [profileMessage, setProfileMessage] = useState('');
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
@@ -76,6 +80,15 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   }
 
   // Load session & initial data
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }
+  }, []);
+
   useEffect(() => {
     const s = getSession();
     if (!s) {
@@ -360,239 +373,503 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
             {/* TAB: CREATE REQUISITION */}
             {activeTab === 'create' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: '20px' }}>
-                {/* ── Two-column layout on desktop ───────────────────────────── */}
-                <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: '20px', alignItems: 'start' }}>
+                {isMobileDevice ? (
+                  /* Guided Flow on Mobile */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '80px' }}>
+                    {/* Visual Progress Steps Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: 'var(--shadow-sm)' }}>
+                      {[
+                        { step: 1, label: 'Details' },
+                        { step: 2, label: 'Menu' },
+                        { step: 3, label: 'Review' }
+                      ].map((s) => (
+                        <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 800,
+                            fontSize: '0.8rem',
+                            background: createOrderStep === s.step
+                              ? 'linear-gradient(135deg, #2563EB, #1D4ED8)'
+                              : createOrderStep > s.step ? '#10B981' : '#E2E8F0',
+                            color: createOrderStep >= s.step ? 'white' : '#64748B',
+                            boxShadow: createOrderStep === s.step ? '0 4px 10px rgba(37,99,235,0.25)' : 'none'
+                          }}>
+                            {createOrderStep > s.step ? '✓' : s.step}
+                          </div>
+                          <span style={{ fontSize: '0.8rem', fontWeight: createOrderStep === s.step ? 800 : 600, color: createOrderStep === s.step ? '#1E3A6F' : '#64748B' }}>
+                            {s.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
-                  {/* LEFT: Food menu grouped by vendor */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {menuByVendor.map(v => (
-                      <div key={v.id}>
-                        {/* Vendor header */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>🏪</div>
-                          <div>
-                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{v.name}</div>
-                            <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items available</div>
+                    {/* Step Content */}
+                    {createOrderStep === 1 && (
+                      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'white' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 1: Requisition Details</h3>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Event / Meeting Title</label>
+                          <input type="text" className="form-input" placeholder="e.g. Board of Trustees Lunch" value={title} onChange={e => setTitle(e.target.value)} required />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Purpose of Request</label>
+                          <textarea className="form-input" style={{ height: '90px', resize: 'none' }} placeholder="Provide brief official purpose for approval..." value={purpose} onChange={e => setPurpose(e.target.value)} required />
+                        </div>
+                        <button
+                          type="button"
+                          disabled={!title.trim() || !purpose.trim()}
+                          className="btn btn-primary"
+                          onClick={() => setCreateOrderStep(2)}
+                          style={{ minHeight: '44px', width: '100%', marginTop: '8px', justifyContent: 'center' }}
+                        >
+                          Next: Select Menu Items →
+                        </button>
+                      </div>
+                    )}
+
+                    {createOrderStep === 2 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 2: Add Food Items</h3>
+                        {menuByVendor.map(v => (
+                          <div key={v.id} style={{ background: 'white', padding: '16px', borderRadius: '20px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>🏪</div>
+                              <div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{v.name}</div>
+                                <div style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items</div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              {v.menu.map(item => {
+                                const qty = selectedItems[item.id] || 0;
+                                const nameKey = `menu.${item.name}`;
+                                const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
+                                const categoryEmoji: Record<string, string> = {
+                                  'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞', 'General': '🍽️'
+                                };
+                                const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
+
+                                return (
+                                  <div
+                                    key={item.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '12px',
+                                      background: qty > 0 ? '#EFF6FF' : '#F8FAFC',
+                                      border: qty > 0 ? '1.5px solid #BFDBFE' : '1px solid #F1F5F9',
+                                      borderRadius: '14px',
+                                      padding: '10px',
+                                      transition: 'all 0.15s'
+                                    }}
+                                  >
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                                      {item.image_url ? (
+                                        <img src={item.image_url} alt={translatedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : emoji}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{translatedName}</div>
+                                      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2563EB', marginTop: '2px' }}>₹{item.price}</div>
+                                    </div>
+
+                                    {/* Qty controls */}
+                                    <div>
+                                      {qty === 0 ? (
+                                        <button
+                                          type="button"
+                                          className="btn btn-primary btn-sm"
+                                          onClick={() => handleQtyChange(item.id, 1)}
+                                          style={{ padding: '6px 14px', borderRadius: '8px', minHeight: '36px' }}
+                                        >
+                                          + Add
+                                        </button>
+                                      ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleQtyChange(item.id, qty - 1)}
+                                            style={{ width: '32px', height: '32px', background: 'white', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                          >
+                                            −
+                                          </button>
+                                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A', minWidth: '16px', textAlign: 'center' }}>{qty}</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleQtyChange(item.id, qty + 1)}
+                                            style={{ width: '32px', height: '32px', background: '#2563EB', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Sticky order summary footer */}
+                        {Object.values(selectedItems).some(q => q > 0) && (
+                          <div
+                            style={{
+                              position: 'fixed',
+                              bottom: '64px',
+                              left: 0,
+                              right: 0,
+                              background: 'rgba(255,255,255,0.96)',
+                              backdropFilter: 'blur(12px)',
+                              borderTop: '1px solid #E2E8F0',
+                              padding: '12px 16px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              boxShadow: '0 -4px 16px rgba(0,0,0,0.08)',
+                              zIndex: 900
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>
+                                {Object.values(selectedItems).filter(q => q > 0).length} Items · {new Set(menuByVendor.filter(v => v.menu.some(i => selectedItems[i.id] > 0)).map(v => v.id)).size} Canteens
+                              </div>
+                              <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0F172A' }}>
+                                Total: <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              onClick={() => setCreateOrderStep(3)}
+                              style={{ padding: '10px 18px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}
+                            >
+                              Review Order →
+                            </button>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() => setCreateOrderStep(1)}
+                          style={{ minHeight: '44px', width: '100%', justifyContent: 'center', color: '#64748B', fontWeight: 700 }}
+                        >
+                          ← Back to Details
+                        </button>
+                      </div>
+                    )}
+
+                    {createOrderStep === 3 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 3: Review & Submit</h3>
+                        
+                        {/* Event specifications */}
+                        <div className="card" style={{ background: 'white' }}>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: '12px' }}>Event Requisition Details</h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700 }}>TITLE</div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{title}</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700 }}>PURPOSE</div>
+                              <div style={{ fontSize: '0.88rem', color: '#334155', lineHeight: 1.4 }}>{purpose}</div>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Food card grid */}
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
-                          gap: '12px',
-                        }}>
-                          {v.menu.map(item => {
-                            const qty = selectedItems[item.id] || 0;
-                            const nameKey = `menu.${item.name}`;
-                            const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
-                            const unitKey = `unit.${item.unit.toLowerCase().replace(/ /g,'_')}`;
-                            const translatedUnit = t(unitKey) !== unitKey ? t(unitKey) : item.unit;
-                            // Emoji food placeholder by category
-                            const categoryEmoji: Record<string, string> = {
-                              'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞',
-                              'General': '🍽️', 'Sweets': '🍮', 'Desserts': '🍮', 'Lunch': '🍱',
-                            };
-                            const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
-
+                        {/* Selected items card */}
+                        <div className="card" style={{ background: 'white' }}>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: '12px' }}>Items Summary</h4>
+                          {menuByVendor.map(v => {
+                            const vendorItems = v.menu.filter(item => (selectedItems[item.id] || 0) > 0);
+                            if (vendorItems.length === 0) return null;
+                            const vendorTotal = vendorItems.reduce((sum, item) => sum + (selectedItems[item.id] || 0) * item.price, 0);
                             return (
-                              <div
-                                key={item.id}
-                                style={{
-                                  background: qty > 0
-                                    ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)'
-                                    : 'white',
-                                  border: qty > 0 ? '2px solid #93C5FD' : '1px solid #E2E8F0',
-                                  borderRadius: '16px',
-                                  overflow: 'hidden',
-                                  transition: 'all 0.18s cubic-bezier(.4,0,.2,1)',
-                                  boxShadow: qty > 0
-                                    ? '0 4px 16px rgba(37,99,235,0.14)'
-                                    : '0 1px 4px rgba(0,0,0,0.06)',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                }}
-                              >
-                                {/* Image / Placeholder */}
-                                <div style={{
-                                  height: '100px',
-                                  background: qty > 0
-                                    ? 'linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%)'
-                                    : 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  overflow: 'hidden',
-                                  position: 'relative',
-                                }}>
-                                  {item.image_url ? (
-                                    <img
-                                      src={item.image_url}
-                                      alt={translatedName}
-                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                    />
-                                  ) : (
-                                    <span style={{ fontSize: '2.8rem', opacity: 0.7 }}>{emoji}</span>
-                                  )}
-                                  {qty > 0 && (
-                                    <div style={{
-                                      position: 'absolute', top: '8px', right: '8px',
-                                      background: '#2563EB', color: 'white',
-                                      borderRadius: '999px', padding: '2px 8px',
-                                      fontSize: '0.72rem', fontWeight: 800,
-                                    }}>
-                                      {qty} added
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Card body */}
-                                <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>{translatedName}</div>
-                                  <div style={{ fontSize: '0.95rem', color: '#2563EB', fontWeight: 800 }}>₹{item.price}</div>
-                                  <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{translatedUnit}</div>
-                                </div>
-
-                                {/* Quantity controls */}
-                                <div style={{ padding: '8px 12px 12px' }}>
-                                  {qty === 0 ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQtyChange(item.id, 1)}
-                                      style={{
-                                        width: '100%',
-                                        padding: '7px',
-                                        background: '#2563EB',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '10px',
-                                        fontSize: '0.82rem',
-                                        fontWeight: 800,
-                                        cursor: 'pointer',
-                                        transition: 'background 0.15s',
-                                      }}
-                                      aria-label={`Add ${translatedName}`}
-                                    >
-                                      + Add
-                                    </button>
-                                  ) : (
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleQtyChange(item.id, qty - 1)}
-                                        style={{
-                                          width: '34px', height: '34px',
-                                          background: 'white',
-                                          border: '1.5px solid #93C5FD',
-                                          borderRadius: '10px',
-                                          fontSize: '1.1rem',
-                                          fontWeight: 800,
-                                          color: '#2563EB',
-                                          cursor: 'pointer',
-                                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        }}
-                                        aria-label="Decrease quantity"
-                                      >
-                                        −
-                                      </button>
-                                      <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleQtyChange(item.id, qty + 1)}
-                                        style={{
-                                          width: '34px', height: '34px',
-                                          background: '#2563EB',
-                                          border: 'none',
-                                          borderRadius: '10px',
-                                          fontSize: '1.1rem',
-                                          fontWeight: 800,
-                                          color: 'white',
-                                          cursor: 'pointer',
-                                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        }}
-                                        aria-label="Increase quantity"
-                                      >
-                                        +
-                                      </button>
-                                    </div>
-                                  )}
+                              <div key={v.id} style={{ marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #EFF6FF' }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', marginBottom: '6px' }}>{v.name}</div>
+                                {vendorItems.map(item => (
+                                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#334155', marginBottom: '4px' }}>
+                                    <span>{selectedItems[item.id]} × {item.name}</span>
+                                    <span style={{ fontWeight: 700 }}>₹{(selectedItems[item.id] * item.price).toFixed(0)}</span>
+                                  </div>
+                                ))}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: '#64748B', marginTop: '6px' }}>
+                                  <span>Subtotal</span>
+                                  <span style={{ fontWeight: 700 }}>₹{vendorTotal.toFixed(0)}</span>
                                 </div>
                               </div>
                             );
                           })}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 900, color: '#0F172A', marginTop: '10px' }}>
+                            <span>Grand Total</span>
+                            <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
 
-                    {menuByVendor.length === 0 && (
-                      <div style={{ padding: '48px 24px', textAlign: 'center', background: 'white', borderRadius: '20px', border: '1px dashed #CBD5E1' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏪</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>No canteen open right now</div>
-                        <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Vendors will appear here once they set their status to Open.</div>
+                        {/* Submit CTA */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleCreateOrder}
+                            disabled={submitting}
+                            style={{ minHeight: '44px', justifyContent: 'center', width: '100%', fontSize: '0.9rem', fontWeight: 800 }}
+                          >
+                            {submitting ? 'Drafting...' : '🚀 Submit Requisition Request'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={() => setCreateOrderStep(2)}
+                            style={{ minHeight: '44px', justifyContent: 'center', width: '100%', color: '#64748B', fontWeight: 700 }}
+                          >
+                            ← Back to Select Food
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
+                ) : (
+                  /* Standard Two-Column Layout on Desktop */
+                  <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: '20px', alignItems: 'start' }}>
+                    {/* LEFT: Food menu grouped by vendor */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      {menuByVendor.map(v => (
+                        <div key={v.id}>
+                          {/* Vendor header */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>🏪</div>
+                            <div>
+                              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{v.name}</div>
+                              <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items available</div>
+                            </div>
+                          </div>
 
-                  {/* RIGHT: Order details + smart summary */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '80px' }}>
-                    {/* Event details card */}
-                    <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'white' }}>
-                      <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: '#0F172A' }}>{t('coord.draft_specs', 'Requisition Details')}</h3>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div>
-                          <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('coord.event_title', 'Event Title')}</label>
-                          <input type="text" className="form-input" placeholder={t('coord.event_title_ph', 'e.g. Faculty Senate Meeting')} value={title} onChange={e => setTitle(e.target.value)} required />
+                          {/* Food card grid */}
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
+                            gap: '12px',
+                          }}>
+                            {v.menu.map(item => {
+                              const qty = selectedItems[item.id] || 0;
+                              const nameKey = `menu.${item.name}`;
+                              const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
+                              const unitKey = `unit.${item.unit.toLowerCase().replace(/ /g,'_')}`;
+                              const translatedUnit = t(unitKey) !== unitKey ? t(unitKey) : item.unit;
+                              const categoryEmoji: Record<string, string> = {
+                                'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞',
+                                'General': '🍽️', 'Sweets': '🍮', 'Desserts': '🍮', 'Lunch': '🍱',
+                              };
+                              const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
+
+                              return (
+                                <div
+                                  key={item.id}
+                                  style={{
+                                    background: qty > 0
+                                      ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)'
+                                      : 'white',
+                                    border: qty > 0 ? '2px solid #93C5FD' : '1px solid #E2E8F0',
+                                    borderRadius: '16px',
+                                    overflow: 'hidden',
+                                    transition: 'all 0.18s cubic-bezier(.4,0,.2,1)',
+                                    boxShadow: qty > 0
+                                      ? '0 4px 16px rgba(37,99,235,0.14)'
+                                      : '0 1px 4px rgba(0,0,0,0.06)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                  }}
+                                >
+                                  {/* Image / Placeholder */}
+                                  <div style={{
+                                    height: '100px',
+                                    background: qty > 0
+                                      ? 'linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%)'
+                                      : 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                  }}>
+                                    {item.image_url ? (
+                                      <img
+                                        src={item.image_url}
+                                        alt={translatedName}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                      />
+                                    ) : (
+                                      <span style={{ fontSize: '2.8rem', opacity: 0.7 }}>{emoji}</span>
+                                    )}
+                                    {qty > 0 && (
+                                      <div style={{
+                                        position: 'absolute', top: '8px', right: '8px',
+                                        background: '#2563EB', color: 'white',
+                                        borderRadius: '999px', padding: '2px 8px',
+                                        fontSize: '0.72rem', fontWeight: 800,
+                                      }}>
+                                        {qty} added
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Card body */}
+                                  <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>{translatedName}</div>
+                                    <div style={{ fontSize: '0.95rem', color: '#2563EB', fontWeight: 800 }}>₹{item.price}</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{translatedUnit}</div>
+                                  </div>
+
+                                  {/* Quantity controls */}
+                                  <div style={{ padding: '8px 12px 12px' }}>
+                                    {qty === 0 ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleQtyChange(item.id, 1)}
+                                        style={{
+                                          width: '100%',
+                                          padding: '7px',
+                                          background: '#2563EB',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '10px',
+                                          fontSize: '0.82rem',
+                                          fontWeight: 800,
+                                          cursor: 'pointer',
+                                          transition: 'background 0.15s',
+                                        }}
+                                        aria-label={`Add ${translatedName}`}
+                                      >
+                                        + Add
+                                      </button>
+                                    ) : (
+                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQtyChange(item.id, qty - 1)}
+                                          style={{
+                                            width: '34px', height: '34px',
+                                            background: 'white',
+                                            border: '1.5px solid #93C5FD',
+                                            borderRadius: '10px',
+                                            fontSize: '1.1rem',
+                                            fontWeight: 800,
+                                            color: '#2563EB',
+                                            cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                          }}
+                                          aria-label="Decrease quantity"
+                                        >
+                                          −
+                                        </button>
+                                        <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQtyChange(item.id, qty + 1)}
+                                          style={{
+                                            width: '34px', height: '34px',
+                                            background: '#2563EB',
+                                            border: 'none',
+                                            borderRadius: '10px',
+                                            fontSize: '1.1rem',
+                                            fontWeight: 800,
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                          }}
+                                          aria-label="Increase quantity"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                        <div>
-                          <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('coord.meeting_purpose', 'Purpose')}</label>
-                          <textarea className="form-input" style={{ height: '72px', resize: 'none' }} placeholder={t('coord.meeting_ph', 'Brief description of official event')} value={purpose} onChange={e => setPurpose(e.target.value)} required />
+                      ))}
+
+                      {menuByVendor.length === 0 && (
+                        <div style={{ padding: '48px 24px', textAlign: 'center', background: 'white', borderRadius: '20px', border: '1px dashed #CBD5E1' }}>
+                          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏪</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>No canteen open right now</div>
+                          <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Vendors will appear here once they set their status to Open.</div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
-                    {/* Order summary card */}
-                    {Object.keys(selectedItems).some(k => selectedItems[k] > 0) && (
+                    {/* RIGHT: Order details + smart summary */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '80px' }}>
+                      {/* Event details card */}
                       <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'white' }}>
-                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: '#0F172A' }}>🛒 Order Summary</h3>
-                        {menuByVendor.map(v => {
-                          const vendorItems = v.menu.filter(item => (selectedItems[item.id] || 0) > 0);
-                          if (vendorItems.length === 0) return null;
-                          const vendorTotal = vendorItems.reduce((sum, item) => sum + (selectedItems[item.id] || 0) * item.price, 0);
-                          return (
-                            <div key={v.id} style={{ marginBottom: '12px' }}>
-                              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #EFF6FF' }}>{v.name}</div>
-                              {vendorItems.map(item => (
-                                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.81rem', color: '#334155', marginBottom: '3px' }}>
-                                  <span>{selectedItems[item.id]}× {item.name}</span>
-                                  <span style={{ fontWeight: 700 }}>₹{(selectedItems[item.id] * item.price).toFixed(0)}</span>
-                                </div>
-                              ))}
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748B', marginTop: '4px' }}>
-                                <span>Subtotal</span>
-                                <span style={{ fontWeight: 700 }}>₹{vendorTotal.toFixed(0)}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        <div style={{ borderTop: '2px solid #EFF6FF', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
-                          <span>Grand Total</span>
-                          <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: '#0F172A' }}>{t('coord.draft_specs', 'Requisition Details')}</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div>
+                            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('coord.event_title', 'Event Title')}</label>
+                            <input type="text" className="form-input" placeholder={t('coord.event_title_ph', 'e.g. Faculty Senate Meeting')} value={title} onChange={e => setTitle(e.target.value)} required />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>{t('coord.meeting_purpose', 'Purpose')}</label>
+                            <textarea className="form-input" style={{ height: '72px', resize: 'none' }} placeholder={t('coord.meeting_ph', 'Brief description of official event')} value={purpose} onChange={e => setPurpose(e.target.value)} required />
+                          </div>
                         </div>
                       </div>
-                    )}
 
-                    {/* Submit button */}
-                    <button
-                      type="submit"
-                      disabled={submitting || Object.values(selectedItems).every(q => q === 0)}
-                      className="btn btn-primary"
-                      style={{ width: '100%', padding: '13px', fontSize: '0.9rem', fontWeight: 800, borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-                    >
-                      {submitting ? t('coord.drafting_btn', 'Drafting...') : `🚀 ${t('coord.draft_btn', 'Draft Requisition')}`}
-                    </button>
-                  </div>
-                </form>
+                      {/* Order summary card */}
+                      {Object.keys(selectedItems).some(k => selectedItems[k] > 0) && (
+                        <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'white' }}>
+                          <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: '#0F172A' }}>🛒 Order Summary</h3>
+                          {menuByVendor.map(v => {
+                            const vendorItems = v.menu.filter(item => (selectedItems[item.id] || 0) > 0);
+                            if (vendorItems.length === 0) return null;
+                            const vendorTotal = vendorItems.reduce((sum, item) => sum + (selectedItems[item.id] || 0) * item.price, 0);
+                            return (
+                              <div key={v.id} style={{ marginBottom: '12px' }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #EFF6FF' }}>{v.name}</div>
+                                {vendorItems.map(item => (
+                                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.81rem', color: '#334155', marginBottom: '3px' }}>
+                                    <span>{selectedItems[item.id]}× {item.name}</span>
+                                    <span style={{ fontWeight: 700 }}>₹{(selectedItems[item.id] * item.price).toFixed(0)}</span>
+                                  </div>
+                                ))}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748B', marginTop: '4px' }}>
+                                  <span>Subtotal</span>
+                                  <span style={{ fontWeight: 700 }}>₹{vendorTotal.toFixed(0)}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', borderTop: '2px solid #EFF6FF', paddingTop: '10px' }}>
+                            <span>Grand Total</span>
+                            <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Submit button */}
+                      <button
+                        type="submit"
+                        disabled={submitting || Object.values(selectedItems).every(q => q === 0)}
+                        className="btn btn-primary"
+                        style={{ width: '100%', padding: '13px', fontSize: '0.9rem', fontWeight: 800, borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                      >
+                        {submitting ? t('coord.drafting_btn', 'Drafting...') : `🚀 ${t('coord.draft_btn', 'Draft Requisition')}`}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             )}
 
@@ -773,11 +1050,15 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                             const file = e.target.files?.[0];
                             if (!file) return;
                             if (file.size > 5 * 1024 * 1024) { setProfileMessage('Image must be less than 5MB.'); return; }
-                            setProfileAvatarFile(file);
                             const reader = new FileReader();
-                            reader.onload = (evt) => setProfileAvatarPreview(evt.target?.result as string);
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                setCropSrc(evt.target.result as string);
+                              }
+                            };
                             reader.readAsDataURL(file);
                             setProfileMessage('');
+                            e.target.value = '';
                           }}
                         />
                       </label>
@@ -835,6 +1116,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                       </div>
                     )}
                   </form>
+                  {cropSrc && (
+                    <ImageCropperModal
+                      imageSrc={cropSrc}
+                      onCrop={(croppedFile) => {
+                        setProfileAvatarFile(croppedFile);
+                        setProfileAvatarPreview(URL.createObjectURL(croppedFile));
+                        setCropSrc(null);
+                      }}
+                      onCancel={() => setCropSrc(null)}
+                    />
+                  )}
                 </div>
               </div>
             )}

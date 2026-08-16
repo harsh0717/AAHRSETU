@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSession, setSession as persistSession, uploadAvatar, updateUserProfile, UserProfile } from '@/lib/auth';
 import { api } from '@/lib/api';
+import ImageCropperModal from './ImageCropperModal';
 
 export default function FirstTimeOnboardingModal() {
   const [showModal, setShowModal] = useState(false);
@@ -11,6 +12,7 @@ export default function FirstTimeOnboardingModal() {
   const [phoneError, setPhoneError] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [skipping, setSkipping] = useState(false);
   const [error, setError] = useState('');
@@ -276,11 +278,15 @@ export default function FirstTimeOnboardingModal() {
                     setError('Image must be less than 5MB');
                     return;
                   }
-                  setAvatarFile(file);
                   const reader = new FileReader();
-                  reader.onload = (evt) => setAvatarPreview(evt.target?.result as string);
+                  reader.onload = (evt) => {
+                    if (evt.target?.result) {
+                      setCropSrc(evt.target.result as string);
+                    }
+                  };
                   reader.readAsDataURL(file);
                   setError('');
+                  e.target.value = '';
                 }}
               />
             </label>
@@ -400,6 +406,18 @@ export default function FirstTimeOnboardingModal() {
           </div>
         </form>
       </div>
+
+      {cropSrc && (
+        <ImageCropperModal
+          imageSrc={cropSrc}
+          onCrop={(croppedFile) => {
+            setAvatarFile(croppedFile);
+            setAvatarPreview(URL.createObjectURL(croppedFile));
+            setCropSrc(null);
+          }}
+          onCancel={() => setCropSrc(null)}
+        />
+      )}
     </div>
   );
 }

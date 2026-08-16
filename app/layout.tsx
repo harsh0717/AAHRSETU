@@ -1,5 +1,6 @@
 import './globals.css';
 import { I18nProvider } from '@/lib/i18n';
+import BootGate from '@/components/BootGate';
 import type { Metadata, Viewport } from 'next';
 
 export const viewport: Viewport = {
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body>
         <I18nProvider>
-          {children}
+          <BootGate>
+            {children}
+          </BootGate>
         </I18nProvider>
       </body>
     </html>

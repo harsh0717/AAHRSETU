@@ -539,3 +539,46 @@ p  { color: var(--gray-600); line-height: 1.7; }
     padding: 16px !important;
   }
 }
+
+/* ── Mobile Layout & Touch Optimization Overrides ───────────────────────── */
+@media (max-width: 768px) {
+  /* Make standard centered modals behave like bottom sheets */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    max-width: 100% !important;
+    border-radius: 24px 24px 0 0;
+    max-height: 85vh;
+    animation: bottomSheetSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important;
+  }
+
+  @keyframes bottomSheetSlide {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* Optimize interactive element touch target size (44px target) */
+  .btn,
+  .form-input,
+  .form-select,
+  .form-textarea {
+    min-height: 44px;
+    font-size: 16px !important; /* Prevents auto-zoom in iOS Safari */
+    box-sizing: border-box;
+  }
+
+  .btn-sm {
+    min-height: 36px; /* slightly smaller for secondary actions */
+  }
+
+  /* Safe Area paddings */
+  .bottom-safe-padding {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  .bottom-safe-margin {
+    margin-bottom: env(safe-area-inset-bottom) !important;
+  }
+}

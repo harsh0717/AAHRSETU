@@ -199,3 +199,58 @@ class NotificationService:
 
         self.db.commit()
         return created_notifications
+
+    async def notify_order_updated(self, order_id: str):
+        """
+        Broadcast an ORDER_UPDATED WS message to all users interested in this order.
+        """
+        from backend.models.order import MasterOrder
+        order = self.db.query(MasterOrder).filter(MasterOrder.id == order_id).first()
+        if not order:
+            return
+            
+        recipient_ids = set()
+        
+        # 1. Creator
+        if order.created_by_id:
+            recipient_ids.add(order.created_by_id)
+            
+        # 2. Principals overseeing the department
+        if order.department_id:
+            from backend.models.user import User
+            from backend.models.department import Department
+            principals = self.db.query(User).join(User.managed_departments).filter(
+                User.role == "principal",
+                User.active == True,
+                Department.id == order.department_id
+            ).all()
+            for p in principals:
+                recipient_ids.add(p.id)
+                
+        # 3. DCR
+        dcrs = self.db.query(User).filter(User.role == "dcr", User.active == True).all()
+        for d in dcrs:
+            recipient_ids.add(d.id)
+            
+        # 4. Vendors
+        for vo in order.vendor_orders:
+            vendor_users = self.db.query(User).filter(
+                User.role == "vendor",
+                User.vendor_id == vo.vendor_id,
+                User.active == True
+            ).all()
+            for vu in vendor_users:
+                recipient_ids.add(vu.id)
+                
+        # 5. Admins
+        admins = self.db.query(User).filter(User.role == "admin", User.active == True).all()
+        for a in admins:
+            recipient_ids.add(a.id)
+            
+        ws_payload = {
+            "type": "ORDER_UPDATED",
+            "order_id": order_id,
+            "status": order.status
+        }
+        for u_id in recipient_ids:
+            await manager.send_personal_message(ws_payload, u_id)

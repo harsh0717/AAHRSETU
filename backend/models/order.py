@@ -15,6 +15,7 @@ class MasterOrder(Base):
     status = Column(String(100), default="Created", nullable=False) # Created, Sent for Approval, etc.
     total_bill_amount = Column(Float, default=0.0, nullable=False)
     bill_generated_at = Column(DateTime, nullable=True)
+    billing_status = Column(String(50), nullable=True) # SUCCESS, FAILED
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

@@ -90,34 +90,63 @@ async def websocket_endpoint(
                 break
 
     import logging
+    from datetime import datetime, timezone
     logger = logging.getLogger("aharsetu-api")
-    if actual_token:
-        safe_token = actual_token[:15] + "..." if len(actual_token) > 15 else "short-token"
-        logger.info(f"[WS AUTH] Initiating WebSocket connection (Token hint: {safe_token})")
-    else:
-        logger.warning("[WS AUTH] WebSocket connection initiated without token")
+    
+    if not actual_token:
+        logger.warning("[WS AUTH] WebSocket connection initiated without token, rejecting.")
+        await websocket.accept(subprotocol=subprotocol_selected)
+        await websocket.close(code=1008)
+        return
 
-    user_id = 1
-    user_role = "coordinator"
+    safe_token = actual_token[:15] + "..." if len(actual_token) > 15 else "short-token"
+    logger.info(f"[WS AUTH] Initiating WebSocket connection (Token hint: {safe_token})")
+
+    user_id = None
     try:
-        if actual_token and actual_token.startswith("demo-"):
-            user_id = 1
-        elif actual_token:
+        if actual_token.startswith("demo-"):
+            demo_role = actual_token.replace("demo-", "")
+            user = db.query(User).filter(User.role == demo_role, User.active == True).first()
+            if user:
+                user_id = user.id
+            else:
+                user_id = 1
+        else:
             payload = jwt.decode(actual_token, settings.SECRET_KEY, algorithms=["HS256"])
-            user_id = int(payload.get("sub", 1))
+            exp = payload.get("exp")
+            if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
+                logger.warning("[WS AUTH] Connection rejected: Token expired")
+                await websocket.accept(subprotocol=subprotocol_selected)
+                await websocket.close(code=1008)
+                return
+            user_id_str = payload.get("sub")
+            if not user_id_str:
+                logger.warning("[WS AUTH] Connection rejected: Missing sub claim")
+                await websocket.accept(subprotocol=subprotocol_selected)
+                await websocket.close(code=1008)
+                return
+            user_id = int(user_id_str)
+    except JWTError as err:
+        logger.warning(f"[WS AUTH] Connection rejected: JWT verification failed: {err}")
+        await websocket.accept(subprotocol=subprotocol_selected)
+        await websocket.close(code=1008)
+        return
     except Exception as err:
-        logger.warning(f"[WS AUTH] JWT verification failed: {err}")
-        user_id = 1
+        logger.warning(f"[WS AUTH] Connection rejected due to error: {err}")
+        await websocket.accept(subprotocol=subprotocol_selected)
+        await websocket.close(code=1008)
+        return
 
     user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        user_id = 1
-        user_role = "coordinator"
-    else:
-        user_id = user.id
-        user_role = user.role
+    if not user or not user.active:
+        logger.warning(f"[WS AUTH] Connection rejected: User not found or inactive (user_id={user_id})")
+        await websocket.accept(subprotocol=subprotocol_selected)
+        await websocket.close(code=1008)
+        return
 
-    # Register connection and accept handshake
+    user_id = user.id
+    user_role = user.role
+
     await manager.connect(websocket, user_id, user_role, subprotocol=subprotocol_selected)
     
     try:

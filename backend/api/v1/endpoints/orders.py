@@ -408,6 +408,7 @@ async def submit_for_approval(
         old_value="Created",
         new_value=order.status
     )
+    await notif_service.notify_order_updated(order.id)
     return read_order_by_id(order.id, db, current_user)
 
 
@@ -468,6 +469,7 @@ async def principal_review(
         action=f"Principal Review: {action.upper()}",
         new_value=f"Order ID: {order.id}, Remarks: {payload.remarks}"
     )
+    await notif_service.notify_order_updated(order.id)
     return read_order_by_id(order.id, db, current_user)
 
 
@@ -532,6 +534,7 @@ async def dcr_review(
         action=f"DCR Review: {action.upper()}",
         new_value=f"Order ID: {order.id}, Remarks: {payload.remarks}"
     )
+    await notif_service.notify_order_updated(order.id)
     return read_order_by_id(order.id, db, current_user)
 
 
@@ -547,7 +550,7 @@ async def set_vendor_pricing(
     Triggers BillingService auto bill generator when all vendors confirm.
     """
     billing_service = BillingService(db)
-    vo = billing_service.set_vendor_prices(vendor_order_id, prices, current_user.name)
+    vo = await billing_service.set_vendor_prices(vendor_order_id, prices, current_user.name)
     if not vo:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -555,12 +558,19 @@ async def set_vendor_pricing(
         )
         
     # Notify Coordinator if master invoice was automatically generated
-    if vo.master_order.status == "Bill Generated":
+    if vo.master_order.status == "Completed":
         notif_service = NotificationService(db)
         await notif_service.create_and_send_notification(
             msg_key="bill_generated",
             params={"title": vo.master_order.title, "amount": vo.master_order.total_bill_amount},
             msg_type="bill",
+            recipient_id=vo.master_order.created_by_id,
+            order_id=vo.master_order_id
+        )
+        await notif_service.create_and_send_notification(
+            msg_key="completed",
+            params={"title": vo.master_order.title},
+            msg_type="completed",
             recipient_id=vo.master_order.created_by_id,
             order_id=vo.master_order_id
         )
@@ -575,6 +585,8 @@ async def set_vendor_pricing(
         action="Vendor Sub-Order Pricing Confirmed",
         new_value=f"Sub-order ID: {vo.id}, Bill Amount: {vo.bill_amount}"
     )
+    notif_service = NotificationService(db)
+    await notif_service.notify_order_updated(vo.master_order_id)
     return read_order_by_id(vo.master_order_id, db, current_user)
 
 
@@ -623,6 +635,7 @@ async def request_vendor_modification(
         action="Vendor Order Modification Requested",
         new_value=f"Sub-order ID: {vo.id}, Reason: {payload.reason}, Type: {payload.type}"
     )
+    await notif_service.notify_order_updated(vo.master_order_id)
     return read_order_by_id(vo.master_order_id, db, current_user)
 
 
@@ -686,6 +699,8 @@ async def resolve_modification(
         action=f"Modification Resolved: {resolution.upper()}",
         new_value=f"Sub-order ID: {vendor_order_id}, Master Order ID: {master.id}"
     )
+    notif_service = NotificationService(db)
+    await notif_service.notify_order_updated(master.id)
     return read_order_by_id(master.id, db, current_user)
 
 
@@ -727,6 +742,7 @@ async def complete_order(
         action="Order Completed & Settled",
         new_value=f"Master Order ID: {order.id}, Total Revenue: {order.total_bill_amount}"
     )
+    await notif_service.notify_order_updated(order.id)
     return read_order_by_id(order.id, db, current_user)
 
 

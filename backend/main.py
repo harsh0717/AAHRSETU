@@ -35,7 +35,25 @@ try:
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_setup_completed BOOLEAN DEFAULT FALSE;"))
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_setup_skipped BOOLEAN DEFAULT FALSE;"))
             db.execute(text("ALTER TABLE vendor_menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
+            db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;"))
+            db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS billing_status VARCHAR(50);"))
             db.commit()
+        else:
+            for stmt in [
+                "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500);",
+                "ALTER TABLE users ADD COLUMN avatar_version INTEGER DEFAULT 1;",
+                "ALTER TABLE users ADD COLUMN mobile_number VARCHAR(15);",
+                "ALTER TABLE users ADD COLUMN profile_setup_completed BOOLEAN DEFAULT FALSE;",
+                "ALTER TABLE users ADD COLUMN profile_setup_skipped BOOLEAN DEFAULT FALSE;",
+                "ALTER TABLE vendor_menu_items ADD COLUMN image_url VARCHAR(500);",
+                "ALTER TABLE vendors ADD COLUMN active BOOLEAN DEFAULT TRUE;",
+                "ALTER TABLE master_orders ADD COLUMN billing_status VARCHAR(50);"
+            ]:
+                try:
+                    db.execute(text(stmt))
+                    db.commit()
+                except Exception:
+                    db.rollback()
 
         user_count = db.query(User).count()
         if user_count == 0:

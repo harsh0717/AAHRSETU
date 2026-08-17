@@ -204,8 +204,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('aharsetu_menu_updated', { detail: payload }));
           }
+        } else if (payload.type === 'ORDER_UPDATED') {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: payload }));
+          }
         } else {
           handleNotification(payload);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: payload }));
+          }
         }
       } catch (err) {
         console.error('[WS CLIENT] Parse payload error:', err);

@@ -1,5 +1,7 @@
 'use client';
 
+import { useId, useState, useEffect } from 'react';
+
 // Aaharसेतु brand logo with IKS (Indian Knowledge System) inspired visual motifs
 // Motifs: Concentric mandala geometry, 8-petal lotus (Aahar), Torana archways (Setu bridge)
 
@@ -16,7 +18,22 @@ export default function BrandLogo({
   style?: React.CSSProperties;
   dark?: boolean;
 }) {
-  const iconSize = size;
+  const uniqueId = useId().replace(/:/g, '');
+  const goldGradId = `iksGoldGrad-${uniqueId}`;
+  const blueGradId = `iksBlueGrad-${uniqueId}`;
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }
+  }, []);
+
+  const actualSize = isMobile ? Math.min(size, 46) : size;
+  const iconSize = actualSize;
   const textColor = dark ? '#FFFFFF' : '#1E3A6F';
   
   const icon = (
@@ -30,34 +47,34 @@ export default function BrandLogo({
       style={{ flexShrink: 0 }}
     >
       {/* Outer concentric geometric rings (IKS style dash-geometry) */}
-      <circle cx="24" cy="24" r="22" stroke="url(#iksGoldGrad)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.8" />
-      <circle cx="24" cy="24" r="19" stroke="url(#iksBlueGrad)" strokeWidth="1" opacity="0.5" />
+      <circle cx="24" cy="24" r="22" stroke={`url(#${goldGradId})`} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.8" />
+      <circle cx="24" cy="24" r="19" stroke={`url(#${blueGradId})`} strokeWidth="1" opacity="0.5" />
       
       {/* Torana/Setu Archways (Traditional Indian Arch Bridge Motif) */}
-      <path d="M8 28 C 16 14, 32 14, 40 28" stroke="url(#iksGoldGrad)" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M12 28 C 18 18, 30 18, 36 28" stroke="url(#iksBlueGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.75" />
+      <path d="M8 28 C 16 14, 32 14, 40 28" stroke={`url(#${goldGradId})`} strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M12 28 C 18 18, 30 18, 36 28" stroke={`url(#${blueGradId})`} strokeWidth="1.5" strokeLinecap="round" opacity="0.75" />
       
       {/* Lotus Mandala Geometry (Purity, Nourishment, Traditional Knowledge Bindu) */}
       <circle cx="24" cy="24" r="2.5" fill="#D97706" />
       
       {/* 8 Lotus petals */}
-      <path d="M24 24 Q21 16 24 12 Q27 16 24 24" fill="url(#iksGoldGrad)" opacity="0.9" />
-      <path d="M24 24 Q21 32 24 36 Q27 32 24 24" fill="url(#iksGoldGrad)" opacity="0.9" />
-      <path d="M24 24 Q16 21 12 24 Q16 27 24 24" fill="url(#iksGoldGrad)" opacity="0.9" />
-      <path d="M24 24 Q32 21 36 24 Q32 27 24 24" fill="url(#iksGoldGrad)" opacity="0.9" />
+      <path d="M24 24 Q21 16 24 12 Q27 16 24 24" fill={`url(#${goldGradId})`} opacity="0.9" />
+      <path d="M24 24 Q21 32 24 36 Q27 32 24 24" fill={`url(#${goldGradId})`} opacity="0.9" />
+      <path d="M24 24 Q16 21 12 24 Q16 27 24 24" fill={`url(#${goldGradId})`} opacity="0.9" />
+      <path d="M24 24 Q32 21 36 24 Q32 27 24 24" fill={`url(#${goldGradId})`} opacity="0.9" />
       
-      <path d="M24 24 Q17.5 17.5 15.5 15.5 Q22.5 17.5 24 24" fill="url(#iksGoldGrad)" opacity="0.75" />
-      <path d="M24 24 Q30.5 30.5 32.5 32.5 Q25.5 30.5 24 24" fill="url(#iksGoldGrad)" opacity="0.75" />
-      <path d="M24 24 Q17.5 30.5 15.5 32.5 Q22.5 30.5 24 24" fill="url(#iksGoldGrad)" opacity="0.75" />
-      <path d="M24 24 Q30.5 17.5 32.5 15.5 Q25.5 17.5 24 24" fill="url(#iksGoldGrad)" opacity="0.75" />
+      <path d="M24 24 Q17.5 17.5 15.5 15.5 Q22.5 17.5 24 24" fill={`url(#${goldGradId})`} opacity="0.75" />
+      <path d="M24 24 Q30.5 30.5 32.5 32.5 Q25.5 30.5 24 24" fill={`url(#${goldGradId})`} opacity="0.75" />
+      <path d="M24 24 Q17.5 30.5 15.5 32.5 Q22.5 30.5 24 24" fill={`url(#${goldGradId})`} opacity="0.75" />
+      <path d="M24 24 Q30.5 17.5 32.5 15.5 Q25.5 17.5 24 24" fill={`url(#${goldGradId})`} opacity="0.75" />
       
       <defs>
-        <linearGradient id="iksGoldGrad" x1="12" y1="12" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+        <linearGradient id={goldGradId} x1="12" y1="12" x2="36" y2="36" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#F59E0B" />
           <stop offset="50%" stopColor="#D97706" />
           <stop offset="100%" stopColor="#B45309" />
         </linearGradient>
-        <linearGradient id="iksBlueGrad" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <linearGradient id={blueGradId} x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#3B82F6" />
           <stop offset="100%" stopColor="#1D4ED8" />
         </linearGradient>
@@ -73,14 +90,14 @@ export default function BrandLogo({
     );
   }
 
-  const wordmarkSize = Math.round(size * 0.46);
+  const wordmarkSize = Math.round(actualSize * 0.46);
 
   return (
     <div
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: Math.round(size * 0.18) + 'px',
+        gap: Math.round(actualSize * 0.18) + 'px',
         padding: '6px 14px',
         background: dark ? 'rgba(30, 41, 59, 0.45)' : 'rgba(255, 255, 255, 0.45)',
         backdropFilter: 'blur(12px)',

@@ -109,6 +109,7 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
           position: 'absolute', top: '44px', right: 0,
           background: 'white', border: '1px solid var(--gray-200)',
           borderRadius: '12px', width: '320px',
+          minWidth: '320px', maxWidth: 'none',
           boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05)',
           overflow: 'hidden',
           animation: 'slide-down 0.2s ease-out'

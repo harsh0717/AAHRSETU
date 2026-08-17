@@ -197,7 +197,7 @@ function LoginFormContent() {
         </div>
 
         <div className={styles.heroFooter}>
-          © 2026 AharSetu. All rights reserved.
+          © 2026 Aaharसेતુ. All rights reserved.
         </div>
       </section>
 

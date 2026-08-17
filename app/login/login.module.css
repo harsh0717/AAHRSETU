@@ -62,8 +62,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-wrap: nowrap;
+  gap: 10px;
+  min-width: 0;
 }
 
 .heroLogo {
@@ -81,11 +82,12 @@
 
 .langRow {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   background: rgba(255, 255, 255, 0.05);
   padding: 4px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .langBtn {
@@ -625,6 +627,12 @@
     width: 100%;
     padding: 24px 16px;
     min-height: auto;
+    overflow: visible;
+  }
+  .heroHeader {
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow: visible;
   }
   .heroContent {
     margin-top: 16px;
@@ -673,5 +681,16 @@
     width: 24px;
     height: 24px;
     font-size: 0.72rem;
+  }
+  .heroHeader {
+    gap: 6px;
+  }
+  .langBtn {
+    padding: 5px 8px;
+    font-size: 0.68rem;
+  }
+  .langRow {
+    gap: 2px;
+    padding: 3px;
   }
 }

@@ -145,10 +145,25 @@ class NotificationService:
             if user:
                 recipients.append(user)
         elif recipient_role:
-            query = self.db.query(User).filter(User.role == recipient_role, User.active == True)
-            if recipient_role == "vendor" and vendor_id:
-                query = query.filter(User.vendor_id == vendor_id)
-            recipients = query.all()
+            if recipient_role == "principal" and order_id:
+                # Route only to Principals supervising the order's department
+                from backend.models.order import MasterOrder
+                from backend.models.department import Department
+                order = self.db.query(MasterOrder).filter(MasterOrder.id == order_id).first()
+                if order and order.department_id:
+                    query = self.db.query(User).join(User.managed_departments).filter(
+                        User.role == "principal",
+                        User.active == True,
+                        Department.id == order.department_id
+                    )
+                    recipients = query.all()
+                else:
+                    recipients = self.db.query(User).filter(User.role == "principal", User.active == True).all()
+            else:
+                query = self.db.query(User).filter(User.role == recipient_role, User.active == True)
+                if recipient_role == "vendor" and vendor_id:
+                    query = query.filter(User.vendor_id == vendor_id)
+                recipients = query.all()
 
         for user in recipients:
             lang = user.preferred_language or "en"

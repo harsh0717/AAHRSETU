@@ -286,6 +286,14 @@ async def upload_avatar(
         "avatar_version": new_version
     })
 
+    # Synchronize Vendor.image_url if the user is a vendor
+    if db_user.role == "vendor" and db_user.vendor_id:
+        from backend.models.vendor import Vendor
+        vendor = db.query(Vendor).filter(Vendor.id == db_user.vendor_id).first()
+        if vendor:
+            vendor.image_url = avatar_url
+            db.commit()
+
     from backend.repositories.audit import AuditRepository
     audit_repo = AuditRepository(db)
     audit_repo.log_action(

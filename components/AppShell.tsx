@@ -40,6 +40,7 @@ const BOTTOM_NAV_CONFIG: Record<string, { label: string; href: string; icon: str
   principal: [
     { id: 'home', label: 'Home', href: '/principal', icon: '🏠' },
     { id: 'approvals', label: 'Approvals', href: '/principal/approvals', icon: '⏳' },
+    { id: 'my_orders', label: 'My Requisitions', href: '/principal/my-orders', icon: '📝' },
     { id: 'history', label: 'Orders', href: '/principal/history', icon: '📜' },
     { id: 'notifications', label: 'Alerts', href: '/principal/notifications', icon: '🔔' },
     { id: 'profile', label: 'Profile', href: '/principal/profile', icon: '👤' },

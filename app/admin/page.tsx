@@ -179,13 +179,13 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       if (hash) {
         setActiveTab(hash);
       } else {
-        setActiveTab('dashboard');
+        setActiveTab(initialTab || 'dashboard');
       }
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
+  }, [initialTab]);
 
   useEffect(() => {
     if (activeTab && window.location.hash !== '#' + activeTab) {

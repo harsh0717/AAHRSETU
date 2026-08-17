@@ -318,11 +318,19 @@ def read_order_by_id(
 def create_order(
     payload: MasterOrderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(["coordinator"]))
+    current_user: User = Depends(deps.check_role(["coordinator", "principal"]))
 ) -> Any:
     """
-    Submit a split order containing multiple vendor items (Coordinator-only).
+    Submit a split order containing multiple vendor items.
     """
+    if current_user.role == "principal":
+        managed_dept_ids = [d.id for d in current_user.managed_departments]
+        if not payload.department_id or payload.department_id not in managed_dept_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only create requisitions for departments you manage."
+            )
+
     order_service = OrderService(db)
     items_in = [{"menu_item_id": i.menu_item_id, "quantity": i.quantity} for i in payload.items]
     try:
@@ -330,7 +338,8 @@ def create_order(
             creator=current_user,
             title=payload.title,
             purpose=payload.purpose,
-            items_in=items_in
+            items_in=items_in,
+            department_id=payload.department_id
         )
     except ValueError as e:
         raise HTTPException(
@@ -355,11 +364,11 @@ def create_order(
 async def submit_for_approval(
     order_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(["coordinator"]))
+    current_user: User = Depends(deps.check_role(["coordinator", "principal"]))
 ) -> Any:
     """
-    Submit a created order to Sent for Approval.
-    Fires WebSocket alerts to the supervising Principal.
+    Submit a created order.
+    Fires WebSocket alerts to DCR (if submitted by Principal) or supervising Principal (if submitted by Coordinator).
     """
     order_service = OrderService(db)
     order = order_service.submit_for_approval(order_id, current_user)
@@ -369,15 +378,24 @@ async def submit_for_approval(
             detail="Order not found or not in draft status"
         )
         
-    # Notify Principal
+    # Notify DCR or Principal
     notif_service = NotificationService(db)
-    await notif_service.create_and_send_notification(
-        msg_key="new_order",
-        params={"dept": order.department.name if order.department else "Coordinator", "title": order.title},
-        msg_type="new_order",
-        recipient_role="principal",
-        order_id=order.id
-    )
+    if current_user.role == "principal":
+        await notif_service.create_and_send_notification(
+            msg_key="order_submitted",
+            params={"title": order.title},
+            msg_type="order_submitted",
+            recipient_role="dcr",
+            order_id=order.id
+        )
+    else:
+        await notif_service.create_and_send_notification(
+            msg_key="new_order",
+            params={"dept": order.department.name if order.department else "Coordinator", "title": order.title},
+            msg_type="new_order",
+            recipient_role="principal",
+            order_id=order.id
+        )
     
     # Audit log order submission
     from backend.repositories.audit import AuditRepository
@@ -386,9 +404,9 @@ async def submit_for_approval(
         user_id=current_user.id,
         role=current_user.role,
         department=current_user.department_id or "General",
-        action="Order Submitted for Approval",
-        old_value=order.status,
-        new_value="Sent for Approval"
+        action="Order Submitted for Approval" if current_user.role != "principal" else "Principal Approved",
+        old_value="Created",
+        new_value=order.status
     )
     return read_order_by_id(order.id, db, current_user)
 

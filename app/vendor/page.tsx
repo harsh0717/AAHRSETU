@@ -119,13 +119,13 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
       if (hash) {
         setActiveTab(hash);
       } else {
-        setActiveTab('dashboard');
+        setActiveTab(initialTab || 'dashboard');
       }
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
+  }, [initialTab]);
 
   // Sync state changes back to hash
   useEffect(() => {

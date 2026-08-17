@@ -162,7 +162,7 @@ function LoginFormContent() {
             <span>{t('login.hero_title_span', 'Better Campus.')}</span>
           </h2>
           <p className={styles.heroSub}>
-            {t('login.hero_sub', 'Your campus food, connected from requisition to plate. Seamless multi-vendor ordering, principal approvals, and instant settlements.')}
+            {t('login.hero_sub', 'Connecting People Through Better Food.')}
           </p>
 
           <div className={styles.featuresGrid}>

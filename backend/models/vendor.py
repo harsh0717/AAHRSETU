@@ -14,6 +14,7 @@ class Vendor(Base):
     phone = Column(String(50), nullable=False)
     status = Column(String(50), default="closed", nullable=False) # open, closed, temporarily_unavailable
     revenue = Column(Float, default=0.0, nullable=False)
+    image_url = Column(String(500), nullable=True)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

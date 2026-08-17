@@ -32,6 +32,7 @@ class VendorBase(BaseModel):
     phone: str
     status: str = "closed" # open, closed, temporarily_unavailable
     revenue: float = 0.0
+    image_url: Optional[str] = None
 
 
 class VendorCreate(VendorBase):

@@ -25,7 +25,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
   // API Data
   const [orders, setOrders] = useState<MasterOrder[]>([]);
-  const [menuByVendor, setMenuByVendor] = useState<{ id: string; name: string; menu: MenuItem[] }[]>([]);
+  const [menuByVendor, setMenuByVendor] = useState<{ id: string; name: string; image_url?: string | null; status?: string; menu: MenuItem[] }[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Create Order States
@@ -136,13 +136,13 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       if (hash) {
         setActiveTab(hash);
       } else {
-        setActiveTab('dashboard');
+        setActiveTab(initialTab || 'dashboard');
       }
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
+  }, [initialTab]);
 
   // Sync state changes back to hash
   useEffect(() => {
@@ -438,7 +438,13 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                         {menuByVendor.map(v => (
                           <div key={v.id} style={{ background: 'white', padding: '16px', borderRadius: '20px', border: '1px solid #E2E8F0' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>🏪</div>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                {v.image_url ? (
+                                  <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                  <div style={{ width: '100%', height: '100%', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800 }}>{v.name[0]}</div>
+                                )}
+                              </div>
                               <div>
                                 <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{v.name}</div>
                                 <div style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items</div>
@@ -646,7 +652,13 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                         <div key={v.id}>
                           {/* Vendor header */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>🏪</div>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              {v.image_url ? (
+                                <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 800 }}>{v.name[0]}</div>
+                              )}
+                            </div>
                             <div>
                               <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{v.name}</div>
                               <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items available</div>

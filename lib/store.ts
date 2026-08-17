@@ -283,6 +283,7 @@ export async function createMasterOrder(orderData: {
   title: string;
   purpose: string;
   items: { menu_item_id: string; quantity: number }[];
+  department_id?: string;
 }): Promise<MasterOrder> {
   const session = getSession();
 
@@ -307,7 +308,7 @@ export async function createMasterOrder(orderData: {
 
   const now = new Date().toISOString();
   const newId = 'ORD-' + String(Date.now()).slice(-4);
-  const deptId = session?.department_id || 'diploma';
+  const deptId = orderData.department_id || session?.department_id || 'diploma';
   const deptLabel = deptId === 'diploma' ? 'Diploma Department' : deptId === 'degree' ? 'Degree Department' : `${deptId.toUpperCase()} Department`;
 
   // Calculate bill total and group items snapshot by vendor ID
@@ -395,7 +396,12 @@ export async function createMasterOrder(orderData: {
   };
 
   try {
-    const res = await api.post<MasterOrder>('/orders', orderData);
+    const res = await api.post<MasterOrder>('/orders', {
+      title: orderData.title,
+      purpose: orderData.purpose,
+      items: orderData.items,
+      department_id: orderData.department_id
+    });
     if (res) {
       const localList = getLocalOrders();
       const idx = localList.findIndex(o => o.id === res.id);

@@ -22,13 +22,14 @@ class OrderService:
         creator: User,
         title: str,
         purpose: str,
-        items_in: List[Dict[str, Any]]
+        items_in: List[Dict[str, Any]],
+        department_id: Optional[str] = None
     ) -> MasterOrder:
         now = datetime.now(timezone.utc)
         order_id = f"ORD-{int(now.timestamp()) % 1000000:06d}"
         
         # Resolve department info
-        dept_id = creator.department_id
+        dept_id = department_id or creator.department_id
         dept = self.user_repo.get_department_by_id(dept_id) if dept_id else None
         dept_label = dept.label if dept else "Unknown Department"
         
@@ -112,16 +113,20 @@ class OrderService:
         if not order or order.status != "Created":
             return None
             
-        order.status = "Sent for Approval"
+        if user.role == "principal":
+            order.status = "Principal Approved"
+        else:
+            order.status = "Sent for Approval"
+            
         order.updated_at = datetime.now(timezone.utc)
         self.db.commit()
         
         self.order_repo.create_history_entry(ApprovalHistory(
             master_order_id=order_id,
-            action="Submitted for Approval",
+            action="Principal Approved" if user.role == "principal" else "Submitted for Approval",
             role=user.role,
             user_id=user.id,
-            remarks="Sent to Principal for review"
+            remarks="Directly approved and sent to DCR for budget clearance" if user.role == "principal" else "Sent to Principal for review"
         ))
         
         return order

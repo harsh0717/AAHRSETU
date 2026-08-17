@@ -24,6 +24,7 @@ export interface Vendor {
   status: string; // open, closed, temporarily_unavailable
   revenue: number;
   menu_items?: MenuItem[];
+  image_url?: string | null;
 }
 
 const LOCAL_VENDORS_KEY = 'aharsetu_vendors_v3';
@@ -286,7 +287,7 @@ export async function deleteVendorMenuItem(vendorId: string, itemId: string): Pr
   saveLocalMenu(vendorId, menu);
 }
 
-export async function getAvailableMenuByVendor(): Promise<{ id: string; name: string; menu: MenuItem[] }[]> {
+export async function getAvailableMenuByVendor(): Promise<{ id: string; name: string; image_url?: string | null; status: string; menu: MenuItem[] }[]> {
   const vendors = await getVendors();
   const open = vendors.filter((v) => v.status === 'open');
   
@@ -298,6 +299,8 @@ export async function getAvailableMenuByVendor(): Promise<{ id: string; name: st
       result.push({
         id: v.id,
         name: v.name,
+        image_url: v.image_url,
+        status: v.status,
         menu: available,
       });
     }

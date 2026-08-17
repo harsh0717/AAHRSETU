@@ -86,6 +86,7 @@ class MasterOrderCreate(BaseModel):
     title: str
     purpose: str
     items: List[OrderItemCreate] # contains menu_item_id + quantity
+    department_id: Optional[str] = None
 
 
 class MasterOrderResponse(BaseModel):

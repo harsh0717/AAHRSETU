@@ -2,7 +2,7 @@ import os
 import uuid
 import shutil
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Response
 from sqlalchemy.orm import Session
 from backend.api import deps
 from backend.core.database import get_db
@@ -255,30 +255,30 @@ async def upload_avatar(
     ext_map = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
     ext = ext_map.get(content_type, "jpg")
 
-    # Build persistent storage path
-    uploads_dir = os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "..", "public", "uploads", "avatars"
-    )
-    os.makedirs(uploads_dir, exist_ok=True)
+    from backend.models.stored_file import StoredFile
 
-    # Delete old avatar file if it exists
+    # Delete old avatar from database if it exists
     if db_user.avatar_url:
         old_filename = os.path.basename(db_user.avatar_url.split("?")[0])
-        old_path = os.path.join(uploads_dir, old_filename)
-        if os.path.exists(old_path):
-            try:
-                os.remove(old_path)
-            except Exception:
-                pass
+        try:
+            db.query(StoredFile).filter(StoredFile.filename == old_filename).delete()
+            db.commit()
+        except Exception:
+            db.rollback()
 
     filename = f"user_{user_id}_v{new_version}_{uuid.uuid4().hex[:8]}.{ext}"
-    file_path = os.path.join(uploads_dir, filename)
 
-    with open(file_path, "wb") as f:
-        f.write(file_bytes)
+    # Save to database StoredFile
+    stored_file = StoredFile(
+        filename=filename,
+        content_type=content_type,
+        data=file_bytes
+    )
+    db.add(stored_file)
+    db.commit()
 
-    # Build public URL (accessible via /uploads/avatars/{filename})
-    avatar_url = f"/uploads/avatars/{filename}"
+    # Build dynamic serving URL
+    avatar_url = f"/api/v1/users/avatar/{filename}"
 
     # Update database
     user_repo.update(db_user, {
@@ -351,3 +351,15 @@ def delete_user(
         old_value=f"ID: {user_id}, Email: {target_email}"
     )
     return None
+
+
+@router.get("/avatar/{filename}")
+def get_user_avatar(filename: str, db: Session = Depends(get_db)) -> Any:
+    """
+    Retrieve user avatar binary data from the persistent database.
+    """
+    from backend.models.stored_file import StoredFile
+    stored_file = db.query(StoredFile).filter(StoredFile.filename == filename).first()
+    if not stored_file:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Avatar not found")
+    return Response(content=stored_file.data, media_type=stored_file.content_type)

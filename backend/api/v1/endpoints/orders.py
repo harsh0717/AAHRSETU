@@ -122,6 +122,85 @@ def read_orders(
     return response
 
 
+@router.get("/verify-invoice/{invoice_no}")
+def verify_invoice(invoice_no: str, db: Session = Depends(get_db)) -> Any:
+    """
+    Public endpoint to verify an invoice and return non-sensitive details.
+    """
+    from backend.models.order import MasterOrder, VendorOrder
+    
+    # 1. Try to find VendorOrder by explicit invoice_number column
+    v_order = db.query(VendorOrder).filter(VendorOrder.invoice_number == invoice_no).first()
+    
+    master_order = None
+    vendor_order = None
+    
+    if v_order:
+        vendor_order = v_order
+        master_order = v_order.master_order
+    else:
+        # Parse canonical patterns
+        # Master: INV-ORD-XXX-MASTER
+        # Vendor: INV-ORD-XXX-VYYYY
+        upper_no = invoice_no.upper()
+        if upper_no.startswith("INV-") and upper_no.endswith("-MASTER"):
+            order_id = upper_no[4:-7]
+            master_order = db.query(MasterOrder).filter(MasterOrder.id == order_id).first()
+        elif upper_no.startswith("INV-"):
+            parts = upper_no.split("-")
+            if len(parts) >= 4:
+                order_id = f"{parts[1]}-{parts[2]}"
+                vendor_id = parts[3].lower()
+                master_order = db.query(MasterOrder).filter(MasterOrder.id == order_id).first()
+                if master_order:
+                    vendor_order = db.query(VendorOrder).filter(
+                        VendorOrder.master_order_id == order_id,
+                        VendorOrder.vendor_id == vendor_id
+                    ).first()
+                    
+    if not master_order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice/Order not found")
+        
+    items = []
+    if vendor_order:
+        for item in vendor_order.items:
+            items.append({
+                "name": item.name,
+                "quantity": item.quantity,
+                "price": item.price,
+                "subtotal": item.price * item.quantity
+            })
+        total_amount = vendor_order.bill_amount
+        vendor_name = vendor_order.vendor.name if vendor_order.vendor else "Canteen Vendor"
+    else:
+        for vo in master_order.vendor_orders:
+            for item in vo.items:
+                items.append({
+                    "name": item.name,
+                    "quantity": item.quantity,
+                    "price": item.price,
+                    "subtotal": item.price * item.quantity,
+                    "vendor": vo.vendor.name if vo.vendor else "Canteen"
+                })
+        total_amount = master_order.total_bill_amount
+        vendor_name = "All Campus Canteens (Master Invoice)"
+        
+    return {
+        "invoice_number": invoice_no,
+        "order_reference": master_order.id,
+        "title": master_order.title,
+        "purpose": master_order.purpose,
+        "department_name": master_order.department.name if master_order.department else "General Department",
+        "vendor_name": vendor_name,
+        "total_amount": total_amount,
+        "date": master_order.created_at.strftime("%d %b %Y"),
+        "status": "GENUINE",
+        "issuer": "AharSetu ERP Institutional Billing System",
+        "items": items,
+        "order_status": master_order.status
+    }
+
+
 @router.get("/{order_id}", response_model=MasterOrderResponse)
 def read_order_by_id(
     order_id: str,

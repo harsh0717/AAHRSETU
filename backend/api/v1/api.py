@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from backend.api.v1.endpoints import auth, users, vendors, orders, notifications, reports
+from backend.api.v1.endpoints import auth, users, vendors, orders, notifications, reports, settings
 
 api_router = APIRouter(redirect_slashes=True)
 
@@ -9,3 +9,4 @@ api_router.include_router(vendors.router, prefix="/vendors", tags=["vendors"])
 api_router.include_router(orders.router, prefix="/orders", tags=["orders"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
+api_router.include_router(settings.router, prefix="/settings", tags=["settings"])

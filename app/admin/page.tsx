@@ -65,6 +65,20 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
+  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
+  const [settingsMessage, setSettingsMessage] = useState('');
+
+  async function handleToggleDemo(enabled: boolean) {
+    setSettingsMessage('');
+    try {
+      const res = await api.put<{ demo_accounts_enabled: boolean }>('/settings', { demo_accounts_enabled: enabled });
+      setDemoAccountsEnabled(res.demo_accounts_enabled);
+      setSettingsMessage('System settings updated successfully!');
+      setTimeout(() => setSettingsMessage(''), 4000);
+    } catch (err: any) {
+      setSettingsMessage(err.message || 'Failed to update system settings.');
+    }
+  }
 
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
@@ -109,6 +123,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       setStats(sysStats);
       setNotifications(nList);
       setDepartments(deptList);
+      const config = await api.get<{ demo_accounts_enabled: boolean }>('/settings/public').catch(() => ({ demo_accounts_enabled: true }));
+      setDemoAccountsEnabled(config.demo_accounts_enabled);
     } catch (err) {
       console.error(err);
     } finally {
@@ -958,6 +974,28 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       <option value="gu">ગુજરાતી (Gujarati)</option>
                     </select>
                   </div>
+
+                  <hr style={{ margin: '18px 0', borderColor: 'var(--gray-200)' }} />
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>🛡️ Administrative System Settings</h3>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-800)' }}>Demo Accounts Access</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--gray-500)', marginTop: '2px' }}>Allows fast mock logins from the login board</div>
+                    </div>
+                    {/* Toggle Switch */}
+                    <label style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px' }}>
+                      <input type="checkbox" checked={demoAccountsEnabled} onChange={(e) => handleToggleDemo(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+                      <span style={{ position: 'absolute', cursor: 'pointer', inset: 0, background: demoAccountsEnabled ? '#2563EB' : '#CBD5E1', borderRadius: '24px', transition: '0.3s' }}>
+                        <span style={{ position: 'absolute', left: demoAccountsEnabled ? '24px' : '4px', bottom: '4px', background: 'white', width: '16px', height: '16px', borderRadius: '50%', transition: '0.3s' }} />
+                      </span>
+                    </label>
+                  </div>
+                  {settingsMessage && (
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: settingsMessage.includes('error') || settingsMessage.includes('Failed') ? '#EF4444' : '#10B981', marginTop: '4px' }}>
+                      {settingsMessage}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

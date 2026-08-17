@@ -187,9 +187,11 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <BrandLogo size={52} />
-            <Link href="/coordinator/orders/create" className="btn btn-primary">
-              ➕ Create Requisition
-            </Link>
+            {activeTab === 'dashboard' && (
+              <Link href="/coordinator/orders/create" className="btn btn-primary">
+                ➕ Create Requisition
+              </Link>
+            )}
           </div>
         </div>
 

@@ -20,6 +20,30 @@ def login(
     Authenticate user credentials, including role and department (where applicable),
     and return access/refresh tokens.
     """
+    from backend.models.system_setting import SystemSetting
+    demo_setting = db.query(SystemSetting).filter(SystemSetting.key == "demo_accounts_enabled").first()
+    demo_enabled = True
+    if demo_setting:
+        demo_enabled = (demo_setting.value.lower() == "true")
+        
+    if not demo_enabled:
+        demo_emails = {
+            "dcr@aharsetu.edu.in",
+            "principal1@aharsetu.edu.in",
+            "principal2@aharsetu.edu.in",
+            "coord.diploma@aharsetu.edu.in",
+            "coord.degree@aharsetu.edu.in",
+            "vendor1@aharsetu.edu.in",
+            "vendor2@aharsetu.edu.in",
+            "vendor3@aharsetu.edu.in",
+            "vendor4@aharsetu.edu.in"
+        }
+        if payload.email.lower() in demo_emails:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Demo accounts are currently disabled by the system administrator."
+            )
+
     auth_service = AuthService(db)
     user = auth_service.authenticate_user(
         email=payload.email,

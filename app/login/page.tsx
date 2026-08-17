@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { login, getSession } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
@@ -43,6 +44,22 @@ function LoginFormContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await api.get<{ demo_accounts_enabled: boolean }>('/settings/public');
+        setDemoAccountsEnabled(res.demo_accounts_enabled);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('aharsetu_demo_enabled', res.demo_accounts_enabled ? 'true' : 'false');
+        }
+      } catch (e) {
+        console.warn('[LOGIN] Offline or system settings error:', e);
+      }
+    }
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     const session = getSession();
@@ -334,33 +351,35 @@ function LoginFormContent() {
           </form>
 
           {/* Quick-Access Demo Accounts Selector */}
-          <div className={styles.demoSection}>
-            <button
-              type="button"
-              onClick={() => setShowDemo(!showDemo)}
-              className={styles.demoTrigger}
-            >
-              {showDemo ? t('login.demo_btn_close', '✕ Close Demo Board') : t('login.demo_btn_open', '🔑 Quick Access Demo Accounts')}
-            </button>
+          {demoAccountsEnabled && (
+            <div className={styles.demoSection}>
+              <button
+                type="button"
+                onClick={() => setShowDemo(!showDemo)}
+                className={styles.demoTrigger}
+              >
+                {showDemo ? t('login.demo_btn_close', '✕ Close Demo Board') : t('login.demo_btn_open', '🔑 Quick Access Demo Accounts')}
+              </button>
 
-            {showDemo && (
-              <div className={styles.demoGrid}>
-                {DEMO_ACCOUNTS.map((acc, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => fillDemo(acc)}
-                    className={styles.demoCard}
-                  >
-                    <span className={styles.demoIcon}>{acc.icon}</span>
-                    <div className={styles.demoMeta}>
-                      <h5>{acc.label}</h5>
-                      <p>{acc.email}</p>
+              {showDemo && (
+                <div className={styles.demoGrid}>
+                  {DEMO_ACCOUNTS.map((acc, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => fillDemo(acc)}
+                      className={styles.demoCard}
+                    >
+                      <span className={styles.demoIcon}>{acc.icon}</span>
+                      <div className={styles.demoMeta}>
+                        <h5>{acc.label}</h5>
+                        <p>{acc.email}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
       </section>

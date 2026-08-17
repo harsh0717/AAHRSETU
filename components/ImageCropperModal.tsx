@@ -22,6 +22,11 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
     if (typeof window !== 'undefined') {
       setIsMobile(window.innerWidth <= 768);
     }
+    // Lock body scrolling during active crop session to prevent viewport bouncing
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, []);
 
   const handleDragStart = (clientX: number, clientY: number) => {

@@ -30,6 +30,7 @@ export default function BillPage() {
   const [session, setSession] = useState<UserProfile | null>(null);
   const [selectedVendorId, setSelectedVendorId] = useState('master');
   const [downloading, setDownloading] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   useEffect(() => {
     const s = getSession();
@@ -72,7 +73,14 @@ export default function BillPage() {
   const computedItemTotal = items.reduce((acc, i) => acc + (i.price * i.quantity), 0);
   const rawTotal = selectedVO ? selectedVO.bill_amount : order.total_bill_amount;
   const totalAmount = rawTotal > 0 ? rawTotal : (computedItemTotal > 0 ? computedItemTotal : 150.0);
-  const qrDataUrl = generateInvoiceQRCodeDataURL(invoiceNo);
+  // Load scannable QR Code URL asynchronously
+  useEffect(() => {
+    if (invoiceNo) {
+      generateInvoiceQRCodeDataURL(invoiceNo)
+        .then((url) => setQrCodeUrl(url))
+        .catch((err) => console.error('[QR] Failed to generate QR data URL:', err));
+    }
+  }, [invoiceNo]);
 
   // Generate jsPDF A4 Document
   async function generatePDF() {
@@ -364,7 +372,7 @@ export default function BillPage() {
             <div style={{ textAlign: 'center', background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
               <Link href={`/verify/invoice/${invoiceNo}`} target="_blank" style={{ textDecoration: 'none' }}>
                 <img
-                  src={qrDataUrl}
+                  src={qrCodeUrl}
                   alt="Invoice Verification QR Code"
                   style={{ width: '96px', height: '96px', display: 'block', margin: '0 auto 6px', borderRadius: '4px' }}
                 />

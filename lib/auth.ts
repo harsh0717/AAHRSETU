@@ -186,6 +186,12 @@ export async function login(payload: any): Promise<{ success: boolean; user?: Us
       return { success: true, user: sessionUser };
     }
   } catch (err: any) {
+    if (typeof window !== 'undefined') {
+      const demoEnabled = localStorage.getItem('aharsetu_demo_enabled') !== 'false';
+      if (!demoEnabled) {
+        throw err;
+      }
+    }
     // Fallback to local accounts lookup
   }
 

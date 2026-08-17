@@ -139,7 +139,7 @@ export default function AppShell({ children, role }: AppShellProps) {
         style={{ background: colors.sidebar }}
       >
         {/* Logo */}
-        <div className={styles.logo} style={{ padding: '16px 20px', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0' }}>
+        <div className={styles.logo} style={{ padding: '16px 20px', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', boxShadow: '0 4px 30px rgba(0,0,0,0.03)' }}>
           <BrandLogo size={46} />
         </div>
 
@@ -389,7 +389,7 @@ export default function AppShell({ children, role }: AppShellProps) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Link
-                href={`/${role}/profile`}
+                href={`/${role}/settings`}
                 onClick={() => setMoreDrawerOpen(false)}
                 style={{
                   display: 'flex',
@@ -429,24 +429,140 @@ export default function AppShell({ children, role }: AppShellProps) {
               )}
 
               {role === 'admin' && (
-                <Link
-                  href="/admin/system-health"
-                  onClick={() => setMoreDrawerOpen(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '14px 16px',
-                    borderRadius: '12px',
-                    background: '#F8FAFC',
-                    color: '#334155',
-                    textDecoration: 'none',
-                    fontWeight: 700,
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  ❤️ System Health Status
-                </Link>
+                <>
+                  <Link
+                    href="/admin/departments"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    🏢 Departments Management
+                  </Link>
+
+                  <Link
+                    href="/admin/vendors"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    🏪 Vendors Management
+                  </Link>
+
+                  <Link
+                    href="/admin/bills"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    🧾 Institutional Bills
+                  </Link>
+
+                  <Link
+                    href="/admin/analytics"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    📈 System Analytics
+                  </Link>
+
+                  <Link
+                    href="/admin/audit-logs"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    📜 Audit Trails & Logs
+                  </Link>
+
+                  <Link
+                    href="/admin/notifications"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    🔔 Notification Alerts
+                  </Link>
+
+                  <Link
+                    href="/admin/system-health"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    ❤️ System Health Status
+                  </Link>
+                </>
               )}
 
               <button

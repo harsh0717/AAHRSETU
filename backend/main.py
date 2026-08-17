@@ -8,6 +8,8 @@ from backend.core.database import engine, Base, SessionLocal
 from backend.api.v1.api import api_router
 from backend.lib.seed_db import seed_all_database
 from backend.models.user import User
+from backend.models.stored_file import StoredFile
+from backend.models.system_setting import SystemSetting
 
 # Configure structured logging
 logging.basicConfig(
@@ -42,6 +44,13 @@ try:
             logger.info("Database successfully seeded.")
         else:
             logger.info(f"Database already contains {user_count} user(s). Migration checked successfully.")
+
+        # Seed default settings
+        demo_setting = db.query(SystemSetting).filter(SystemSetting.key == "demo_accounts_enabled").first()
+        if not demo_setting:
+            db.add(SystemSetting(key="demo_accounts_enabled", value="true"))
+            db.commit()
+            logger.info("Default system setting 'demo_accounts_enabled' seeded.")
     finally:
         db.close()
 except Exception as e:

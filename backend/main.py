@@ -10,6 +10,7 @@ from backend.lib.seed_db import seed_all_database
 from backend.models.user import User
 from backend.models.stored_file import StoredFile
 from backend.models.system_setting import SystemSetting
+import backend.models
 
 # Configure structured logging
 logging.basicConfig(
@@ -34,8 +35,10 @@ try:
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(15);"))
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_setup_completed BOOLEAN DEFAULT FALSE;"))
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_setup_skipped BOOLEAN DEFAULT FALSE;"))
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;"))
             db.execute(text("ALTER TABLE vendor_menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
             db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;"))
+            db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
             db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS billing_status VARCHAR(50);"))
             db.commit()
         else:
@@ -45,8 +48,10 @@ try:
                 "ALTER TABLE users ADD COLUMN mobile_number VARCHAR(15);",
                 "ALTER TABLE users ADD COLUMN profile_setup_completed BOOLEAN DEFAULT FALSE;",
                 "ALTER TABLE users ADD COLUMN profile_setup_skipped BOOLEAN DEFAULT FALSE;",
+                "ALTER TABLE users ADD COLUMN active BOOLEAN DEFAULT TRUE;",
                 "ALTER TABLE vendor_menu_items ADD COLUMN image_url VARCHAR(500);",
                 "ALTER TABLE vendors ADD COLUMN active BOOLEAN DEFAULT TRUE;",
+                "ALTER TABLE vendors ADD COLUMN image_url VARCHAR(500);",
                 "ALTER TABLE master_orders ADD COLUMN billing_status VARCHAR(50);"
             ]:
                 try:

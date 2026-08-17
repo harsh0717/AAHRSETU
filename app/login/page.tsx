@@ -183,11 +183,11 @@ function LoginFormContent() {
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ fontSize: '2rem', background: 'rgba(255, 255, 255, 0.2)', padding: '8px', borderRadius: '12px' }}>{f.icon}</div>
-                  <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'nowrap', width: '100%' }}>
+                  <div style={{ fontSize: '2rem', background: 'rgba(255, 255, 255, 0.2)', padding: '8px', borderRadius: '12px', flexShrink: 0 }}>{f.icon}</div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#F59E0B', letterSpacing: '0.05em' }}>{f.tag}</div>
-                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'white' }}>{f.title}</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.title}</div>
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>🏪 {f.vendor}</div>
                   </div>
                 </div>

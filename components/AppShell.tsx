@@ -140,8 +140,24 @@ export default function AppShell({ children, role }: AppShellProps) {
         style={{ background: colors.sidebar }}
       >
         {/* Logo */}
-        <div className={styles.logo} style={{ padding: '16px 20px', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', boxShadow: '0 4px 30px rgba(0,0,0,0.03)' }}>
+        <div className={styles.logo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', boxShadow: '0 4px 30px rgba(0,0,0,0.03)' }}>
           <BrandLogo size={46} />
+          {isMobileDevice && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '1.4rem',
+                cursor: 'pointer',
+                color: '#64748B',
+                padding: '4px 8px',
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         {/* User card */}

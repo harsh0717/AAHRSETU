@@ -309,6 +309,8 @@
 @media (max-width: 900px) {
   .sidebar {
     transform: translateX(-100%);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .sidebar.open {

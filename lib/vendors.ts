@@ -25,6 +25,7 @@ export interface Vendor {
   revenue: number;
   menu_items?: MenuItem[];
   image_url?: string | null;
+  active?: boolean;
 }
 
 const LOCAL_VENDORS_KEY = 'aharsetu_vendors_v3';

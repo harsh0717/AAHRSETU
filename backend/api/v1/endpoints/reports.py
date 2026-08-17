@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.api import deps
@@ -119,3 +119,149 @@ def get_audit_logs(
             "browser": l.browser
         })
     return report
+
+
+@router.get("/filtered-summary")
+def get_filtered_summary(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    department_id: Optional[str] = None,
+    vendor_id: Optional[str] = None,
+    status: Optional[str] = None,
+    coordinator_id: Optional[int] = None,
+    principal_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin", "dcr"]))
+) -> Any:
+    """
+    Get system-wide summary analytics filtered by date, department, vendor, status, coordinator, and principal HOD.
+    Real database queries.
+    """
+    from datetime import datetime
+    from backend.models.user import User
+    from backend.models.vendor import Vendor
+    from backend.models.order import MasterOrder, VendorOrder
+
+    query = db.query(MasterOrder)
+    
+    if start_date:
+        try:
+            # support YYYY-MM-DD or full ISO
+            if len(start_date) == 10:
+                sd = datetime.fromisoformat(f"{start_date}T00:00:00")
+            else:
+                sd = datetime.fromisoformat(start_date)
+            query = query.filter(MasterOrder.created_at >= sd)
+        except Exception:
+            pass
+            
+    if end_date:
+        try:
+            if len(end_date) == 10:
+                ed = datetime.fromisoformat(f"{end_date}T23:59:59")
+            else:
+                ed = datetime.fromisoformat(end_date)
+            query = query.filter(MasterOrder.created_at <= ed)
+        except Exception:
+            pass
+            
+    if department_id:
+        query = query.filter(MasterOrder.department_id == department_id)
+        
+    if status:
+        query = query.filter(MasterOrder.status == status)
+        
+    if coordinator_id:
+        query = query.filter(MasterOrder.created_by_id == coordinator_id)
+        
+    if principal_id:
+        principal = db.query(User).filter(User.id == principal_id, User.role == "principal").first()
+        if principal:
+            dept_ids = [d.id for d in principal.managed_departments]
+            query = query.filter(MasterOrder.department_id.in_(dept_ids))
+        else:
+            query = query.filter(False)
+            
+    if vendor_id:
+        query = query.join(VendorOrder).filter(VendorOrder.vendor_id == vendor_id)
+        
+    orders = query.all()
+    
+    total_orders = len(orders)
+    completed_orders = sum(1 for o in orders if o.status == "Completed")
+    pending_orders = sum(1 for o in orders if o.status in ["Submitted", "Principal Approved", "DCR Approved", "Vendor Processing", "Vendor Confirmed"])
+    rejected_orders = sum(1 for o in orders if o.status in ["Principal Rejected", "DCR Rejected"])
+    total_expenditure = sum(o.total_bill_amount for o in orders if o.status == "Completed")
+    total_billed = sum(o.total_bill_amount for o in orders if o.status in ["Completed", "Bill Generated"])
+    
+    # Department-wise split from matched orders
+    dept_exp = {}
+    for o in orders:
+        d_id = o.department_id or "unknown"
+        d_name = o.department.name if o.department else "Unknown"
+        d_label = o.department.label if o.department else "Unknown"
+        if d_id not in dept_exp:
+            dept_exp[d_id] = {
+                "department_id": d_id,
+                "department_name": d_name,
+                "label": d_label,
+                "total_orders": 0,
+                "completed_orders": 0,
+                "revenue": 0.0
+            }
+        dept_exp[d_id]["total_orders"] += 1
+        if o.status == "Completed":
+            dept_exp[d_id]["completed_orders"] += 1
+            dept_exp[d_id]["revenue"] += o.total_bill_amount
+
+    # Vendor-wise split from matched orders
+    vendor_rev = {}
+    for o in orders:
+        vos = o.vendor_orders
+        if vendor_id:
+            vos = [vo for vo in vos if vo.vendor_id == vendor_id]
+        for vo in vos:
+            v_id = vo.vendor_id
+            v_name = vo.vendor.name if vo.vendor else "Unknown Vendor"
+            v_owner = vo.vendor.owner_name if vo.vendor else "Unknown Owner"
+            v_status = vo.vendor.status if vo.vendor else "closed"
+            if v_id not in vendor_rev:
+                vendor_rev[v_id] = {
+                    "vendor_id": v_id,
+                    "vendor_name": v_name,
+                    "owner": v_owner,
+                    "status": v_status,
+                    "revenue": 0.0,
+                    "menu_count": len(vo.vendor.menu_items) if (vo.vendor and vo.vendor.menu_items) else 0
+                }
+            if o.status == "Completed" or vo.status == "Completed":
+                vendor_rev[v_id]["revenue"] += vo.bill_amount
+                
+    # List of orders matching filters
+    orders_list = []
+    for o in orders:
+        orders_list.append({
+            "id": o.id,
+            "title": o.title,
+            "purpose": o.purpose,
+            "department_id": o.department_id,
+            "department_label": o.department.label if o.department else "Unknown",
+            "created_by_name": o.created_by.name if o.created_by else "Unknown",
+            "status": o.status,
+            "total_bill_amount": o.total_bill_amount,
+            "created_at": o.created_at
+        })
+        
+    return {
+        "metrics": {
+            "total_orders": total_orders,
+            "completed_orders": completed_orders,
+            "pending_orders": pending_orders,
+            "rejected_orders": rejected_orders,
+            "total_expenditure": total_expenditure,
+            "total_billed": total_billed
+        },
+        "departments": list(dept_exp.values()),
+        "vendors": list(vendor_rev.values()),
+        "orders": orders_list
+    }

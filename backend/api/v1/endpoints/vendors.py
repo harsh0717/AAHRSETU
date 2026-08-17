@@ -1,4 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Optional
+from pydantic import BaseModel, EmailStr
+from backend.core.security import get_password_hash
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.api import deps
@@ -283,3 +285,115 @@ async def patch_vendor_availability(
     Alias for PUT /vendors/{vendor_id}/status for RESTful naming compliance.
     """
     return await update_vendor_status(vendor_id, payload, db, current_user)
+
+
+class VendorCreatePayload(BaseModel):
+    id: str
+    name: str
+    owner_name: str
+    email: EmailStr
+    phone: str
+    password: str
+    image_url: Optional[str] = None
+
+
+@router.post("", response_model=VendorResponse)
+def create_vendor_by_admin(
+    payload: VendorCreatePayload,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin"]))
+) -> Any:
+    """
+    Create a new Vendor profile and concurrently create their login account (Admin-only).
+    """
+    # 1. Check if vendor profile ID already exists
+    vendor_repo = VendorRepository(db)
+    existing_vendor = vendor_repo.get(payload.id)
+    if existing_vendor:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vendor with this ID already exists."
+        )
+        
+    # 2. Check if email already registered in users
+    existing_user = db.query(User).filter(User.email == payload.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A user account with this email already exists."
+        )
+        
+    # 3. Create Vendor profile record
+    vendor = Vendor(
+        id=payload.id,
+        name=payload.name,
+        owner_name=payload.owner_name,
+        email=payload.email,
+        phone=payload.phone,
+        status="closed",
+        revenue=0.0,
+        image_url=payload.image_url,
+        active=True
+    )
+    db.add(vendor)
+    db.flush()
+    
+    # 4. Create User login account for this vendor
+    user = User(
+        name=payload.owner_name,
+        email=payload.email,
+        password_hash=get_password_hash(payload.password),
+        role="vendor",
+        vendor_id=vendor.id,
+        preferred_language="en",
+        active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(vendor)
+    return vendor
+
+
+@router.put("/{vendor_id}/toggle-active", response_model=VendorResponse)
+def toggle_vendor_active_status(
+    vendor_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin"]))
+) -> Any:
+    """
+    Toggle a vendor's active/deactivated account status (Admin-only).
+    Suspends user logins for the vendor but preserves all historical data records.
+    """
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendor not found."
+        )
+        
+    new_active_status = not (vendor.active if hasattr(vendor, 'active') else True)
+    vendor.active = new_active_status
+    db.add(vendor)
+    
+    # Toggle active status on linked user accounts
+    users = db.query(User).filter(User.vendor_id == vendor.id).all()
+    for u in users:
+        u.active = new_active_status
+        db.add(u)
+        
+    db.commit()
+    db.refresh(vendor)
+    
+    # Audit log this action
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department="General",
+        action="Vendor Account Active Status Toggled",
+        old_value=str(not new_active_status),
+        new_value=str(new_active_status)
+    )
+    
+    return vendor

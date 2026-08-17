@@ -22,14 +22,6 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [session, setSession] = useState<UserProfile | null>(null);
   const colors = ROLE_COLORS.admin;
 
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobileDevice(window.innerWidth <= 900);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -40,37 +32,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [stats, setStats] = useState<any>({ total_orders: 0, completed_orders: 0, total_revenue: 0, active_vendors: 0 });
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-
+  
   // Reports states
   const [deptReport, setDeptReport] = useState<any[]>([]);
   const [vendorReport, setVendorReport] = useState<any[]>([]);
-
-  const totalDeptExp = deptReport.reduce((acc, r) => acc + (r.revenue || 0), 0);
-  const totalVendorRev = vendorReport.reduce((acc, v) => acc + (v.revenue || 0), 0);
-  
-  // Reports filters
-  const [filterStartDate, setFilterStartDate] = useState('');
-  const [filterEndDate, setFilterEndDate] = useState('');
-  const [filterDeptId, setFilterDeptId] = useState('');
-  const [filterVendorId, setFilterVendorId] = useState('');
-  const [filterOrderStatus, setFilterOrderStatus] = useState('');
-  const [filterCoordId, setFilterCoordId] = useState('');
-  const [filterPrincipalId, setFilterPrincipalId] = useState('');
-  const [reportMetrics, setReportMetrics] = useState<any>(null);
-  const [coordinators, setCoordinators] = useState<any[]>([]);
-  const [principals, setPrincipals] = useState<any[]>([]);
-
-  // Add Vendor form states
-  const [newVendorId, setNewVendorId] = useState('');
-  const [newVendorName, setNewVendorName] = useState('');
-  const [newVendorOwner, setNewVendorOwner] = useState('');
-  const [newVendorEmail, setNewVendorEmail] = useState('');
-  const [newVendorPhone, setNewVendorPhone] = useState('');
-  const [newVendorPassword, setNewVendorPassword] = useState('');
-  const [newVendorImageUrl, setNewVendorImageUrl] = useState('');
-  const [addVendorError, setAddVendorError] = useState('');
-  const [addVendorSuccess, setAddVendorSuccess] = useState('');
-  const [showAddVendorModal, setShowAddVendorModal] = useState(false);
 
   // Search & Filter
   const [orderSearch, setOrderSearch] = useState('');
@@ -100,7 +65,6 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
   const [settingsMessage, setSettingsMessage] = useState('');
 
@@ -144,72 +108,21 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     }
   }
 
-  async function handleToggleVendorActive(vendorId: string) {
-    try {
-      await api.put(`/vendors/${vendorId}/toggle-active`, {});
-      loadDashboardData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to toggle vendor active status');
-    }
-  }
-
-  async function handleAddVendorSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newVendorId.trim() || !newVendorName.trim() || !newVendorOwner.trim() || !newVendorEmail.trim() || !newVendorPhone.trim() || !newVendorPassword.trim()) {
-      setAddVendorError('All fields (except Image URL) are required');
-      return;
-    }
-    setSubmitting(true);
-    setAddVendorError('');
-    setAddVendorSuccess('');
-    try {
-      await api.post('/vendors', {
-        id: newVendorId.trim(),
-        name: newVendorName.trim(),
-        owner_name: newVendorOwner.trim(),
-        email: newVendorEmail.trim(),
-        phone: newVendorPhone.trim(),
-        password: newVendorPassword.trim(),
-        image_url: newVendorImageUrl.trim() || null
-      });
-      setAddVendorSuccess('Vendor added successfully!');
-      setNewVendorId('');
-      setNewVendorName('');
-      setNewVendorOwner('');
-      setNewVendorEmail('');
-      setNewVendorPhone('');
-      setNewVendorPassword('');
-      setNewVendorImageUrl('');
-      loadDashboardData();
-      setTimeout(() => {
-        setShowAddVendorModal(false);
-        setAddVendorSuccess('');
-      }, 2000);
-    } catch (err: any) {
-      setAddVendorError(err.message || 'Failed to add vendor.');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   async function loadDashboardData() {
     setLoading(true);
     try {
-      const [oList, vList, sysStats, nList, deptList, usersList] = await Promise.all([
+      const [oList, vList, sysStats, nList, deptList] = await Promise.all([
         getOrders().catch(() => []),
         getVendors().catch(() => []),
         api.get<any>('/reports/system-stats').catch(() => ({ total_orders: 0, completed_orders: 0, total_revenue: 0, active_vendors: 0 })),
         getNotifications().catch(() => []),
-        getDepartments().catch(() => []),
-        api.get<any[]>('/users').catch(() => [])
+        getDepartments().catch(() => [])
       ]);
       setOrders(oList);
       setVendors(vList);
       setStats(sysStats);
       setNotifications(nList);
       setDepartments(deptList);
-      setCoordinators(usersList.filter((u: any) => u.role === 'coordinator'));
-      setPrincipals(usersList.filter((u: any) => u.role === 'principal'));
       const config = await api.get<{ demo_accounts_enabled: boolean }>('/settings/public').catch(() => ({ demo_accounts_enabled: true }));
       setDemoAccountsEnabled(config.demo_accounts_enabled);
     } catch (err) {
@@ -221,20 +134,12 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
   async function loadReportsData() {
     try {
-      const params = new URLSearchParams();
-      if (filterStartDate) params.append('start_date', filterStartDate);
-      if (filterEndDate) params.append('end_date', filterEndDate);
-      if (filterDeptId) params.append('department_id', filterDeptId);
-      if (filterVendorId) params.append('vendor_id', filterVendorId);
-      if (filterOrderStatus) params.append('status', filterOrderStatus);
-      if (filterCoordId) params.append('coordinator_id', filterCoordId);
-      if (filterPrincipalId) params.append('principal_id', filterPrincipalId);
-      
-      const summary = await api.get<any>(`/reports/filtered-summary?${params.toString()}`);
-      setReportMetrics(summary.metrics);
-      setDeptReport(summary.departments);
-      setVendorReport(summary.vendors);
-      setOrders(summary.orders || []);
+      const [dRep, vRep] = await Promise.all([
+        api.get<any[]>('/reports/department').catch(() => []),
+        api.get<any[]>('/reports/revenue').catch(() => [])
+      ]);
+      setDeptReport(dRep);
+      setVendorReport(vRep);
     } catch (err) {
       console.error(err);
     }
@@ -289,7 +194,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     if (activeTab === 'reports' || activeTab === 'analytics') loadReportsData();
     if (activeTab === 'audit' || activeTab === 'logs') loadAuditLogs();
     if (activeTab === 'dashboard') loadDashboardData();
-  }, [activeTab, filterStartDate, filterEndDate, filterDeptId, filterVendorId, filterOrderStatus, filterCoordId, filterPrincipalId]);
+  }, [activeTab]);
 
   async function handleResetData() {
     if (confirm('Are you sure you want to clear all transactions, users, and reset AharSetu to its seeded demo state?')) {
@@ -678,80 +583,39 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
             {/* TAB: VENDORS MANAGEMENT */}
             {activeTab === 'vendors' && (
               <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>🏪 Canteen Vendors Directory</h3>
-                  <button className="btn btn-primary btn-sm" onClick={() => setShowAddVendorModal(true)}>
-                    ➕ Add Canteen Vendor
-                  </button>
-                </div>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflow: 'hidden' }}>
+                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Vendor ID</th>
                         <th>Vendor Name</th>
                         <th>Owner Name</th>
                         <th>Email Address</th>
                         <th>Phone</th>
-                        <th>Operational Status</th>
-                        <th>Login Status</th>
+                        <th>Status</th>
                         <th style={{ textAlign: 'right' }}>Revenue Earning</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
+                        <th style={{ textAlign: 'center' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {vendors.map(v => (
                         <tr key={v.id}>
-                          <td style={{ fontWeight: 700, color: '#475569', fontSize: '0.82rem' }}>{v.id}</td>
-                          <td style={{ fontWeight: 800, color: '#0F172A' }}>{v.name}</td>
+                          <td style={{ fontWeight: 700 }}>{v.name}</td>
                           <td style={{ fontWeight: 600 }}>{v.owner_name}</td>
                           <td>{v.email}</td>
                           <td>{v.phone}</td>
                           <td>
                             <VendorStatusBadge status={v.status} size="sm" />
                           </td>
-                          <td>
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '4px 10px',
-                              borderRadius: '9999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              background: v.active ? '#ECFDF5' : '#FEF2F2',
-                              color: v.active ? '#047857' : '#B91C1C'
-                            }}>
-                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: v.active ? '#10B981' : '#EF4444' }}></span>
-                              {v.active ? 'Active' : 'Suspended'}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>
+                          <td style={{ textAlign: 'right', fontWeight: 700 }}>
                             ₹{v.revenue.toFixed(2)}
                           </td>
                           <td style={{ textAlign: 'center' }}>
-                            <div style={{ display: 'inline-flex', gap: '8px' }}>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => { setSelectedVendor(v); setEditStatus(v.status); }}
-                                style={{ padding: '6px 12px', fontSize: '0.78rem' }}
-                              >
-                                ⚙️ Status
-                              </button>
-                              <button
-                                className={`btn btn-sm ${v.active ? 'btn-danger' : 'btn-primary'}`}
-                                onClick={() => handleToggleVendorActive(v.id)}
-                                style={{
-                                  padding: '6px 12px',
-                                  fontSize: '0.78rem',
-                                  background: v.active ? '#FEF2F2' : '#EFF6FF',
-                                  color: v.active ? '#EF4444' : '#2563EB',
-                                  border: `1px solid ${v.active ? '#FCA5A5' : '#BFDBFE'}`
-                                }}
-                              >
-                                {v.active ? '🚫 Suspend' : '✅ Activate'}
-                              </button>
-                            </div>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => { setSelectedVendor(v); setEditStatus(v.status); }}
+                            >
+                              ⚙️ Edit Status
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -761,87 +625,31 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                 {/* Vendor Status Modal */}
                 {selectedVendor && (
-                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: '20px', padding: '28px', width: '380px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}>
-                      <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
-                        Update operational status
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '360px', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
+                      <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 800 }}>
+                        Update {selectedVendor.name} Status
                       </h3>
-                      <p style={{ margin: '0 0 20px', fontSize: '0.8rem', color: '#64748B' }}>Set the live operating availability for {selectedVendor.name}.</p>
                       
                       <select
                         className="form-input"
                         value={editStatus}
                         onChange={e => setEditStatus(e.target.value)}
-                        style={{ marginBottom: '20px', width: '100%' }}
+                        style={{ marginBottom: '16px' }}
                       >
                         {Object.entries(VENDOR_STATUS_LABELS).map(([k, v]) => (
                           <option key={k} value={k}>{v}</option>
                         ))}
                       </select>
 
-                      <div style={{ display: 'flex', gap: '10px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
                         <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleUpdateVendorStatus}>
                           Save Changes
                         </button>
-                        <button className="btn btn-ghost" style={{ border: '1px solid #E2E8F0' }} onClick={() => setSelectedVendor(null)}>
+                        <button className="btn btn-ghost" onClick={() => setSelectedVendor(null)}>
                           Cancel
                         </button>
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Add Vendor Overlay Modal */}
-                {showAddVendorModal && (
-                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: '24px', padding: '32px', width: '480px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', maxHeight: '90vh', overflowY: 'auto' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>➕ Add new canteen vendor</h3>
-                        <button onClick={() => setShowAddVendorModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#94A3B8' }}>✕</button>
-                      </div>
-
-                      <form onSubmit={handleAddVendorSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Vendor ID (Unique Key)</label>
-                          <input type="text" className="form-input" value={newVendorId} onChange={e => setNewVendorId(e.target.value)} required placeholder="e.g. v5, v6" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Canteen Name</label>
-                          <input type="text" className="form-input" value={newVendorName} onChange={e => setNewVendorName(e.target.value)} required placeholder="e.g. Nescafe Canteen, South Feast" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Owner Full Name</label>
-                          <input type="text" className="form-input" value={newVendorOwner} onChange={e => setNewVendorOwner(e.target.value)} required placeholder="e.g. Ramesh Patel" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Email Address</label>
-                          <input type="email" className="form-input" value={newVendorEmail} onChange={e => setNewVendorEmail(e.target.value)} required placeholder="e.g. nescafe@aharsetu.edu.in" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Phone Number</label>
-                          <input type="tel" className="form-input" value={newVendorPhone} onChange={e => setNewVendorPhone(e.target.value)} required placeholder="e.g. 9876543210" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Login Password</label>
-                          <input type="password" className="form-input" value={newVendorPassword} onChange={e => setNewVendorPassword(e.target.value)} required placeholder="••••••••" minLength={6} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Brand Image URL <span style={{ color: '#94A3B8', fontWeight: 500 }}>(optional)</span></label>
-                          <input type="url" className="form-input" value={newVendorImageUrl} onChange={e => setNewVendorImageUrl(e.target.value)} placeholder="https://example.com/logo.jpg" />
-                        </div>
-
-                        {addVendorError && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#EF4444' }}>⚠️ {addVendorError}</div>}
-                        {addVendorSuccess && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10B981' }}>✓ {addVendorSuccess}</div>}
-
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                          <button type="submit" disabled={submitting} className="btn btn-primary" style={{ flex: 1 }}>
-                            {submitting ? 'Adding...' : 'Add Vendor'}
-                          </button>
-                          <button type="button" className="btn btn-ghost" style={{ border: '1px solid #E2E8F0' }} onClick={() => setShowAddVendorModal(false)}>
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
                     </div>
                   </div>
                 )}
@@ -893,268 +701,63 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
             {/* TAB: REPORTS */}
             {activeTab === 'reports' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {/* Filters Header Card */}
-                  <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-                      <div>
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>📊 System Financial & Order Reports</h3>
-                        <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#64748B' }}>Filter live canteen transactions and query real-time departmental statistics.</p>
-                      </div>
-                      {isMobileDevice && (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowMobileFilters(!showMobileFilters)}
-                          style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                          🔍 {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Filter Inputs Grid */}
-                    {(!isMobileDevice || showMobileFilters) && (
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '16px',
-                        paddingTop: '16px',
-                        borderTop: '1px solid #F1F5F9'
-                      }}>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Start Date</label>
-                          <input type="date" className="form-input" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>End Date</label>
-                          <input type="date" className="form-input" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Department</label>
-                          <select className="form-input" value={filterDeptId} onChange={e => setFilterDeptId(e.target.value)}>
-                            <option value="">All Departments</option>
-                            {departments.map(d => (
-                              <option key={d.id} value={d.id}>{d.label} - {d.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Canteen Vendor</label>
-                          <select className="form-input" value={filterVendorId} onChange={e => setFilterVendorId(e.target.value)}>
-                            <option value="">All Vendors</option>
-                            {vendors.map(v => (
-                              <option key={v.id} value={v.id}>{v.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Order Status</label>
-                          <select className="form-input" value={filterOrderStatus} onChange={e => setFilterOrderStatus(e.target.value)}>
-                            <option value="">All Statuses</option>
-                            <option value="Submitted">Submitted (Review Pending)</option>
-                            <option value="Principal Approved">Principal Approved</option>
-                            <option value="DCR Approved">DCR Approved (Procuring)</option>
-                            <option value="Vendor Processing">Vendor Processing</option>
-                            <option value="Vendor Confirmed">Vendor Confirmed</option>
-                            <option value="Bill Generated">Bill Generated</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Principal Rejected">Principal Rejected</option>
-                            <option value="DCR Rejected">DCR Rejected</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Coordinator (Creator)</label>
-                          <select className="form-input" value={filterCoordId} onChange={e => setFilterCoordId(e.target.value)}>
-                            <option value="">All Coordinators</option>
-                            {coordinators.map(c => (
-                              <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Principal HOD</label>
-                          <select className="form-input" value={filterPrincipalId} onChange={e => setFilterPrincipalId(e.target.value)}>
-                            <option value="">All HODs</option>
-                            {principals.map(p => (
-                              <option key={p.id} value={p.id}>{p.name} ({p.email})</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* KPI Metrics Dashboard Grid */}
-                  {reportMetrics && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #3B82F6' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>TOTAL TRANSACTIONS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: '6px' }}>{reportMetrics.total_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #10B981' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>COMPLETED ORDERS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#10B981', marginTop: '6px' }}>{reportMetrics.completed_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #F59E0B' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>PENDING REQUISITIONS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F59E0B', marginTop: '6px' }}>{reportMetrics.pending_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #EF4444' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>REJECTED ORDERS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#EF4444', marginTop: '6px' }}>{reportMetrics.rejected_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #8B5CF6', gridColumn: isMobileDevice ? 'auto' : 'span 2' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>COMPLETED EXPENDITURE</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#8B5CF6', marginTop: '6px' }}>₹{reportMetrics.total_expenditure.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Redesigned SVG Sharing Trends & Breakdown Columns */}
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobileDevice ? '1fr' : '1fr 1fr', gap: '20px', alignItems: 'start' }}>
-                    
-                    {/* Department wise share card */}
-                    <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        🏢 Departmental Expenditure Shares
-                      </h3>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {deptReport.map(r => {
-                          const pct = totalDeptExp > 0 ? (r.revenue / totalDeptExp) * 100 : 0;
-                          return (
-                            <div key={r.department_id}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#334155' }}>
-                                <span>{r.label} - {r.department_name}</span>
-                                <span style={{ color: '#0F172A' }}>₹{r.revenue.toLocaleString()} ({pct.toFixed(1)}%)</span>
-                              </div>
-                              <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{
-                                  width: `${pct}%`,
-                                  height: '100%',
-                                  background: 'linear-gradient(90deg, #3B82F6, #1D4ED8)',
-                                  borderRadius: '4px',
-                                  transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-                                }}></div>
-                              </div>
-                              <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
-                                <span>Total: {r.total_orders} orders</span>
-                                <span>·</span>
-                                <span>Completed: {r.completed_orders}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {deptReport.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8', fontSize: '0.85rem' }}>No department statistics matching filters.</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Vendor share card */}
-                    <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        🏪 Food Vendor Settlement Shares
-                      </h3>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {vendorReport.map(v => {
-                          const pct = totalVendorRev > 0 ? (v.revenue / totalVendorRev) * 100 : 0;
-                          return (
-                            <div key={v.vendor_id}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#334155' }}>
-                                <span>{v.vendor_name} ({v.owner})</span>
-                                <span style={{ color: '#0F172A' }}>₹{v.revenue.toLocaleString()} ({pct.toFixed(1)}%)</span>
-                              </div>
-                              <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{
-                                  width: `${pct}%`,
-                                  height: '100%',
-                                  background: 'linear-gradient(90deg, #10B981, #047857)',
-                                  borderRadius: '4px',
-                                  transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-                                }}></div>
-                              </div>
-                              <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
-                                <span>Live Status: {v.status.toUpperCase()}</span>
-                                <span>·</span>
-                                <span>Items: {v.menu_count} active</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {vendorReport.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8', fontSize: '0.85rem' }}>No vendor statistics matching filters.</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Matched Orders List (Responsive Table/Card view) */}
-                  <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>
-                      📋 Matched Transactions ({orders.length})
-                    </h3>
-
-                    {isMobileDevice ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        {orders.map(o => (
-                          <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
-                              <StatusBadge status={o.status} size="sm" />
-                            </div>
-                            <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                            <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Creator: {o.created_by_name} · Dept: {o.department_label}</p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
-                              <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
-                            </div>
-                          </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
+                {/* Dept wise report */}
+                <div className="card" style={{ padding: '20px' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>📊 Department Expenditure Reports</h3>
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Department</th>
+                          <th style={{ textAlign: 'center' }}>Orders</th>
+                          <th style={{ textAlign: 'center' }}>Completed</th>
+                          <th style={{ textAlign: 'right' }}>Total Billing</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deptReport.map(r => (
+                          <tr key={r.department_id}>
+                            <td style={{ fontWeight: 700 }}>{r.label}</td>
+                            <td style={{ textAlign: 'center' }}>{r.total_orders}</td>
+                            <td style={{ textAlign: 'center' }}>{r.completed_orders}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
+                              ₹{r.revenue}
+                            </td>
+                          </tr>
                         ))}
-                        {orders.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8', fontSize: '0.85rem' }}>No orders match the selected filters.</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflow: 'hidden' }}>
-                        <table className="table">
-                          <thead>
-                            <tr>
-                              <th>Order ID</th>
-                              <th>Description Title</th>
-                              <th>Department</th>
-                              <th>Creator Coordinator</th>
-                              <th>Order Status</th>
-                              <th>Creation Date</th>
-                              <th style={{ textAlign: 'right' }}>Total Bill</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {orders.map(o => (
-                              <tr key={o.id}>
-                                <td style={{ fontWeight: 800, color: '#475569' }}>{o.id}</td>
-                                <td style={{ fontWeight: 700, color: '#0F172A' }}>{o.title}</td>
-                                <td style={{ fontWeight: 600 }}>{o.department_label}</td>
-                                <td>{o.created_by_name}</td>
-                                <td>
-                                  <StatusBadge status={o.status} size="sm" />
-                                </td>
-                                <td style={{ fontSize: '0.82rem', color: '#64748B' }}>{new Date(o.created_at).toLocaleDateString()}</td>
-                                <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</td>
-                              </tr>
-                            ))}
-                            {orders.length === 0 && (
-                              <tr>
-                                <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#94A3B8' }}>No orders match the selected filters.</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
+
+                {/* Vendor wise report */}
+                <div className="card" style={{ padding: '20px' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>🏪 Food Vendor Revenue Summary</h3>
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Vendor Name</th>
+                          <th style={{ textAlign: 'center' }}>Owner</th>
+                          <th style={{ textAlign: 'right' }}>Settled Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vendorReport.map(v => (
+                          <tr key={v.vendor_id}>
+                            <td style={{ fontWeight: 700 }}>{v.vendor_name}</td>
+                            <td style={{ textAlign: 'center' }}>{v.owner_name}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
+                              ₹{v.revenue}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* TAB: ANALYTICS & INSIGHTS (MONTHLY & YEARLY STATS) */}

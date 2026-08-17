@@ -3,7 +3,7 @@
   min-height: 100vh;
   background: #FAFBFD;
   font-family: var(--font-sans), sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Left Hero Section */
@@ -15,7 +15,7 @@
   justify-content: space-between;
   padding: 48px;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   color: white;
 }
 
@@ -159,7 +159,7 @@
 
 .featureCard {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -167,6 +167,8 @@
   border-radius: 16px;
   backdrop-filter: blur(8px);
   transition: all 0.3s;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .featureCard:hover {

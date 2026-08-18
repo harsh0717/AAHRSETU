@@ -101,7 +101,10 @@ function getLocalVendors(): Vendor[] {
 
 function saveLocalVendors(vendors: Vendor[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(LOCAL_VENDORS_KEY, JSON.stringify(vendors));
+  const current = localStorage.getItem(LOCAL_VENDORS_KEY);
+  const next = JSON.stringify(vendors);
+  if (current === next) return;
+  localStorage.setItem(LOCAL_VENDORS_KEY, next);
 }
 
 function getLocalMenu(vendorId: string): MenuItem[] {
@@ -148,7 +151,11 @@ export function getCustomFoodImage(itemId: string): string | null {
 
 function saveLocalMenu(vendorId: string, items: MenuItem[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(`${LOCAL_MENUS_KEY}_${vendorId}`, JSON.stringify(items));
+  const key = `${LOCAL_MENUS_KEY}_${vendorId}`;
+  const current = localStorage.getItem(key);
+  const next = JSON.stringify(items);
+  if (current === next) return;
+  localStorage.setItem(key, next);
 }
 
 export async function getVendors(): Promise<Vendor[]> {
@@ -358,7 +365,10 @@ function getLocalSettlements(): VendorMonthlySettlement[] {
 
 function saveLocalSettlements(list: VendorMonthlySettlement[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(LOCAL_SETTLEMENTS_KEY, JSON.stringify(list));
+  const current = localStorage.getItem(LOCAL_SETTLEMENTS_KEY);
+  const next = JSON.stringify(list);
+  if (current === next) return;
+  localStorage.setItem(LOCAL_SETTLEMENTS_KEY, next);
 }
 
 export async function getMonthlySettlements(): Promise<VendorMonthlySettlement[]> {

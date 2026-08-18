@@ -233,7 +233,10 @@ function getLocalOrders(): MasterOrder[] {
 
 function saveLocalOrders(orders: MasterOrder[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders));
+  const current = localStorage.getItem(LOCAL_ORDERS_KEY);
+  const next = JSON.stringify(orders);
+  if (current === next) return;
+  localStorage.setItem(LOCAL_ORDERS_KEY, next);
 }
 
 // ── API Operations ────────────────────────────────────────────────────────────

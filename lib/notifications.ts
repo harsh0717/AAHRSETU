@@ -149,7 +149,10 @@ function getLocalNotifs(): NotificationItem[] {
 
 function saveLocalNotifs(items: NotificationItem[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(LOCAL_NOTIFS_KEY, JSON.stringify(items));
+  const current = localStorage.getItem(LOCAL_NOTIFS_KEY);
+  const next = JSON.stringify(items);
+  if (current === next) return;
+  localStorage.setItem(LOCAL_NOTIFS_KEY, next);
 }
 
 export async function getNotifications(): Promise<NotificationItem[]> {

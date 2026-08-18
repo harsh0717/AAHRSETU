@@ -684,7 +684,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     ➕ Add Canteen Vendor
                   </button>
                 </div>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflow: 'hidden' }}>
+                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
                   <table className="table">
                     <thead>
                       <tr>
@@ -1117,7 +1117,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                         )}
                       </div>
                     ) : (
-                      <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflow: 'hidden' }}>
+                      <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
                         <table className="table">
                           <thead>
                             <tr>

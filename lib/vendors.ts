@@ -102,7 +102,8 @@ function getLocalVendors(): Vendor[] {
 function saveLocalVendors(vendors: Vendor[]) {
   if (typeof window === 'undefined') return;
   const current = localStorage.getItem(LOCAL_VENDORS_KEY);
-  const next = JSON.stringify(vendors);
+  const sorted = [...vendors].sort((a, b) => a.id.localeCompare(b.id));
+  const next = JSON.stringify(sorted);
   if (current === next) return;
   localStorage.setItem(LOCAL_VENDORS_KEY, next);
 }
@@ -153,7 +154,8 @@ function saveLocalMenu(vendorId: string, items: MenuItem[]) {
   if (typeof window === 'undefined') return;
   const key = `${LOCAL_MENUS_KEY}_${vendorId}`;
   const current = localStorage.getItem(key);
-  const next = JSON.stringify(items);
+  const sorted = [...items].sort((a, b) => a.id.localeCompare(b.id));
+  const next = JSON.stringify(sorted);
   if (current === next) return;
   localStorage.setItem(key, next);
 }
@@ -366,7 +368,11 @@ function getLocalSettlements(): VendorMonthlySettlement[] {
 function saveLocalSettlements(list: VendorMonthlySettlement[]) {
   if (typeof window === 'undefined') return;
   const current = localStorage.getItem(LOCAL_SETTLEMENTS_KEY);
-  const next = JSON.stringify(list);
+  const sorted = [...list].sort((a, b) => {
+    if (a.vendor_id !== b.vendor_id) return a.vendor_id.localeCompare(b.vendor_id);
+    return a.month.localeCompare(b.month);
+  });
+  const next = JSON.stringify(sorted);
   if (current === next) return;
   localStorage.setItem(LOCAL_SETTLEMENTS_KEY, next);
 }

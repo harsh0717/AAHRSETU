@@ -150,7 +150,8 @@ function getLocalNotifs(): NotificationItem[] {
 function saveLocalNotifs(items: NotificationItem[]) {
   if (typeof window === 'undefined') return;
   const current = localStorage.getItem(LOCAL_NOTIFS_KEY);
-  const next = JSON.stringify(items);
+  const sorted = [...items].sort((a, b) => (a.id && b.id) ? a.id.localeCompare(b.id) : 0);
+  const next = JSON.stringify(sorted);
   if (current === next) return;
   localStorage.setItem(LOCAL_NOTIFS_KEY, next);
 }

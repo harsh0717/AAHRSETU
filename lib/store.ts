@@ -233,8 +233,30 @@ function getLocalOrders(): MasterOrder[] {
 
 function saveLocalOrders(orders: MasterOrder[]) {
   if (typeof window === 'undefined') return;
+
+  const sortedOrders = [...orders].sort((a, b) => a.id.localeCompare(b.id)).map(o => {
+    const sortedVOs = [...o.vendor_orders].sort((a, b) => a.id.localeCompare(b.id)).map(vo => {
+      const sortedItems = [...vo.items].sort((a, b) => {
+        const idA = a.id ?? 0;
+        const idB = b.id ?? 0;
+        if (idA !== idB) return idA - idB;
+        return a.name.localeCompare(b.name);
+      });
+      return { ...vo, items: sortedItems };
+    });
+
+    const sortedHistory = [...o.history].sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return (a.action || '').localeCompare(b.action || '');
+    });
+
+    return { ...o, vendor_orders: sortedVOs, history: sortedHistory };
+  });
+
   const current = localStorage.getItem(LOCAL_ORDERS_KEY);
-  const next = JSON.stringify(orders);
+  const next = JSON.stringify(sortedOrders);
   if (current === next) return;
   localStorage.setItem(LOCAL_ORDERS_KEY, next);
 }

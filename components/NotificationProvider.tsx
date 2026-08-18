@@ -101,10 +101,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const { getVendors } = await import('@/lib/vendors');
         const vendors = await getVendors();
         if (typeof window !== 'undefined' && vendors && vendors.length > 0) {
+          let hasChange = false;
           vendors.forEach((v) => {
-            localStorage.setItem(`aharsetu_vendor_status_${v.id}`, v.status);
+            const key = `aharsetu_vendor_status_${v.id}`;
+            const currentStatus = localStorage.getItem(key);
+            if (currentStatus !== v.status) {
+              localStorage.setItem(key, v.status);
+              hasChange = true;
+            }
           });
-          window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendors } }));
+          if (hasChange) {
+            window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendors } }));
+          }
         }
       } catch (err) {
         console.warn('[WS CLIENT] Fallback polling sync error:', err);
@@ -178,7 +186,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         if (payload.type === 'VENDOR_STATUS_UPDATED') {
           if (typeof window !== 'undefined') {
             if (payload.vendor_id && payload.status) {
-              localStorage.setItem(`aharsetu_vendor_status_${payload.vendor_id}`, payload.status);
+              const key = `aharsetu_vendor_status_${payload.vendor_id}`;
+              const currentStatus = localStorage.getItem(key);
+              if (currentStatus !== payload.status) {
+                localStorage.setItem(key, payload.status);
+              }
             }
             window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: payload }));
           }

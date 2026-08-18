@@ -8,7 +8,7 @@ import VendorStatusBadge from '@/components/VendorStatusBadge';
 import UserManager from '@/components/UserManager';
 import { getSession, UserProfile, updateSessionLanguage, getDepartments, addDepartment, toggleDepartmentStatus, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, resetAllData, completeOrder, MasterOrder } from '@/lib/store';
-import { getVendors, updateVendorStatus, Vendor, deleteVendor } from '@/lib/vendors';
+import { getVendors, updateVendorStatus, Vendor, deleteVendor, getMonthlySettlements, updateMonthlySettlement, VendorMonthlySettlement } from '@/lib/vendors';
 import { ROLE_COLORS, VENDOR_STATUS_LABELS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
@@ -36,6 +36,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   // API Lists
   const [orders, setOrders] = useState<MasterOrder[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [settlements, setSettlements] = useState<VendorMonthlySettlement[]>([]);
+  
+  // Settlements states
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [selectedSettlementVendor, setSelectedSettlementVendor] = useState('');
+  const [selectedSettlementMonth, setSelectedSettlementMonth] = useState('');
+  const [settlementTotalAmount, setSettlementTotalAmount] = useState(0);
+  const [settlementPaidAmount, setSettlementPaidAmount] = useState(0);
+  const [settlementError, setSettlementError] = useState('');
+  const [settlementSuccess, setSettlementSuccess] = useState('');
   const [departments, setDepartments] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({ total_orders: 0, completed_orders: 0, total_revenue: 0, active_vendors: 0 });
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -204,16 +214,47 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     }
   }
 
+  async function handleUpdateSettlementSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedSettlementVendor || !selectedSettlementMonth.trim()) {
+      setSettlementError('Vendor and Month are required');
+      return;
+    }
+    setSubmitting(true);
+    setSettlementError('');
+    setSettlementSuccess('');
+    try {
+      await updateMonthlySettlement(
+        selectedSettlementVendor,
+        selectedSettlementMonth.trim(),
+        settlementPaidAmount,
+        settlementTotalAmount
+      );
+      setSettlementSuccess('Monthly settlement updated successfully!');
+      loadDashboardData();
+      setTimeout(() => {
+        setShowSettlementModal(false);
+        setSettlementSuccess('');
+      }, 1500);
+    } catch (err: any) {
+      setSettlementError(err.message || 'Failed to update settlement.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+
   async function loadDashboardData() {
     setLoading(true);
     try {
-      const [oList, vList, sysStats, nList, deptList, usersList] = await Promise.all([
+      const [oList, vList, sysStats, nList, deptList, usersList, sList] = await Promise.all([
         getOrders().catch(() => []),
         getVendors().catch(() => []),
         api.get<any>('/reports/system-stats').catch(() => ({ total_orders: 0, completed_orders: 0, total_revenue: 0, active_vendors: 0 })),
         getNotifications().catch(() => []),
         getDepartments().catch(() => []),
-        api.get<any[]>('/users').catch(() => [])
+        api.get<any[]>('/users').catch(() => []),
+        getMonthlySettlements().catch(() => [])
       ]);
       setOrders(oList);
       setVendors(vList);
@@ -222,6 +263,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       setDepartments(deptList);
       setCoordinators(usersList.filter((u: any) => u.role === 'coordinator'));
       setPrincipals(usersList.filter((u: any) => u.role === 'principal'));
+      setSettlements(sList);
       const config = await api.get<{ demo_accounts_enabled: boolean }>('/settings/public').catch(() => ({ demo_accounts_enabled: true }));
       setDemoAccountsEnabled(config.demo_accounts_enabled);
     } catch (err) {
@@ -784,6 +826,97 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </table>
                 </div>
 
+                <div style={{ marginTop: '32px', borderTop: '2px dashed var(--gray-200)', paddingTop: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>🧾 Monthly Settlements & Accounts Due</h3>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        setSelectedSettlementVendor('');
+                        setSelectedSettlementMonth(new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }));
+                        setSettlementTotalAmount(0);
+                        setSettlementPaidAmount(0);
+                        setSettlementError('');
+                        setSettlementSuccess('');
+                        setShowSettlementModal(true);
+                      }}
+                    >
+                      ➕ Record / Update Settlement
+                    </button>
+                  </div>
+
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Canteen Vendor</th>
+                          <th>Settlement Month</th>
+                          <th style={{ textAlign: 'right' }}>Total Billed Amount</th>
+                          <th style={{ textAlign: 'right' }}>Paid Amount</th>
+                          <th style={{ textAlign: 'right' }}>Due Amount Outstanding</th>
+                          <th style={{ textAlign: 'center' }}>Status</th>
+                          <th>Last Transaction Date</th>
+                          <th style={{ textAlign: 'center' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {settlements.map(s => {
+                          const due = s.due_amount;
+                          return (
+                            <tr key={s.id}>
+                              <td style={{ fontWeight: 800, color: '#0F172A' }}>{s.vendor_name || s.vendor_id}</td>
+                              <td style={{ fontWeight: 600 }}>{s.month}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{s.total_amount.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{s.paid_amount.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 800, color: due > 0 ? '#EF4444' : '#10B981' }}>₹{due.toFixed(2)}</td>
+                              <td style={{ textAlign: 'center' }}>
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '4px 10px',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                  background: s.status === 'Settled' ? '#ECFDF5' : (s.status === 'Partially Settled' ? '#EFF6FF' : '#FEF2F2'),
+                                  color: s.status === 'Settled' ? '#047857' : (s.status === 'Partially Settled' ? '#2563EB' : '#B91C1C')
+                                }}>
+                                  {s.status}
+                                </span>
+                              </td>
+                              <td style={{ fontSize: '0.78rem', color: '#64748B' }}>{new Date(s.updated_at).toLocaleString('en-IN')}</td>
+                              <td style={{ textAlign: 'center' }}>
+                                <button
+                                  className="btn btn-ghost btn-sm"
+                                  onClick={() => {
+                                    setSelectedSettlementVendor(s.vendor_id);
+                                    setSelectedSettlementMonth(s.month);
+                                    setSettlementTotalAmount(s.total_amount);
+                                    setSettlementPaidAmount(s.paid_amount);
+                                    setSettlementError('');
+                                    setSettlementSuccess('');
+                                    setShowSettlementModal(true);
+                                  }}
+                                  style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 700 }}
+                                >
+                                  💸 Record Payment
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {settlements.length === 0 && (
+                          <tr>
+                            <td colSpan={8} style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>
+                              No monthly settlements recorded yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+
                 {/* Vendor Status Modal */}
                 {selectedVendor && (
                   <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -863,6 +996,96 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                             {submitting ? 'Adding...' : 'Add Vendor'}
                           </button>
                           <button type="button" className="btn btn-ghost" style={{ border: '1px solid #E2E8F0' }} onClick={() => setShowAddVendorModal(false)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {/* Record/Update Settlement Modal */}
+                {showSettlementModal && (
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: 'white', borderRadius: '24px', padding: '32px', width: '420px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                          💸 Record Vendor Settlement
+                        </h3>
+                        <button onClick={() => setShowSettlementModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#94A3B8' }}>✕</button>
+                      </div>
+
+                      <form onSubmit={handleUpdateSettlementSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Canteen Vendor</label>
+                          <select
+                            className="form-input"
+                            value={selectedSettlementVendor}
+                            onChange={e => setSelectedSettlementVendor(e.target.value)}
+                            required
+                            style={{ width: '100%' }}
+                          >
+                            <option value="">Select Vendor...</option>
+                            {vendors.map(v => (
+                              <option key={v.id} value={v.id}>{v.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Settlement Period (Month Year)</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={selectedSettlementMonth}
+                            onChange={e => setSelectedSettlementMonth(e.target.value)}
+                            required
+                            placeholder="e.g. August 2026"
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Total Billed Amount (INR)</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={settlementTotalAmount}
+                            onChange={e => setSettlementTotalAmount(parseFloat(e.target.value) || 0)}
+                            required
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Amount Paid (INR)</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={settlementPaidAmount}
+                            onChange={e => setSettlementPaidAmount(parseFloat(e.target.value) || 0)}
+                            required
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+
+                        {/* Live calculation of dues */}
+                        <div style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>Dues Outstanding:</span>
+                          <span style={{ fontSize: '1rem', fontWeight: 800, color: Math.max(0.0, settlementTotalAmount - settlementPaidAmount) > 0 ? '#EF4444' : '#10B981' }}>
+                            ₹{Math.max(0.0, settlementTotalAmount - settlementPaidAmount).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {settlementError && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#EF4444' }}>⚠️ {settlementError}</div>}
+                        {settlementSuccess && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10B981' }}>✓ {settlementSuccess}</div>}
+
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                          <button type="submit" disabled={submitting} className="btn btn-primary" style={{ flex: 1 }}>
+                            {submitting ? 'Updating...' : 'Record Payment'}
+                          </button>
+                          <button type="button" className="btn btn-ghost" style={{ border: '1px solid #E2E8F0' }} onClick={() => setShowSettlementModal(false)}>
                             Cancel
                           </button>
                         </div>

@@ -319,3 +319,121 @@ export async function getAvailableMenuByVendor(): Promise<{ id: string; name: st
   }
   return result;
 }
+
+export interface VendorMonthlySettlement {
+  id: number;
+  vendor_id: string;
+  vendor_name?: string;
+  month: string;
+  total_amount: number;
+  paid_amount: number;
+  due_amount: number;
+  status: string; // 'Pending', 'Partially Settled', 'Settled'
+  updated_at: string;
+}
+
+const LOCAL_SETTLEMENTS_KEY = 'aharsetu_settlements_v1';
+
+const FALLBACK_SETTLEMENTS: VendorMonthlySettlement[] = [
+  { id: 1, vendor_id: 'v1', vendor_name: 'Sharma Canteen', month: 'August 2026', total_amount: 15000.0, paid_amount: 12000.0, due_amount: 3000.0, status: 'Partially Settled', updated_at: new Date().toISOString() },
+  { id: 2, vendor_id: 'v2', vendor_name: 'Fresh Bites', month: 'August 2026', total_amount: 28400.0, paid_amount: 28400.0, due_amount: 0.0, status: 'Settled', updated_at: new Date().toISOString() },
+  { id: 3, vendor_id: 'v3', vendor_name: 'Hot Meals', month: 'August 2026', total_amount: 5000.0, paid_amount: 0.0, due_amount: 5000.0, status: 'Pending', updated_at: new Date().toISOString() },
+  { id: 4, vendor_id: 'v1', vendor_name: 'Sharma Canteen', month: 'July 2026', total_amount: 12000.0, paid_amount: 12000.0, due_amount: 0.0, status: 'Settled', updated_at: new Date().toISOString() },
+  { id: 5, vendor_id: 'v2', vendor_name: 'Fresh Bites', month: 'July 2026', total_amount: 26400.0, paid_amount: 26400.0, due_amount: 0.0, status: 'Settled', updated_at: new Date().toISOString() },
+];
+
+function getLocalSettlements(): VendorMonthlySettlement[] {
+  if (typeof window === 'undefined') return FALLBACK_SETTLEMENTS;
+  try {
+    const raw = localStorage.getItem(LOCAL_SETTLEMENTS_KEY);
+    if (!raw) {
+      localStorage.setItem(LOCAL_SETTLEMENTS_KEY, JSON.stringify(FALLBACK_SETTLEMENTS));
+      return FALLBACK_SETTLEMENTS;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return FALLBACK_SETTLEMENTS;
+  }
+}
+
+function saveLocalSettlements(list: VendorMonthlySettlement[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LOCAL_SETTLEMENTS_KEY, JSON.stringify(list));
+}
+
+export async function getMonthlySettlements(): Promise<VendorMonthlySettlement[]> {
+  try {
+    const res = await api.get<VendorMonthlySettlement[]>('/vendors/settlements');
+    if (res && Array.isArray(res)) {
+      return res;
+    }
+  } catch (err) {
+    console.warn('[SETTLEMENTS] API fetch failed, serving local fallback');
+  }
+  return getLocalSettlements();
+}
+
+export async function getVendorMonthlySettlements(vendorId: string): Promise<VendorMonthlySettlement[]> {
+  try {
+    const res = await api.get<VendorMonthlySettlement[]>('/vendors/my-settlements');
+    if (res && Array.isArray(res)) {
+      return res;
+    }
+  } catch (err) {
+    console.warn('[SETTLEMENTS] API fetch failed, serving local fallback');
+  }
+  return getLocalSettlements().filter(s => s.vendor_id === vendorId);
+}
+
+export async function updateMonthlySettlement(
+  vendorId: string,
+  month: string,
+  paidAmount: number,
+  totalAmount: number
+): Promise<VendorMonthlySettlement> {
+  try {
+    const res = await api.post<VendorMonthlySettlement>('/vendors/settlements', {
+      vendor_id: vendorId,
+      month,
+      paid_amount: paidAmount,
+      total_amount: totalAmount,
+    });
+    if (res) return res;
+  } catch (err) {
+    console.warn('[SETTLEMENTS] API update failed, saving locally');
+  }
+
+  const list = getLocalSettlements();
+  let target = list.find(s => s.vendor_id === vendorId && s.month === month);
+  
+  if (!target) {
+    target = {
+      id: Date.now(),
+      vendor_id: vendorId,
+      month,
+      total_amount: totalAmount,
+      paid_amount: paidAmount,
+      due_amount: Math.max(0.0, totalAmount - paidAmount),
+      status: 'Pending',
+      updated_at: new Date().toISOString(),
+    };
+    list.push(target);
+  } else {
+    target.total_amount = totalAmount;
+    target.paid_amount = paidAmount;
+    target.due_amount = Math.max(0.0, totalAmount - paidAmount);
+    target.updated_at = new Date().toISOString();
+  }
+
+  if (target.due_amount <= 0) {
+    target.status = 'Settled';
+  } else if (target.paid_amount > 0) {
+    target.status = 'Partially Settled';
+  } else {
+    target.status = 'Pending';
+  }
+
+  saveLocalSettlements(list);
+  return target;
+}
+

@@ -6,9 +6,12 @@ from sqlalchemy.orm import Session
 from backend.api import deps
 from backend.core.database import get_db
 from backend.models.user import User
-from backend.models.vendor import Vendor, VendorMenuItem
+from backend.models.vendor import Vendor, VendorMenuItem, VendorMonthlySettlement
 from backend.repositories.vendor import VendorRepository
 from backend.schemas.vendor import VendorResponse, VendorMenuItemResponse, VendorMenuItemCreate, VendorStatusUpdate
+from backend.schemas.settlement import SettlementResponse, SettlementUpdate
+from datetime import datetime
+
 
 router = APIRouter()
 
@@ -434,3 +437,149 @@ def delete_vendor(
         new_value="DELETED"
     )
     return
+
+
+def sync_monthly_settlements(db: Session):
+    from backend.models.order import VendorOrder
+    from collections import defaultdict
+    
+    vendors = db.query(Vendor).all()
+    current_month = datetime.now().strftime("%B %Y")
+    
+    completed_orders = db.query(VendorOrder).filter(VendorOrder.status == "Completed").all()
+    orders_by_vendor_month = defaultdict(float)
+    
+    for vo in completed_orders:
+        month_str = vo.updated_at.strftime("%B %Y")
+        orders_by_vendor_month[(vo.vendor_id, month_str)] += vo.bill_amount
+        
+    for vendor in vendors:
+        months_to_check = set([current_month])
+        for (v_id, m_str) in orders_by_vendor_month.keys():
+            if v_id == vendor.id:
+                months_to_check.add(m_str)
+                
+        for month in months_to_check:
+            s = db.query(VendorMonthlySettlement).filter(
+                VendorMonthlySettlement.vendor_id == vendor.id,
+                VendorMonthlySettlement.month == month
+            ).first()
+            
+            calculated_total = orders_by_vendor_month[(vendor.id, month)]
+            
+            if not s:
+                s = VendorMonthlySettlement(
+                    vendor_id=vendor.id,
+                    month=month,
+                    total_amount=calculated_total,
+                    paid_amount=0.0,
+                    due_amount=calculated_total,
+                    status="Pending"
+                )
+                db.add(s)
+            else:
+                if s.total_amount != calculated_total:
+                    s.total_amount = calculated_total
+                    s.due_amount = max(0.0, calculated_total - s.paid_amount)
+                    if s.due_amount <= 0.0:
+                        s.status = "Settled"
+                    elif s.paid_amount > 0.0:
+                        s.status = "Partially Settled"
+                    else:
+                        s.status = "Pending"
+                    db.add(s)
+    db.commit()
+
+
+@router.get("/settlements", response_model=List[SettlementResponse])
+def get_monthly_settlements(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin"]))
+) -> Any:
+    """
+    Retrieve all monthly settlements for canteens (Admin-only).
+    Auto-syncs records against completed order billing amounts first.
+    """
+    sync_monthly_settlements(db)
+    settlements = db.query(VendorMonthlySettlement).order_by(VendorMonthlySettlement.month.desc()).all()
+    response = []
+    for s in settlements:
+        vendor = db.query(Vendor).filter(Vendor.id == s.vendor_id).first()
+        r = SettlementResponse.model_validate(s)
+        r.vendor_name = vendor.name if vendor else "Unknown Vendor"
+        response.append(r)
+    return response
+
+
+@router.post("/settlements", response_model=SettlementResponse)
+def update_monthly_settlement(
+    payload: SettlementUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin"]))
+) -> Any:
+    """
+    Update or record monthly settlement payment and outstanding dues (Admin-only).
+    """
+    s = db.query(VendorMonthlySettlement).filter(
+        VendorMonthlySettlement.vendor_id == payload.vendor_id,
+        VendorMonthlySettlement.month == payload.month
+    ).first()
+    
+    if not s:
+        s = VendorMonthlySettlement(
+            vendor_id=payload.vendor_id,
+            month=payload.month,
+            total_amount=payload.total_amount,
+            paid_amount=payload.paid_amount,
+            due_amount=max(0.0, payload.total_amount - payload.paid_amount)
+        )
+    else:
+        s.total_amount = payload.total_amount
+        s.paid_amount = payload.paid_amount
+        s.due_amount = max(0.0, payload.total_amount - payload.paid_amount)
+        
+    if s.due_amount <= 0.0:
+        s.status = "Settled"
+    elif s.paid_amount > 0.0:
+        s.status = "Partially Settled"
+    else:
+        s.status = "Pending"
+        
+    db.add(s)
+    db.commit()
+    db.refresh(s)
+    
+    vendor = db.query(Vendor).filter(Vendor.id == s.vendor_id).first()
+    r = SettlementResponse.model_validate(s)
+    r.vendor_name = vendor.name if vendor else "Unknown Vendor"
+    return r
+
+
+@router.get("/my-settlements", response_model=List[SettlementResponse])
+def get_my_monthly_settlements(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["vendor"]))
+) -> Any:
+    """
+    Retrieve monthly settlements history for the currently logged-in vendor.
+    """
+    if not current_user.vendor_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User account is not linked to any vendor profile."
+        )
+    
+    sync_monthly_settlements(db)
+    settlements = db.query(VendorMonthlySettlement).filter(
+        VendorMonthlySettlement.vendor_id == current_user.vendor_id
+    ).order_by(VendorMonthlySettlement.month.desc()).all()
+    
+    response = []
+    vendor = db.query(Vendor).filter(Vendor.id == current_user.vendor_id).first()
+    vendor_name = vendor.name if vendor else "My Canteen"
+    for s in settlements:
+        r = SettlementResponse.model_validate(s)
+        r.vendor_name = vendor_name
+        response.append(r)
+    return response
+

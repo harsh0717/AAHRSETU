@@ -24,6 +24,7 @@ class Vendor(Base):
     menu_items = relationship("VendorMenuItem", back_populates="vendor", cascade="all, delete-orphan")
     vendor_orders = relationship("VendorOrder", back_populates="vendor")
     user_profiles = relationship("User", back_populates="vendor")
+    monthly_settlements = relationship("VendorMonthlySettlement", back_populates="vendor", cascade="all, delete-orphan")
 
 
 class VendorMenuItem(Base):
@@ -45,3 +46,21 @@ class VendorMenuItem(Base):
     
     # Relationships
     vendor = relationship("Vendor", back_populates="menu_items")
+
+
+class VendorMonthlySettlement(Base):
+    __tablename__ = "vendor_monthly_settlements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(String(50), ForeignKey("vendors.id", ondelete="CASCADE"), nullable=False, index=True)
+    month = Column(String(50), nullable=False)  # e.g., "2026-08"
+    total_amount = Column(Float, default=0.0, nullable=False)
+    paid_amount = Column(Float, default=0.0, nullable=False)
+    due_amount = Column(Float, default=0.0, nullable=False)
+    status = Column(String(50), default="Pending", nullable=False)  # Pending, Partially Settled, Settled
+    
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+    # Relationships
+    vendor = relationship("Vendor", back_populates="monthly_settlements")
+

@@ -4,7 +4,7 @@ import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, setVendorPrices, requestVendorModification, rejectVendorOrder, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
-import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, saveCustomFoodImage, MenuItem, Vendor } from '@/lib/vendors';
+import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, saveCustomFoodImage, MenuItem, Vendor, getVendorMonthlySettlements, VendorMonthlySettlement } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
@@ -28,6 +28,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [vendorDetails, setVendorDetails] = useState<Vendor | null>(null);
+  const [settlements, setSettlements] = useState<VendorMonthlySettlement[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Menu Edit form states
@@ -73,16 +74,18 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
   async function loadData(vendorId: string) {
     setLoading(true);
     try {
-      const [oList, mList, nList, vDetails] = await Promise.all([
+      const [oList, mList, nList, vDetails, sList] = await Promise.all([
         getOrders(),
         getVendorMenu(vendorId),
         getNotifications(),
-        getVendorById(vendorId)
+        getVendorById(vendorId),
+        getVendorMonthlySettlements(vendorId).catch(() => [])
       ]);
       setOrders(oList);
       setMenu(mList);
       setNotifications(nList);
       setVendorDetails(vDetails);
+      setSettlements(sList);
     } catch (err) {
       console.error('Error loading vendor data:', err);
     } finally {
@@ -1054,48 +1057,103 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
             {/* TAB: REVENUE */}
             {activeTab === 'revenue' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', alignItems: 'start' }}>
-                <div className="card" style={{ padding: '20px' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💰</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10B981' }}>
-                    ₹{totalEarnings.toFixed(2)}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', alignItems: 'start' }}>
+                  <div className="card" style={{ padding: '20px' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💰</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10B981' }}>
+                      ₹{totalEarnings.toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', fontWeight: 600 }}>CONSOLIDATED CANTEEN EARNINGS</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--gray-400)', marginTop: '8px' }}>Revenue generated from completed institutional orders.</div>
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', fontWeight: 600 }}>CONSOLIDATED CANTEEN EARNINGS</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--gray-400)', marginTop: '8px' }}>Revenue generated from completed institutional orders.</div>
+
+                  <div className="card" style={{ padding: '20px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>Order Settlement History</h3>
+                    <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th>Order ID</th>
+                            <th>Title</th>
+                            <th>Department</th>
+                            <th>Settle Date</th>
+                            <th style={{ textAlign: 'right' }}>Earning Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {completedOrders.map(o => {
+                            const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                            return (
+                              <tr key={o.id}>
+                                <td style={{ fontWeight: 700 }}>{o.id}</td>
+                                <td style={{ fontWeight: 600 }}>{o.title}</td>
+                                <td>{o.department_label}</td>
+                                <td style={{ fontSize: '0.8rem' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</td>
+                                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
+                                  ₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {completedOrders.length === 0 && (
+                            <tr>
+                              <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                                No orders settled yet.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="card" style={{ padding: '20px' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>Order Settlement History</h3>
-                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '16px' }}>🧾 Monthly Settlements & Accounts Ledger</h3>
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
                     <table className="table">
                       <thead>
                         <tr>
-                          <th>Order ID</th>
-                          <th>Title</th>
-                          <th>Department</th>
-                          <th>Settle Date</th>
-                          <th style={{ textAlign: 'right' }}>Earning Amount</th>
+                          <th>Settlement Period</th>
+                          <th style={{ textAlign: 'right' }}>Total Billed Amount</th>
+                          <th style={{ textAlign: 'right' }}>Paid Amount</th>
+                          <th style={{ textAlign: 'right' }}>Dues Outstanding</th>
+                          <th style={{ textAlign: 'center' }}>Status</th>
+                          <th>Last Updated Date</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {completedOrders.map(o => {
-                          const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                        {settlements.map(s => {
+                          const due = s.due_amount;
                           return (
-                            <tr key={o.id}>
-                              <td style={{ fontWeight: 700 }}>{o.id}</td>
-                              <td style={{ fontWeight: 600 }}>{o.title}</td>
-                              <td>{o.department_label}</td>
-                              <td style={{ fontSize: '0.8rem' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
-                                ₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}
+                            <tr key={s.id}>
+                              <td style={{ fontWeight: 700 }}>{s.month}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{s.total_amount.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{s.paid_amount.toFixed(2)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 800, color: due > 0 ? '#EF4444' : '#10B981' }}>₹{due.toFixed(2)}</td>
+                              <td style={{ textAlign: 'center' }}>
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '4px 10px',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                  background: s.status === 'Settled' ? '#ECFDF5' : (s.status === 'Partially Settled' ? '#EFF6FF' : '#FEF2F2'),
+                                  color: s.status === 'Settled' ? '#047857' : (s.status === 'Partially Settled' ? '#2563EB' : '#B91C1C')
+                                }}>
+                                  {s.status}
+                                </span>
                               </td>
+                              <td style={{ fontSize: '0.78rem', color: '#64748B' }}>{new Date(s.updated_at).toLocaleString('en-IN')}</td>
                             </tr>
                           );
                         })}
-                        {completedOrders.length === 0 && (
+                        {settlements.length === 0 && (
                           <tr>
-                            <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                              No orders settled yet.
+                            <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>
+                              No monthly settlements recorded yet.
                             </td>
                           </tr>
                         )}

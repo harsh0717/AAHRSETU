@@ -234,8 +234,6 @@ function getLocalOrders(): MasterOrder[] {
 function saveLocalOrders(orders: MasterOrder[]) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders));
-  // Notify same-tab listeners that orders changed
-  window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'local' } }));
 }
 
 // ── API Operations ────────────────────────────────────────────────────────────

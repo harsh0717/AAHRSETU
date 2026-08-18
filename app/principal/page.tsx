@@ -91,25 +91,18 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
     setPreferredLang(s.preferred_language || 'en');
     loadData();
 
-    // Real-time cross-tab sync: reload when coordinator submits orders or notifications arrive
+    // Cross-tab real-time sync: reload when coordinator submits orders from another tab
+    // (browser fires 'storage' event to all OTHER tabs automatically)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
         loadData();
       }
     };
-    const handleOrderChanged = () => loadData();
-    const handleFocus = () => loadData();
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('aharsetu_order_changed', handleOrderChanged);
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleFocus);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleFocus);
     };
   }, []);
 

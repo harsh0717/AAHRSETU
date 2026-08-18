@@ -109,33 +109,24 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       getAvailableMenuByVendor().then(mList => setMenuByVendor(mList)).catch(() => {});
     };
 
-    // Reload orders when another tab (e.g., principal) modifies orders/notifications
+    // Cross-tab real-time sync: reload orders when another tab modifies them
+    // (browser fires 'storage' event to all OTHER tabs when localStorage changes)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
         loadData();
       }
     };
 
-    // Listen for order status changes dispatched by WS or other tabs
-    const handleOrderChanged = () => loadData();
-    const handleFocus = () => { handleStatusChange(); loadData(); };
-
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
       window.addEventListener('aharsetu_menu_updated', handleStatusChange);
-      window.addEventListener('aharsetu_order_changed', handleOrderChanged);
       window.addEventListener('storage', handleStorageChange);
-      window.addEventListener('focus', handleFocus);
-      document.addEventListener('visibilitychange', handleFocus);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
         window.removeEventListener('aharsetu_menu_updated', handleStatusChange);
-        window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
         window.removeEventListener('storage', handleStorageChange);
-        window.removeEventListener('focus', handleFocus);
-        document.removeEventListener('visibilitychange', handleFocus);
       }
     };
   }, []);

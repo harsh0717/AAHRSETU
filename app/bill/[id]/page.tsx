@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { getSession, UserProfile } from '@/lib/auth';
 import { getOrderById, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
 import { COLLEGE_INFO } from '@/lib/constants';
-import { jsPDF } from 'jspdf';
 import { useI18n } from '@/lib/i18n';
 import { generateInvoiceQRCodeDataURL, generateInvoiceQRCodePNGDataURL } from '@/lib/qr';
 
@@ -88,6 +87,9 @@ export default function BillPage() {
   async function generatePDF() {
     if (!order) return;
     setDownloading(true);
+    
+    // Dynamically import jsPDF only in browser at runtime to avoid SSR/module-init crash
+    const { jsPDF } = await import('jspdf');
     
     // Generate valid base64 PNG Data URL for jsPDF compatibility
     const qrPngUrl = await generateInvoiceQRCodePNGDataURL(invoiceNo, 200);

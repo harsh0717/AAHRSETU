@@ -133,7 +133,8 @@ class NotificationService:
         recipient_role: Optional[str] = None,
         vendor_id: Optional[str] = None,
         order_id: Optional[str] = None,
-        vendor_order_id: Optional[str] = None
+        vendor_order_id: Optional[str] = None,
+        route: Optional[str] = None
     ) -> List[Notification]:
         now = datetime.now(timezone.utc)
         created_notifications = []
@@ -169,6 +170,20 @@ class NotificationService:
             lang = user.preferred_language or "en"
             localized_msg = self._localize_message(lang, msg_key, params)
             
+            # Auto-resolve route if not provided
+            final_route = route
+            if not final_route:
+                if msg_type == "new_order":
+                    final_route = "/principal#approvals"
+                elif msg_type == "order_submitted":
+                    final_route = "/dcr#approvals"
+                elif msg_type in ["approved", "rejected", "dcr_approved", "dcr_rejected", "vendor_confirmed", "completed"]:
+                    final_route = "/coordinator/orders"
+                elif msg_type == "mod_requested":
+                    final_route = f"/order/{order_id}" if order_id else "/coordinator/orders"
+                elif msg_type == "bill_generated":
+                    final_route = f"/bill/{order_id}" if order_id else "/coordinator/bills"
+
             notif_id = f"notif-{int(now.timestamp())}-{random.randint(1000, 9999)}"
             notif = Notification(
                 id=notif_id,
@@ -179,7 +194,8 @@ class NotificationService:
                 order_id=order_id,
                 vendor_order_id=vendor_order_id,
                 read=False,
-                timestamp=now
+                timestamp=now,
+                route=final_route
             )
             self.db.add(notif)
             created_notifications.append(notif)
@@ -192,7 +208,8 @@ class NotificationService:
                 "order_id": notif.order_id,
                 "vendor_order_id": notif.vendor_order_id,
                 "read": notif.read,
-                "timestamp": notif.timestamp.isoformat()
+                "timestamp": notif.timestamp.isoformat(),
+                "route": notif.route
             }
             # Push WebSocket Alert
             await manager.send_personal_message(ws_payload, user.id)

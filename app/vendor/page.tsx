@@ -336,6 +336,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     }
   }
 
+  /** @deprecated Use initModRequest instead. Reject is no longer shown in UI. */
   async function handleQuickReject(vendorOrderId: string) {
     if (confirm('Reject this canteen order?')) {
       setSaving(true);
@@ -689,12 +690,12 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                             ⚙️ Custom Pricing
                           </button>
                           <button
-                            onClick={() => handleQuickReject(myVO.id)}
+                            onClick={() => initModRequest(myVO.id)}
                             disabled={saving}
                             style={{
-                              background: '#FEF2F2',
-                              color: '#DC2626',
-                              border: '1px solid #FECACA',
+                              background: '#FFF7ED',
+                              color: '#C2410C',
+                              border: '1px solid #FED7AA',
                               borderRadius: '10px',
                               padding: '10px 16px',
                               fontSize: '0.88rem',
@@ -702,7 +703,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                               cursor: 'pointer'
                             }}
                           >
-                            ✖ Reject Order
+                            ✏️ Modify Request
                           </button>
                         </div>
                       )}
@@ -1469,45 +1470,83 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
         {/* Vendor Modification Request Modal */}
         {showModModal && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '380px', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
-              <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 800 }}>
-                Request Order Modification
-              </h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '420px', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
+              {/* Modal Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900)' }}>
+                  ✏️ Request Modification
+                </h3>
+                <button
+                  onClick={() => setShowModModal(null)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--gray-400)', lineHeight: 1 }}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+                {/* Type Selector */}
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                    Type of Modification
+                    Type
                   </label>
                   <select
                     className="form-input"
                     value={modType}
                     onChange={e => setModType(e.target.value as any)}
                   >
-                    <option value="minor">Minor Substitution (e.g. out-of-stock swap)</option>
-                    <option value="major">Major Change (requires re-approval)</option>
+                    <option value="minor">Minor — Small substitution (e.g. out-of-stock swap, no re-approval needed)</option>
+                    <option value="major">Major — Significant change (requires institution re-approval)</option>
                   </select>
                 </div>
+
+                {/* Reason Textarea */}
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
-                    Reason & Substitution Details
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '4px' }}>
+                    Reason <span style={{ color: '#DC2626' }}>*</span>
+                    <span style={{ fontWeight: 400, color: 'var(--gray-500)', marginLeft: '6px' }}>(required)</span>
                   </label>
                   <textarea
                     className="form-input"
-                    style={{ height: '80px', resize: 'none' }}
-                    placeholder="e.g. Samosas out of stock. Can replace with Samosa-Kachori split?"
+                    style={{ height: '90px', resize: 'vertical' }}
+                    placeholder="e.g. Samosas out of stock — proposing Samosa-Kachori split instead."
                     value={modReason}
                     onChange={e => setModReason(e.target.value)}
                   />
+                  {!modReason.trim() && (
+                    <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--gray-400)' }}>
+                      Please describe why you need to modify this order.
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleSendModRequest(showModModal)} disabled={saving}>
-                  {saving ? 'Submitting...' : 'Send Request'}
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ flex: 1 }}
+                  onClick={() => handleSendModRequest(showModModal)}
+                  disabled={saving || !modReason.trim()}
+                >
+                  {saving ? 'Submitting…' : '📨 Send Request'}
                 </button>
-                <button className="btn btn-ghost" onClick={() => setShowModModal(null)}>
+                <button
+                  onClick={() => setShowModModal(null)}
+                  disabled={saving}
+                  style={{
+                    background: '#F9FAFB',
+                    color: 'var(--gray-700)',
+                    border: '1px solid var(--gray-300)',
+                    borderRadius: '10px',
+                    padding: '10px 18px',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    cursor: saving ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   Cancel
                 </button>
               </div>

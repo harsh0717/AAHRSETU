@@ -32,6 +32,7 @@ export interface NotificationItem {
   action_label?: string;
   read: boolean;
   timestamp: string;
+  route?: string | null;
 }
 
 const LOCAL_NOTIFS_KEY = 'aharsetu_notifications_v3.7';

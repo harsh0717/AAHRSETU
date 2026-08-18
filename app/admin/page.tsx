@@ -113,6 +113,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
   const [settingsMessage, setSettingsMessage] = useState('');
+  const [resetConfirmPhrase, setResetConfirmPhrase] = useState('');
 
   async function handleToggleDemo(enabled: boolean) {
     setSettingsMessage('');
@@ -123,6 +124,22 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       setTimeout(() => setSettingsMessage(''), 4000);
     } catch (err: any) {
       setSettingsMessage(err.message || 'Failed to update system settings.');
+    }
+  }
+
+  async function handleDeactivateAllUsers() {
+    if (resetConfirmPhrase !== 'RESET USERS') return;
+    setSubmitting(true);
+    setSettingsMessage('');
+    try {
+      const res = await api.post<{ message: string }>('/users/admin-reset', { confirmation_phrase: 'RESET USERS' });
+      setSettingsMessage(res.message || 'Successfully deactivated all non-admin users.');
+      setResetConfirmPhrase('');
+      loadDashboardData();
+    } catch (err: any) {
+      setSettingsMessage(err.message || 'Failed to deactivate users.');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -1659,6 +1676,52 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       {settingsMessage}
                     </div>
                   )}
+
+                  <hr style={{ margin: '18px 0', borderColor: 'var(--gray-200)' }} />
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px', color: '#DC2626' }}>⚠️ Destructive System Actions</h3>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#FEF2F2', borderRadius: '12px', border: '1px solid #FEE2E2' }}>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#991B1B' }}>Deactivate Non-Admin User Directory</div>
+                      <div style={{ fontSize: '0.72rem', color: '#B91C1C', marginTop: '2px' }}>
+                        Deactivates all coordinators, principals, DCRs, and vendors in the database.
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginTop: '6px' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#991B1B', display: 'block', marginBottom: '6px' }}>
+                        Type "RESET USERS" to confirm:
+                      </label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="RESET USERS" 
+                        value={resetConfirmPhrase} 
+                        onChange={e => setResetConfirmPhrase(e.target.value)} 
+                        style={{ borderColor: '#FCA5A5' }}
+                      />
+                    </div>
+                    
+                    <button
+                      onClick={handleDeactivateAllUsers}
+                      disabled={submitting || resetConfirmPhrase !== 'RESET USERS'}
+                      style={{
+                        background: resetConfirmPhrase === 'RESET USERS' ? '#DC2626' : '#FCA5A5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        cursor: resetConfirmPhrase === 'RESET USERS' ? 'pointer' : 'not-allowed',
+                        textAlign: 'center',
+                        marginTop: '6px',
+                        transition: '0.2s'
+                      }}
+                    >
+                      {submitting ? 'Deactivating...' : '⚠️ Execute Bulk User Deactivation'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

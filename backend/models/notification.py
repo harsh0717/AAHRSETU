@@ -16,6 +16,7 @@ class Notification(Base):
     vendor_order_id = Column(String(50), nullable=True)
     read = Column(Boolean, default=False, nullable=False, index=True)
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    route = Column(String(250), nullable=True)
     
     # Relationships
     recipient = relationship("User")

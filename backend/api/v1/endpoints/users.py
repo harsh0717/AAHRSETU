@@ -2,6 +2,7 @@ import os
 import uuid
 import shutil
 from typing import Any, List
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Response
 from sqlalchemy.orm import Session
 from backend.api import deps
@@ -359,6 +360,47 @@ def delete_user(
         old_value=f"ID: {user_id}, Email: {target_email}"
     )
     return None
+
+
+class ResetConfirmation(BaseModel):
+    confirmation_phrase: str
+
+
+@router.post("/admin-reset")
+def admin_reset_users(
+    payload: ResetConfirmation,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin"]))
+) -> Any:
+    """
+    Deactivate all non-admin users (Admin-only).
+    """
+    if payload.confirmation_phrase != "RESET USERS":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid confirmation phrase. Please type 'RESET USERS' to confirm."
+        )
+    
+    non_admins = db.query(User).filter(User.role != "admin").all()
+    count = 0
+    for u in non_admins:
+        if u.active:
+            u.active = False
+            count += 1
+            
+    db.commit()
+    
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Admin Database Reset",
+        old_value="All users active",
+        new_value=f"Deactivated {count} non-admin users."
+    )
+    return {"message": f"Successfully deactivated {count} non-admin users."}
 
 
 @router.get("/avatar/{filename}")

@@ -40,6 +40,7 @@ try:
             db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;"))
             db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
             db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS billing_status VARCHAR(50);"))
+            db.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS route VARCHAR(250);"))
             db.commit()
         else:
             for stmt in [
@@ -52,7 +53,8 @@ try:
                 "ALTER TABLE vendor_menu_items ADD COLUMN image_url VARCHAR(500);",
                 "ALTER TABLE vendors ADD COLUMN active BOOLEAN DEFAULT TRUE;",
                 "ALTER TABLE vendors ADD COLUMN image_url VARCHAR(500);",
-                "ALTER TABLE master_orders ADD COLUMN billing_status VARCHAR(50);"
+                "ALTER TABLE master_orders ADD COLUMN billing_status VARCHAR(50);",
+                "ALTER TABLE notifications ADD COLUMN route VARCHAR(250);"
             ]:
                 try:
                     db.execute(text(stmt))

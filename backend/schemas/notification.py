@@ -13,6 +13,7 @@ class NotificationResponse(BaseModel):
     vendor_order_id: Optional[str] = None
     read: bool
     timestamp: datetime
+    route: Optional[str] = None
 
     class Config:
         from_attributes = True

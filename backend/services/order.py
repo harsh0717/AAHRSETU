@@ -271,7 +271,7 @@ class OrderService:
             else:
                 # Major changes return to Sent for Approval for Principal re-approval
                 master.status = "Sent for Approval"
-                master.principal_approval_status = None # Reset
+                
                 
             history = ApprovalHistory(
                 master_order_id=master.id,

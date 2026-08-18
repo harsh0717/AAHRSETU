@@ -50,3 +50,8 @@ class VendorResponse(VendorBase):
 
 class VendorStatusUpdate(BaseModel):
     status: str
+
+
+class MenuItemAvailabilityUpdate(BaseModel):
+    available: bool
+

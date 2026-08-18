@@ -216,6 +216,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('aharsetu_menu_updated', { detail: payload }));
           }
+        } else if (payload.type === 'MENU_ITEM_AVAILABILITY_UPDATED') {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aharsetu_menu_item_changed', { detail: payload }));
+          }
         } else if (payload.type === 'ORDER_UPDATED') {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: payload }));

@@ -8,7 +8,7 @@ from backend.core.database import get_db
 from backend.models.user import User
 from backend.models.vendor import Vendor, VendorMenuItem, VendorMonthlySettlement
 from backend.repositories.vendor import VendorRepository
-from backend.schemas.vendor import VendorResponse, VendorMenuItemResponse, VendorMenuItemCreate, VendorStatusUpdate
+from backend.schemas.vendor import VendorResponse, VendorMenuItemResponse, VendorMenuItemCreate, VendorStatusUpdate, MenuItemAvailabilityUpdate
 from backend.schemas.settlement import SettlementResponse, SettlementUpdate
 from datetime import datetime
 
@@ -274,6 +274,52 @@ async def delete_menu_item(
         pass
 
     return None
+
+
+@router.patch("/{vendor_id}/menu/{item_id}/availability", response_model=VendorMenuItemResponse)
+async def update_menu_item_availability(
+    vendor_id: str,
+    item_id: str,
+    payload: MenuItemAvailabilityUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["vendor", "admin"]))
+) -> Any:
+    """
+    Update menu item availability (Vendor/Admin only).
+    """
+    if current_user.role == "vendor" and current_user.vendor_id != vendor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this vendor menu"
+        )
+        
+    vendor_repo = VendorRepository(db)
+    db_item = vendor_repo.get_menu_item(vendor_id, item_id)
+    if not db_item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Menu item not found"
+        )
+        
+    db_item.available = payload.available
+    db.commit()
+    db.refresh(db_item)
+
+    # Broadcast MENU_ITEM_AVAILABILITY_UPDATED
+    try:
+        from backend.services.notification import manager
+        import asyncio
+        asyncio.create_task(manager.broadcast({
+            "type": "MENU_ITEM_AVAILABILITY_UPDATED",
+            "vendor_id": vendor_id,
+            "item_id": item_id,
+            "available": db_item.available,
+            "item_name": db_item.name
+        }))
+    except Exception:
+        pass
+
+    return db_item
 
 
 @router.patch("/{vendor_id}/availability", response_model=VendorResponse)

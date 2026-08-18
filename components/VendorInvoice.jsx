@@ -2,14 +2,16 @@
 import { COLLEGE_INFO } from '@/lib/constants';
 
 function numToWords(n) {
-  if (n === 0) return 'Zero';
+  if (isNaN(n) || n < 0 || !isFinite(n)) return 'Zero';
+  const floorN = Math.floor(n);
+  if (floorN === 0) return 'Zero';
   const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
   const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  if (n < 20) return ones[n];
-  if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
-  if (n < 1000) return ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + numToWords(n%100) : '');
-  if (n < 100000) return numToWords(Math.floor(n/1000)) + ' Thousand' + (n%1000 ? ' ' + numToWords(n%1000) : '');
-  return numToWords(Math.floor(n/100000)) + ' Lakh' + (n%100000 ? ' ' + numToWords(n%100000) : '');
+  if (floorN < 20) return ones[floorN];
+  if (floorN < 100) return tens[Math.floor(floorN/10)] + (floorN%10 ? ' ' + ones[floorN%10] : '');
+  if (floorN < 1000) return ones[Math.floor(floorN/100)] + ' Hundred' + (floorN%100 ? ' ' + numToWords(floorN%100) : '');
+  if (floorN < 100000) return numToWords(Math.floor(floorN/1000)) + ' Thousand' + (floorN%1000 ? ' ' + numToWords(floorN%1000) : '');
+  return numToWords(Math.floor(floorN/100000)) + ' Lakh' + (floorN%100000 ? ' ' + numToWords(floorN%100000) : '');
 }
 
 export default function VendorInvoice({ masterOrder, vendorOrder }) {
@@ -106,7 +108,7 @@ export default function VendorInvoice({ masterOrder, vendorOrder }) {
         </table>
 
         <div style={{ marginTop: '10px', padding: '10px 14px', background: '#F3F4F6', borderRadius: '6px', fontSize: '0.8rem', fontStyle: 'italic', color: '#374151' }}>
-          Rupees {numToWords(total)} Only
+          Rupees {numToWords(Math.floor(total))} Only
         </div>
       </div>
 

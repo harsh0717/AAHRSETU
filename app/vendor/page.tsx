@@ -537,60 +537,154 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
                           Items Requested:
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {myVO.items.map((item, idx) => (
-                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
-                              <span style={{ fontWeight: 700, color: '#0F172A' }}>
-                                • {item.name}
-                              </span>
-                              <span style={{ fontWeight: 800, color: '#2563EB', background: '#EFF6FF', padding: '2px 10px', borderRadius: '999px' }}>
-                                × {item.quantity} {item.unit || 'qty'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        
+                        {isPricingThis ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {myVO.items.map((item, idx) => (
+                              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>
+                                  • {item.name} <span style={{ fontWeight: 500, color: '#64748B' }}>(x{item.quantity} {item.unit || 'qty'})</span>
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontSize: '0.8rem', color: '#64748B' }}>₹</span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    step="0.5"
+                                    value={pricesInput[item.name] || ''}
+                                    onChange={(e) => setPricesInput(prev => ({ ...prev, [item.name]: e.target.value }))}
+                                    style={{
+                                      width: '80px',
+                                      height: '32px',
+                                      padding: '0 8px',
+                                      border: '1px solid #CBD5E1',
+                                      borderRadius: '6px',
+                                      fontSize: '0.85rem',
+                                      textAlign: 'right'
+                                    }}
+                                    required
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {myVO.items.map((item, idx) => (
+                              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                                <span style={{ fontWeight: 700, color: '#0F172A' }}>
+                                  • {item.name}
+                                </span>
+                                <span style={{ fontWeight: 800, color: '#2563EB', background: '#EFF6FF', padding: '2px 10px', borderRadius: '999px' }}>
+                                  × {item.quantity} {item.unit || 'qty'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
                         <div style={{ borderTop: '1px dashed #CBD5E1', marginTop: '12px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Total Estimated Amount:</span>
-                          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#059669' }}>₹{myVO.bill_amount > 0 ? myVO.bill_amount.toFixed(2) : (myVO.items.reduce((acc, i) => acc + (i.price * i.quantity), 0) || 150).toFixed(2)}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>
+                            {isPricingThis ? 'Calculated Total Amount:' : 'Total Estimated Amount:'}
+                          </span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#059669' }}>
+                            ₹{isPricingThis 
+                              ? myVO.items.reduce((acc, i) => acc + ((parseFloat(pricesInput[i.name]) || 0) * i.quantity), 0).toFixed(2)
+                              : (myVO.bill_amount > 0 ? myVO.bill_amount.toFixed(2) : (myVO.items.reduce((acc, i) => acc + (i.price * i.quantity), 0) || 150).toFixed(2))}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Easy 1-Click Action Buttons */}
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button
-                          onClick={() => handleQuickApprove(myVO.id)}
-                          disabled={saving}
-                          style={{
-                            background: '#10B981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '10px',
-                            padding: '10px 20px',
-                            fontSize: '0.88rem',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            flex: 1
-                          }}
-                        >
-                          ✓ Accept & Start Cooking
-                        </button>
-                        <button
-                          onClick={() => handleQuickReject(myVO.id)}
-                          disabled={saving}
-                          style={{
-                            background: '#FEF2F2',
-                            color: '#DC2626',
-                            border: '1px solid #FECACA',
-                            borderRadius: '10px',
-                            padding: '10px 16px',
-                            fontSize: '0.88rem',
-                            fontWeight: 800,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          ✖ Reject Order
-                        </button>
-                      </div>
+                      {/* Action Buttons */}
+                      {isPricingThis ? (
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <button
+                            onClick={() => handleSubmitPricing(myVO.id)}
+                            disabled={saving}
+                            style={{
+                              background: '#2563EB',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '10px',
+                              padding: '10px 20px',
+                              fontSize: '0.88rem',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              flex: 1
+                            }}
+                          >
+                            {saving ? 'Saving...' : '✓ Submit Custom Prices'}
+                          </button>
+                          <button
+                            onClick={() => setPricingOrderId(null)}
+                            disabled={saving}
+                            style={{
+                              background: '#F1F5F9',
+                              color: '#475569',
+                              border: '1px solid #E2E8F0',
+                              borderRadius: '10px',
+                              padding: '10px 16px',
+                              fontSize: '0.88rem',
+                              fontWeight: 800,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => handleQuickApprove(myVO.id)}
+                            disabled={saving}
+                            style={{
+                              background: '#10B981',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '10px',
+                              padding: '10px 20px',
+                              fontSize: '0.88rem',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              flex: 1
+                            }}
+                          >
+                            ✓ Accept & Start Cooking
+                          </button>
+                          <button
+                            onClick={() => initPricingInput(o)}
+                            disabled={saving}
+                            style={{
+                              background: '#EFF6FF',
+                              color: '#2563EB',
+                              border: '1px solid #BFDBFE',
+                              borderRadius: '10px',
+                              padding: '10px 16px',
+                              fontSize: '0.88rem',
+                              fontWeight: 800,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            ⚙️ Custom Pricing
+                          </button>
+                          <button
+                            onClick={() => handleQuickReject(myVO.id)}
+                            disabled={saving}
+                            style={{
+                              background: '#FEF2F2',
+                              color: '#DC2626',
+                              border: '1px solid #FECACA',
+                              borderRadius: '10px',
+                              padding: '10px 16px',
+                              fontSize: '0.88rem',
+                              fontWeight: 800,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            ✖ Reject Order
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

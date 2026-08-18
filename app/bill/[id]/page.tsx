@@ -10,14 +10,16 @@ import { useI18n } from '@/lib/i18n';
 import { generateInvoiceQRCodeDataURL, generateInvoiceQRCodePNGDataURL } from '@/lib/qr';
 
 function numToWords(n: number): string {
-  if (n === 0) return 'Zero';
+  if (isNaN(n) || n < 0 || !isFinite(n)) return 'Zero';
+  const floorN = Math.floor(n);
+  if (floorN === 0) return 'Zero';
   const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
   const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  if (n < 20) return ones[n];
-  if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
-  if (n < 1000) return ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + numToWords(n%100) : '');
-  if (n < 100000) return numToWords(Math.floor(n/1000)) + ' Thousand' + (n%1000 ? ' ' + numToWords(n%1000) : '');
-  return numToWords(Math.floor(n/100000)) + ' Lakh' + (n%100000 ? ' ' + numToWords(n%100000) : '');
+  if (floorN < 20) return ones[floorN];
+  if (floorN < 100) return tens[Math.floor(floorN/10)] + (floorN%10 ? ' ' + ones[floorN%10] : '');
+  if (floorN < 1000) return ones[Math.floor(floorN/100)] + ' Hundred' + (floorN%100 ? ' ' + numToWords(floorN%100) : '');
+  if (floorN < 100000) return numToWords(Math.floor(floorN/1000)) + ' Thousand' + (floorN%1000 ? ' ' + numToWords(floorN%1000) : '');
+  return numToWords(Math.floor(floorN/100000)) + ' Lakh' + (floorN%100000 ? ' ' + numToWords(floorN%100000) : '');
 }
 
 export default function BillPage() {
@@ -210,7 +212,7 @@ export default function BillPage() {
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(113, 113, 122);
-    doc.text(`Amount in Words: Rupees ${numToWords(totalAmount)} Only.`, 10, y);
+    doc.text(`Amount in Words: Rupees ${numToWords(Math.floor(totalAmount))} Only.`, 10, y);
 
     // Timeline History summary
     y += 14;
@@ -433,7 +435,7 @@ export default function BillPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px dashed var(--gray-200)', paddingTop: '16px', marginBottom: '24px' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>
               <strong>Amount in Words:</strong><br />
-              Rupees {numToWords(totalAmount)} Only.
+              Rupees {numToWords(Math.floor(totalAmount))} Only.
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-500)' }}>GRAND TOTAL</div>

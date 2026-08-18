@@ -39,10 +39,9 @@ const BOTTOM_NAV_CONFIG: Record<string, { label: string; href: string; icon: str
   principal: [
     { id: 'home', label: 'Home', href: '/principal', icon: '🏠' },
     { id: 'approvals', label: 'Approvals', href: '/principal/approvals', icon: '⏳' },
-    { id: 'my_orders', label: 'My Requisitions', href: '/principal/my-orders', icon: '📝' },
-    { id: 'history', label: 'Orders', href: '/principal/history', icon: '📜' },
+    { id: 'my_orders', label: 'Requisitions', href: '/principal/my-orders', icon: '📝' },
     { id: 'notifications', label: 'Alerts', href: '/principal/notifications', icon: '🔔' },
-    { id: 'profile', label: 'Profile', href: '/principal/profile', icon: '👤' },
+    { id: 'more', label: 'More', href: '#more', icon: '☰' },
   ],
   dcr: [
     { id: 'home', label: 'Home', href: '/dcr', icon: '🏠' },
@@ -430,6 +429,48 @@ export default function AppShell({ children, role }: AppShellProps) {
                 >
                   🧾 Institutional Bills
                 </Link>
+              )}
+
+              {role === 'principal' && (
+                <>
+                  <Link
+                    href="/principal/history"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    📜 Requisition History
+                  </Link>
+
+                  <Link
+                    href="/principal/profile"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    👤 My Profile
+                  </Link>
+                </>
               )}
 
               {role === 'admin' && (

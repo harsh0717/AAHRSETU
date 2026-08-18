@@ -397,3 +397,40 @@ def toggle_vendor_active_status(
     )
     
     return vendor
+
+
+@router.delete("/{vendor_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_vendor(
+    vendor_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin"]))
+) -> None:
+    """
+    Hard delete a vendor and all their associated user login accounts (Admin-only).
+    """
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendor not found."
+        )
+
+    # Delete linked user accounts
+    db.query(User).filter(User.vendor_id == vendor.id).delete(synchronize_session=False)
+
+    # Delete the vendor itself (SQLAlchemy cascade deletes menu_items)
+    db.delete(vendor)
+    db.commit()
+
+    # Audit log this action
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department="General",
+        action="Vendor Deleted",
+        old_value=vendor_id,
+        new_value="DELETED"
+    )
+    return

@@ -288,6 +288,17 @@ export async function deleteVendorMenuItem(vendorId: string, itemId: string): Pr
   saveLocalMenu(vendorId, menu);
 }
 
+export async function deleteVendor(vendorId: string): Promise<void> {
+  try {
+    await api.delete(`/vendors/${vendorId}`);
+  } catch (err) {
+    console.warn('[VENDORS] API delete vendor failed, deleting locally');
+  }
+
+  const vendors = getLocalVendors().filter(v => v.id !== vendorId);
+  saveLocalVendors(vendors);
+}
+
 export async function getAvailableMenuByVendor(): Promise<{ id: string; name: string; image_url?: string | null; status: string; menu: MenuItem[] }[]> {
   const vendors = await getVendors();
   const open = vendors.filter((v) => v.status === 'open');

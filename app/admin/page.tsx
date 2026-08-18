@@ -8,7 +8,7 @@ import VendorStatusBadge from '@/components/VendorStatusBadge';
 import UserManager from '@/components/UserManager';
 import { getSession, UserProfile, updateSessionLanguage, getDepartments, addDepartment, toggleDepartmentStatus, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, resetAllData, completeOrder, MasterOrder } from '@/lib/store';
-import { getVendors, updateVendorStatus, Vendor } from '@/lib/vendors';
+import { getVendors, updateVendorStatus, Vendor, deleteVendor } from '@/lib/vendors';
 import { ROLE_COLORS, VENDOR_STATUS_LABELS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
@@ -150,6 +150,18 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       loadDashboardData();
     } catch (err: any) {
       alert(err.message || 'Failed to toggle vendor active status');
+    }
+  }
+
+  async function handleDeleteVendor(vendorId: string) {
+    if (!confirm('Are you absolutely sure you want to delete this vendor? This will permanently delete the vendor and their user login accounts.')) {
+      return;
+    }
+    try {
+      await deleteVendor(vendorId);
+      loadDashboardData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete vendor');
     }
   }
 
@@ -750,6 +762,19 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                                 }}
                               >
                                 {v.active ? '🚫 Suspend' : '✅ Activate'}
+                              </button>
+                              <button
+                                className="btn btn-sm"
+                                onClick={() => handleDeleteVendor(v.id)}
+                                style={{
+                                  padding: '6px 12px',
+                                  fontSize: '0.78rem',
+                                  background: '#FFF5F5',
+                                  color: '#E53E3E',
+                                  border: '1px solid #FED7D7'
+                                }}
+                              >
+                                🗑️ Delete
                               </button>
                             </div>
                           </td>

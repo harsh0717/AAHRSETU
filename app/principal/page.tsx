@@ -99,10 +99,16 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
       }
     };
 
+    const handleOrderChanged = () => {
+      loadData();
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('aharsetu_order_changed', handleOrderChanged);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
     };
   }, []);
 

@@ -112,6 +112,24 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
     loadData(s.vendor_id);
+
+    const handleOrderChanged = () => {
+      if (s.vendor_id) loadData(s.vendor_id);
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (s.vendor_id && (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7')) {
+        loadData(s.vendor_id);
+      }
+    };
+
+    window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Listen to hash changes for sidebar navigation

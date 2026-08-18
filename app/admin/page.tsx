@@ -318,6 +318,24 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
     loadDashboardData();
+
+    const handleOrderChanged = () => {
+      loadDashboardData();
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+        loadDashboardData();
+      }
+    };
+
+    window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [router]);
 
   // Sync hash changes with state

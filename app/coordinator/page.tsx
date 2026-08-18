@@ -117,16 +117,22 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       }
     };
 
+    const handleOrderChanged = () => {
+      loadData();
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
       window.addEventListener('aharsetu_menu_updated', handleStatusChange);
       window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('aharsetu_order_changed', handleOrderChanged);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
         window.removeEventListener('aharsetu_menu_updated', handleStatusChange);
         window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
       }
     };
   }, []);

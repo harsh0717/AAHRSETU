@@ -403,29 +403,39 @@ export async function createMasterOrder(orderData: {
       department_id: orderData.department_id
     });
     if (res) {
+      // Auto-submit: advance status from 'Created' → 'Sent for Approval' (or 'Principal Approved' for principals)
+      let finalOrder = res;
+      try {
+        const submitted = await api.post<MasterOrder>(`/orders/${res.id}/submit`);
+        if (submitted) finalOrder = submitted;
+      } catch (submitErr) {
+        console.warn('[STORE] Submit call failed after create, keeping Created status');
+      }
       const localList = getLocalOrders();
-      const idx = localList.findIndex(o => o.id === res.id);
-      if (idx >= 0) localList[idx] = res;
-      else localList.unshift(res);
+      const idx = localList.findIndex(o => o.id === finalOrder.id);
+      if (idx >= 0) localList[idx] = finalOrder;
+      else localList.unshift(finalOrder);
       saveLocalOrders(localList);
       if (isPrincipal) {
-        pushNotification(`New requisition ${res.id} created by Principal requiring DCR audit.`, 'dcr', res.id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
+        pushNotification(`New requisition ${finalOrder.id} created by Principal requiring DCR audit.`, 'dcr', finalOrder.id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
       } else {
-        pushNotification(`New requisition ${res.id} submitted for approval.`, 'principal', res.id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
+        pushNotification(`New requisition ${finalOrder.id} submitted for approval.`, 'principal', finalOrder.id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
       }
-      return res;
+      return finalOrder;
     }
   } catch (err) {
     // Backend offline, fallback creation
   }
 
+  // Offline fallback: create locally and mark as submitted
+  newOrder.status = isPrincipal ? 'Principal Approved' : 'Sent for Approval';
   const localList = getLocalOrders();
   localList.unshift(newOrder);
   saveLocalOrders(localList);
   if (isPrincipal) {
-    pushNotification(`New requisition ${newId} created by Principal requiring DCR audit.`, 'dcr', newId, { type: 'ORDER_SUBMITTED_FOR_DCR' });
+    pushNotification(`New requisition ${newOrder.id} created by Principal requiring DCR audit.`, 'dcr', newOrder.id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
   } else {
-    pushNotification(`New requisition ${newId} submitted for approval.`, 'principal', newId, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
+    pushNotification(`New requisition ${newOrder.id} submitted for approval.`, 'principal', newOrder.id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
   }
   return newOrder;
 }

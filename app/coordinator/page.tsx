@@ -109,12 +109,22 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       getAvailableMenuByVendor().then(mList => setMenuByVendor(mList)).catch(() => {});
     };
 
-    // No polling — event-driven: respond to vendor status/menu changes immediately
-    const handleFocus = () => handleStatusChange();
+    // Reload orders when another tab (e.g., principal) modifies orders/notifications
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+        loadData();
+      }
+    };
+
+    // Listen for order status changes dispatched by WS or other tabs
+    const handleOrderChanged = () => loadData();
+    const handleFocus = () => { handleStatusChange(); loadData(); };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
-      window.addEventListener('aharsetu_menu_updated', handleStatusChange);  // real-time menu change
+      window.addEventListener('aharsetu_menu_updated', handleStatusChange);
+      window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.addEventListener('storage', handleStorageChange);
       window.addEventListener('focus', handleFocus);
       document.addEventListener('visibilitychange', handleFocus);
     }
@@ -122,6 +132,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
         window.removeEventListener('aharsetu_menu_updated', handleStatusChange);
+        window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+        window.removeEventListener('storage', handleStorageChange);
         window.removeEventListener('focus', handleFocus);
         document.removeEventListener('visibilitychange', handleFocus);
       }
@@ -260,8 +272,12 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
   if (!session) return null;
 
-  // Filter orders created by this coordinator
-  const myOrders = orders.filter(o => o.created_by_id === session.id);
+  // Filter orders created by this coordinator (store already pre-filters by role)
+  const myOrders = orders.filter(o =>
+    o.created_by_id === session.id ||
+    o.created_by_name === session.name ||
+    (session.department_id && o.department_id === session.department_id)
+  );
 
   // Apply tab filters
   let displayedOrders = myOrders;
@@ -283,7 +299,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     });
 
   // Filter master orders that have invoices generated
-  const ordersWithBills = myOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
+  const ordersWithBills = myOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status) || (o.total_bill_amount > 0 && o.vendor_orders.some(vo => vo.status === 'Vendor Confirmed')));
 
   // Compute Stats for Dashboard tab
   const totalMyOrders = myOrders.length;

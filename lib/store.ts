@@ -234,6 +234,8 @@ function getLocalOrders(): MasterOrder[] {
 function saveLocalOrders(orders: MasterOrder[]) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders));
+  // Notify same-tab listeners that orders changed
+  window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'local' } }));
 }
 
 // ── API Operations ────────────────────────────────────────────────────────────
@@ -243,8 +245,13 @@ export async function getOrders(): Promise<MasterOrder[]> {
   try {
     const apiOrders = await api.get<MasterOrder[]>('/orders');
     if (apiOrders && Array.isArray(apiOrders) && apiOrders.length > 0) {
-      saveLocalOrders(apiOrders);
-      orders = apiOrders;
+      // Merge: keep API orders as base, then add any locally-created orders not in API response
+      const localOrders = getLocalOrders();
+      const apiIds = new Set(apiOrders.map(o => o.id));
+      const localOnly = localOrders.filter(o => !apiIds.has(o.id));
+      const merged = [...apiOrders, ...localOnly];
+      saveLocalOrders(merged);
+      orders = merged;
     } else {
       orders = getLocalOrders();
     }
@@ -258,9 +265,14 @@ export async function getOrders(): Promise<MasterOrder[]> {
   if (!session) return orders;
 
   if (session.role === 'coordinator') {
-    return orders.filter(o => o.created_by_id === session.id || o.created_by_name === session.name || (session.department_id && o.department_id === session.department_id));
+    // Match by id, name, or same department
+    return orders.filter(o =>
+      o.created_by_id === session.id ||
+      o.created_by_name === session.name ||
+      (session.department_id && o.department_id === session.department_id)
+    );
   } else if (session.role === 'principal') {
-    // Principals can view all campus requisitions across departments
+    // Principals see all orders in their departments
     return orders;
   } else if (session.role === 'vendor') {
     return orders.filter(o => o.vendor_orders.some(v => v.vendor_id === session.vendor_id || (session.name && v.vendor_name?.toLowerCase().includes(session.name.toLowerCase()))));

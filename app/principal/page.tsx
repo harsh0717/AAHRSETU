@@ -90,6 +90,27 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
     loadData();
+
+    // Real-time cross-tab sync: reload when coordinator submits orders or notifications arrive
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+        loadData();
+      }
+    };
+    const handleOrderChanged = () => loadData();
+    const handleFocus = () => loadData();
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
   }, []);
 
   // Mobile Device Resize Hook
@@ -242,7 +263,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
   const approvedOrders = deptOrders.filter(o => o.history.some(h => h.role === 'principal' && h.action === 'Principal Approved'));
   const rejectedOrders = deptOrders.filter(o => o.history.some(h => h.role === 'principal' && h.action === 'Principal Rejected'));
   const historyOrders = deptOrders.filter(o => !['Created', 'Sent for Approval', 'Principal Reviewing'].includes(o.status));
-  const ordersWithBills = deptOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
+  const ordersWithBills = deptOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status) || (o.total_bill_amount > 0 && o.vendor_orders.some(vo => vo.status === 'Vendor Confirmed')));
 
   // Compute Stats
   const totalPending = pendingQueue.length;

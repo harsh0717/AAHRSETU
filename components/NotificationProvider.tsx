@@ -109,7 +109,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       } catch (err) {
         console.warn('[WS CLIENT] Fallback polling sync error:', err);
       }
-    }, 15000); // Reasonable fallback polling interval
+    }, 5000); // Poll every 5 seconds for near real-time feel
   }, []);
 
   // Main connection builder
@@ -301,9 +301,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       }
     };
 
+    // Cross-tab real-time sync: detect when another tab writes notifications to localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      // React to notification or order changes from other tabs
+      if (e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_orders_v3') {
+        getNotifications().then((list) => {
+          setNotifications(list);
+          setUnreadCount(list.filter((n) => !n.read).length);
+        }).catch(() => {});
+      }
+    };
+
     window.addEventListener('aharsetu_profile_changed', handleAuthChange);
+    window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('aharsetu_profile_changed', handleAuthChange);
+      window.removeEventListener('storage', handleStorageChange);
       cleanup();
       if (fallbackPollingIntervalRef.current) {
         clearInterval(fallbackPollingIntervalRef.current);

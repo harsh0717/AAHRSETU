@@ -9,7 +9,6 @@ import { useI18n } from '@/lib/i18n';
 import NotificationBell from './NotificationBell';
 import LanguageSwitcher from './LanguageSwitcher';
 import PushPrompt from './PushPrompt';
-import CommandPalette from './CommandPalette';
 import ToastContainer from './Toast';
 import BrandLogo from './BrandLogo';
 import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
@@ -67,7 +66,6 @@ export default function AppShell({ children, role }: AppShellProps) {
   const { t } = useI18n();
   const [session, setSession] = useState<UserProfile | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showCmdPalette, setShowCmdPalette] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [moreDrawerOpen, setMoreDrawerOpen] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -89,9 +87,6 @@ export default function AppShell({ children, role }: AppShellProps) {
     }
     setSession(s);
 
-    const handleOpenCmd = () => setShowCmdPalette(true);
-    window.addEventListener('open_command_palette', handleOpenCmd);
-
     // Re-read session whenever profile is updated (from any device via WS or same-device)
     const handleProfileChange = () => {
       const updated = getSession();
@@ -101,7 +96,6 @@ export default function AppShell({ children, role }: AppShellProps) {
     window.addEventListener('focus', handleProfileChange);
 
     return () => {
-      window.removeEventListener('open_command_palette', handleOpenCmd);
       window.removeEventListener('aharsetu_profile_changed', handleProfileChange);
       window.removeEventListener('focus', handleProfileChange);
     };
@@ -244,13 +238,6 @@ export default function AppShell({ children, role }: AppShellProps) {
           <div className={styles.headerRight}>
             {!isMobileDevice && (
               <>
-                <button
-                  onClick={() => setShowCmdPalette(true)}
-                  className={styles.cmdSearchBtn}
-                >
-                  <span>🔍</span>
-                  <span className={styles.cmdSearchLabel}>Search (Cmd + K)</span>
-                </button>
                 <LanguageSwitcher />
                 {session && <NotificationBell userId={session.id} role={session.role} />}
               </>
@@ -611,7 +598,6 @@ export default function AppShell({ children, role }: AppShellProps) {
         </>
       )}
 
-      <CommandPalette isOpen={showCmdPalette} onClose={() => setShowCmdPalette(false)} />
       <ToastContainer />
       <PushPrompt />
       <FirstTimeOnboardingModal />

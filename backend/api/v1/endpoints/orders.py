@@ -315,7 +315,7 @@ def read_order_by_id(
 
 
 @router.post("", response_model=MasterOrderResponse)
-def create_order(
+async def create_order(
     payload: MasterOrderCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.check_role(["coordinator", "principal"]))
@@ -347,6 +347,28 @@ def create_order(
             detail=str(e)
         )
         
+    # Notify DCR or Principal immediately on creation
+    try:
+        notif_service = NotificationService(db)
+        if current_user.role == "principal":
+            await notif_service.create_and_send_notification(
+                msg_key="order_submitted",
+                params={"title": order.title},
+                msg_type="order_submitted",
+                recipient_role="dcr",
+                order_id=order.id
+            )
+        else:
+            await notif_service.create_and_send_notification(
+                msg_key="new_order",
+                params={"dept": order.department.name if order.department else "Coordinator", "title": order.title},
+                msg_type="new_order",
+                recipient_role="principal",
+                order_id=order.id
+            )
+    except Exception as e:
+        print(f"[ERROR] Failed to send order creation notification: {e}")
+
     # Audit log order creation
     from backend.repositories.audit import AuditRepository
     audit_repo = AuditRepository(db)

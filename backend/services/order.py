@@ -60,13 +60,15 @@ class OrderService:
                 "menu_item_id": db_menu_item.id
             })
             
+        initial_status = "Principal Approved" if creator.role == "principal" else "Sent for Approval"
+        
         master_order = MasterOrder(
             id=order_id,
             title=title,
             purpose=purpose,
             department_id=dept_id,
             created_by_id=creator.id,
-            status="Created"
+            status=initial_status
         )
         self.order_repo.create(master_order)
         
@@ -96,21 +98,35 @@ class OrderService:
                 )
                 self.order_repo.create_order_item(vo_item)
                 
-        # Log approval history
-        history = ApprovalHistory(
+        # Log approval history (creation)
+        history_created = ApprovalHistory(
             master_order_id=order_id,
             action="Order Created",
             role=creator.role,
             user_id=creator.id,
             remarks=f"Created order with {len(items_in)} items from {len(by_vendor)} vendors"
         )
-        self.order_repo.create_history_entry(history)
+        self.order_repo.create_history_entry(history_created)
+
+        # Log submission/approval history immediately
+        history_submitted = ApprovalHistory(
+            master_order_id=order_id,
+            action="Principal Approved" if creator.role == "principal" else "Submitted for Approval",
+            role=creator.role,
+            user_id=creator.id,
+            remarks="Directly approved and sent to DCR for budget clearance" if creator.role == "principal" else "Sent to Principal for review"
+        )
+        self.order_repo.create_history_entry(history_submitted)
         
         return master_order
 
     def submit_for_approval(self, order_id: str, user: User) -> Optional[MasterOrder]:
         order = self.order_repo.get_by_id(order_id)
-        if not order or order.status != "Created":
+        if not order:
+            return None
+        if order.status in ["Sent for Approval", "Principal Approved"]:
+            return order
+        if order.status != "Created":
             return None
             
         if user.role == "principal":

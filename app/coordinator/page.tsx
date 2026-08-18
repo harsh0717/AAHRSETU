@@ -193,7 +193,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
         purpose: purpose.trim(),
         items: itemsPayload
       });
-      alert(t('coord.order_drafted', 'Order drafted successfully!'));
+      alert(t('coord.order_drafted', 'Order submitted successfully!'));
       setTitle('');
       setPurpose('');
       setSelectedItems({});
@@ -341,7 +341,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                 {/* Stats Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
                   {[
-                    { label: t('coord.stats_total', 'Total Drafts'), value: totalMyOrders, color: '#0284C7', icon: '📦' },
+                    { label: t('coord.stats_total', 'Total Requisitions'), value: totalMyOrders, color: '#0284C7', icon: '📦' },
                     { label: t('coord.stats_pending', 'Pending Approvals'), value: totalPending, color: '#EAB308', icon: '⏳' },
                     { label: t('coord.stats_completed', 'Completed Orders'), value: totalCompleted, color: '#10B981', icon: '✅' },
                     { label: t('coord.stats_rejected', 'Rejected Requests'), value: totalRejected, color: '#EF4444', icon: '❌' },
@@ -360,7 +360,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🚀 Quick Requisitions</h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>Need catering for an official event or guest meeting? Open a new requisition instantly.</p>
                     <button className="btn btn-primary" onClick={() => setActiveTab('create')}>
-                      ➕ Draft New Requisition
+                      ➕ Create New Requisition
                     </button>
                   </div>
 
@@ -890,7 +890,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                         className="btn btn-primary"
                         style={{ width: '100%', padding: '13px', fontSize: '0.9rem', fontWeight: 800, borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                       >
-                        {submitting ? t('coord.drafting_btn', 'Drafting...') : `🚀 ${t('coord.draft_btn', 'Draft Requisition')}`}
+                        {submitting ? t('coord.drafting_btn', 'Submitting...') : `🚀 ${t('coord.draft_btn', 'Submit Requisition')}`}
                       </button>
                     </div>
                   </form>

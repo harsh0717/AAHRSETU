@@ -36,7 +36,11 @@ def read_orders(
         orders = order_repo.get_by_coordinator(current_user.id)
     elif role == "principal":
         dept_ids = [d.id for d in current_user.managed_departments]
+        import logging
+        logger = logging.getLogger("aharsetu-api")
+        logger.info(f"[DEBUG READ_ORDERS] Principal user: {current_user.email}, managed depts: {dept_ids}")
         orders = order_repo.get_by_departments(dept_ids)
+        logger.info(f"[DEBUG READ_ORDERS] Retrieved {len(orders)} orders: {[o.id for o in orders]}")
     elif role == "vendor":
         orders = order_repo.get_by_vendor(current_user.vendor_id)
     else:

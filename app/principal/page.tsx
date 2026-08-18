@@ -252,17 +252,28 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
   // Filter orders matching principal's managed departments
   const managedDepts = session.principal_depts || [];
-  const deptOrders = orders.filter(o => !session.department_id || !o.department_id || session.department_id === o.department_id || managedDepts.includes(o.department_id));
+  const deptOrders = orders.filter(o => {
+    if (!o.department_id) return true;
+    if (managedDepts.includes(o.department_id)) return true;
+    if (session.department_id === o.department_id) return true;
+    if (managedDepts.length === 0) return true; // Trust backend response
+    return false;
+  });
 
   // Orders created by this Principal
   const myOrders = orders.filter(o => o.created_by_id === session.id || o.order_source === 'PRINCIPAL');
 
   // Approval queue (Excludes Principal self-created orders to prevent self-approval)
-  const pendingQueue = deptOrders.filter(o => o.created_by_id !== session.id && ['Sent for Approval', 'Principal Reviewing'].includes(o.status));
+  const pendingQueue = deptOrders.filter(o => Number(o.created_by_id) !== Number(session.id) && ['Sent for Approval', 'Principal Reviewing'].includes(o.status));
   const approvedOrders = deptOrders.filter(o => o.history.some(h => h.role === 'principal' && h.action === 'Principal Approved'));
   const rejectedOrders = deptOrders.filter(o => o.history.some(h => h.role === 'principal' && h.action === 'Principal Rejected'));
   const historyOrders = deptOrders.filter(o => !['Created', 'Sent for Approval', 'Principal Reviewing'].includes(o.status));
   const ordersWithBills = deptOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status) || (o.total_bill_amount > 0 && o.vendor_orders.some(vo => vo.status === 'Vendor Confirmed')));
+
+  console.log('[DEBUG PRINCIPAL] session:', session);
+  console.log('[DEBUG PRINCIPAL] orders:', orders);
+  console.log('[DEBUG PRINCIPAL] deptOrders:', deptOrders);
+  console.log('[DEBUG PRINCIPAL] pendingQueue:', pendingQueue);
 
   // Compute Stats
   const totalPending = pendingQueue.length;

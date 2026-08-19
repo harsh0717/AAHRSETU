@@ -14,6 +14,8 @@ export type NotificationType =
   | 'VENDOR_CONFIRMED'
   | 'BILL_GENERATED'
   | 'ORDER_COMPLETED'
+  | 'ORDER_UPDATED'
+  | 'ORDER_CANCELLED'
   | 'SYSTEM_ALERT';
 
 export interface NotificationItem {

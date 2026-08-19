@@ -1,8 +1,9 @@
 'use client';
 
 import { useId, useState, useEffect } from 'react';
+import { useI18n } from '@/lib/i18n';
 
-// Aaharसेतु brand logo with IKS (Indian Knowledge System) inspired visual motifs
+// Aharसेतु / Aharસેતુ brand logo with IKS (Indian Knowledge System) inspired visual motifs
 // Motifs: Concentric mandala geometry, 8-petal lotus (Aahar), Torana archways (Setu bridge)
 
 export default function BrandLogo({
@@ -11,16 +12,24 @@ export default function BrandLogo({
   className,
   style,
   dark = false,
+  language,
 }: {
   size?: number;
   variant?: 'full' | 'icon';
   className?: string;
   style?: React.CSSProperties;
   dark?: boolean;
+  language?: string;
 }) {
   const uniqueId = useId().replace(/:/g, '');
   const goldGradId = `iksGoldGrad-${uniqueId}`;
   const blueGradId = `iksBlueGrad-${uniqueId}`;
+
+  let currentLang = language || 'en';
+  try {
+    const i18n = useI18n();
+    if (i18n?.lang) currentLang = language || i18n.lang;
+  } catch {}
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -125,11 +134,13 @@ export default function BrandLogo({
           alignItems: 'baseline',
         }}
       >
-        Aahar
+        Ahar
         <span
           style={{
             color: '#D97706',
-            fontFamily: "'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Mukta', 'Inter', sans-serif",
+            fontFamily: currentLang === 'gu'
+              ? "'Noto Sans Gujarati', 'Gujarati Sangam MN', sans-serif"
+              : "'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Mukta', 'Inter', sans-serif",
             fontWeight: 900,
             fontSize: '0.86em',
             marginLeft: '2px',
@@ -137,7 +148,7 @@ export default function BrandLogo({
             verticalAlign: 'baseline'
           }}
         >
-          सेतु
+          {currentLang === 'gu' ? 'સેતુ' : 'सेतु'}
         </span>
       </span>
     </div>

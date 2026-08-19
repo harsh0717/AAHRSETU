@@ -200,20 +200,44 @@ const FALLBACK_ORDERS: MasterOrder[] = [
 ];
 
 function sanitizeOrderItems(orders: MasterOrder[]): MasterOrder[] {
-  return orders.map(o => ({
-    ...o,
-    order_reference: o.order_reference || `AS-2026-${o.id.replace(/[^0-9]/g, '').slice(-4) || '0101'}`,
-    vendor_orders: o.vendor_orders.map(vo => ({
-      ...vo,
-      items: vo.items.map(it => {
+  return orders.map(o => {
+    let orderCalculatedTotal = 0;
+    const sanitizedVOs = (o.vendor_orders || []).map(vo => {
+      const sanitizedItems = (vo.items || []).map(it => {
         const resolvedName = getMenuItemName(it.name) !== it.name ? getMenuItemName(it.name) : getMenuItemName(it.menu_item_id);
+        const itemObj = getMenuItem(it.menu_item_id) || getMenuItem(it.name);
+        const resolvedPrice = (typeof it.price === 'number' && it.price > 0) 
+          ? it.price 
+          : ((itemObj && typeof itemObj.price === 'number' && itemObj.price > 0) ? itemObj.price : 15.0);
         return {
           ...it,
-          name: resolvedName
+          name: resolvedName,
+          price: resolvedPrice
         };
-      })
-    }))
-  }));
+      });
+
+      const voItemsTotal = sanitizedItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+      const finalVoBillAmount = (typeof vo.bill_amount === 'number' && vo.bill_amount > 0) ? vo.bill_amount : voItemsTotal;
+      orderCalculatedTotal += finalVoBillAmount;
+
+      return {
+        ...vo,
+        bill_amount: finalVoBillAmount,
+        items: sanitizedItems
+      };
+    });
+
+    const finalMasterTotal = (typeof o.total_bill_amount === 'number' && o.total_bill_amount > 0) 
+      ? o.total_bill_amount 
+      : orderCalculatedTotal;
+
+    return {
+      ...o,
+      order_reference: o.order_reference || `AS-2026-${o.id.replace(/[^0-9]/g, '').slice(-4) || '0101'}`,
+      total_bill_amount: finalMasterTotal,
+      vendor_orders: sanitizedVOs
+    };
+  });
 }
 
 function getLocalOrders(): MasterOrder[] {
@@ -310,7 +334,10 @@ export async function getOrders(): Promise<MasterOrder[]> {
 export async function getOrderById(id: string): Promise<MasterOrder | null> {
   try {
     const apiOrder = await api.get<MasterOrder>(`/orders/${id}`);
-    if (apiOrder) return apiOrder;
+    if (apiOrder) {
+      const sanitized = sanitizeOrderItems([apiOrder]);
+      return sanitized[0] || apiOrder;
+    }
   } catch (err) {
     console.warn(`[STORE] API fetch for ${id} failed, checking local store`);
   }
@@ -475,6 +502,156 @@ export async function createMasterOrder(orderData: {
     pushNotification(`New requisition ${newOrder.id} submitted for approval.`, 'principal', newOrder.id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
   }
   return newOrder;
+}
+
+export async function updateMasterOrder(
+  id: string,
+  orderData: {
+    title: string;
+    purpose: string;
+    items: { menu_item_id: string; quantity: number }[];
+    department_id?: string;
+  }
+): Promise<MasterOrder> {
+  const session = getSession();
+
+  try {
+    const res = await api.put<MasterOrder>(`/orders/${id}`, {
+      title: orderData.title,
+      purpose: orderData.purpose,
+      items: orderData.items.map(it => ({
+        menu_item_id: it.menu_item_id,
+        quantity: it.quantity,
+        name: getMenuItemName(it.menu_item_id)
+      })),
+      department_id: orderData.department_id
+    });
+    if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
+      pushNotification(`Requisition ${id} was updated.`, 'principal', id, { type: 'ORDER_UPDATED' });
+      return res;
+    }
+  } catch (err) {
+    console.warn('[STORE] Backend offline or error updating order, falling back locally', err);
+  }
+
+  const localList = getLocalOrders();
+  const target = localList.find(o => o.id === id);
+  if (target) {
+    target.title = orderData.title;
+    target.purpose = orderData.purpose;
+    if (orderData.department_id) target.department_id = orderData.department_id;
+
+    const vendorNameMap: Record<string, string> = {
+      v1: 'Sharma Canteen',
+      v2: 'Fresh Bites',
+      v3: 'Hot Meals',
+      v4: 'Quick Snacks'
+    };
+
+    const itemsByVendor: Record<string, any[]> = {};
+    let totalCalculated = 0;
+
+    orderData.items.forEach((it, idx) => {
+      let vId = 'v1';
+      if (it.menu_item_id.startsWith('v2')) vId = 'v2';
+      else if (it.menu_item_id.startsWith('v3')) vId = 'v3';
+      else if (it.menu_item_id.startsWith('v4')) vId = 'v4';
+
+      const itemObj = getMenuItem(it.menu_item_id);
+      const readableName = itemObj?.name || getMenuItemName(it.menu_item_id);
+      const unitPrice = (itemObj && typeof itemObj.price === 'number' && itemObj.price > 0) ? itemObj.price : 15.0;
+      const itemUnit = itemObj?.unit || 'per serving';
+
+      const itemSubtotal = unitPrice * it.quantity;
+      totalCalculated += itemSubtotal;
+
+      if (!itemsByVendor[vId]) itemsByVendor[vId] = [];
+      itemsByVendor[vId].push({
+        id: idx + 100,
+        name: readableName,
+        quantity: it.quantity,
+        price: unitPrice,
+        unit: itemUnit,
+        menu_item_id: it.menu_item_id
+      });
+    });
+
+    target.vendor_orders = Object.keys(itemsByVendor).map((vId, idx) => {
+      const vItems = itemsByVendor[vId];
+      const vTotal = vItems.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+      return {
+        id: `VORD-${id}-${idx + 1}`,
+        master_order_id: id,
+        vendor_id: vId,
+        vendor_name: vendorNameMap[vId] || `Vendor ${vId.toUpperCase()}`,
+        status: 'Pending',
+        bill_amount: vTotal,
+        invoice_number: null,
+        items: vItems
+      };
+    });
+
+    target.total_bill_amount = totalCalculated;
+    if (target.status === 'Principal Rejected') {
+      target.status = 'Sent for Approval';
+    }
+    target.updated_at = new Date().toISOString();
+    target.history.push({
+      action: 'Order Modified by Coordinator',
+      role: session?.role || 'coordinator',
+      user_name: session?.name || 'Coordinator',
+      remarks: `Requisition modified with ${orderData.items.length} items`,
+      timestamp: new Date().toISOString(),
+      master_order_id: id
+    });
+
+    saveLocalOrders(localList);
+    pushNotification(`Requisition ${id} was updated.`, 'principal', id, { type: 'ORDER_UPDATED' });
+    return target;
+  }
+  throw new Error('Order not found');
+}
+
+export async function cancelMasterOrder(id: string, reason?: string): Promise<MasterOrder> {
+  const session = getSession();
+  try {
+    const res = await api.post<MasterOrder>(`/orders/${id}/cancel`, { reason: reason || 'Cancelled by coordinator' });
+    if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      saveLocalOrders(localList);
+      pushNotification(`Requisition ${id} was cancelled.`, 'principal', id, { type: 'ORDER_CANCELLED' });
+      return res;
+    }
+  } catch (err) {
+    console.warn('[STORE] Backend offline or cancel failed, cancelling locally', err);
+  }
+
+  const localList = getLocalOrders();
+  const target = localList.find(o => o.id === id);
+  if (target) {
+    target.status = 'Cancelled';
+    target.updated_at = new Date().toISOString();
+    target.vendor_orders.forEach(vo => { vo.status = 'Cancelled'; });
+    target.history.push({
+      action: 'Order Cancelled',
+      role: session?.role || 'coordinator',
+      user_name: session?.name || 'Coordinator',
+      remarks: reason || 'Cancelled by Coordinator before DCR approval',
+      timestamp: new Date().toISOString(),
+      master_order_id: id
+    });
+    saveLocalOrders(localList);
+    pushNotification(`Requisition ${id} was cancelled.`, 'principal', id, { type: 'ORDER_CANCELLED' });
+    return target;
+  }
+  throw new Error('Order not found');
 }
 
 export async function submitForApproval(id: string): Promise<MasterOrder> {

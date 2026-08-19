@@ -27,31 +27,68 @@ const DEMO_ACCOUNTS = [
   { label: 'Fresh Bites Canteen', email: 'vendor2@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: '🍽️' },
 ];
 
-function formatBrandText(text: string) {
+function formatBrandText(text: string, currentLang: string = 'en') {
   if (!text) return null;
-  // If text contains mixed Indic scripts (e.g. Aaharसेतु or Aaharસેતુ or AharSetu)
-  if (text.includes('Aaharसेतु') || text.includes('Aharसेतु')) {
-    const splitKey = text.includes('Aaharसेतु') ? 'Aaharसेतु' : 'Aharसेतु';
-    const parts = text.split(splitKey);
+
+  // Language-aware suffix:
+  // If language is Gujarati ('gu') -> 'સેતુ'
+  // If language is Hindi ('hi') or English ('en') -> 'सेतु' (English defaults to Hindi 'सेतु' as requested)
+  const setuSuffix = currentLang === 'gu' ? 'સેતુ' : 'सेतु';
+  const fontFamily = currentLang === 'gu'
+    ? "'Noto Sans Gujarati', 'Gujarati Sangam MN', sans-serif"
+    : "'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Mukta', 'Inter', sans-serif";
+
+  const brandRegex = /(AaharSetu|AharSetu|Aaharसेतु|Aharसेतु|Aaharસેતુ|Aharસેતુ|Setu|સેતુ|सेतु)/g;
+
+  if (brandRegex.test(text)) {
+    const parts = text.split(brandRegex);
     return (
       <>
-        {parts[0]}
-        <span>Ahar<span style={{ fontSize: '0.86em', color: '#D97706', fontWeight: 900, marginLeft: '1px', verticalAlign: 'baseline', display: 'inline-block' }}>सेतु</span></span>
-        {parts[1]}
+        {parts.map((part, idx) => {
+          if (part.match(/^(AaharSetu|AharSetu|Aaharसेतु|Aharसेतु|Aaharસેતુ|Aharસેતુ)$/)) {
+            return (
+              <span key={idx} style={{ display: 'inline-flex', alignItems: 'baseline' }}>
+                Ahar
+                <span
+                  style={{
+                    fontSize: '0.86em',
+                    color: '#D97706',
+                    fontFamily,
+                    fontWeight: 900,
+                    marginLeft: '2px',
+                    verticalAlign: 'baseline',
+                    display: 'inline-block'
+                  }}
+                >
+                  {setuSuffix}
+                </span>
+              </span>
+            );
+          }
+          if (part.match(/^(Setu|સેતુ|सेतु)$/)) {
+            return (
+              <span
+                key={idx}
+                style={{
+                  fontSize: '0.86em',
+                  color: '#D97706',
+                  fontFamily,
+                  fontWeight: 900,
+                  marginLeft: '2px',
+                  verticalAlign: 'baseline',
+                  display: 'inline-block'
+                }}
+              >
+                {setuSuffix}
+              </span>
+            );
+          }
+          return <span key={idx}>{part}</span>;
+        })}
       </>
     );
   }
-  if (text.includes('Aaharસેતુ') || text.includes('Aharસેતુ')) {
-    const splitKey = text.includes('Aaharસેતુ') ? 'Aaharસેતુ' : 'Aharસેતુ';
-    const parts = text.split(splitKey);
-    return (
-      <>
-        {parts[0]}
-        <span>Ahar<span style={{ fontSize: '0.86em', color: '#D97706', fontWeight: 900, marginLeft: '1px', verticalAlign: 'baseline', display: 'inline-block' }}>સેતુ</span></span>
-        {parts[1]}
-      </>
-    );
-  }
+
   return text;
 }
 
@@ -225,7 +262,7 @@ function LoginFormContent() {
         </div>
 
         <div className={styles.heroFooter}>
-          © 2026 {formatBrandText('AharSetu')}. All rights reserved.
+          © 2026 {formatBrandText('AharSetu', lang)}. All rights reserved.
         </div>
       </section>
 
@@ -257,7 +294,7 @@ function LoginFormContent() {
 
           <div className={styles.formHeader}>
             <h3 className={styles.formTitle}>
-              {formatBrandText(t('login.welcome_title', 'Welcome to AharSetu'))}
+              {formatBrandText(t('login.welcome_title', 'Welcome to AharSetu'), lang)}
             </h3>
             <p className={styles.formSub}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
           </div>

@@ -152,9 +152,12 @@ export const STATUS = {
   VENDOR_CONFIRMED:          'Vendor Confirmed',
   BILL_GENERATED:            'Bill Generated',
   COMPLETED:                 'Completed',
+  CANCELLED:                 'Cancelled',
+  DRAFT:                     'Draft',
 };
 
 export const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  'Draft':                         { bg: '#F8FAFC', text: '#64748B',  border: '#CBD5E1' },
   'Created':                       { bg: '#F3F4F6', text: '#6B7280',  border: '#D1D5DB' },
   'Sent for Approval':             { bg: '#F3F4F6', text: '#4B5563',  border: '#D1D5DB' },
   'Principal Reviewing':           { bg: '#EFF6FF', text: '#2563EB',  border: '#BFDBFE' },
@@ -169,6 +172,7 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string; border: s
   'Vendor Confirmed':              { bg: '#ECFDF5', text: '#047857',  border: '#6EE7B7' },
   'Bill Generated':                { bg: '#F0FDFA', text: '#0D9488',  border: '#99F6E4' },
   'Completed':                     { bg: '#DCFCE7', text: '#166534',  border: '#86EFAC' },
+  'Cancelled':                     { bg: '#FEF2F2', text: '#991B1B',  border: '#FCA5A5' },
 };
 
 export const PIPELINE_STAGES = [

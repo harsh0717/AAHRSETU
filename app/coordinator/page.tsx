@@ -13,6 +13,8 @@ import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
+import EditOrderModal from '@/components/EditOrderModal';
+import CancelOrderModal from '@/components/CancelOrderModal';
 
 export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -22,6 +24,10 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Edit and Cancel Modal States
+  const [editingOrder, setEditingOrder] = useState<MasterOrder | null>(null);
+  const [cancellingOrder, setCancellingOrder] = useState<MasterOrder | null>(null);
 
   // API Data
   const [orders, setOrders] = useState<MasterOrder[]>([]);
@@ -947,22 +953,86 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                         <th>{t('coord.created_date', 'Created Date')}</th>
                         <th>{t('common.status', 'Status')}</th>
                         <th style={{ textAlign: 'right' }}>{t('coord.total_bill', 'Estimated Bill')}</th>
+                        <th style={{ textAlign: 'center', width: '130px' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredOrders.map(o => (
-                        <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>{o.purpose}</td>
-                          <td style={{ fontSize: '0.8rem' }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
-                          <td><StatusBadge status={o.status} size="sm" /></td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                      {filteredOrders.map(o => {
+                        const canEdit = ['Draft', 'Created', 'Sent for Approval', 'Principal Rejected'].includes(o.status);
+                        const canCancel = ['Draft', 'Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Rejected', 'Principal Approved'].includes(o.status);
+                        return (
+                        <tr key={o.id}>
+                          <td style={{ fontWeight: 700, cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>{o.id}</td>
+                          <td style={{ fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>{o.title}</td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-600)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>{o.purpose}</td>
+                          <td style={{ fontSize: '0.8rem', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                          <td style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}><StatusBadge status={o.status} size="sm" /></td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>₹{o.total_bill_amount}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  title="Edit Requisition"
+                                  onClick={(e) => { e.stopPropagation(); setEditingOrder(o); }}
+                                  style={{
+                                    border: '1px solid #BFDBFE',
+                                    background: '#EFF6FF',
+                                    color: '#1D4ED8',
+                                    borderRadius: '6px',
+                                    padding: '4px 8px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  ✏️ Edit
+                                </button>
+                              )}
+                              {canCancel && (
+                                <button
+                                  type="button"
+                                  title="Cancel Requisition"
+                                  onClick={(e) => { e.stopPropagation(); setCancellingOrder(o); }}
+                                  style={{
+                                    border: '1px solid #FECACA',
+                                    background: '#FEF2F2',
+                                    color: '#DC2626',
+                                    borderRadius: '6px',
+                                    padding: '4px 8px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  🚫 Cancel
+                                </button>
+                              )}
+                              {!canEdit && !canCancel && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); router.push(`/order/${o.id}`); }}
+                                  style={{
+                                    border: '1px solid #E2E8F0',
+                                    background: '#F8FAFC',
+                                    color: '#475569',
+                                    borderRadius: '6px',
+                                    padding: '4px 8px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  View
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
-                      ))}
+                      );})}
                       {filteredOrders.length === 0 && (
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                          <td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
                             {t('coord.no_orders', 'No requisition records found.')}
                           </td>
                         </tr>
@@ -1189,6 +1259,30 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
               </div>
             )}
           </div>
+        )}
+
+        {/* Edit and Cancel Requisition Modals */}
+        {editingOrder && (
+          <EditOrderModal
+            order={editingOrder}
+            isOpen={!!editingOrder}
+            onClose={() => setEditingOrder(null)}
+            onSaved={(updated) => {
+              setOrders(prev => prev.map(o => o.id === updated.id ? updated : o));
+              setEditingOrder(null);
+            }}
+          />
+        )}
+        {cancellingOrder && (
+          <CancelOrderModal
+            order={cancellingOrder}
+            isOpen={!!cancellingOrder}
+            onClose={() => setCancellingOrder(null)}
+            onCancelled={(updated) => {
+              setOrders(prev => prev.map(o => o.id === updated.id ? updated : o));
+              setCancellingOrder(null);
+            }}
+          />
         )}
 
       </div>

@@ -15,6 +15,8 @@ import { getMenuItemName } from '@/lib/vendors';
 import { useI18n } from '@/lib/i18n';
 import { showToast } from '@/components/Toast';
 import Link from 'next/link';
+import EditOrderModal from '@/components/EditOrderModal';
+import CancelOrderModal from '@/components/CancelOrderModal';
 
 export default function OrderDetailsPage() {
   const router = useRouter();
@@ -28,6 +30,8 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
   const [actioning, setActioning] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   const loadOrderRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
@@ -201,10 +205,28 @@ export default function OrderDetailsPage() {
   const roleColorsMap: Record<string, string> = { coordinator: '#3B82F6', principal: '#6366F1', dcr: '#0EA5E9', vendor: '#10B981', admin: '#8B5CF6' };
   const roleColor = roleColorsMap[role] || '#3B82F6';
 
-  const completedVOs = (order.vendor_orders || []).filter((vo: VendorOrder) => vo.bill_amount > 0);
-  const total = order.total_bill_amount || completedVOs.reduce((s: number, i: VendorOrder) => s + i.bill_amount, 0);
+  const calculateTotal = (ord: MasterOrder): number => {
+    if (typeof ord.total_bill_amount === 'number' && ord.total_bill_amount > 0) {
+      return ord.total_bill_amount;
+    }
+    let sum = 0;
+    (ord.vendor_orders || []).forEach(vo => {
+      if (typeof vo.bill_amount === 'number' && vo.bill_amount > 0) {
+        sum += vo.bill_amount;
+      } else {
+        (vo.items || []).forEach(it => {
+          sum += (it.price || 15) * (it.quantity || 1);
+        });
+      }
+    });
+    return sum;
+  };
+  const total = calculateTotal(order);
 
   // Role Action Guards
+  const canEdit = role === 'coordinator' && ['Draft', 'Created', 'Sent for Approval', 'Principal Rejected'].includes(order.status);
+  const canCancel = role === 'coordinator' && ['Draft', 'Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Rejected', 'Principal Approved'].includes(order.status);
+
   const showCoordSubmit = role === 'coordinator' && order.status === 'Created';
   const showCoordResubmit = role === 'coordinator' && ['Principal Rejected', 'DCR Rejected'].includes(order.status);
   const showPrincipalReview = role === 'principal' && ['Sent for Approval', 'Principal Reviewing'].includes(order.status);
@@ -236,11 +258,33 @@ export default function OrderDetailsPage() {
             </div>
           </div>
           
-          {order.status === 'Completed' && (
-            <Link href={`/bill/${order.id}`} className="btn btn-primary" style={{ padding: '8px 18px', borderRadius: '10px' }}>
-              🧾 View Printable A4 Bill
-            </Link>
-          )}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(true)}
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+              >
+                <span>✏️</span> Edit Requisition
+              </button>
+            )}
+            {canCancel && (
+              <button
+                type="button"
+                onClick={() => setCancelModalOpen(true)}
+                className="btn btn-ghost"
+                style={{ padding: '8px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 700 }}
+              >
+                <span>🚫</span> Cancel Requisition
+              </button>
+            )}
+            {order.status === 'Completed' && (
+              <Link href={`/bill/${order.id}`} className="btn btn-primary" style={{ padding: '8px 18px', borderRadius: '10px' }}>
+                🧾 View Printable A4 Bill
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Stepper progress pipeline */}
@@ -253,9 +297,14 @@ export default function OrderDetailsPage() {
           <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--color-coordinator)', marginBottom: '24px', background: '#F0F9FF' }}>
             <h4 style={{ margin: '0 0 4px', color: '#0369A1' }}>Action Required: Submit Order</h4>
             <p style={{ fontSize: '0.82rem', color: '#0284C7', margin: '0 0 12px' }}>Your order draft is ready. Submit it to send to the Principal for approval.</p>
-            <button className="btn btn-primary" onClick={handleCoordinatorSubmit} disabled={actioning}>
-              {actioning ? 'Submitting...' : '🚀 Submit for Approval'}
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn btn-primary" onClick={handleCoordinatorSubmit} disabled={actioning}>
+                {actioning ? 'Submitting...' : '🚀 Submit for Approval'}
+              </button>
+              <button className="btn btn-secondary" onClick={() => setEditModalOpen(true)} disabled={actioning}>
+                ✏️ Edit Items
+              </button>
+            </div>
           </div>
         )}
 
@@ -265,9 +314,14 @@ export default function OrderDetailsPage() {
             <p style={{ fontSize: '0.82rem', color: '#B91C1C', margin: '0 0 12px' }}>
               Reason: "{order.history[0]?.remarks || 'No remarks provided.'}"
             </p>
-            <button className="btn btn-primary" onClick={handleCoordinatorSubmit} disabled={actioning}>
-              {actioning ? 'Resubmitting...' : '🔄 Edit & Resubmit'}
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn btn-primary" onClick={() => setEditModalOpen(true)} disabled={actioning}>
+                ✏️ Edit & Correct Requisition
+              </button>
+              <button className="btn btn-ghost" onClick={() => setCancelModalOpen(true)} style={{ color: '#DC2626', border: '1px solid #FECACA' }}>
+                🚫 Cancel Requisition
+              </button>
+            </div>
           </div>
         )}
 
@@ -470,6 +524,30 @@ export default function OrderDetailsPage() {
               </table>
             </div>
           </div>
+        )}
+
+        {/* Edit and Cancel Modals */}
+        {order && (
+          <>
+            <EditOrderModal
+              order={order}
+              isOpen={editModalOpen}
+              onClose={() => setEditModalOpen(false)}
+              onSaved={(updated) => {
+                setOrder(updated);
+                loadOrder(true);
+              }}
+            />
+            <CancelOrderModal
+              order={order}
+              isOpen={cancelModalOpen}
+              onClose={() => setCancelModalOpen(false)}
+              onCancelled={(updated) => {
+                setOrder(updated);
+                loadOrder(true);
+              }}
+            />
+          </>
         )}
 
       </div>

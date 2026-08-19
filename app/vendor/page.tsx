@@ -766,7 +766,9 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>Items: {myVO.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</span>
-                        <strong style={{ fontSize: '0.9rem', color: colors.accent }}>₹{myVO.bill_amount.toFixed(2)}</strong>
+                        <strong style={{ fontSize: '0.9rem', color: colors.accent }}>
+                          ₹{((myVO.bill_amount > 0 ? myVO.bill_amount : myVO.items.reduce((acc, i) => acc + (i.price * i.quantity), 0)) || 0).toFixed(2)}
+                        </strong>
                       </div>
                     </div>
                   );

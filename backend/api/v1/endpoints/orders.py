@@ -51,6 +51,7 @@ def read_orders(
     response = []
     for o in orders:
         vendor_orders_resp = []
+        master_calc_total = 0.0
         for vo in o.vendor_orders:
             # Skip for vendor if it's not their sub-order
             if role == "vendor" and vo.vendor_id != current_user.vendor_id:
@@ -78,6 +79,10 @@ def read_orders(
                     "requested_at": vo.modification.requested_at,
                     "status": vo.modification.status
                 }
+            
+            calc_vo_amount = sum(float(item.price or 0.0) * int(item.quantity or 0) for item in vo.items)
+            display_vo_amount = vo.bill_amount if (vo.bill_amount and vo.bill_amount > 0.0) else calc_vo_amount
+            master_calc_total += display_vo_amount
                 
             vendor_orders_resp.append(
                 VendorOrderResponse(
@@ -86,7 +91,7 @@ def read_orders(
                     vendor_id=vo.vendor_id,
                     vendor_name=vo.vendor.name,
                     status=vo.status,
-                    bill_amount=vo.bill_amount,
+                    bill_amount=display_vo_amount,
                     invoice_number=vo.invoice_number,
                     items=items_resp,
                     modification=mod_resp
@@ -105,6 +110,8 @@ def read_orders(
             } for h in o.history
         ]
         
+        display_master_total = o.total_bill_amount if (o.total_bill_amount and o.total_bill_amount > 0.0) else master_calc_total
+        
         response.append(
             MasterOrderResponse(
                 id=o.id,
@@ -115,7 +122,7 @@ def read_orders(
                 created_by_id=o.created_by_id,
                 created_by_name=o.created_by.name,
                 status=o.status,
-                total_bill_amount=o.total_bill_amount,
+                total_bill_amount=display_master_total,
                 bill_generated_at=o.bill_generated_at,
                 created_at=o.created_at,
                 updated_at=o.updated_at,
@@ -247,6 +254,7 @@ def read_order_by_id(
             )
 
     vendor_orders_resp = []
+    master_calc_total = 0.0
     for vo in o.vendor_orders:
         if role == "vendor" and vo.vendor_id != current_user.vendor_id:
             continue
@@ -274,6 +282,10 @@ def read_order_by_id(
                 "status": vo.modification.status
             }
             
+        calc_vo_amount = sum(float(item.price or 0.0) * int(item.quantity or 0) for item in vo.items)
+        display_vo_amount = vo.bill_amount if (vo.bill_amount and vo.bill_amount > 0.0) else calc_vo_amount
+        master_calc_total += display_vo_amount
+
         vendor_orders_resp.append(
             VendorOrderResponse(
                 id=vo.id,
@@ -281,7 +293,7 @@ def read_order_by_id(
                 vendor_id=vo.vendor_id,
                 vendor_name=vo.vendor.name,
                 status=vo.status,
-                bill_amount=vo.bill_amount,
+                bill_amount=display_vo_amount,
                 invoice_number=vo.invoice_number,
                 items=items_resp,
                 modification=mod_resp
@@ -300,6 +312,8 @@ def read_order_by_id(
         } for h in o.history
     ]
     
+    display_master_total = o.total_bill_amount if (o.total_bill_amount and o.total_bill_amount > 0.0) else master_calc_total
+
     return MasterOrderResponse(
         id=o.id,
         title=o.title,
@@ -309,7 +323,7 @@ def read_order_by_id(
         created_by_id=o.created_by_id,
         created_by_name=o.created_by.name,
         status=o.status,
-        total_bill_amount=o.total_bill_amount,
+        total_bill_amount=display_master_total,
         bill_generated_at=o.bill_generated_at,
         created_at=o.created_at,
         updated_at=o.updated_at,
@@ -383,6 +397,113 @@ async def create_order(
         action="Order Created",
         new_value=f"Order ID: {order.id}, Title: {order.title}"
     )
+    return read_order_by_id(order.id, db, current_user)
+
+
+@router.put("/{order_id}", response_model=MasterOrderResponse)
+async def update_order(
+    order_id: str,
+    payload: MasterOrderCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["coordinator", "principal", "admin"]))
+) -> Any:
+    """
+    Update a requisition before DCR final approval.
+    Allows correcting items, quantities, title, and purpose.
+    """
+    order_service = OrderService(db)
+    items_in = [{"menu_item_id": i.menu_item_id, "quantity": i.quantity} for i in payload.items]
+    try:
+        order = order_service.update_order(
+            order_id=order_id,
+            title=payload.title,
+            purpose=payload.purpose,
+            items_in=items_in,
+            user=current_user,
+            department_id=payload.department_id
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    # Audit log order update
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Order Edited",
+        new_value=f"Order ID: {order.id}, Items count: {len(items_in)}"
+    )
+
+    # Broadcast WebSocket update
+    try:
+        from backend.services.websocket import manager
+        await manager.broadcast({"type": "ORDER_UPDATED", "order_id": order.id, "status": order.status})
+    except Exception as e:
+        print(f"[WS] Broadcast error on order edit: {e}")
+
+    return read_order_by_id(order.id, db, current_user)
+
+
+@router.post("/{order_id}/cancel", response_model=MasterOrderResponse)
+async def cancel_order(
+    order_id: str,
+    payload: Dict[str, Any] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["coordinator", "principal", "admin"]))
+) -> Any:
+    """
+    Cancel a requisition before DCR final clearance.
+    """
+    reason = (payload or {}).get("reason") or "Cancelled by user"
+    order_service = OrderService(db)
+    try:
+        order = order_service.cancel_order(
+            order_id=order_id,
+            user=current_user,
+            reason=reason
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    # Notify Principal & DCR
+    try:
+        notif_service = NotificationService(db)
+        await notif_service.create_and_send_notification(
+            msg_key="order_cancelled",
+            params={"title": order.title},
+            msg_type="order_cancelled",
+            recipient_role="principal",
+            order_id=order.id
+        )
+    except Exception as e:
+        print(f"[ERROR] Failed to send cancel notification: {e}")
+
+    # Audit log order cancellation
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Order Cancelled",
+        new_value=f"Order ID: {order.id}, Reason: {reason}"
+    )
+
+    # Broadcast WebSocket update
+    try:
+        from backend.services.websocket import manager
+        await manager.broadcast({"type": "ORDER_UPDATED", "order_id": order.id, "status": order.status})
+    except Exception as e:
+        print(f"[WS] Broadcast error on order cancel: {e}")
+
     return read_order_by_id(order.id, db, current_user)
 
 

@@ -8,6 +8,7 @@ interface OrderStepperProps {
 export default function OrderStepper({ status }: OrderStepperProps) {
   const currentStage = STATUS_TO_STAGE[status] ?? 0;
   const rejected = status?.includes('Rejected');
+  const isCancelled = status === 'Cancelled';
 
   return (
     <div style={{ overflowX: 'auto', padding: '10px 0 8px' }}>
@@ -19,7 +20,7 @@ export default function OrderStepper({ status }: OrderStepperProps) {
           const done    = i < currentStage;
           const active  = i === currentStage;
           const isLast  = i === PIPELINE_STAGES.length - 1;
-          const failed  = active && rejected;
+          const failed  = (active && rejected) || isCancelled;
 
           const circleColor = failed ? '#EF4444'
             : done   ? '#10B981'

@@ -98,7 +98,7 @@ def seed_all_database(db: Session):
         
         # Coordinators
         User(name="Priya Sharma", email="coord.diploma@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="diploma", preferred_language="en"),
-        User(name="Ravi Kumar", email="coord.degree@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="degree", preferred_language="hi"),
+        User(name="Ravi Kumar", email="coord.degree@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="degree", preferred_language="en"),
         User(name="Anita Desai", email="coord.pharmacy@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="pharmacy", preferred_language="en"),
         User(name="Kavita Patel", email="coord.nursing@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="nursing", preferred_language="gu"),
         User(name="Sanjay Shah", email="coord.physio@aharsetu.edu.in", password_hash=c_pw, role="coordinator", department_id="physiotherapy", preferred_language="gu"),

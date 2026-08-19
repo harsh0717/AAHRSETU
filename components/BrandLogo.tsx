@@ -131,7 +131,10 @@ export default function BrandLogo({
             color: '#D97706',
             fontFamily: "'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Mukta', 'Inter', sans-serif",
             fontWeight: 900,
+            fontSize: '0.86em',
             marginLeft: '2px',
+            lineHeight: 1,
+            verticalAlign: 'baseline'
           }}
         >
           सेतु

@@ -2,7 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { getSession, UserProfile } from '@/lib/auth';
-import { getNotifications, NotificationItem, pushNotification, markNotificationRead, markAllRead } from '@/lib/notifications';
+import { getNotifications, NotificationItem, pushNotification, markNotificationRead, markAllRead, localizeNotificationMessage, displaySystemPushNotification } from '@/lib/notifications';
+import { registerServiceWorker } from '@/lib/push';
+import { getLangSync } from '@/lib/i18n';
 
 interface NotificationContextType {
   notifications: NotificationItem[];
@@ -40,27 +42,40 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  // Register ServiceWorker on mount
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   const handleNotification = useCallback((notif: NotificationItem) => {
     if (seenNotificationIdsRef.current.has(notif.id)) return;
     seenNotificationIdsRef.current.add(notif.id);
 
+    const activeLang = getLangSync();
+    const localized = localizeNotificationMessage(notif, activeLang);
+    const resolvedNotif: NotificationItem = {
+      ...notif,
+      title: localized.title,
+      message: localized.message
+    };
+
     // Update notifications and unreadCount in state
     setNotifications((prev) => {
-      // Avoid adding duplicate IDs
-      if (prev.some((n) => n.id === notif.id)) return prev;
-      return [notif, ...prev];
+      if (prev.some((n) => n.id === resolvedNotif.id)) return prev;
+      return [resolvedNotif, ...prev];
     });
 
-    if (!notif.read) {
+    if (!resolvedNotif.read) {
       setUnreadCount((c) => c + 1);
     }
 
-    // Trigger local push notification (toast + audio if enabled)
-    pushNotification(notif.message, notif.recipient_role || undefined, notif.order_id || undefined, {
-      id: notif.id,
-      type: notif.type,
-      vendor_order_id: notif.vendor_order_id,
-      timestamp: notif.timestamp,
+    // Trigger local push notification (toast + audio + browser push)
+    pushNotification(resolvedNotif.message, resolvedNotif.recipient_role || undefined, resolvedNotif.order_id || undefined, {
+      id: resolvedNotif.id,
+      title: resolvedNotif.title,
+      type: resolvedNotif.type,
+      vendor_order_id: resolvedNotif.vendor_order_id,
+      timestamp: resolvedNotif.timestamp,
     });
 
     // Play subtle audio alert
@@ -235,6 +250,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: payload }));
           }
+          // Fetch latest notifications to immediately surface any new approval/vendor alert
+          getNotifications().then((freshList) => {
+            setNotifications(freshList);
+            setUnreadCount(freshList.filter((n) => !n.read).length);
+            const latest = freshList[0];
+            if (latest && !latest.read && !seenNotificationIdsRef.current.has(latest.id)) {
+              handleNotification(latest);
+            }
+          }).catch(() => {});
         } else {
           handleNotification(payload);
           if (typeof window !== 'undefined') {

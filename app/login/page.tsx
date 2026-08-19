@@ -27,6 +27,34 @@ const DEMO_ACCOUNTS = [
   { label: 'Fresh Bites Canteen', email: 'vendor2@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: '🍽️' },
 ];
 
+function formatBrandText(text: string) {
+  if (!text) return null;
+  // If text contains mixed Indic scripts (e.g. Aaharसेतु or Aaharસેતુ or AharSetu)
+  if (text.includes('Aaharसेतु') || text.includes('Aharसेतु')) {
+    const splitKey = text.includes('Aaharसेतु') ? 'Aaharसेतु' : 'Aharसेतु';
+    const parts = text.split(splitKey);
+    return (
+      <>
+        {parts[0]}
+        <span>Ahar<span style={{ fontSize: '0.86em', color: '#D97706', fontWeight: 900, marginLeft: '1px', verticalAlign: 'baseline', display: 'inline-block' }}>सेतु</span></span>
+        {parts[1]}
+      </>
+    );
+  }
+  if (text.includes('Aaharસેતુ') || text.includes('Aharસેતુ')) {
+    const splitKey = text.includes('Aaharસેતુ') ? 'Aaharસેતુ' : 'Aharસેતુ';
+    const parts = text.split(splitKey);
+    return (
+      <>
+        {parts[0]}
+        <span>Ahar<span style={{ fontSize: '0.86em', color: '#D97706', fontWeight: 900, marginLeft: '1px', verticalAlign: 'baseline', display: 'inline-block' }}>સેતુ</span></span>
+        {parts[1]}
+      </>
+    );
+  }
+  return text;
+}
+
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -197,7 +225,7 @@ function LoginFormContent() {
         </div>
 
         <div className={styles.heroFooter}>
-          © 2026 Aaharसेતુ. All rights reserved.
+          © 2026 {formatBrandText('AharSetu')}. All rights reserved.
         </div>
       </section>
 
@@ -228,7 +256,9 @@ function LoginFormContent() {
           </div>
 
           <div className={styles.formHeader}>
-            <h3 className={styles.formTitle}>{t('login.welcome_title', 'Welcome to AharSetu')}</h3>
+            <h3 className={styles.formTitle}>
+              {formatBrandText(t('login.welcome_title', 'Welcome to AharSetu'))}
+            </h3>
             <p className={styles.formSub}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
           </div>
 

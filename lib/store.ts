@@ -480,7 +480,10 @@ export async function createMasterOrder(orderData: {
 export async function submitForApproval(id: string): Promise<MasterOrder> {
   try {
     const res = await api.post<MasterOrder>(`/orders/${id}/submit`);
-    if (res) return res;
+    if (res) {
+      pushNotification(`Requisition ${id} submitted for Principal approval.`, 'principal', id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
+      return res;
+    }
   } catch (err) {
     console.warn('[STORE] Backend offline, updating status locally');
   }
@@ -499,6 +502,7 @@ export async function submitForApproval(id: string): Promise<MasterOrder> {
       master_order_id: id
     });
     saveLocalOrders(localList);
+    pushNotification(`Requisition ${id} submitted for Principal approval.`, 'principal', id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
     return target;
   }
   throw new Error('Order not found');
@@ -514,7 +518,15 @@ export async function principalReview(
       `/orders/${id}/principal-review?action=${action}`,
       { remarks }
     );
-    if (res) return res;
+    if (res) {
+      if (action === 'approve') {
+        pushNotification(`Requisition ${id} was approved by Principal.`, 'coordinator', id, { type: 'PRINCIPAL_APPROVED' });
+        pushNotification(`New requisition ${id} requires DCR budget audit.`, 'dcr', id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
+      } else {
+        pushNotification(`Requisition ${id} was rejected by Principal. Remarks: ${remarks || 'None'}`, 'coordinator', id, { type: 'PRINCIPAL_REJECTED' });
+      }
+      return res;
+    }
   } catch (err) {
     console.warn('[STORE] Backend offline, processing principal review locally');
   }
@@ -535,10 +547,10 @@ export async function principalReview(
     saveLocalOrders(localList);
 
     if (action === 'approve') {
-      pushNotification(`Requisition ${id} was approved by Principal.`, 'coordinator', id);
-      pushNotification(`New requisition ${id} requires DCR budget audit.`, 'dcr', id);
+      pushNotification(`Requisition ${id} was approved by Principal.`, 'coordinator', id, { type: 'PRINCIPAL_APPROVED' });
+      pushNotification(`New requisition ${id} requires DCR budget audit.`, 'dcr', id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
     } else {
-      pushNotification(`Requisition ${id} was rejected by Principal. Remarks: ${remarks || 'None'}`, 'coordinator', id);
+      pushNotification(`Requisition ${id} was rejected by Principal. Remarks: ${remarks || 'None'}`, 'coordinator', id, { type: 'PRINCIPAL_REJECTED' });
     }
     return target;
   }
@@ -555,7 +567,15 @@ export async function dcrReview(
       `/orders/${id}/dcr-review?action=${action}`,
       { remarks }
     );
-    if (res) return res;
+    if (res) {
+      if (action === 'approve') {
+        pushNotification(`Requisition ${id} cleared DCR audit and dispatched to vendor.`, 'coordinator', id, { type: 'DCR_APPROVED' });
+        pushNotification(`New kitchen order ${id} available for canteen processing.`, 'vendor', id, { type: 'VENDOR_ORDER_ASSIGNED' });
+      } else {
+        pushNotification(`Requisition ${id} was rejected during DCR audit. Remarks: ${remarks || 'None'}`, 'coordinator', id, { type: 'DCR_REJECTED' });
+      }
+      return res;
+    }
   } catch (err) {
     console.warn('[STORE] Backend offline, processing DCR review locally');
   }
@@ -576,10 +596,10 @@ export async function dcrReview(
     saveLocalOrders(localList);
 
     if (action === 'approve') {
-      pushNotification(`Requisition ${id} cleared DCR audit and dispatched to vendor.`, 'coordinator', id);
-      pushNotification(`New kitchen order ${id} available for canteen processing.`, 'vendor', id);
+      pushNotification(`Requisition ${id} cleared DCR audit and dispatched to vendor.`, 'coordinator', id, { type: 'DCR_APPROVED' });
+      pushNotification(`New kitchen order ${id} available for canteen processing.`, 'vendor', id, { type: 'VENDOR_ORDER_ASSIGNED' });
     } else {
-      pushNotification(`Requisition ${id} was rejected during DCR audit. Remarks: ${remarks || 'None'}`, 'coordinator', id);
+      pushNotification(`Requisition ${id} was rejected during DCR audit. Remarks: ${remarks || 'None'}`, 'coordinator', id, { type: 'DCR_REJECTED' });
     }
     return target;
   }
@@ -595,7 +615,10 @@ export async function setVendorPrices(
       `/orders/vendor-order/${vendorOrderId}/pricing`,
       prices
     );
-    if (res) return res;
+    if (res) {
+      pushNotification(`Canteen vendor confirmed pricing for order ${res.id}.`, 'coordinator', res.id, { type: 'VENDOR_CONFIRMED' });
+      return res;
+    }
   } catch (err) {
     console.warn('[STORE] Backend offline, confirming pricing locally');
   }

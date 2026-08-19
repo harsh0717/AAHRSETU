@@ -35,7 +35,7 @@ const DEMO_USERS: UserProfile[] = [
   
   // Coordinators
   { id: 8, name: 'Priya Sharma', email: 'coord.diploma@aharsetu.edu.in', role: 'coordinator', department_id: 'diploma', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
-  { id: 9, name: 'Ravi Kumar', email: 'coord.degree@aharsetu.edu.in', role: 'coordinator', department_id: 'degree', vendor_id: null, preferred_language: 'hi', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 9, name: 'Ravi Kumar', email: 'coord.degree@aharsetu.edu.in', role: 'coordinator', department_id: 'degree', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 10, name: 'Anita Desai', email: 'coord.pharmacy@aharsetu.edu.in', role: 'coordinator', department_id: 'pharmacy', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 11, name: 'Kavita Patel', email: 'coord.nursing@aharsetu.edu.in', role: 'coordinator', department_id: 'nursing', vendor_id: null, preferred_language: 'gu', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 12, name: 'Sanjay Shah', email: 'coord.physio@aharsetu.edu.in', role: 'coordinator', department_id: 'physiotherapy', vendor_id: null, preferred_language: 'gu', active: true, principal_depts: [], created_at: new Date().toISOString() },

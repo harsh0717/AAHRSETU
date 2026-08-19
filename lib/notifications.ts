@@ -232,6 +232,125 @@ export async function markAllRead(): Promise<void> {
   saveLocalNotifs(list);
 }
 
+export function displaySystemPushNotification(title: string, body: string, url: string = '/') {
+  if (typeof window === 'undefined') return;
+
+  // 1. If ServiceWorker registration is available, try showNotification
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then((reg) => {
+      if (reg && reg.showNotification && 'Notification' in window && Notification.permission === 'granted') {
+        reg.showNotification(title || 'AharSetu Alert', {
+          body: body || 'New workflow notification',
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          data: { url: url || '/' },
+        });
+      }
+    }).catch(() => {});
+  }
+
+  // 2. Fallback to native window.Notification constructor
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      const n = new Notification(title || 'AharSetu Alert', {
+        body: body || 'New workflow notification',
+        icon: '/favicon.ico',
+        data: { url: url || '/' }
+      });
+      n.onclick = () => {
+        window.focus();
+        if (url && url !== '/') {
+          window.location.href = url;
+        }
+      };
+    } catch {
+      // Mobile Safari / Chrome fallback handled by SW
+    }
+  }
+}
+
+export function localizeNotificationMessage(notif: NotificationItem, targetLang: string = 'en'): { title: string; message: string } {
+  const lang = ['en', 'hi', 'gu'].includes(targetLang) ? targetLang : 'en';
+  let title = notif.title || 'AharSetu Alert';
+  let message = notif.message || '';
+
+  // Extract order ID or quoted title if available
+  const quotedMatch = message.match(/"([^"]+)"/);
+  const orderTitle = quotedMatch ? quotedMatch[1] : (notif.order_id || 'Requisition');
+  const dept = notif.department_id ? (notif.department_id.charAt(0).toUpperCase() + notif.department_id.slice(1)) : 'Campus';
+
+  // If the target language is English but the message was saved in Hindi or Gujarati
+  if (lang === 'en') {
+    if (message.includes('अनुमोदन के लिए') || message.includes('સબમિટ કરવામાં આવ્યો') || notif.type === 'ORDER_SUBMITTED_FOR_PRINCIPAL') {
+      title = 'Approval Requisition';
+      message = `Master order "${orderTitle}" has been submitted for Principal approval.`;
+    } else if (message.includes('स्वीकृत हो गया') || message.includes('મંજૂર થઈ ગયો') || notif.type === 'PRINCIPAL_APPROVED') {
+      title = 'Principal Approved';
+      message = `Your order "${orderTitle}" has been approved by Principal.`;
+    } else if (message.includes('अस्वीकृत') || message.includes('નામંજૂર') || notif.type === 'PRINCIPAL_REJECTED') {
+      title = 'Principal Rejected';
+      message = `Your order "${orderTitle}" was rejected by Principal.`;
+    } else if (message.includes('DCR ने') || message.includes('DCR એ') || notif.type === 'DCR_APPROVED') {
+      title = 'DCR Audit Approved';
+      message = `DCR has approved your order "${orderTitle}" and forwarded to canteen.`;
+    } else if (message.includes('DCR ने खारिज') || message.includes('DCR એ નકારી') || notif.type === 'DCR_REJECTED') {
+      title = 'DCR Rejected';
+      message = `DCR has rejected your order "${orderTitle}".`;
+    } else if (message.includes('संशोधन का अनुरोध') || message.includes('સુધારા વિનંતી') || notif.type === 'VENDOR_MODIFICATION_REQUESTED') {
+      title = 'Item Modification Requested';
+      message = `Canteen vendor requested modification for order "${orderTitle}".`;
+    } else if (message.includes('पुष्टि कर दी') || message.includes('પુષ્ટિ કરી') || notif.type === 'VENDOR_CONFIRMED') {
+      title = 'Canteen Pricing Confirmed';
+      message = `Canteen vendor confirmed pricing for order "${orderTitle}".`;
+    } else if (message.includes('चालान बनाया गया') || message.includes('બિલ બન્યું') || notif.type === 'BILL_GENERATED') {
+      title = 'Invoice Generated';
+      message = `Invoice generated for order "${orderTitle}".`;
+    } else if (message.includes('पूर्ण चिह्नित') || message.includes('પૂર્ણ તરીકે') || notif.type === 'ORDER_COMPLETED') {
+      title = 'Order Completed';
+      message = `Your order "${orderTitle}" has been marked as completed.`;
+    } else if (message.includes('नया ऑर्डर') || message.includes('નવો ઑર્ડર') || notif.type === 'ORDER_SUBMITTED_FOR_DCR') {
+      title = 'New Order Requisition';
+      message = `New order received from ${dept} Department: "${orderTitle}"`;
+    }
+  } else if (lang === 'hi') {
+    if (notif.type === 'ORDER_SUBMITTED_FOR_PRINCIPAL' || message.includes('submitted for approval')) {
+      title = 'अनुमोदन अनुरोध';
+      message = `मास्टर ऑर्डर "${orderTitle}" अनुमोदन के लिए प्रस्तुत किया गया है।`;
+    } else if (notif.type === 'PRINCIPAL_APPROVED' || message.includes('approved by Principal')) {
+      title = 'प्राचार्य द्वारा स्वीकृत';
+      message = `आपका ऑर्डर "${orderTitle}" प्राचार्य द्वारा स्वीकृत हो गया है।`;
+    } else if (notif.type === 'DCR_APPROVED' || message.includes('DCR has approved')) {
+      title = 'DCR ऑडिट स्वीकृत';
+      message = `DCR ने आपके ऑर्डर "${orderTitle}" को मंजूरी दे दी है।`;
+    } else if (notif.type === 'VENDOR_CONFIRMED' || message.includes('confirmed pricing')) {
+      title = 'मूल्य पुष्टि';
+      message = `कैंटीन ने ऑर्डर "${orderTitle}" के लिए मूल्य की पुष्टि कर दी है।`;
+    } else if (notif.type === 'ORDER_COMPLETED' || message.includes('marked as completed')) {
+      title = 'ऑर्डर पूर्ण';
+      message = `आपका ऑर्डर "${orderTitle}" पूर्ण चिह्नित किया गया है।`;
+    }
+  } else if (lang === 'gu') {
+    if (notif.type === 'ORDER_SUBMITTED_FOR_PRINCIPAL' || message.includes('submitted for approval')) {
+      title = 'મંજૂરી વિનંતી';
+      message = `માસ્ટર ઑર્ડર "${orderTitle}" મંજૂરી માટે સબમિટ કરવામાં આવ્યો છે.`;
+    } else if (notif.type === 'PRINCIPAL_APPROVED' || message.includes('approved by Principal')) {
+      title = 'આચાર્ય મંજૂર';
+      message = `તમારો ઑર્ડર "${orderTitle}" આચાર્ય દ્વારા મંજૂર થઈ ગયો છે.`;
+    } else if (notif.type === 'DCR_APPROVED' || message.includes('DCR has approved')) {
+      title = 'DCR ઓડિટ મંજૂર';
+      message = `DCR એ તમારા ઑર્ડર "${orderTitle}" ને મંજૂરી આપી દીધી છે.`;
+    } else if (notif.type === 'VENDOR_CONFIRMED' || message.includes('confirmed pricing')) {
+      title = 'કિંમત પુષ્ટિ';
+      message = `કેન્ટીન એ ઑર્ડર "${orderTitle}" માટે કિંમતની પુષ્ટિ કરી છે.`;
+    } else if (notif.type === 'ORDER_COMPLETED' || message.includes('marked as completed')) {
+      title = 'ઑર્ડર પૂર્ણ';
+      message = `તમારો ઑર્ડર "${orderTitle}" પૂર્ણ તરીકે ચિહ્નિત થયો છે.`;
+    }
+  }
+
+  return { title, message };
+}
+
 export function pushNotification(
   message: string,
   recipient_role?: string,
@@ -265,9 +384,13 @@ export function pushNotification(
   saveLocalNotifs(list);
 
   if (typeof window !== 'undefined') {
+    // 1. Dispatch custom event for in-app toast banner
     window.dispatchEvent(new CustomEvent('aharsetu_toast', { detail: { message, notif } }));
     
-    // Web Push Service Worker Trigger
+    // 2. Trigger native/ServiceWorker system push notification
+    displaySystemPushNotification(notif.title, message, notif.action_url || '/');
+
+    // 3. Web Push Service Worker message trigger
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
         type: 'PUSH_NOTIFICATION',

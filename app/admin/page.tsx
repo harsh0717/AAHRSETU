@@ -11,14 +11,14 @@ import { getOrders, resetAllData, completeOrder, MasterOrder } from '@/lib/store
 import { getVendors, updateVendorStatus, Vendor, deleteVendor, getMonthlySettlements, updateMonthlySettlement, VendorMonthlySettlement } from '@/lib/vendors';
 import { ROLE_COLORS, VENDOR_STATUS_LABELS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
-import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
+import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
 import { api } from '@/lib/api';
 
 export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [session, setSession] = useState<UserProfile | null>(null);
   const colors = ROLE_COLORS.admin;
 
@@ -1604,12 +1604,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {notifications.map(n => (
+                  {notifications.map(n => {
+                    const loc = localizeNotificationMessage(n, lang);
+                    return (
                     <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? '#FAFAFA' : 'var(--sidebar-bg)', border: '1px solid var(--sidebar-border)', borderRadius: '10px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <span style={{ fontSize: '1.2rem' }}>🔔</span>
                         <div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: n.read ? 500 : 700, color: 'var(--gray-800)' }}>{n.message}</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: n.read ? 500 : 700, color: 'var(--gray-800)' }}>{loc.message}</div>
                           <div style={{ fontSize: '0.7rem', color: 'var(--gray-400)', marginTop: '2px' }}>{new Date(n.timestamp).toLocaleString()}</div>
                         </div>
                       </div>
@@ -1619,7 +1621,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                         </button>
                       )}
                     </div>
-                  ))}
+                  );})}
                   {notifications.length === 0 && (
                     <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)' }}>
                       No alerts or notifications recorded.

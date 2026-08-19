@@ -97,6 +97,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         setNotifications(list);
         setUnreadCount(list.filter((n) => !n.read).length);
 
+        // Notify dashboard pages to re-fetch orders too
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'polling' } }));
+        }
+
         // Fetch available vendors status
         const { getVendors } = await import('@/lib/vendors');
         const vendors = await getVendors();
@@ -117,7 +122,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       } catch (err) {
         console.warn('[WS CLIENT] Fallback polling sync error:', err);
       }
-    }, 5000); // Poll every 5 seconds for near real-time feel
+    }, 10000); // Poll every 10 seconds
   }, []);
 
   // Main connection builder

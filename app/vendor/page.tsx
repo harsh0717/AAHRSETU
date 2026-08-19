@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
@@ -71,8 +71,10 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
   const [saving, setSaving] = useState(false);
 
-  async function loadData(vendorId: string) {
-    setLoading(true);
+  const loadDataRef = useRef<((vendorId: string) => Promise<void>) | null>(null);
+
+  const loadData = useCallback(async (vendorId: string, silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [oList, mList, nList, vDetails, sList] = await Promise.all([
         getOrders(),
@@ -89,9 +91,12 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     } catch (err) {
       console.error('Error loading vendor data:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }
+  }, []);
+
+  // Keep a stable ref so the interval always calls the latest version
+  useEffect(() => { loadDataRef.current = loadData; }, [loadData]);
 
   useEffect(() => {
     const s = getSession();
@@ -113,20 +118,28 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     setPreferredLang(s.preferred_language || 'en');
     loadData(s.vendor_id);
 
-    const handleOrderChanged = () => {
-      if (s.vendor_id) loadData(s.vendor_id);
-    };
+    const vendorId = s.vendor_id;
 
+    // WebSocket-driven sync
+    const handleOrderChanged = () => { if (vendorId) loadData(vendorId, true); };
+
+    // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
-      if (s.vendor_id && (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7')) {
-        loadData(s.vendor_id);
+      if (vendorId && (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7')) {
+        loadData(vendorId, true);
       }
     };
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadDataRef.current?.(vendorId, true);
+    }, 10000);
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
+      clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
       window.removeEventListener('storage', handleStorageChange);
     };

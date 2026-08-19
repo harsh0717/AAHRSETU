@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
@@ -54,8 +54,10 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  async function loadData() {
-    setLoading(true);
+  const loadDataRef = useRef<(() => Promise<void>) | null>(null);
+
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const oList = await getOrders().catch((err) => {
         console.error('Error fetching orders:', err);
@@ -75,9 +77,12 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     } catch (err) {
       console.error('Error in coordinator loadData:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }
+  }, []);
+
+  // Keep a stable ref so the interval always calls the latest version
+  useEffect(() => { loadDataRef.current = loadData; }, [loadData]);
 
   // Load session & initial data
   useEffect(() => {
@@ -109,17 +114,20 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       getAvailableMenuByVendor().then(mList => setMenuByVendor(mList)).catch(() => {});
     };
 
-    // Cross-tab real-time sync: reload orders when another tab modifies them
-    // (browser fires 'storage' event to all OTHER tabs when localStorage changes)
+    // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
-        loadData();
+        loadData(true);
       }
     };
 
-    const handleOrderChanged = () => {
-      loadData();
-    };
+    // WebSocket-driven sync
+    const handleOrderChanged = () => { loadData(true); };
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadDataRef.current?.(true);
+    }, 10000);
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
@@ -128,6 +136,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       window.addEventListener('aharsetu_order_changed', handleOrderChanged);
     }
     return () => {
+      clearInterval(syncInterval);
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
         window.removeEventListener('aharsetu_menu_updated', handleStatusChange);

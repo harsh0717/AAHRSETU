@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
@@ -261,8 +261,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   }
 
 
-  async function loadDashboardData() {
-    setLoading(true);
+  const loadDashboardDataRef = useRef<(() => Promise<void>) | null>(null);
+
+  const loadDashboardData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [oList, vList, sysStats, nList, deptList, usersList, sList] = await Promise.all([
         getOrders().catch(() => []),
@@ -286,9 +288,12 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }
+  }, []);
+
+  // Keep a stable ref so the interval always calls the latest version
+  useEffect(() => { loadDashboardDataRef.current = loadDashboardData; }, [loadDashboardData]);
 
   async function loadReportsData() {
     try {
@@ -336,20 +341,26 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     setPreferredLang(s.preferred_language || 'en');
     loadDashboardData();
 
-    const handleOrderChanged = () => {
-      loadDashboardData();
-    };
+    // WebSocket-driven sync
+    const handleOrderChanged = () => { loadDashboardData(true); };
 
+    // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
-        loadDashboardData();
+        loadDashboardData(true);
       }
     };
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadDashboardDataRef.current?.(true);
+    }, 10000);
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
+      clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
       window.removeEventListener('storage', handleStorageChange);
     };

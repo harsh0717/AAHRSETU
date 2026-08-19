@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
@@ -39,8 +39,10 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
 
-  async function loadData() {
-    setLoading(true);
+  const loadDataRef = useRef<(() => Promise<void>) | null>(null);
+
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const oList = await getOrders().catch((err) => {
         console.error('Error fetching orders:', err);
@@ -55,9 +57,12 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }
+  }, []);
+
+  // Keep a stable ref so the interval always calls the latest version
+  useEffect(() => { loadDataRef.current = loadData; }, [loadData]);
 
   // Load session & data
   useEffect(() => {
@@ -75,6 +80,30 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
     loadData();
+
+    // WebSocket-driven sync
+    const handleOrderChanged = () => { loadData(true); };
+
+    // Cross-tab real-time sync (same browser)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+        loadData(true);
+      }
+    };
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadDataRef.current?.(true);
+    }, 10000);
+
+    window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Listen to hash changes for sidebar navigation

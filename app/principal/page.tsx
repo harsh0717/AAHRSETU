@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
@@ -49,8 +49,10 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
   const [selectedDeptId, setSelectedDeptId] = useState('');
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
-  async function loadData() {
-    setLoading(true);
+  const loadDataRef = useRef<(() => Promise<void>) | null>(null);
+
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const oList = await getOrders().catch((err) => {
         console.error('Error fetching orders:', err);
@@ -70,9 +72,12 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }
+  }, []);
+
+  // Keep a stable ref so the interval always calls the latest version
+  useEffect(() => { loadDataRef.current = loadData; }, [loadData]);
 
   // Load session & data
   useEffect(() => {
@@ -91,22 +96,26 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
     setPreferredLang(s.preferred_language || 'en');
     loadData();
 
-    // Cross-tab real-time sync: reload when coordinator submits orders from another tab
-    // (browser fires 'storage' event to all OTHER tabs automatically)
+    // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
-        loadData();
+        loadData(true);
       }
     };
 
-    const handleOrderChanged = () => {
-      loadData();
-    };
+    // WebSocket-driven sync
+    const handleOrderChanged = () => { loadData(true); };
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadDataRef.current?.(true);
+    }, 10000);
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
 
     return () => {
+      clearInterval(syncInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
     };

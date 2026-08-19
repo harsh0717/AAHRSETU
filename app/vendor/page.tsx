@@ -75,12 +75,13 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
   const loadData = useCallback(async (vendorId: string, silent = false) => {
     if (!silent) setLoading(true);
+    const safetyTimer = !silent ? setTimeout(() => setLoading(false), 2500) : null;
     try {
       const [oList, mList, nList, vDetails, sList] = await Promise.all([
-        getOrders(),
-        getVendorMenu(vendorId),
-        getNotifications(),
-        getVendorById(vendorId),
+        getOrders().catch(() => []),
+        getVendorMenu(vendorId).catch(() => []),
+        getNotifications().catch(() => []),
+        getVendorById(vendorId).catch(() => null),
         getVendorMonthlySettlements(vendorId).catch(() => [])
       ]);
       setOrders(oList);
@@ -89,8 +90,9 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
       setVendorDetails(vDetails);
       setSettlements(sList);
     } catch (err) {
-      console.error('Error loading vendor data:', err);
+      console.warn('Error loading vendor data:', err);
     } finally {
+      if (safetyTimer) clearTimeout(safetyTimer);
       if (!silent) setLoading(false);
     }
   }, []);

@@ -12,8 +12,8 @@ export default function BootGate({ children }: { children: React.ReactNode }) {
   const performBoot = async () => {
     setError(false);
     
-    // 1. Min 3 second splash timer
-    const timer = new Promise((resolve) => setTimeout(resolve, 3000));
+    // 1. Min 800ms splash display for branding
+    const timer = new Promise((resolve) => setTimeout(resolve, 800));
     
     // 2. Application initialization task
     const init = (async () => {
@@ -21,26 +21,25 @@ export default function BootGate({ children }: { children: React.ReactNode }) {
         const user = await initializeApplication();
         return user;
       } catch (err) {
-        console.error('[BOOT] Error during app initialization:', err);
-        throw err;
+        console.warn('[BOOT] App initialization fallback:', err);
+        return null;
       }
     })();
 
-    // 3. Overall timeout of 10s to prevent hanging on splash
+    // 3. Overall timeout of 3.5s to prevent any hanging on splash
     const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Initialization timed out')), 10000)
+      setTimeout(() => reject(new Error('Initialization timed out')), 3500)
     );
 
     try {
-      // Race the initialization against a 10-second timeout, but wait at least 3 seconds
       await Promise.race([
         Promise.all([timer, init]),
         timeout
       ]);
       setBooted(true);
     } catch (err) {
-      console.error('[BOOT] Boot process failed:', err);
-      setError(true);
+      console.warn('[BOOT] Proceeding in resilient local/offline mode:', err);
+      setBooted(true);
     }
   };
 

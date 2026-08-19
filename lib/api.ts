@@ -75,6 +75,8 @@ class ApiClient {
     }
 
     this.isRefreshing = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
 
     try {
       const response = await fetch(`${BASE_URL}/auth/refresh`, {
@@ -83,6 +85,7 @@ class ApiClient {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ refresh_token: refresh }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -97,13 +100,19 @@ class ApiClient {
     } catch (err) {
       this.isRefreshing = false;
       throw err;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
   public async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit & { timeoutMs?: number } = {}
   ): Promise<T> {
+    const timeoutMs = options.timeoutMs ?? 5000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
     const headers = new Headers(options.headers || {});
     if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json');
@@ -117,10 +126,17 @@ class ApiClient {
     const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
     let response: Response;
     try {
-      response = await fetch(url, { ...options, headers });
+      response = await fetch(url, {
+        ...options,
+        headers,
+        signal: options.signal || controller.signal,
+      });
     } catch (fetchErr: any) {
+      clearTimeout(timer);
       // Silence continuous background polling warnings when serving local fallback store
       throw { message: 'Service unavailable or connection reset. Please try again.', status: 503 } as ApiError;
+    } finally {
+      clearTimeout(timer);
     }
 
     if (response.status === 401) {
@@ -128,8 +144,18 @@ class ApiClient {
         try {
           const newToken = await this.refreshTokens();
           headers.set('Authorization', `Bearer ${newToken}`);
-          const retryResponse = await fetch(url, { ...options, headers });
-          return this.handleResponse<T>(retryResponse);
+          const retryController = new AbortController();
+          const retryTimer = setTimeout(() => retryController.abort(), timeoutMs);
+          try {
+            const retryResponse = await fetch(url, {
+              ...options,
+              headers,
+              signal: retryController.signal,
+            });
+            return this.handleResponse<T>(retryResponse);
+          } finally {
+            clearTimeout(retryTimer);
+          }
         } catch (err) {
           throw { message: 'Session expired. Please log in again.', status: 401 } as ApiError;
         }
@@ -176,11 +202,11 @@ class ApiClient {
   }
 
   // Helper HTTP methods
-  public get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  public get<T>(endpoint: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
-  public post<T>(endpoint: string, body?: any, options: RequestInit = {}): Promise<T> {
+  public post<T>(endpoint: string, body?: any, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
@@ -188,7 +214,7 @@ class ApiClient {
     });
   }
 
-  public put<T>(endpoint: string, body?: any, options: RequestInit = {}): Promise<T> {
+  public put<T>(endpoint: string, body?: any, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
@@ -196,7 +222,7 @@ class ApiClient {
     });
   }
 
-  public delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  public delete<T>(endpoint: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 }

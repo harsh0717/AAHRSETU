@@ -34,18 +34,17 @@ export default function OrderDetailsPage() {
   const loadOrder = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setForbidden(false);
+    const safetyTimer = !silent ? setTimeout(() => setLoading(false), 2500) : null;
     try {
       const o = await getOrderById(orderId);
       const s = getSession();
       if (!o) {
         if (!silent) setForbidden(true);
-        if (!silent) setLoading(false);
         return;
       }
       if (s) {
         if (s.role === 'coordinator' && o.created_by_id !== s.id && o.department_id !== s.department_id) {
           if (!silent) setForbidden(true);
-          if (!silent) setLoading(false);
           return;
         }
       }
@@ -55,6 +54,7 @@ export default function OrderDetailsPage() {
         setForbidden(true);
       }
     } finally {
+      if (safetyTimer) clearTimeout(safetyTimer);
       if (!silent) setLoading(false);
     }
   }, [orderId]);

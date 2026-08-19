@@ -43,20 +43,24 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
+    const safetyTimer = !silent ? setTimeout(() => setLoading(false), 2500) : null;
     try {
-      const oList = await getOrders().catch((err) => {
-        console.error('Error fetching orders:', err);
-        return [];
-      });
-      const nList = await getNotifications().catch((err) => {
-        console.error('Error fetching notifications:', err);
-        return [];
-      });
+      const [oList, nList] = await Promise.all([
+        getOrders().catch((err) => {
+          console.warn('Error fetching orders:', err);
+          return [];
+        }),
+        getNotifications().catch((err) => {
+          console.warn('Error fetching notifications:', err);
+          return [];
+        })
+      ]);
       setOrders(oList);
       setNotifications(nList);
     } catch (err) {
-      console.error(err);
+      console.warn('Error in dcr loadData:', err);
     } finally {
+      if (safetyTimer) clearTimeout(safetyTimer);
       if (!silent) setLoading(false);
     }
   }, []);

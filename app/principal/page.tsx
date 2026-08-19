@@ -53,25 +53,29 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
+    const safetyTimer = !silent ? setTimeout(() => setLoading(false), 2500) : null;
     try {
-      const oList = await getOrders().catch((err) => {
-        console.error('Error fetching orders:', err);
-        return [];
-      });
-      const nList = await getNotifications().catch((err) => {
-        console.error('Error fetching notifications:', err);
-        return [];
-      });
-      const mList = await getAvailableMenuByVendor().catch((err) => {
-        console.error('Error fetching menus:', err);
-        return [];
-      });
+      const [oList, nList, mList] = await Promise.all([
+        getOrders().catch((err) => {
+          console.warn('Error fetching orders:', err);
+          return [];
+        }),
+        getNotifications().catch((err) => {
+          console.warn('Error fetching notifications:', err);
+          return [];
+        }),
+        getAvailableMenuByVendor().catch((err) => {
+          console.warn('Error fetching menus:', err);
+          return [];
+        })
+      ]);
       setOrders(oList);
       setNotifications(nList);
       setMenuByVendor(mList);
     } catch (err) {
-      console.error(err);
+      console.warn('Error in principal loadData:', err);
     } finally {
+      if (safetyTimer) clearTimeout(safetyTimer);
       if (!silent) setLoading(false);
     }
   }, []);

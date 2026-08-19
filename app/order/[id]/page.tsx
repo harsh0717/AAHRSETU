@@ -11,6 +11,7 @@ import {
   getOrderById, submitForApproval, principalReview, dcrReview, completeOrder,
   resolveModification, MasterOrder, VendorOrder
 } from '@/lib/store';
+import { getMenuItemName } from '@/lib/vendors';
 import { useI18n } from '@/lib/i18n';
 import { showToast } from '@/components/Toast';
 import Link from 'next/link';
@@ -362,8 +363,9 @@ export default function OrderDetailsPage() {
                     </thead>
                     <tbody>
                       {vo.items.map((item, idx) => {
-                        const nameKey = `menu.${item.name}`;
-                        const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
+                        const effectiveName = getMenuItemName(item.menu_item_id, item.name);
+                        const nameKey = `menu.${effectiveName}`;
+                        const translatedName = t(nameKey) !== nameKey ? t(nameKey) : effectiveName;
                         
                         const formattedUnit = item.unit ? item.unit.toLowerCase().replace(' ', '_') : '';
                         const unitKey = `unit.${formattedUnit}`;

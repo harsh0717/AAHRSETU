@@ -4,7 +4,7 @@ import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, setVendorPrices, requestVendorModification, rejectVendorOrder, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
-import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, saveCustomFoodImage, MenuItem, Vendor, getVendorMonthlySettlements, VendorMonthlySettlement } from '@/lib/vendors';
+import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, saveCustomFoodImage, MenuItem, Vendor, getVendorMonthlySettlements, VendorMonthlySettlement, getMenuItemName } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem } from '@/lib/notifications';
@@ -293,6 +293,9 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     const inputs: Record<string, string> = {};
     myVO.items.forEach(i => {
       inputs[i.name] = String(i.price || '');
+      if (i.menu_item_id) {
+        inputs[i.menu_item_id] = String(i.price || '');
+      }
     });
     setPricesInput(inputs);
     setPricingOrderId(order.id);
@@ -575,10 +578,12 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         
                         {isPricingThis ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {myVO.items.map((item, idx) => (
+                            {myVO.items.map((item, idx) => {
+                              const displayName = getMenuItemName(item.menu_item_id, item.name);
+                              return (
                               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>
-                                  • {item.name} <span style={{ fontWeight: 500, color: '#64748B' }}>(x{item.quantity} {item.unit || 'qty'})</span>
+                                  • {displayName} <span style={{ fontWeight: 500, color: '#64748B' }}>(x{item.quantity} {item.unit || 'qty'})</span>
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                   <span style={{ fontSize: '0.8rem', color: '#64748B' }}>₹</span>
@@ -586,8 +591,15 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                                     type="number"
                                     min="1"
                                     step="0.5"
-                                    value={pricesInput[item.name] || ''}
-                                    onChange={(e) => setPricesInput(prev => ({ ...prev, [item.name]: e.target.value }))}
+                                    value={pricesInput[item.name] || (item.menu_item_id ? pricesInput[item.menu_item_id] : '') || ''}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setPricesInput(prev => ({
+                                        ...prev,
+                                        [item.name]: val,
+                                        ...(item.menu_item_id ? { [item.menu_item_id]: val } : {})
+                                      }));
+                                    }}
                                     style={{
                                       width: '80px',
                                       height: '32px',
@@ -601,20 +613,22 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                                   />
                                 </div>
                               </div>
-                            ))}
+                            );})}
                           </div>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {myVO.items.map((item, idx) => (
+                            {myVO.items.map((item, idx) => {
+                              const displayName = getMenuItemName(item.menu_item_id, item.name);
+                              return (
                               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
                                 <span style={{ fontWeight: 700, color: '#0F172A' }}>
-                                  • {item.name}
+                                  • {displayName}
                                 </span>
                                 <span style={{ fontWeight: 800, color: '#2563EB', background: '#EFF6FF', padding: '2px 10px', borderRadius: '999px' }}>
                                   × {item.quantity} {item.unit || 'qty'}
                                 </span>
                               </div>
-                            ))}
+                            );})}
                           </div>
                         )}
                         

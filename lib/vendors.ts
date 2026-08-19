@@ -58,16 +58,46 @@ const FALLBACK_MENUS: Record<string, MenuItem[]> = {
   ]
 };
 
-export function getMenuItemName(menuItemId: string | null | undefined): string {
-  if (!menuItemId) return 'Canteen Special Item';
+export function getMenuItem(menuItemId: string | null | undefined): MenuItem | null {
+  if (!menuItemId) return null;
   const cleanId = menuItemId.replace('Item #', '').trim();
 
-  for (const list of Object.values(FALLBACK_MENUS)) {
-    const item = list.find(m => m.id === cleanId || m.id === menuItemId);
-    if (item) return item.name;
+  // 1. Check updated localStorage menus across all vendors
+  if (typeof window !== 'undefined') {
+    const vIds = ['v1', 'v2', 'v3', 'v4'];
+    for (const vId of vIds) {
+      try {
+        const raw = localStorage.getItem(`${LOCAL_MENUS_KEY}_${vId}`);
+        if (raw) {
+          const list: MenuItem[] = JSON.parse(raw);
+          const found = list.find(m => m.id === cleanId || m.id === menuItemId);
+          if (found) return found;
+        }
+      } catch {}
+    }
   }
 
-  if (cleanId.includes('v1m1')) return 'Masala Tea';
+  // 2. Check fallback menus
+  for (const list of Object.values(FALLBACK_MENUS)) {
+    const found = list.find(m => m.id === cleanId || m.id === menuItemId);
+    if (found) return found;
+  }
+
+  return null;
+}
+
+export function getMenuItemName(menuItemId: string | null | undefined, fallbackName?: string): string {
+  if (!menuItemId) return fallbackName || 'Canteen Special Item';
+  const cleanId = menuItemId.replace('Item #', '').trim();
+
+  const item = getMenuItem(cleanId) || getMenuItem(menuItemId);
+  if (item && item.name) return item.name;
+
+  if (fallbackName && fallbackName !== cleanId && fallbackName !== 'Item' && !fallbackName.startsWith('Item #')) {
+    return fallbackName;
+  }
+
+  if (cleanId.includes('v1m1')) return 'Tea';
   if (cleanId.includes('v1m2')) return 'Samosa';
   if (cleanId.includes('v1m3')) return 'Kachori';
   if (cleanId.includes('v1m4')) return 'Coffee';
@@ -82,7 +112,7 @@ export function getMenuItemName(menuItemId: string | null | undefined): string {
     return 'Special Canteen Refreshment';
   }
 
-  return cleanId;
+  return fallbackName || cleanId;
 }
 
 function getLocalVendors(): Vendor[] {
@@ -257,15 +287,16 @@ export async function upsertVendorMenuItem(vendorId: string, item: any): Promise
     image_url: item.image_url || null,
   };
 
+  let savedItem: MenuItem | null = null;
   try {
     const res = await api.post<MenuItem>(`/vendors/${vendorId}/menu`, payload);
-    if (res) return res;
+    if (res) savedItem = res;
   } catch (err) {
     console.warn('[VENDORS] API menu update failed, saving locally');
   }
 
   const menu = getLocalMenu(vendorId);
-  const newItem: MenuItem = {
+  const newItem: MenuItem = savedItem || {
     id: payload.id || `m-${Date.now()}`,
     vendor_id: vendorId,
     name: payload.name,
@@ -283,6 +314,38 @@ export async function upsertVendorMenuItem(vendorId: string, item: any): Promise
   else menu.push(newItem);
 
   saveLocalMenu(vendorId, menu);
+
+  // Synchronize item names in any pending/active local orders
+  if (typeof window !== 'undefined') {
+    try {
+      const rawOrders = localStorage.getItem('aharsetu_orders_v3');
+      if (rawOrders) {
+        const orders = JSON.parse(rawOrders);
+        let modified = false;
+        orders.forEach((o: any) => {
+          if (Array.isArray(o.vendor_orders)) {
+            o.vendor_orders.forEach((vo: any) => {
+              if (Array.isArray(vo.items)) {
+                vo.items.forEach((it: any) => {
+                  if (it.menu_item_id === newItem.id) {
+                    it.name = newItem.name;
+                    if (newItem.unit) it.unit = newItem.unit;
+                    modified = true;
+                  }
+                });
+              }
+            });
+          }
+        });
+        if (modified) {
+          localStorage.setItem('aharsetu_orders_v3', JSON.stringify(orders));
+          window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'menu_update' } }));
+        }
+      }
+      window.dispatchEvent(new CustomEvent('aharsetu_menu_updated', { detail: { vendor_id: vendorId, item: newItem } }));
+    } catch {}
+  }
+
   return newItem;
 }
 

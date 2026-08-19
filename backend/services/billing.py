@@ -31,6 +31,8 @@ class BillingService:
         for item in vo.items:
             if item.name in prices:
                 item.price = float(prices[item.name])
+            elif item.menu_item_id and item.menu_item_id in prices:
+                item.price = float(prices[item.menu_item_id])
             total_amount += item.price * item.quantity
             
         # 2. Update VendorOrder bill amount and invoice details

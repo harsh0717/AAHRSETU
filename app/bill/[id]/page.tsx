@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getSession, UserProfile } from '@/lib/auth';
 import { getOrderById, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
+import { getMenuItemName } from '@/lib/vendors';
 import { COLLEGE_INFO } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 
@@ -246,7 +247,7 @@ export default function BillPage() {
       doc.setTextColor(39, 39, 42);
       let y = 92;
       items.forEach((item, index) => {
-        const name = String(item?.name || 'Item');
+        const name = getMenuItemName(item?.menu_item_id, item?.name) || 'Item';
         const qty = Number(item?.quantity ?? 0);
         const price = Number(item?.price ?? 0);
         const unit = item?.unit ? ` (${item.unit})` : '';
@@ -477,7 +478,7 @@ export default function BillPage() {
               ) : items.map((item, idx) => {
                 const price = Number(item?.price ?? 0);
                 const qty = Number(item?.quantity ?? 0);
-                const name = item?.name || 'Item';
+                const name = getMenuItemName(item?.menu_item_id, item?.name) || 'Item';
                 const unit = item?.unit || '';
                 return (
                   <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9', fontSize: '0.8rem' }}>

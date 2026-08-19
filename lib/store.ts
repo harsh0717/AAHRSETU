@@ -2,7 +2,7 @@
 import { api } from './api';
 import { getSession } from './auth';
 import { pushNotification } from './notifications';
-import { getMenuItemName } from './vendors';
+import { getMenuItemName, getMenuItem } from './vendors';
 
 export interface OrderItem {
   id?: number;
@@ -366,17 +366,11 @@ export async function createMasterOrder(orderData: {
     else if (it.menu_item_id.startsWith('v3')) vId = 'v3';
     else if (it.menu_item_id.startsWith('v4')) vId = 'v4';
 
-    // Lookup actual menu price snapshot
-    let unitPrice = 15.0;
-    const readableName = getMenuItemName(it.menu_item_id);
-    if (readableName.includes('Tea')) unitPrice = 10.0;
-    else if (readableName.includes('Samosa')) unitPrice = 15.0;
-    else if (readableName.includes('Kachori')) unitPrice = 18.0;
-    else if (readableName.includes('Coffee')) unitPrice = 15.0;
-    else if (readableName.includes('Veg Lunch')) unitPrice = 80.0;
-    else if (readableName.includes('Idli')) unitPrice = 40.0;
-    else if (readableName.includes('Thali')) unitPrice = 100.0;
-    else if (readableName.includes('Sandwich')) unitPrice = 35.0;
+    // Lookup actual updated menu item snapshot
+    const itemObj = getMenuItem(it.menu_item_id);
+    const readableName = itemObj?.name || getMenuItemName(it.menu_item_id);
+    const unitPrice = (itemObj && typeof itemObj.price === 'number' && itemObj.price > 0) ? itemObj.price : 15.0;
+    const itemUnit = itemObj?.unit || 'per serving';
 
     const itemSubtotal = unitPrice * it.quantity;
     totalCalculated += itemSubtotal;
@@ -387,6 +381,7 @@ export async function createMasterOrder(orderData: {
       name: readableName,
       quantity: it.quantity,
       price: unitPrice,
+      unit: itemUnit,
       menu_item_id: it.menu_item_id
     });
   });
@@ -615,6 +610,7 @@ export async function setVendorPrices(
       let total = 0;
       vo.items.forEach(it => {
         if (prices[it.name] !== undefined) it.price = prices[it.name];
+        else if (it.menu_item_id && prices[it.menu_item_id] !== undefined) it.price = prices[it.menu_item_id];
         total += it.price * it.quantity;
       });
       vo.bill_amount = total;

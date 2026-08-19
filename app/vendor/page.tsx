@@ -71,7 +71,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
   const [saving, setSaving] = useState(false);
 
-  const loadDataRef = useRef<((vendorId: string) => Promise<void>) | null>(null);
+  const loadDataRef = useRef<((vendorId: string, silent?: boolean) => Promise<void>) | null>(null);
 
   const loadData = useCallback(async (vendorId: string, silent = false) => {
     if (!silent) setLoading(true);

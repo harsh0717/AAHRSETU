@@ -54,7 +54,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const loadDataRef = useRef<(() => Promise<void>) | null>(null);
+  const loadDataRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);

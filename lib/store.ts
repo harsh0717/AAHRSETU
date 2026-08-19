@@ -259,6 +259,9 @@ function saveLocalOrders(orders: MasterOrder[]) {
   const next = JSON.stringify(sortedOrders);
   if (current === next) return;
   localStorage.setItem(LOCAL_ORDERS_KEY, next);
+  try {
+    window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'local_save', orders: sortedOrders } }));
+  } catch {}
 }
 
 // ── API Operations ────────────────────────────────────────────────────────────
@@ -434,8 +437,12 @@ export async function createMasterOrder(orderData: {
     const res = await api.post<MasterOrder>('/orders', {
       title: orderData.title,
       purpose: orderData.purpose,
-      items: orderData.items,
-      department_id: orderData.department_id
+      items: orderData.items.map(it => ({
+        menu_item_id: it.menu_item_id,
+        quantity: it.quantity,
+        name: getMenuItemName(it.menu_item_id)
+      })),
+      department_id: orderData.department_id || deptId
     });
     if (res) {
       // Auto-submit: advance status from 'Created' → 'Sent for Approval' (or 'Principal Approved' for principals)

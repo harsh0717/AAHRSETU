@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
@@ -28,33 +28,39 @@ export default function OrderDetailsPage() {
   const [forbidden, setForbidden] = useState(false);
   const [actioning, setActioning] = useState(false);
 
-  const loadOrder = useCallback(async () => {
-    setLoading(true);
+  const loadOrderRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
+
+  const loadOrder = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setForbidden(false);
     try {
       const o = await getOrderById(orderId);
       const s = getSession();
       if (!o) {
-        setForbidden(true);
-        setLoading(false);
+        if (!silent) setForbidden(true);
+        if (!silent) setLoading(false);
         return;
       }
       if (s) {
         if (s.role === 'coordinator' && o.created_by_id !== s.id && o.department_id !== s.department_id) {
-          setForbidden(true);
-          setLoading(false);
+          if (!silent) setForbidden(true);
+          if (!silent) setLoading(false);
           return;
         }
       }
       setOrder(o);
     } catch (e: any) {
-      if (e?.status === 403) {
+      if (e?.status === 403 && !silent) {
         setForbidden(true);
       }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [orderId]);
+
+  useEffect(() => {
+    loadOrderRef.current = loadOrder;
+  }, [loadOrder]);
 
   useEffect(() => {
     const s = getSession();
@@ -64,6 +70,34 @@ export default function OrderDetailsPage() {
     }
     setSession(s);
     loadOrder();
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadOrderRef.current?.(true);
+    }, 10000);
+
+    const handleOrderChanged = () => {
+      loadOrderRef.current?.(true);
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+        loadOrderRef.current?.(true);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.addEventListener('storage', handleStorageChange);
+    }
+
+    return () => {
+      clearInterval(syncInterval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+        window.removeEventListener('storage', handleStorageChange);
+      }
+    };
   }, [loadOrder, router]);
 
   if (forbidden && session) {

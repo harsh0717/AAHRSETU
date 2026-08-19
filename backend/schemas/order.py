@@ -4,15 +4,19 @@ from pydantic import BaseModel
 
 
 class OrderItemBase(BaseModel):
-    name: str
+    name: Optional[str] = ""
     quantity: int
-    price: float = 0.0
+    price: Optional[float] = 0.0
     unit: Optional[str] = None
     menu_item_id: Optional[str] = None
 
 
-class OrderItemCreate(OrderItemBase):
-    pass
+class OrderItemCreate(BaseModel):
+    name: Optional[str] = ""
+    quantity: int
+    price: Optional[float] = 0.0
+    unit: Optional[str] = None
+    menu_item_id: Optional[str] = None
 
 
 class OrderItemResponse(OrderItemBase):

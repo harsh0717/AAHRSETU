@@ -261,7 +261,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   }
 
 
-  const loadDashboardDataRef = useRef<(() => Promise<void>) | null>(null);
+  const loadDashboardDataRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
   const loadDashboardData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -343,10 +343,19 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
     // WebSocket-driven sync
     const handleOrderChanged = () => { loadDashboardData(true); };
+    const handleUserChanged = () => { loadDashboardData(true); };
 
     // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+      if (
+        e.key === 'aharsetu_orders_v3' ||
+        e.key === 'aharsetu_notifications_v3.7' ||
+        e.key === 'aharsetu_users_timestamp' ||
+        e.key === 'aharsetu_custom_users' ||
+        e.key === 'aharsetu_deleted_user_ids' ||
+        e.key === 'aharsetu_vendors_v3' ||
+        e.key === 'aharsetu_departments_v3'
+      ) {
         loadDashboardData(true);
       }
     };
@@ -354,17 +363,26 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     // Cross-device sync: poll every 10 seconds silently
     const syncInterval = setInterval(() => {
       loadDashboardDataRef.current?.(true);
+      const currentTab = window.location.hash ? window.location.hash.substring(1) : (initialTab || 'dashboard');
+      if (currentTab === 'reports' || currentTab === 'analytics') {
+        loadReportsData();
+      }
+      if (['audit', 'logs', 'audit-logs'].includes(currentTab)) {
+        loadAuditLogs();
+      }
     }, 10000);
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('aharsetu_user_changed', handleUserChanged);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('aharsetu_user_changed', handleUserChanged);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [router]);
+  }, [router, initialTab]);
 
   // Sync hash changes with state
   useEffect(() => {
@@ -387,8 +405,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       window.location.hash = activeTab;
     }
     if (activeTab === 'reports' || activeTab === 'analytics') loadReportsData();
-    if (activeTab === 'audit' || activeTab === 'logs') loadAuditLogs();
-    if (activeTab === 'dashboard') loadDashboardData();
+    if (['audit', 'logs', 'audit-logs'].includes(activeTab)) loadAuditLogs();
+    if (activeTab === 'dashboard') loadDashboardData(true);
   }, [activeTab, filterStartDate, filterEndDate, filterDeptId, filterVendorId, filterOrderStatus, filterCoordId, filterPrincipalId]);
 
   async function handleResetData() {
@@ -1610,7 +1628,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
             )}
 
             {/* TAB: SYSTEM AUDIT LOGS */}
-            {['audit', 'logs'].includes(activeTab) && (
+            {['audit', 'logs', 'audit-logs'].includes(activeTab) && (
               <div className="card" style={{ padding: '20px' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>Immutable Security Audit Trail</h3>
                 <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
@@ -1738,7 +1756,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
             )}
 
             {/* TAB: SYSTEM HEALTH */}
-            {activeTab === 'health' && (
+            {['health', 'system-health'].includes(activeTab) && (
               <div className="card" style={{ padding: '20px', maxWidth: '600px' }}>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>❤️ System Health Monitoring</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

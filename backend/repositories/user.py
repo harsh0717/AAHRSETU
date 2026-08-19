@@ -30,6 +30,22 @@ class UserRepository(BaseRepository[User]):
         self.db.query(UserSession).filter(UserSession.user_id == user_id).delete()
         self.db.commit()
 
+    def remove(self, id: int) -> Optional[User]:
+        user = self.get(id)
+        if not user:
+            return None
+        # Clean up many-to-many managed departments
+        self.db.execute(user_departments.delete().where(user_departments.c.user_id == id))
+        # Clean up active sessions
+        self.db.query(UserSession).filter(UserSession.user_id == id).delete()
+        # Clean up recipient notifications
+        from backend.models.notification import Notification
+        self.db.query(Notification).filter(Notification.recipient_id == id).delete()
+        # Delete user
+        self.db.delete(user)
+        self.db.commit()
+        return user
+
     # Department operations
     def get_departments(self) -> List[Department]:
         return self.db.query(Department).all()

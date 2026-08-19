@@ -68,7 +68,7 @@ def read_users(
 
 
 @router.post("", response_model=UserResponse)
-def create_user(
+async def create_user(
     payload: UserCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.check_role(["admin"]))
@@ -108,6 +108,18 @@ def create_user(
         action="User Created",
         new_value=f"ID: {db_user.id}, Email: {db_user.email}, Role: {db_user.role}"
     )
+
+    # Broadcast USER_CREATED to WebSocket clients
+    try:
+        from backend.services.notification import manager
+        await manager.broadcast({
+            "type": "USER_CREATED",
+            "user_id": db_user.id,
+            "name": db_user.name,
+            "role": db_user.role
+        })
+    except Exception as err:
+        print(f"[WS BROADCAST ERROR] Failed to broadcast user creation: {err}")
 
     return _user_to_response(db_user)
 
@@ -325,7 +337,7 @@ async def upload_avatar(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(
+async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.check_role(["admin"]))
@@ -359,6 +371,17 @@ def delete_user(
         action="User Deleted",
         old_value=f"ID: {user_id}, Email: {target_email}"
     )
+
+    # Broadcast USER_DELETED to WebSocket clients
+    try:
+        from backend.services.notification import manager
+        await manager.broadcast({
+            "type": "USER_DELETED",
+            "user_id": user_id
+        })
+    except Exception as err:
+        print(f"[WS BROADCAST ERROR] Failed to broadcast user deletion: {err}")
+
     return None
 
 

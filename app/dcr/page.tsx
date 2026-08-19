@@ -39,7 +39,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
 
-  const loadDataRef = useRef<(() => Promise<void>) | null>(null);
+  const loadDataRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);

@@ -97,9 +97,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         setNotifications(list);
         setUnreadCount(list.filter((n) => !n.read).length);
 
-        // Notify dashboard pages to re-fetch orders too
+        // Notify dashboard pages to re-fetch orders and users too
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'polling' } }));
+          window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: { source: 'polling' } }));
         }
 
         // Fetch available vendors status
@@ -152,7 +153,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       wsUrl = `${protocol}//${apiHost}/api/v1/notifications/ws`;
     } else {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname === 'localhost' ? '127.0.0.1:8000' : window.location.host;
+      const host = window.location.hostname === 'localhost' ? '127.0.0.1:8000' : (window.location.port ? `${window.location.hostname}:8000` : window.location.host);
       wsUrl = `${protocol}//${host}/api/v1/notifications/ws`;
     }
 
@@ -199,6 +200,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             }
             window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: payload }));
           }
+        } else if (payload.type === 'USER_DELETED' || payload.type === 'USER_CREATED' || payload.type === 'USER_UPDATED') {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: payload }));
+          }
         } else if (payload.type === 'PROFILE_UPDATED') {
           if (typeof window !== 'undefined') {
             const { getSession: getFresh, setSession } = await import('@/lib/auth');
@@ -216,6 +221,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               setSession(updated, true);
               window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updated }));
             }
+            window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: payload }));
           }
         } else if (payload.type === 'MENU_UPDATED') {
           if (typeof window !== 'undefined') {

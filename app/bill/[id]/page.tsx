@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getSession, UserProfile } from '@/lib/auth';
@@ -33,6 +33,26 @@ export default function BillPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [loadError, setLoadError] = useState('');
 
+  const loadOrderRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
+
+  const loadOrder = useCallback(async (silent = false) => {
+    try {
+      const o = await getOrderById(orderId);
+      if (!o) {
+        if (!silent) setLoadError(`Order "${orderId}" not found. It may have been created on another device or browser.`);
+        return;
+      }
+      setOrder(o);
+      setLoadError('');
+    } catch (err: any) {
+      if (!silent) setLoadError(err?.message || 'Failed to load order details.');
+    }
+  }, [orderId]);
+
+  useEffect(() => {
+    loadOrderRef.current = loadOrder;
+  }, [loadOrder]);
+
   useEffect(() => {
     const s = getSession();
     if (!s) {
@@ -40,21 +60,36 @@ export default function BillPage() {
       return;
     }
     setSession(s);
-
-    async function loadOrder() {
-      try {
-        const o = await getOrderById(orderId);
-        if (!o) {
-          setLoadError(`Order "${orderId}" not found. It may have been created on another device or browser.`);
-          return;
-        }
-        setOrder(o);
-      } catch (err: any) {
-        setLoadError(err?.message || 'Failed to load order details.');
-      }
-    }
     loadOrder();
-  }, [orderId, router]);
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadOrderRef.current?.(true);
+    }, 10000);
+
+    const handleOrderChanged = () => {
+      loadOrderRef.current?.(true);
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+        loadOrderRef.current?.(true);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.addEventListener('storage', handleStorageChange);
+    }
+
+    return () => {
+      clearInterval(syncInterval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+        window.removeEventListener('storage', handleStorageChange);
+      }
+    };
+  }, [orderId, router, loadOrder]);
 
   // ── Derived data — wrapped in useMemo for safety ──────────────────────────
   const allVendorOrders: VendorOrder[] = useMemo(() => {

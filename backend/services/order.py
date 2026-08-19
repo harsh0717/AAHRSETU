@@ -44,20 +44,45 @@ class OrderService:
                 VendorMenuItem.id == menu_item_id
             ).first()
 
-            if not db_menu_item:
-                raise ValueError(f"Menu item '{menu_item_id}' not found in the database")
-            if not db_menu_item.vendor:
-                raise ValueError(f"Menu item '{menu_item_id}' is not linked to any vendor")
+            if not db_menu_item and item.get("name"):
+                db_menu_item = self.db.query(VendorMenuItem).filter(
+                    VendorMenuItem.name == item["name"]
+                ).first()
 
-            vendor = db_menu_item.vendor
+            vendor = None
+            if db_menu_item and db_menu_item.vendor:
+                vendor = db_menu_item.vendor
+                item_name = db_menu_item.name
+                item_price = db_menu_item.price
+                item_unit = db_menu_item.unit
+                item_id = db_menu_item.id
+            else:
+                # Infer vendor from menu_item_id prefix (v1, v2, v3, v4)
+                v_id = "v1"
+                if str(menu_item_id).startswith("v2"): v_id = "v2"
+                elif str(menu_item_id).startswith("v3"): v_id = "v3"
+                elif str(menu_item_id).startswith("v4"): v_id = "v4"
+                
+                from backend.models.vendor import Vendor
+                vendor = self.db.query(Vendor).filter(Vendor.id == v_id).first()
+                if not vendor:
+                    vendor = self.db.query(Vendor).first()
+                item_name = item.get("name") or str(menu_item_id)
+                item_price = item.get("price") or 15.0
+                item_unit = item.get("unit") or "per serving"
+                item_id = menu_item_id
+
+            if not vendor:
+                raise ValueError(f"Could not resolve canteen vendor for item '{menu_item_id}'")
+
             if vendor.id not in by_vendor:
                 by_vendor[vendor.id] = {"vendor": vendor, "items": []}
             by_vendor[vendor.id]["items"].append({
-                "name": db_menu_item.name,
+                "name": item_name,
                 "quantity": quantity,
-                "price": db_menu_item.price,
-                "unit": db_menu_item.unit,
-                "menu_item_id": db_menu_item.id
+                "price": item_price,
+                "unit": item_unit,
+                "menu_item_id": item_id
             })
             
         initial_status = "Principal Approved" if creator.role == "principal" else "Sent for Approval"

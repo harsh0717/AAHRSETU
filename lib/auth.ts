@@ -50,36 +50,87 @@ const DEMO_USERS: UserProfile[] = [
 
 // ── User Management (Admin APIs) ──────────────────────────────────────────────
 
+const CUSTOM_USERS_KEY = 'aharsetu_custom_users';
+const DELETED_USERS_KEY = 'aharsetu_deleted_user_ids';
+const USERS_TIMESTAMP_KEY = 'aharsetu_users_timestamp';
+
+function getDeletedUserIds(): (number | string)[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(DELETED_USERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function notifyUsersChanged() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(USERS_TIMESTAMP_KEY, Date.now().toString());
+    window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: { timestamp: Date.now() } }));
+  } catch {}
+}
+
 export function getSavedUsers(): UserProfile[] {
   if (typeof window === 'undefined') return DEMO_USERS;
   try {
-    const raw = localStorage.getItem('aharsetu_custom_users');
-    if (raw) {
-      const custom = JSON.parse(raw);
-      if (Array.isArray(custom)) {
-        return [...custom, ...DEMO_USERS];
+    const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
+    const raw = localStorage.getItem(CUSTOM_USERS_KEY);
+    const custom: UserProfile[] = raw ? JSON.parse(raw) : [];
+
+    // Map by email and ID so custom accounts override demo accounts
+    const userMap = new Map<string, UserProfile>();
+
+    // Add demo users first (unless deleted)
+    DEMO_USERS.forEach(u => {
+      if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
+        userMap.set(u.email.toLowerCase(), u);
       }
+    });
+
+    // Merge custom users (unless deleted)
+    if (Array.isArray(custom)) {
+      custom.forEach(u => {
+        if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
+          userMap.set(u.email.toLowerCase(), u);
+        }
+      });
     }
-  } catch (e) {}
-  return DEMO_USERS;
+
+    return Array.from(userMap.values());
+  } catch (e) {
+    return DEMO_USERS;
+  }
 }
 
 export function saveCustomUser(user: UserProfile) {
   if (typeof window === 'undefined') return;
   try {
-    const raw = localStorage.getItem('aharsetu_custom_users');
+    // Un-delete if previously marked deleted
+    const deleted = getDeletedUserIds().filter(
+      id => String(id).toLowerCase() !== String(user.id).toLowerCase() && String(id).toLowerCase() !== user.email.toLowerCase()
+    );
+    localStorage.setItem(DELETED_USERS_KEY, JSON.stringify(deleted));
+
+    const raw = localStorage.getItem(CUSTOM_USERS_KEY);
     let custom: UserProfile[] = raw ? JSON.parse(raw) : [];
     const idx = custom.findIndex(u => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase());
     if (idx >= 0) custom[idx] = user;
     else custom.unshift(user);
-    localStorage.setItem('aharsetu_custom_users', JSON.stringify(custom));
+    localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(custom));
+    notifyUsersChanged();
   } catch (e) {}
 }
 
 export async function getUsers(): Promise<UserProfile[]> {
   try {
     const res = await api.get<UserProfile[]>('/users');
-    if (res && Array.isArray(res) && res.length > 0) return res;
+    if (res && Array.isArray(res) && res.length > 0) {
+      const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
+      const filtered = res.filter(u => !deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase()));
+      return filtered;
+    }
   } catch (err) {
     // Serve local users directory
   }
@@ -114,14 +165,65 @@ export async function createUser(userData: any): Promise<UserProfile> {
 }
 
 export async function upsertUser(userData: any): Promise<UserProfile> {
+  if (userData.id) {
+    try {
+      const res = await api.put<UserProfile>(`/users/${userData.id}`, userData);
+      if (res) {
+        saveCustomUser(res);
+        return res;
+      }
+    } catch (err) {
+      // Fallback to local update
+    }
+    // Update local object
+    const existing = getSavedUsers().find(u => u.id === userData.id);
+    const updated: UserProfile = {
+      id: userData.id,
+      name: userData.name || existing?.name || '',
+      email: userData.email || existing?.email || '',
+      role: userData.role || existing?.role || 'coordinator',
+      department_id: userData.department_id !== undefined ? userData.department_id : (existing?.department_id || null),
+      vendor_id: userData.vendor_id !== undefined ? userData.vendor_id : (existing?.vendor_id || null),
+      preferred_language: userData.preferred_language || existing?.preferred_language || 'en',
+      active: userData.active !== undefined ? userData.active : (existing?.active ?? true),
+      principal_depts: userData.principal_depts || existing?.principal_depts || [],
+      created_at: existing?.created_at || new Date().toISOString()
+    };
+    saveCustomUser(updated);
+    return updated;
+  }
   return await createUser(userData);
 }
 
-export async function deleteUser(id: number): Promise<void> {
+export async function deleteUser(id: number | string): Promise<void> {
+  // 1. Send API DELETE to backend
   try {
     await api.delete(`/users/${id}`);
   } catch (err) {
-    console.warn('[AUTH] Error deleting user on backend');
+    console.warn('[AUTH] Error deleting user on backend, recording local deletion');
+  }
+
+  // 2. Persist deletion in localStorage tombstone list & remove from custom users
+  if (typeof window !== 'undefined') {
+    try {
+      const deleted = getDeletedUserIds();
+      const idStr = String(id);
+      if (!deleted.some(d => String(d) === idStr)) {
+        deleted.push(id);
+        localStorage.setItem(DELETED_USERS_KEY, JSON.stringify(deleted));
+      }
+
+      const raw = localStorage.getItem(CUSTOM_USERS_KEY);
+      if (raw) {
+        let custom: UserProfile[] = JSON.parse(raw);
+        custom = custom.filter(u => String(u.id) !== idStr);
+        localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(custom));
+      }
+
+      notifyUsersChanged();
+    } catch (e) {
+      console.error('[AUTH] Local storage deletion error:', e);
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getUsers, createUser, upsertUser, deleteUser, getDepartments, UserProfile } from '@/lib/auth';
 import { getVendors, Vendor } from '@/lib/vendors';
 import { ROLE_LABELS, ROLE_ICONS } from '@/lib/constants';
@@ -35,21 +35,66 @@ export default function UserManager({ accentColor = '#DC2626' }: UserManagerProp
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  async function loadData() {
-    setLoading(true);
-    const [uList, dList, vList] = await Promise.all([
-      getUsers(),
-      getDepartments(),
-      getVendors()
-    ]);
-    setUsers(uList);
-    setDepartments(dList);
-    setVendors(vList);
-    setLoading(false);
-  }
+  const loadDataRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
+
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const [uList, dList, vList] = await Promise.all([
+        getUsers().catch(() => []),
+        getDepartments().catch(() => []),
+        getVendors().catch(() => [])
+      ]);
+      setUsers(uList);
+      setDepartments(dList);
+      setVendors(vList);
+    } catch (err) {
+      console.error('Error in UserManager loadData:', err);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  }, [loadData]);
 
   useEffect(() => {
     loadData();
+
+    // Cross-device sync: poll every 10 seconds silently
+    const syncInterval = setInterval(() => {
+      loadDataRef.current?.(true);
+    }, 10000);
+
+    const handleUserChanged = () => {
+      loadDataRef.current?.(true);
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (
+        e.key === 'aharsetu_users_timestamp' ||
+        e.key === 'aharsetu_custom_users' ||
+        e.key === 'aharsetu_deleted_user_ids' ||
+        e.key === 'aharsetu_departments_v3' ||
+        e.key === 'aharsetu_vendors_v3'
+      ) {
+        loadDataRef.current?.(true);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('aharsetu_user_changed', handleUserChanged);
+      window.addEventListener('storage', handleStorageChange);
+    }
+
+    return () => {
+      clearInterval(syncInterval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('aharsetu_user_changed', handleUserChanged);
+        window.removeEventListener('storage', handleStorageChange);
+      }
+    };
   }, []);
 
   function openAdd() {
@@ -115,7 +160,7 @@ export default function UserManager({ accentColor = '#DC2626' }: UserManagerProp
         });
       }
       setShowModal(false);
-      await loadData();
+      await loadData(true);
     } catch (e: any) {
       alert(e.message || 'Error saving user');
     } finally {
@@ -129,9 +174,14 @@ export default function UserManager({ accentColor = '#DC2626' }: UserManagerProp
       return;
     }
     if (confirm(`Delete user "${user.name}"? This cannot be undone.`)) {
-      setLoading(true);
-      await deleteUser(user.id);
-      await loadData();
+      // Optimistic instant UI update
+      setUsers(prev => prev.filter(u => u.id !== user.id));
+      try {
+        await deleteUser(user.id);
+      } catch (err: any) {
+        console.error('Error deleting user:', err);
+      }
+      await loadData(true);
     }
   }
 

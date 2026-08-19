@@ -149,7 +149,7 @@ class NotificationService:
             if recipient_role == "principal" and order_id:
                 # Route only to Principals supervising the order's department
                 from backend.models.order import MasterOrder
-                from backend.models.department import Department
+                from backend.models import Department
                 order = self.db.query(MasterOrder).filter(MasterOrder.id == order_id).first()
                 if order and order.department_id:
                     query = self.db.query(User).join(User.managed_departments).filter(
@@ -235,7 +235,7 @@ class NotificationService:
         # 2. Principals overseeing the department
         if order.department_id:
             from backend.models.user import User
-            from backend.models.department import Department
+            from backend.models import Department
             principals = self.db.query(User).join(User.managed_departments).filter(
                 User.role == "principal",
                 User.active == True,

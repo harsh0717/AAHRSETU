@@ -2,6 +2,8 @@ import sys
 import os
 from datetime import datetime, timezone
 
+os.environ["DATABASE_URL"] = "sqlite:///./aharsetu_test.db"
+
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

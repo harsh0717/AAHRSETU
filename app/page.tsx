@@ -22,7 +22,7 @@ export default function RootIndexPage() {
     }}>
       <div style={{ textAlign: 'center', color: '#6B7280' }}>
         <div style={{ fontSize: '2rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
-        <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>Loading AharSetu ERP session...</p>
+        <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>Loading AaharSetu ERP session...</p>
       </div>
 
       <style>{`

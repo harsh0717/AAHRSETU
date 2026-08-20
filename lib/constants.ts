@@ -1,11 +1,11 @@
 // ── AharSetu v2.0 Constants ───────────────────────────────────────────────────
 
 export const COLLEGE_INFO = {
-  name: 'AharSetu Institute of Education',
-  shortName: 'AharSetu',
+  name: 'AaharSetu Institute of Education',
+  shortName: 'AaharSetu',
   address: 'College Campus, Education District',
   phone: '+91 79 1234 5678',
-  email: 'info@aharsetu.edu.in',
+  email: 'info@aaharsetu.edu.in',
   logo: '🍱',
 };
 

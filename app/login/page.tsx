@@ -48,11 +48,11 @@ function formatBrandText(text: string, currentLang: string = 'en') {
           if (part.match(/^(AaharSetu|AharSetu|Aaharसेतु|Aharसेतु|Aaharસેતુ|Aharસેતુ)$/)) {
             return (
               <span key={idx} style={{ display: 'inline-flex', alignItems: 'baseline' }}>
-                Ahar
+                Aahar
                 <span
                   style={{
                     fontSize: '0.86em',
-                    color: '#D97706',
+                    color: '#EA580C',
                     fontFamily,
                     fontWeight: 900,
                     marginLeft: '2px',
@@ -461,7 +461,7 @@ export default function LoginPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAFAF9' }}>
         <div style={{ textAlign: 'center', color: 'var(--gray-500)' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
-          <div>Loading AharSetu Portal...</div>
+          <div>Loading AaharSetu Portal...</div>
         </div>
       </div>
     }>

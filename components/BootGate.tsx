@@ -95,7 +95,7 @@ export default function BootGate({ children }: { children: React.ReactNode }) {
             Unable to Connect
           </h3>
           <p style={{ fontSize: '0.88rem', color: '#64748B', margin: '0 0 24px 0', lineHeight: 1.5 }}>
-            We are having trouble connecting to the AharSetu server. Please check your internet connection and try again.
+            We are having trouble connecting to the AaharSetu server. Please check your internet connection and try again.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button
@@ -168,12 +168,12 @@ export default function BootGate({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* AharSetu Wordmark with letter-spacing & fade animation */}
+          {/* AaharSetu Wordmark with letter-spacing & fade animation */}
           <h1
             style={{
               fontSize: '2rem',
               fontWeight: 900,
-              color: '#1E3A6F',
+              color: '#0F388A',
               letterSpacing: '-0.03em',
               margin: '0 0 4px 0',
               opacity: 0,
@@ -182,7 +182,7 @@ export default function BootGate({ children }: { children: React.ReactNode }) {
               fontFamily: "'Outfit', 'Inter', sans-serif"
             }}
           >
-            Ahar<span style={{ color: '#2563EB' }}>Setu</span>
+            Aahar<span style={{ color: '#EA580C' }}>Setu</span>
           </h1>
 
           <p

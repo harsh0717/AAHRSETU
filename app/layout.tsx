@@ -12,18 +12,20 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'AharSetu — Campus Canteen Platform',
+  title: 'AaharSetu — Campus Canteen Platform',
   description: 'Smart Canteen Order Management & Institutional Procurement Platform for Educational Institutions.',
-  keywords: 'canteen management, order ERP, food ordering, college canteen, AharSetu',
+  keywords: 'canteen management, order ERP, food ordering, college canteen, AaharSetu',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'AharSetu',
+    title: 'AaharSetu',
   },
 };
 
 import { NotificationProvider } from '@/components/NotificationProvider';
+import ToastContainer from '@/components/ToastContainer';
+import RoleSwitcherBar from '@/components/RoleSwitcherBar';
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -41,6 +43,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <NotificationProvider>
             <BootGate>
               {children}
+              <ToastContainer />
+              <RoleSwitcherBar />
             </BootGate>
           </NotificationProvider>
         </I18nProvider>

@@ -387,7 +387,16 @@ export function pushNotification(
 
   if (typeof window !== 'undefined') {
     // 1. Dispatch custom event for in-app toast banner
-    window.dispatchEvent(new CustomEvent('aharsetu_toast', { detail: { message, notif } }));
+    window.dispatchEvent(new CustomEvent('aharsetu_toast', {
+      detail: {
+        title: notif.title,
+        message,
+        role: notif.recipient_role || session?.role || 'system',
+        order_id: notif.order_id,
+        type: notif.type,
+        notif
+      }
+    }));
     
     // 2. Trigger native/ServiceWorker system push notification
     displaySystemPushNotification(notif.title, message, notif.action_url || '/');

@@ -14,6 +14,8 @@ import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
+import UiverseToggle from '@/components/ui/UiverseToggle';
+import { getSystemSettings, updateSystemSettings } from '@/lib/systemSettings';
 import { api } from '@/lib/api';
 
 export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
@@ -111,20 +113,29 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   // Settings State
   const [preferredLang, setPreferredLang] = useState('en');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [demoSwitcherEnabled, setDemoSwitcherEnabled] = useState(true);
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
   const [settingsMessage, setSettingsMessage] = useState('');
   const [resetConfirmPhrase, setResetConfirmPhrase] = useState('');
 
-  async function handleToggleDemo(enabled: boolean) {
-    setSettingsMessage('');
-    try {
-      const res = await api.put<{ demo_accounts_enabled: boolean }>('/settings', { demo_accounts_enabled: enabled });
-      setDemoAccountsEnabled(res.demo_accounts_enabled);
-      setSettingsMessage('System settings updated successfully!');
-      setTimeout(() => setSettingsMessage(''), 4000);
-    } catch (err: any) {
-      setSettingsMessage(err.message || 'Failed to update system settings.');
-    }
+  useEffect(() => {
+    const s = getSystemSettings();
+    setDemoSwitcherEnabled(s.demo_switcher_enabled);
+    setDemoAccountsEnabled(s.demo_accounts_enabled);
+  }, []);
+
+  function handleToggleDemoSwitcher(enabled: boolean) {
+    const updated = updateSystemSettings({ demo_switcher_enabled: enabled });
+    setDemoSwitcherEnabled(updated.demo_switcher_enabled);
+    setSettingsMessage(enabled ? 'Live Role Switcher bar enabled.' : 'Live Role Switcher bar disabled.');
+    setTimeout(() => setSettingsMessage(''), 4000);
+  }
+
+  function handleToggleDemoAccounts(enabled: boolean) {
+    const updated = updateSystemSettings({ demo_accounts_enabled: enabled });
+    setDemoAccountsEnabled(updated.demo_accounts_enabled);
+    setSettingsMessage(enabled ? 'Login demo accounts enabled.' : 'Login demo accounts disabled.');
+    setTimeout(() => setSettingsMessage(''), 4000);
   }
 
   async function handleDeactivateAllUsers() {
@@ -1691,22 +1702,41 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   <hr style={{ margin: '18px 0', borderColor: 'var(--gray-200)' }} />
                   <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>🛡️ Administrative System Settings</h3>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
-                    <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-800)' }}>Demo Accounts Access</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--gray-500)', marginTop: '2px' }}>Allows fast mock logins from the login board</div>
+                  {/* 1. Live Role Switcher Floating Dock */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ flex: 1, paddingRight: '12px' }}>
+                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--gray-900)' }}>Live Demo Role Switcher Dock</div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--gray-500)', marginTop: '2px' }}>
+                        Shows floating bottom dock for 1-click persona switching (Board presentation mode)
+                      </div>
                     </div>
-                    {/* Toggle Switch */}
-                    <label style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px' }}>
-                      <input type="checkbox" checked={demoAccountsEnabled} onChange={(e) => handleToggleDemo(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
-                      <span style={{ position: 'absolute', cursor: 'pointer', inset: 0, background: demoAccountsEnabled ? '#2563EB' : '#CBD5E1', borderRadius: '24px', transition: '0.3s' }}>
-                        <span style={{ position: 'absolute', left: demoAccountsEnabled ? '24px' : '4px', bottom: '4px', background: 'white', width: '16px', height: '16px', borderRadius: '50%', transition: '0.3s' }} />
-                      </span>
-                    </label>
+                    <UiverseToggle
+                      checked={demoSwitcherEnabled}
+                      onChange={(checked) => handleToggleDemoSwitcher(checked)}
+                      activeColor="#2563EB"
+                      size="md"
+                    />
                   </div>
+
+                  {/* 2. Login Quick-Access Demo Accounts */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', marginTop: '10px' }}>
+                    <div style={{ flex: 1, paddingRight: '12px' }}>
+                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--gray-900)' }}>Login Demo Accounts Board</div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--gray-500)', marginTop: '2px' }}>
+                        Enables quick-fill mock credentials on the login screen
+                      </div>
+                    </div>
+                    <UiverseToggle
+                      checked={demoAccountsEnabled}
+                      onChange={(checked) => handleToggleDemoAccounts(checked)}
+                      activeColor="#2563EB"
+                      size="md"
+                    />
+                  </div>
+
                   {settingsMessage && (
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: settingsMessage.includes('error') || settingsMessage.includes('Failed') ? '#EF4444' : '#10B981', marginTop: '4px' }}>
-                      {settingsMessage}
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: settingsMessage.includes('error') || settingsMessage.includes('Failed') ? '#EF4444' : '#10B981', marginTop: '8px' }}>
+                      ✓ {settingsMessage}
                     </div>
                   )}
 

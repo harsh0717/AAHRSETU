@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getSession, login, UserProfile } from '@/lib/auth';
+import { isDemoSwitcherEnabled } from '@/lib/systemSettings';
 import AppIcon from './ui/AppIcon';
 
 interface PersonaItem {
@@ -123,22 +124,34 @@ export default function RoleSwitcherBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
+  const [switcherEnabled, setSwitcherEnabled] = useState(true);
 
   const refreshSession = useCallback(() => {
     const s = getSession();
     setCurrentSession(s);
+    setSwitcherEnabled(isDemoSwitcherEnabled());
   }, []);
 
   useEffect(() => {
     refreshSession();
     const handleAuthChange = () => refreshSession();
+    const handleSettingsChange = (e: any) => {
+      if (e.detail && typeof e.detail.demo_switcher_enabled === 'boolean') {
+        setSwitcherEnabled(e.detail.demo_switcher_enabled);
+      } else {
+        setSwitcherEnabled(isDemoSwitcherEnabled());
+      }
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_profile_changed', handleAuthChange);
+      window.addEventListener('aharsetu_settings_changed', handleSettingsChange);
       window.addEventListener('storage', handleAuthChange);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_profile_changed', handleAuthChange);
+        window.removeEventListener('aharsetu_settings_changed', handleSettingsChange);
         window.removeEventListener('storage', handleAuthChange);
       }
     };
@@ -208,8 +221,8 @@ export default function RoleSwitcherBar() {
     }
   };
 
-  // Don't show if user hid it
-  if (hidden) return null;
+  // Don't show if user hid it or if disabled by Admin in settings
+  if (hidden || !switcherEnabled) return null;
 
   const currentRole = currentSession?.role || 'Guest';
   const currentEmail = currentSession?.email?.toLowerCase() || '';

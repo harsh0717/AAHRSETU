@@ -10,6 +10,7 @@ import UiverseButton from '@/components/ui/UiverseButton';
 import UiverseLoader from '@/components/ui/UiverseLoader';
 import AppIcon from '@/components/ui/AppIcon';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
+import { isDemoAccountsEnabled } from '@/lib/systemSettings';
 import styles from './login.module.css';
 
 const ROLES_LIST = [
@@ -116,18 +117,26 @@ function LoginFormContent() {
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
 
   useEffect(() => {
-    async function loadSettings() {
-      try {
-        const res = await api.get<{ demo_accounts_enabled: boolean }>('/settings/public');
-        setDemoAccountsEnabled(res.demo_accounts_enabled);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('aharsetu_demo_enabled', res.demo_accounts_enabled ? 'true' : 'false');
-        }
-      } catch (e) {
-        console.warn('[LOGIN] Offline or system settings error:', e);
+    setDemoAccountsEnabled(isDemoAccountsEnabled());
+
+    const handleSettingsChange = (e: any) => {
+      if (e.detail && typeof e.detail.demo_accounts_enabled === 'boolean') {
+        setDemoAccountsEnabled(e.detail.demo_accounts_enabled);
+      } else {
+        setDemoAccountsEnabled(isDemoAccountsEnabled());
       }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('aharsetu_settings_changed', handleSettingsChange);
+      window.addEventListener('storage', handleSettingsChange);
     }
-    loadSettings();
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('aharsetu_settings_changed', handleSettingsChange);
+        window.removeEventListener('storage', handleSettingsChange);
+      }
+    };
   }, []);
 
   useEffect(() => {

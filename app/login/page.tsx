@@ -7,7 +7,9 @@ import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 import UiverseButton from '@/components/ui/UiverseButton';
+import UiverseLoader from '@/components/ui/UiverseLoader';
 import AppIcon from '@/components/ui/AppIcon';
+import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import styles from './login.module.css';
 
 const ROLES_LIST = [
@@ -456,7 +458,8 @@ function LoginFormContent() {
 
         </div>
       </section>
-      
+
+      <PwaInstallPrompt />
     </div>
   );
 }
@@ -465,10 +468,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAFAF9' }}>
-        <div style={{ textAlign: 'center', color: 'var(--gray-500)' }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
-          <div>Loading AaharSetu Portal...</div>
-        </div>
+        <UiverseLoader variant="cloche" label="Loading AharSetu Portal..." />
       </div>
     }>
       <LoginFormContent />

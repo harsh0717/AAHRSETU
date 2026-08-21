@@ -2,22 +2,75 @@
   "name": "AharSetu — Campus Canteen Platform",
   "short_name": "AharSetu",
   "description": "Smart Canteen Order Management & Institutional Procurement Platform",
-  "start_url": "/",
+  "id": "edu.aharsetu.app",
+  "start_url": "/login",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#FFFFFF",
   "theme_color": "#2563EB",
+  "categories": [
+    "food",
+    "education",
+    "business",
+    "productivity"
+  ],
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/images/logo.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
       "src": "/icon.svg",
-      "sizes": "512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Order Requisition",
+      "short_name": "New Order",
+      "description": "Create a new canteen food order",
+      "url": "/coordinator/orders/create",
+      "icons": [
+        {
+          "src": "/images/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Pending Approvals",
+      "short_name": "Approvals",
+      "description": "Review and approve department food bills",
+      "url": "/principal/approvals",
+      "icons": [
+        {
+          "src": "/images/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Incoming Kitchen Orders",
+      "short_name": "Kitchen Orders",
+      "description": "Manage live kitchen orders",
+      "url": "/vendor/orders/incoming",
+      "icons": [
+        {
+          "src": "/images/logo.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

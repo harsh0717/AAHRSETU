@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import NotificationBell from './NotificationBell';
 import LanguageSwitcher from './LanguageSwitcher';
 import PushPrompt from './PushPrompt';
+import PwaInstallPrompt from './PwaInstallPrompt';
 import ToastContainer from './Toast';
 import BrandLogo from './BrandLogo';
 import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
@@ -650,6 +651,7 @@ export default function AppShell({ children, role }: AppShellProps) {
 
       <ToastContainer />
       <PushPrompt />
+      <PwaInstallPrompt />
       <FirstTimeOnboardingModal />
     </div>
   );

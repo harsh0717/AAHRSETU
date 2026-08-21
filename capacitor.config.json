@@ -1,0 +1,22 @@
+{
+  "appId": "edu.aharsetu.app",
+  "appName": "AharSetu",
+  "webDir": "out",
+  "bundledWebRuntime": false,
+  "server": {
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1800,
+      "launchAutoHide": true,
+      "backgroundColor": "#2563EB",
+      "showSpinner": true,
+      "spinnerColor": "#FFFFFF"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#2563EB"
+    }
+  }
+}

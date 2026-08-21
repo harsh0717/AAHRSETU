@@ -9,6 +9,11 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL
 
 const nextConfig = {
   trailingSlash: false,
+  compress: true,
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 86400,
+  },
   async rewrites() {
     return [
       {

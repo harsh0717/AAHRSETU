@@ -37,6 +37,18 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <head>
         <link rel="icon" href="/icon.svg" />
         <link rel="apple-touch-icon" href="/icon.svg" />
+        
+        {/* Preconnect to Font domains for zero-latency DNS & TLS negotiation */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        />
+
+        {/* High-priority asset preloading to prevent LCP discovery delay */}
+        <link rel="preload" as="image" href="/images/food_login_bg.webp" type="image/webp" />
+        <link rel="preload" as="image" href="/images/logo.png" type="image/png" />
       </head>
       <body>
         <I18nProvider>

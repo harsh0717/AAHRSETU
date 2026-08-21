@@ -17,18 +17,21 @@
   "background_color": "#FFFFFF",
   "theme_color": "#2563EB",
   "prefer_related_applications": false,
+  "related_applications": [],
   "categories": [
     "food",
     "education",
     "business",
     "productivity"
   ],
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
   "launch_handler": {
     "client_mode": "auto"
   },
   "edge_side_panel": {
     "preferred_width": 400
   },
+  "handle_links": "preferred",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -106,6 +109,68 @@
           "sizes": "192x192"
         }
       ]
+    }
+  ],
+  "share_target": {
+    "action": "/coordinator/orders/create",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "/admin/reports",
+      "name": "AharSetu Requisition File",
+      "accept": {
+        "text/csv": [
+          ".csv"
+        ],
+        "application/json": [
+          ".json"
+        ]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+aharsetu",
+      "url": "/order/%s"
+    }
+  ],
+  "note_taking": {
+    "new_note_url": "/coordinator/orders/create"
+  },
+  "widgets": [
+    {
+      "name": "Today Requisition Status",
+      "short_name": "Requisitions",
+      "description": "View live canteen order updates",
+      "tag": "canteen-orders",
+      "template": "widget-template",
+      "ms_ac_template": "widget.json",
+      "data": "widget-data.json",
+      "type": "application/json",
+      "screenshots": [
+        {
+          "src": "/images/screenshot-mobile.png",
+          "sizes": "750x1334",
+          "label": "Canteen Status Widget"
+        }
+      ],
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "scope_extensions": [
+    {
+      "origin": "https://aharsetu.edu.in"
     }
   ]
 }

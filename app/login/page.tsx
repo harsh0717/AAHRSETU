@@ -7,25 +7,26 @@ import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 import UiverseButton from '@/components/ui/UiverseButton';
+import AppIcon from '@/components/ui/AppIcon';
 import styles from './login.module.css';
 
 const ROLES_LIST = [
-  { id: 'coordinator', label: 'Coordinator', icon: '👤', desc: 'Draft department requests' },
-  { id: 'principal', label: 'Principal', icon: '🎓', desc: 'Oversee & approve department bills' },
-  { id: 'dcr', label: 'DCR Auditor', icon: '📋', desc: 'Audit budgets & settle accounts' },
-  { id: 'vendor', label: 'Canteen Vendor', icon: '🍽️', desc: 'Update prices & settle kitchen orders' },
-  { id: 'admin', label: 'System Admin', icon: '⚙️', desc: 'Configure users & system baseline' },
+  { id: 'coordinator', label: 'Coordinator', icon: 'coordinator', desc: 'Draft department requests' },
+  { id: 'principal', label: 'Principal', icon: 'principal', desc: 'Oversee & approve department bills' },
+  { id: 'dcr', label: 'DCR Auditor', icon: 'dcr', desc: 'Audit budgets & settle accounts' },
+  { id: 'vendor', label: 'Canteen Vendor', icon: 'vendor', desc: 'Update prices & settle kitchen orders' },
+  { id: 'admin', label: 'System Admin', icon: 'admin', desc: 'Configure users & system baseline' },
 ];
 
 const DEMO_ACCOUNTS = [
-  { label: 'System Admin', email: 'admin@aharsetu.edu.in', password: 'Admin@123', role: 'admin', department_id: null, icon: '⚙️' },
-  { label: 'DCR Auditor', email: 'dcr@aharsetu.edu.in', password: 'DCR@123', role: 'dcr', department_id: null, icon: '📋' },
-  { label: 'Principal (DD)', email: 'principal.dd@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'diploma', icon: '🎓' },
-  { label: 'Principal (Pharma)', email: 'principal.pharma@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'pharmacy', icon: '🎓' },
-  { label: 'Coordinator (Diploma)', email: 'coord.diploma@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'diploma', icon: '👤' },
-  { label: 'Coordinator (Degree)', email: 'coord.degree@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'degree', icon: '👤' },
-  { label: 'Sharma Canteen', email: 'vendor1@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: '🍽️' },
-  { label: 'Fresh Bites Canteen', email: 'vendor2@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: '🍽️' },
+  { label: 'System Admin', email: 'admin@aharsetu.edu.in', password: 'Admin@123', role: 'admin', department_id: null, icon: 'admin' },
+  { label: 'DCR Auditor', email: 'dcr@aharsetu.edu.in', password: 'DCR@123', role: 'dcr', department_id: null, icon: 'dcr' },
+  { label: 'Principal (DD)', email: 'principal.dd@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'diploma', icon: 'principal' },
+  { label: 'Principal (Pharma)', email: 'principal.pharma@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'pharmacy', icon: 'principal' },
+  { label: 'Coordinator (Diploma)', email: 'coord.diploma@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'diploma', icon: 'coordinator' },
+  { label: 'Coordinator (Degree)', email: 'coord.degree@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'degree', icon: 'coordinator' },
+  { label: 'Sharma Canteen', email: 'vendor1@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: 'vendor' },
+  { label: 'Fresh Bites Canteen', email: 'vendor2@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: 'vendor' },
 ];
 
 function formatBrandText(text: string, currentLang: string = 'en') {
@@ -301,8 +302,8 @@ function LoginFormContent() {
           </div>
 
           {error && (
-            <div className={styles.errorBanner}>
-              <span>⚠️</span>
+            <div className={styles.errorBanner} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AppIcon name="rejected" size={18} color="#DC2626" />
               <div>{error}</div>
             </div>
           )}
@@ -322,7 +323,9 @@ function LoginFormContent() {
                     className={`${styles.roleCard} ${role === r.id ? styles.roleSelected : ''}`}
                   >
                     {role === r.id && <span className={styles.roleSelectedIcon}>✓</span>}
-                    <div className={styles.roleIcon}>{r.icon}</div>
+                    <div className={styles.roleIcon} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <AppIcon name={r.icon} size={26} color={role === r.id ? '#2563EB' : '#64748B'} />
+                    </div>
                     <div className={styles.roleName}>{t(`role.${r.id}`, r.label)}</div>
                   </div>
                 ))}
@@ -356,7 +359,9 @@ function LoginFormContent() {
               {/* Email */}
               <div className={styles.inputField}>
                 <div className={styles.inputBox}>
-                  <span className={styles.inputIcon}>👤</span>
+                  <span className={styles.inputIcon} style={{ display: 'flex', alignItems: 'center' }}>
+                    <AppIcon name="profile" size={18} color="#94A3B8" />
+                  </span>
                   <input
                     type="email"
                     placeholder={t('login.email_ph', 'Institutional Email (e.g. name@aharsetu.edu.in)')}
@@ -371,7 +376,9 @@ function LoginFormContent() {
               {/* Password */}
               <div className={styles.inputField} style={{ marginBottom: 0 }}>
                 <div className={styles.inputBox}>
-                  <span className={styles.inputIcon}>🔑</span>
+                  <span className={styles.inputIcon} style={{ display: 'flex', alignItems: 'center' }}>
+                    <AppIcon name="settings" size={18} color="#94A3B8" />
+                  </span>
                   <input
                     type={showPass ? 'text' : 'password'}
                     placeholder={t('login.pass_ph', 'Verification Password')}
@@ -384,8 +391,9 @@ function LoginFormContent() {
                     type="button"
                     onClick={() => setShowPass(!showPass)}
                     className={styles.togglePassBtn}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
-                    {showPass ? '👁️' : '👁️‍🗨️'}
+                    <AppIcon name={showPass ? 'eye_off' : 'eye'} size={18} color="#64748B" />
                   </button>
                 </div>
               </div>
@@ -432,7 +440,9 @@ function LoginFormContent() {
                       onClick={() => fillDemo(acc)}
                       className={styles.demoCard}
                     >
-                      <span className={styles.demoIcon}>{acc.icon}</span>
+                      <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
+                        <AppIcon name={acc.icon} size={20} color="#2563EB" />
+                      </span>
                       <div className={styles.demoMeta}>
                         <h5>{acc.label}</h5>
                         <p>{acc.email}</p>

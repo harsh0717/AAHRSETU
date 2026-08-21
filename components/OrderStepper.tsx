@@ -1,9 +1,21 @@
 'use client';
 import { PIPELINE_STAGES, STATUS_TO_STAGE } from '@/lib/constants';
+import AppIcon from './ui/AppIcon';
 
 interface OrderStepperProps {
   status: string;
 }
+
+const STAGE_ICON_MAP: Record<string, string> = {
+  coordinator: 'file_edit',
+  sent: 'send',
+  principal: 'principal',
+  dcr: 'dcr',
+  vendor: 'chef',
+  confirmed: 'check',
+  bill: 'bills',
+  completed: 'completed',
+};
 
 export default function OrderStepper({ status }: OrderStepperProps) {
   const currentStage = STATUS_TO_STAGE[status] ?? 0;
@@ -71,7 +83,15 @@ export default function OrderStepper({ status }: OrderStepperProps) {
                       }}
                     />
                   )}
-                  {done ? '✓' : stage.icon}
+                  {done ? (
+                    <AppIcon name="check" size={16} color="#FFFFFF" strokeWidth={3} />
+                  ) : (
+                    <AppIcon
+                      name={STAGE_ICON_MAP[stage.key] || 'orders'}
+                      size={16}
+                      color={active ? '#FFFFFF' : '#64748B'}
+                    />
+                  )}
                 </div>
                 <div style={{
                   fontSize: '0.66rem',

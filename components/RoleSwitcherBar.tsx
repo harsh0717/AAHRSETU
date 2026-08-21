@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getSession, login, UserProfile } from '@/lib/auth';
+import AppIcon from './ui/AppIcon';
 
 interface PersonaItem {
   id: string;
@@ -27,7 +28,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     subLabel: 'Diploma Dept',
     email: 'coord.diploma@aharsetu.edu.in',
     deptId: 'diploma',
-    icon: '👤',
+    icon: 'coordinator',
     color: '#2563EB',
     badgeBg: '#EFF6FF',
   },
@@ -39,7 +40,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     subLabel: 'Degree Dept',
     email: 'coord.degree@aharsetu.edu.in',
     deptId: 'degree',
-    icon: '👤',
+    icon: 'coordinator',
     color: '#0284C7',
     badgeBg: '#F0F9FF',
   },
@@ -51,7 +52,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     subLabel: 'Diploma & Degree',
     email: 'principal.dd@aharsetu.edu.in',
     deptId: 'diploma',
-    icon: '🎓',
+    icon: 'principal',
     color: '#4F46E5',
     badgeBg: '#EEF2FF',
   },
@@ -63,7 +64,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     subLabel: 'Pharmacy College',
     email: 'principal.pharma@aharsetu.edu.in',
     deptId: 'pharmacy',
-    icon: '🎓',
+    icon: 'principal',
     color: '#7C3AED',
     badgeBg: '#F5F3FF',
   },
@@ -74,7 +75,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     label: 'DCR Auditor',
     subLabel: 'Accounts Clearance',
     email: 'dcr@aharsetu.edu.in',
-    icon: '📋',
+    icon: 'dcr',
     color: '#0D9488',
     badgeBg: '#CCFBF1',
   },
@@ -86,7 +87,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     subLabel: 'Tea & Snacks',
     email: 'vendor1@aharsetu.edu.in',
     vendorId: 'v1',
-    icon: '🍽️',
+    icon: 'vendor',
     color: '#059669',
     badgeBg: '#ECFDF5',
   },
@@ -98,7 +99,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     subLabel: 'Fast Food & Bowls',
     email: 'vendor2@aharsetu.edu.in',
     vendorId: 'v2',
-    icon: '🍕',
+    icon: 'vendor',
     color: '#D97706',
     badgeBg: '#FEF3C7',
   },
@@ -109,7 +110,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
     label: 'System Admin',
     subLabel: 'Institutional IT',
     email: 'admin@aharsetu.edu.in',
-    icon: '⚙️',
+    icon: 'admin',
     color: '#9333EA',
     badgeBg: '#FAF5FF',
   },
@@ -322,8 +323,10 @@ export default function RoleSwitcherBar() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <span style={{ fontSize: '1rem' }}>{p.icon}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        <AppIcon name={p.icon} size={15} color={isActive ? p.color : '#94A3B8'} />
+                      </span>
                       <span style={{ fontSize: '0.78rem', fontWeight: 800, color: isActive ? p.color : '#F1F5F9' }}>
                         {p.label}
                       </span>

@@ -13,6 +13,7 @@ import ToastContainer from './Toast';
 import BrandLogo from './BrandLogo';
 import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
 import AvatarImage from './AvatarImage';
+import AppIcon from './ui/AppIcon';
 import styles from './AppShell.module.css';
 
 interface AppShellProps {
@@ -23,39 +24,39 @@ interface AppShellProps {
 
 const BOTTOM_NAV_CONFIG: Record<string, { label: string; href: string; icon: string; id: string }[]> = {
   coordinator: [
-    { id: 'home', label: 'Home', href: '/coordinator', icon: '🏠' },
-    { id: 'create', label: 'New Order', href: '/coordinator/orders/create', icon: '➕' },
-    { id: 'orders', label: 'Orders', href: '/coordinator/orders', icon: '📦' },
-    { id: 'notifications', label: 'Alerts', href: '/coordinator/notifications', icon: '🔔' },
-    { id: 'profile', label: 'Profile', href: '/coordinator/profile', icon: '👤' },
+    { id: 'home', label: 'Home', href: '/coordinator', icon: 'home' },
+    { id: 'create', label: 'New Order', href: '/coordinator/orders/create', icon: 'create' },
+    { id: 'orders', label: 'Orders', href: '/coordinator/orders', icon: 'orders' },
+    { id: 'notifications', label: 'Alerts', href: '/coordinator/notifications', icon: 'notifications' },
+    { id: 'profile', label: 'Profile', href: '/coordinator/profile', icon: 'profile' },
   ],
   vendor: [
-    { id: 'home', label: 'Home', href: '/vendor', icon: '🏠' },
-    { id: 'incoming', label: 'Incoming', href: '/vendor/orders/incoming', icon: '📥' },
-    { id: 'menu', label: 'Menu', href: '/vendor/menu', icon: '🍽️' },
-    { id: 'notifications', label: 'Alerts', href: '/vendor/notifications', icon: '🔔' },
-    { id: 'profile', label: 'Profile', href: '/vendor/profile', icon: '👤' },
+    { id: 'home', label: 'Home', href: '/vendor', icon: 'home' },
+    { id: 'incoming', label: 'Incoming', href: '/vendor/orders/incoming', icon: 'incoming' },
+    { id: 'menu', label: 'Menu', href: '/vendor/menu', icon: 'menu' },
+    { id: 'notifications', label: 'Alerts', href: '/vendor/notifications', icon: 'notifications' },
+    { id: 'profile', label: 'Profile', href: '/vendor/profile', icon: 'profile' },
   ],
   principal: [
-    { id: 'home', label: 'Home', href: '/principal', icon: '🏠' },
-    { id: 'approvals', label: 'Approvals', href: '/principal/approvals', icon: '⏳' },
-    { id: 'my_orders', label: 'Requisitions', href: '/principal/my-orders', icon: '📝' },
-    { id: 'notifications', label: 'Alerts', href: '/principal/notifications', icon: '🔔' },
-    { id: 'more', label: 'More', href: '#more', icon: '☰' },
+    { id: 'home', label: 'Home', href: '/principal', icon: 'home' },
+    { id: 'approvals', label: 'Approvals', href: '/principal/approvals', icon: 'queue' },
+    { id: 'my_orders', label: 'Requisitions', href: '/principal/my-orders', icon: 'file_edit' },
+    { id: 'notifications', label: 'Alerts', href: '/principal/notifications', icon: 'notifications' },
+    { id: 'more', label: 'More', href: '#more', icon: 'menu_btn' },
   ],
   dcr: [
-    { id: 'home', label: 'Home', href: '/dcr', icon: '🏠' },
-    { id: 'approvals', label: 'Audit', href: '/dcr/approvals', icon: '📋' },
-    { id: 'history', label: 'Orders', href: '/dcr/history', icon: '📜' },
-    { id: 'notifications', label: 'Alerts', href: '/dcr/notifications', icon: '🔔' },
-    { id: 'profile', label: 'Profile', href: '/dcr/profile', icon: '👤' },
+    { id: 'home', label: 'Home', href: '/dcr', icon: 'home' },
+    { id: 'approvals', label: 'Audit', href: '/dcr/approvals', icon: 'active' },
+    { id: 'history', label: 'Orders', href: '/dcr/history', icon: 'history' },
+    { id: 'notifications', label: 'Alerts', href: '/dcr/notifications', icon: 'notifications' },
+    { id: 'profile', label: 'Profile', href: '/dcr/profile', icon: 'profile' },
   ],
   admin: [
-    { id: 'home', label: 'Home', href: '/admin', icon: '🏠' },
-    { id: 'users', label: 'Users', href: '/admin/users', icon: '👥' },
-    { id: 'orders', label: 'Orders', href: '/admin/orders', icon: '📦' },
-    { id: 'reports', label: 'Reports', href: '/admin/reports', icon: '📊' },
-    { id: 'more', label: 'More', href: '#more', icon: '☰' },
+    { id: 'home', label: 'Home', href: '/admin', icon: 'home' },
+    { id: 'users', label: 'Users', href: '/admin/users', icon: 'users' },
+    { id: 'orders', label: 'Orders', href: '/admin/orders', icon: 'orders' },
+    { id: 'reports', label: 'Reports', href: '/admin/reports', icon: 'reports' },
+    { id: 'more', label: 'More', href: '#more', icon: 'menu_btn' },
   ]
 };
 
@@ -181,7 +182,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                 className={`${styles.navItem} ${isActive ? styles.navActive : ''}`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <span className={styles.navIcon}>{item.icon}</span>
+                <span className={styles.navIcon} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AppIcon name={item.icon} size={18} />
+                </span>
                 <span>{t(item.labelKey)}</span>
               </Link>
             );
@@ -190,8 +193,8 @@ export default function AppShell({ children, role }: AppShellProps) {
 
         {/* Footer */}
         <div className={styles.sidebarFooter}>
-          <button onClick={handleLogout} className={styles.logoutBtn}>
-            <span>🚪</span> {t('auth.logout')}
+          <button onClick={handleLogout} className={styles.logoutBtn} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AppIcon name="logout" size={16} /> <span>{t('auth.logout')}</span>
           </button>
         </div>
       </aside>
@@ -219,15 +222,17 @@ export default function AppShell({ children, role }: AppShellProps) {
                   alignItems: 'center'
                 }}
               >
-                ←
+                <AppIcon name="back" size={20} />
               </button>
             ) : (
-              <button className={styles.menuBtn} onClick={() => setSidebarOpen((o) => !o)}>
-                ☰
+              <button className={styles.menuBtn} onClick={() => setSidebarOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AppIcon name="menu_btn" size={20} />
               </button>
             )}
-            <div className={styles.pageTitle}>
-              <span style={{ color: colors.accent }}>{ROLE_ICONS[role]}</span>
+            <div className={styles.pageTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: colors.accent, display: 'flex', alignItems: 'center' }}>
+                <AppIcon name={role} size={20} />
+              </span>
               <span>{ROLE_LABELS[role]}</span>
               {deptLabel && (
                 <span className={styles.headerDeptLabel} style={{ color: 'var(--gray-400)', fontSize: '0.85rem' }}> — {deptLabel}</span>
@@ -295,7 +300,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                     onMouseEnter={e => e.currentTarget.style.background = '#EFF6FF'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    ⚙️ Settings & Profile
+                    <AppIcon name="settings" size={16} /> <span>Settings & Profile</span>
                   </Link>
                   <button
                     onClick={() => {
@@ -321,7 +326,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                     onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    🚪 Fast Logout
+                    <AppIcon name="logout" size={16} color="#DC2626" /> <span>Fast Logout</span>
                   </button>
                 </div>
               )}
@@ -349,7 +354,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                   onClick={() => setMoreDrawerOpen((o) => !o)}
                   className={`${styles.bottomNavItem} ${isItemActive ? styles.bottomNavItemActive : ''}`}
                 >
-                  <span className={styles.bottomNavIcon}>{item.icon}</span>
+                  <span className={styles.bottomNavIcon}>
+                    <AppIcon name={item.icon} size={20} />
+                  </span>
                   <span>{item.label}</span>
                 </button>
               );
@@ -361,7 +368,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                 href={item.href}
                 className={`${styles.bottomNavItem} ${isItemActive ? styles.bottomNavItemActive : ''}`}
               >
-                <span className={styles.bottomNavIcon}>{item.icon}</span>
+                <span className={styles.bottomNavIcon}>
+                  <AppIcon name={item.icon} size={20} />
+                </span>
                 <span>{item.label}</span>
               </Link>
             );
@@ -384,8 +393,8 @@ export default function AppShell({ children, role }: AppShellProps) {
               <AvatarImage userId={session.id} name={session.name} size={44} />
               <div>
                 <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{session.name}</h4>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--role-accent)', marginTop: '2px' }}>
-                  {ROLE_ICONS[role]} {ROLE_LABELS[role]}
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--role-accent)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <AppIcon name={role} size={14} color="var(--role-accent)" /> {ROLE_LABELS[role]}
                 </div>
               </div>
             </div>
@@ -407,7 +416,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   fontSize: '0.9rem'
                 }}
               >
-                ⚙️ Settings & Languages
+                <AppIcon name="settings" size={18} /> <span>Settings & Languages</span>
               </Link>
 
               {role !== 'admin' && (
@@ -427,7 +436,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                     fontSize: '0.9rem'
                   }}
                 >
-                  🧾 Institutional Bills
+                  <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
                 </Link>
               )}
 
@@ -449,7 +458,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    📜 Requisition History
+                    <AppIcon name="history" size={18} /> <span>Requisition History</span>
                   </Link>
 
                   <Link
@@ -468,7 +477,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    👤 My Profile
+                    <AppIcon name="profile" size={18} /> <span>My Profile</span>
                   </Link>
                 </>
               )}
@@ -491,7 +500,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    🏢 Departments Management
+                    <AppIcon name="departments" size={18} /> <span>Departments Management</span>
                   </Link>
 
                   <Link
@@ -510,7 +519,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    🏪 Vendors Management
+                    <AppIcon name="vendors" size={18} /> <span>Vendors Management</span>
                   </Link>
 
                   <Link
@@ -529,7 +538,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    🧾 Institutional Bills
+                    <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
                   </Link>
 
                   <Link
@@ -548,7 +557,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    📈 System Analytics
+                    <AppIcon name="analytics" size={18} /> <span>System Analytics</span>
                   </Link>
 
                   <Link
@@ -567,7 +576,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    📜 Audit Trails & Logs
+                    <AppIcon name="audit" size={18} /> <span>Audit Trails & Logs</span>
                   </Link>
 
                   <Link
@@ -586,7 +595,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    🔔 Notification Alerts
+                    <AppIcon name="notifications" size={18} /> <span>Notification Alerts</span>
                   </Link>
 
                   <Link
@@ -605,7 +614,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       fontSize: '0.9rem'
                     }}
                   >
-                    ❤️ System Health Status
+                    <AppIcon name="health" size={18} /> <span>System Health Status</span>
                   </Link>
                 </>
               )}
@@ -632,7 +641,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   marginTop: '12px'
                 }}
               >
-                🚪 Sign Out of Session
+                <AppIcon name="logout" size={18} color="#DC2626" /> <span>Sign Out of Session</span>
               </button>
             </div>
           </div>

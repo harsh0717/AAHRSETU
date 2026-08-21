@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotification } from '@/components/NotificationProvider';
 import { useI18n } from '@/lib/i18n';
+import AppIcon from './ui/AppIcon';
 
 interface NotificationBellProps {
   userId: number;
@@ -89,7 +90,7 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
         }}
         className="notif-bell-btn"
       >
-        🔔
+        <AppIcon name="notifications" size={18} color="var(--gray-700)" />
         {unread > 0 && (
           <span style={{
             position: 'absolute', top: '-4px', right: '-4px',

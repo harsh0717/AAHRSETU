@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
+import UiverseButton from '@/components/ui/UiverseButton';
 
 interface ApprovalPanelProps {
   order: any;
@@ -30,11 +31,11 @@ export default function ApprovalPanel({ order, role, onApprove, onReject }: Appr
   }
 
   return (
-    <div style={{ padding: '16px', background: 'var(--surface-0)', borderRadius: '12px', border: '1px solid var(--gray-200)' }}>
-      <div style={{ fontWeight: 800, marginBottom: '12px', fontSize: '0.9rem', color: 'var(--gray-900)' }}>
+    <div style={{ padding: '18px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+      <div style={{ fontWeight: 800, marginBottom: '12px', fontSize: '0.92rem', color: 'var(--gray-900)' }}>
         {title}
       </div>
-      <div style={{ marginBottom: '12px' }}>
+      <div style={{ marginBottom: '14px' }}>
         <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600)', display: 'block', marginBottom: '4px' }}>
           {t('approval.optional_remarks')}
         </label>
@@ -43,25 +44,32 @@ export default function ApprovalPanel({ order, role, onApprove, onReject }: Appr
           value={remarks}
           onChange={e => setRemarks(e.target.value)}
           placeholder={t('approval.optional_ph')}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-300)', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--gray-300)', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box' }}
         />
       </div>
 
       {!showReject ? (
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleApprove}
-            className="btn btn-primary btn-sm"
-            style={{ background: '#10B981', borderColor: '#10B981', color: 'white' }}>
-            ✅ {t('approval.approve_btn')}
-          </button>
-          <button onClick={() => setShowReject(true)}
-            className="btn btn-ghost btn-sm"
-            style={{ color: '#EF4444' }}>
-            ❌ {t('approval.reject_btn')}
-          </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <UiverseButton
+            onClick={handleApprove}
+            variant="success"
+            size="sm"
+            leftIcon={<span>✅</span>}
+          >
+            {t('approval.approve_btn')}
+          </UiverseButton>
+          <UiverseButton
+            onClick={() => setShowReject(true)}
+            variant="glass"
+            size="sm"
+            style={{ color: '#EF4444' }}
+            leftIcon={<span>❌</span>}
+          >
+            {t('approval.reject_btn')}
+          </UiverseButton>
         </div>
       ) : (
-        <div style={{ background: '#FEF2F2', padding: '14px', borderRadius: '10px', border: '1px solid #FEE2E2' }}>
+        <div style={{ background: '#FEF2F2', padding: '16px', borderRadius: '14px', border: '1px solid #FEE2E2' }}>
           <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#991B1B', display: 'block', marginBottom: '6px' }}>
             {t('approval.reject_reason')} *
           </label>
@@ -70,19 +78,25 @@ export default function ApprovalPanel({ order, role, onApprove, onReject }: Appr
             value={rejectReason}
             onChange={e => setRejectReason(e.target.value)}
             placeholder={t('approval.reject_ph')}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #FCA5A5', fontSize: '0.85rem', resize: 'vertical', marginBottom: '8px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #FCA5A5', fontSize: '0.85rem', resize: 'vertical', marginBottom: '10px', boxSizing: 'border-box' }}
           />
-          <div style={{ fontSize: '0.72rem', color: '#991B1B', marginBottom: '10px' }}>{t('approval.reject_note')}</div>
+          <div style={{ fontSize: '0.74rem', color: '#991B1B', marginBottom: '12px' }}>{t('approval.reject_note')}</div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={handleReject} disabled={!rejectReason.trim()}
-              className="btn btn-primary btn-sm"
-              style={{ background: '#EF4444', borderColor: '#EF4444', color: 'white', opacity: rejectReason.trim() ? 1 : 0.5, cursor: rejectReason.trim() ? 'pointer' : 'not-allowed' }}>
+            <UiverseButton
+              onClick={handleReject}
+              disabled={!rejectReason.trim()}
+              variant="danger"
+              size="sm"
+            >
               {t('approval.confirm_reject')}
-            </button>
-            <button onClick={() => setShowReject(false)}
-              className="btn btn-ghost btn-sm">
+            </UiverseButton>
+            <UiverseButton
+              onClick={() => setShowReject(false)}
+              variant="glass"
+              size="sm"
+            >
               {t('common.cancel')}
-            </button>
+            </UiverseButton>
           </div>
         </div>
       )}

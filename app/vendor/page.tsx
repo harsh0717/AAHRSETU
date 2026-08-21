@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
+import UiverseToggle from '@/components/ui/UiverseToggle';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -1090,15 +1091,46 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
             {/* TAB: AVAILABILITY */}
             {activeTab === 'availability' && (
-              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>⚡ Operational Availability Settings</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="card" style={{ padding: '24px', maxWidth: '520px', borderRadius: '16px' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '16px', color: 'var(--gray-900)' }}>
+                  ⚡ Operational Availability Settings
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{
+                    padding: '16px',
+                    borderRadius: '14px',
+                    background: vendorDetails?.status === 'open' ? 'rgba(16, 185, 129, 0.08)' : '#F8FAFC',
+                    border: `1px solid ${vendorDetails?.status === 'open' ? 'rgba(16, 185, 129, 0.25)' : '#E2E8F0'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0F172A' }}>
+                        Kitchen Instant Availability
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>
+                        {vendorDetails?.status === 'open'
+                          ? '🟢 Currently OPEN and accepting new requisitions'
+                          : '🔴 Currently CLOSED to new department orders'}
+                      </div>
+                    </div>
+                    <UiverseToggle
+                      checked={vendorDetails?.status === 'open'}
+                      onChange={(checked) => handleToggleStatus(checked ? 'open' : 'closed')}
+                      activeColor="#10B981"
+                      size="md"
+                    />
+                  </div>
+
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Status</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                      Detailed Operational Mode
+                    </label>
                     <select className="form-input" value={vendorDetails?.status} onChange={e => handleToggleStatus(e.target.value)}>
                       <option value="open">Open (Available for new orders)</option>
                       <option value="closed">Closed (Unavailable for new orders)</option>
-                      <option value="temporarily_unavailable">Temporarily Unavailable</option>
+                      <option value="temporarily_unavailable">Temporarily Unavailable (Busy kitchen)</option>
                     </select>
                   </div>
                 </div>

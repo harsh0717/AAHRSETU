@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
+import UiverseButton from '@/components/ui/UiverseButton';
 import styles from './login.module.css';
 
 const ROLES_LIST = [
@@ -401,20 +402,15 @@ function LoginFormContent() {
               </label>
             </div>
 
-            <button
+            <UiverseButton
               type="submit"
-              disabled={loading}
-              className={styles.submitBtn}
+              size="lg"
+              isLoading={loading}
+              variant="primary"
+              style={{ width: '100%', marginTop: '8px' }}
             >
-              {loading ? (
-                <>
-                  <span className={styles.spinner}></span>
-                  {t('login.verifying_btn', 'Verifying Identity...')}
-                </>
-              ) : (
-                t('login.secure_btn', 'Secure Log In')
-              )}
-            </button>
+              {t('login.secure_btn', 'Secure Log In')}
+            </UiverseButton>
           </form>
 
           {/* Quick-Access Demo Accounts Selector */}

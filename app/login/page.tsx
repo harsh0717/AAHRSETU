@@ -244,6 +244,7 @@ export default function LoginPage() {
               <button
                 key={l.code}
                 type="button"
+                aria-label={`Select ${l.label} language`}
                 onClick={() => setLang(l.code as LangCode)}
                 className={`${styles.langBtn} ${lang === l.code ? styles.langActive : ''}`}
               >
@@ -358,7 +359,7 @@ export default function LoginPage() {
                     <option value="">{t('login.choose_department_placeholder', '-- Choose Department --')}</option>
                     {DEPARTMENTS.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.icon} {t(`departments.${d.id}`, d.name)} ({d.code})
+                        {t(`departments.${d.id}`, d.name)} ({d.label})
                       </option>
                     ))}
                   </select>
@@ -399,6 +400,7 @@ export default function LoginPage() {
                   />
                   <button
                     type="button"
+                    aria-label={showPass ? 'Hide password' : 'Show password'}
                     onClick={() => setShowPass(!showPass)}
                     className={styles.togglePassBtn}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -418,7 +420,6 @@ export default function LoginPage() {
                 />
                 <span>{t('login.remember_device', 'Remember this device')}</span>
               </label>
-            </div>
 
             <UiverseButton
               type="submit"

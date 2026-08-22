@@ -196,7 +196,6 @@
   z-index: 190;
 }
 
-/* Main content */
 .main {
   flex: 1;
   margin-left: 240px;
@@ -204,6 +203,8 @@
   flex-direction: column;
   min-height: 100vh;
   min-width: 0;
+  max-width: calc(100vw - 240px);
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -479,6 +480,9 @@
   }
 
   .main {
+    margin-left: 0 !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
     padding-bottom: calc(68px + env(safe-area-inset-bottom)) !important;
   }
 

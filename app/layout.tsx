@@ -9,8 +9,6 @@ import RoleSwitcherBar from '@/components/RoleSwitcherBar';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: '#2563EB',
 };
 
@@ -77,7 +75,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <I18nProvider>
           <NotificationProvider>
             <BootGate>
-              {children}
+              <main id="main-content" style={{ minHeight: '100vh', width: '100%' }}>
+                {children}
+              </main>
               <ToastContainer />
               <RoleSwitcherBar />
             </BootGate>

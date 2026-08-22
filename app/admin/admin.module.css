@@ -5,8 +5,11 @@
   flex-direction: column;
   gap: 24px;
   max-width: 1440px;
+  width: 100%;
   margin: 0 auto;
   padding: 8px 4px 40px 4px;
+  overflow-x: hidden;
+  box-sizing: border-box;
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -129,13 +132,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  overflow-x: auto;
+  flex-wrap: wrap;
   padding: 4px 2px;
-  scrollbar-width: none;
-}
-
-.quickActionsBar::-webkit-scrollbar {
-  display: none;
 }
 
 .quickActionBtn {
@@ -160,7 +158,7 @@
   border-color: #CBD5E1;
   color: #0F172A;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
 }
 
 .quickActionPrimary {
@@ -175,129 +173,158 @@
   color: #FFFFFF;
 }
 
-/* ── 3. KPI Stat Cards Grid ── */
-.statsGrid {
+/* ── 3. KPI Metrics Grid ── */
+.metricsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
 }
 
-.statCard {
+.kpiCard {
   background: #FFFFFF;
-  border-radius: 18px;
-  padding: 22px;
   border: 1px solid #E2E8F0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border-radius: 18px;
+  padding: 20px 22px;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 16px;
   position: relative;
   overflow: hidden;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.03);
 }
 
-.statCard:hover {
+.kpiCard:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
   border-color: #CBD5E1;
 }
 
-.statCardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
+.kpiCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--kpi-accent, #2563EB);
+  opacity: 0.85;
 }
 
-.statLabel {
-  font-size: 0.8rem;
+.kpiInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpiLabel {
+  font-size: 0.78rem;
   font-weight: 700;
   color: #64748B;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.statIconWrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+.kpiValue {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0F172A;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 2px 0 4px 0;
+}
+
+.kpiSubtext {
+  font-size: 0.76rem;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kpiSubtextBadge {
+  color: #059669;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.kpiIconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.4rem;
   flex-shrink: 0;
 }
 
-.statValue {
-  font-size: 1.85rem;
-  font-weight: 900;
-  color: #0F172A;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
-}
-
-.statSub {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.78rem;
-  color: #64748B;
-  border-top: 1px solid #F1F5F9;
-  padding-top: 10px;
-  margin-top: 4px;
-}
-
-.statBadgePositive {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: #059669;
-  font-weight: 800;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-
-/* ── 4. Main Two-Column Split Layout ── */
-.mainSplitGrid {
+/* ── 4. Main Two-Column Layout ── */
+.mainDashboardGrid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1.65fr 1fr;
   gap: 20px;
 }
 
-.cardSection {
+@media (max-width: 1100px) {
+  .mainDashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sectionCard {
   background: #FFFFFF;
-  border-radius: 18px;
   border: 1px solid #E2E8F0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border-radius: 18px;
   padding: 24px;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
+  gap: 18px;
 }
 
 .sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-.sectionTitle {
-  font-size: 1.05rem;
+.sectionTitleGroup h3 {
+  font-size: 1.15rem;
   font-weight: 800;
   color: #0F172A;
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.sectionSubtitle {
+.sectionTitleGroup p {
   font-size: 0.8rem;
   color: #64748B;
-  font-weight: 500;
-  margin-top: 2px;
+  margin: 2px 0 0 0;
+}
+
+.sectionActionBtn {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2563EB;
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sectionActionBtn:hover {
+  background: #2563EB;
+  color: white;
 }
 
 /* ── 5. Segmented Tabs Bar ── */
@@ -308,12 +335,7 @@
   background: #F1F5F9;
   padding: 5px;
   border-radius: 14px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tabNavContainer::-webkit-scrollbar {
-  display: none;
+  flex-wrap: wrap;
 }
 
 .tabNavBtn {
@@ -350,6 +372,18 @@
   border-radius: 14px;
   border: 1px solid #E2E8F0;
   background: #FFFFFF;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 
 .dataTable {

@@ -124,17 +124,52 @@ export function saveCustomUser(user: UserProfile) {
 }
 
 export async function getUsers(): Promise<UserProfile[]> {
+  let baseUsers: UserProfile[] = [];
   try {
     const res = await api.get<UserProfile[]>('/users');
     if (res && Array.isArray(res) && res.length > 0) {
-      const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
-      const filtered = res.filter(u => !deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase()));
-      return filtered;
+      baseUsers = res;
     }
   } catch (err) {
     // Serve local users directory
   }
-  return getSavedUsers();
+
+  if (baseUsers.length === 0) {
+    return getSavedUsers();
+  }
+
+  // Merge custom user overrides (names, roles, depts) over backend baseUsers
+  try {
+    const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(CUSTOM_USERS_KEY) : null;
+    const custom: UserProfile[] = raw ? JSON.parse(raw) : [];
+    
+    const userMap = new Map<string, UserProfile>();
+    
+    // 1. Add base users from backend
+    baseUsers.forEach(u => {
+      if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
+        userMap.set(u.email.toLowerCase(), u);
+      }
+    });
+
+    // 2. Custom users ALWAYS override base users (preserving user updates forever)
+    if (Array.isArray(custom)) {
+      custom.forEach(u => {
+        if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
+          const existing = userMap.get(u.email.toLowerCase());
+          userMap.set(u.email.toLowerCase(), {
+            ...(existing || {}),
+            ...u,
+          });
+        }
+      });
+    }
+
+    return Array.from(userMap.values());
+  } catch (e) {
+    return baseUsers;
+  }
 }
 
 export async function createUser(userData: any): Promise<UserProfile> {

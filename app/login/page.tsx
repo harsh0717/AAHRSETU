@@ -224,7 +224,7 @@ function LoginFormContent() {
           priority
           // @ts-ignore
           fetchPriority="high"
-          quality={60}
+          quality={92}
           sizes="(max-width: 992px) 100vw, 45vw"
           className={styles.heroBgImage}
         />

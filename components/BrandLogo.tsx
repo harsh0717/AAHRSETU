@@ -51,16 +51,15 @@ export default function BrandLogo({
         className={className}
       >
         <Image
-          src="/images/logo.png"
-          alt="AaharSetu Logo"
-          width={size * 3}
+          src="/icon.png"
+          alt="AaharSetu Icon"
+          width={size}
           height={size}
-          sizes={`${size * 3}px`}
+          sizes={`${size}px`}
           style={{
-            width: size * 3,
-            height: size,
-            objectFit: 'cover',
-            objectPosition: 'left center',
+            width: `${size}px`,
+            height: `${size}px`,
+            objectFit: 'contain',
           }}
           priority
         />
@@ -69,7 +68,7 @@ export default function BrandLogo({
   }
 
   const logoHeight = size;
-  const logoWidth = Math.round(logoHeight * 3.0);
+  const logoWidth = Math.round(logoHeight * 2.72);
 
   return (
     <div
@@ -90,7 +89,7 @@ export default function BrandLogo({
         alt="AaharSetu — AAHAR सेतु"
         width={logoWidth}
         height={logoHeight}
-        sizes={`(max-width: 768px) ${Math.min(logoWidth, 140)}px, ${logoWidth}px`}
+        sizes={`(max-width: 768px) ${Math.min(logoWidth, 160)}px, ${logoWidth}px`}
         style={{
           width: 'auto',
           height: `${logoHeight}px`,

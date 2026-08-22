@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-// AaharSetu official brand logo — uses transparent /images/logo.png with optional glassmorphism
+// AaharSetu official brand logo — uses transparent official asset with high-clarity rendering
 
 export default function BrandLogo({
   size = 48,
@@ -23,13 +23,13 @@ export default function BrandLogo({
 
   const glassStyle: React.CSSProperties = glass
     ? {
-        background: 'rgba(255, 255, 255, 0.22)',
+        background: 'rgba(255, 255, 255, 0.25)',
         backdropFilter: 'blur(24px) saturate(200%)',
         WebkitBackdropFilter: 'blur(24px) saturate(200%)',
         borderRadius: '16px',
         padding: '6px 14px',
-        border: '1px solid rgba(255, 255, 255, 0.45)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.6)',
+        border: '1px solid rgba(255, 255, 255, 0.5)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.6)',
       }
     : {};
 
@@ -55,11 +55,12 @@ export default function BrandLogo({
           alt="AaharSetu Icon"
           width={size}
           height={size}
-          sizes={`${size}px`}
+          unoptimized
           style={{
             width: `${size}px`,
             height: `${size}px`,
             objectFit: 'contain',
+            filter: 'drop-shadow(0 1px 4px rgba(255, 255, 255, 0.5))',
           }}
           priority
         />
@@ -85,17 +86,18 @@ export default function BrandLogo({
       className={className}
     >
       <Image
-        src="/images/logo.png"
+        src="/images/aharsetu_brand_logo_v3.png"
         alt="AaharSetu — AAHAR सेतु"
         width={logoWidth}
         height={logoHeight}
-        sizes={`(max-width: 768px) ${Math.min(logoWidth, 160)}px, ${logoWidth}px`}
+        unoptimized
         style={{
           width: 'auto',
           height: `${logoHeight}px`,
           maxWidth: '100%',
           maxHeight: '100%',
           objectFit: 'contain',
+          filter: 'drop-shadow(0 2px 8px rgba(255, 255, 255, 0.8))',
         }}
         priority
       />

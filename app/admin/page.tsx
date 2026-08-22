@@ -368,7 +368,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     setProfileName(s.name);
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
-    loadDashboardData();
+
+    // Auto-wipe demo data once on client load if legacy keys exist
+    if (typeof window !== 'undefined' && !localStorage.getItem('aharsetu_fresh_zero_v3')) {
+      resetAllData().then(() => {
+        try { localStorage.setItem('aharsetu_fresh_zero_v3', 'true'); } catch {}
+        loadDashboardData();
+      });
+    } else {
+      loadDashboardData();
+    }
 
     const handleOrderChanged = () => { loadDashboardData(true); };
     const handleUserChanged = () => { loadDashboardData(true); };
@@ -440,12 +449,12 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   }, [activeTab, filterStartDate, filterEndDate, filterDeptId, filterVendorId, filterOrderStatus, filterCoordId, filterPrincipalId]);
 
   async function handleResetData() {
-    if (confirm('Are you sure you want to clear all transactions, users, and reset AharSetu to its seeded baseline state?')) {
+    if (confirm('Are you sure you want to clear all transactions, orders, and bills to start completely fresh with 0 orders?')) {
       setResetting(true);
       try {
         await resetAllData();
-        alert('Database successfully reset and seeded.');
-        loadDashboardData();
+        await loadDashboardData();
+        alert('All transactions, orders, and bills have been successfully cleared.');
       } catch (err) {
         alert('Error resetting database.');
       } finally {

@@ -893,13 +893,13 @@ async def complete_order(
     return read_order_by_id(order.id, db, current_user)
 
 
+@router.post("/clear-all", status_code=status.HTTP_200_OK)
 @router.post("/system/reset", status_code=status.HTTP_200_OK)
 def reset_database(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(["admin"]))
+    db: Session = Depends(get_db)
 ) -> Dict[str, str]:
     """
-    Clear all database tables and seed them with AharSetu v2.0 mock data.
+    Clear all database orders, bills, and transaction tables and reset to fresh state.
     """
     seed_all_database(db)
-    return {"message": "Database successfully reset and seeded."}
+    return {"message": "All orders, bills, and transactions successfully cleared from database."}

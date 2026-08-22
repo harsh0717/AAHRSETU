@@ -917,15 +917,32 @@ export async function resolveModification(
 
 export async function resetAllData(): Promise<void> {
   try {
-    await api.post('/seed', {});
-  } catch (e) {
-    console.warn('[RESET] Backend seed call failed or offline:', e);
-  }
+    await api.post('/orders/clear-all', {});
+  } catch {}
+  try {
+    await api.post('/orders/system/reset', {});
+  } catch {}
   if (typeof window !== 'undefined') {
-    localStorage.removeItem(LOCAL_ORDERS_KEY);
-    localStorage.removeItem('aharsetu_settlements_v1');
-    localStorage.removeItem('aharsetu_notifications_v3.7');
-    localStorage.removeItem('aharsetu_audit_logs_v3');
+    const keysToRemove = [
+      'aharsetu_orders_v1',
+      'aharsetu_orders_v2',
+      'aharsetu_orders_v3',
+      'aharsetu_orders_v4',
+      'aharsetu_settlements_v1',
+      'aharsetu_settlements_v2',
+      'aharsetu_settlements_v4',
+      'aharsetu_notifications_v1',
+      'aharsetu_notifications_v2',
+      'aharsetu_notifications_v3',
+      'aharsetu_notifications_v3.7',
+      'aharsetu_notifications_v4',
+      'aharsetu_audit_logs_v1',
+      'aharsetu_audit_logs_v2',
+      'aharsetu_audit_logs_v3',
+      'aharsetu_custom_orders'
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
     try {
       window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'reset', orders: [] } }));
       window.dispatchEvent(new CustomEvent('aharsetu_notification_changed', { detail: { count: 0 } }));

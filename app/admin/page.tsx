@@ -15,8 +15,12 @@ import { getNotifications, markNotificationRead, markAllRead, NotificationItem, 
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
 import UiverseToggle from '@/components/ui/UiverseToggle';
+import AppIcon, { getIconTheme } from '@/components/ui/AppIcon';
 import { getSystemSettings, updateSystemSettings } from '@/lib/systemSettings';
 import { api } from '@/lib/api';
+import styles from './admin.module.css';
+
+const ALL_STATUSES = ['All', 'Draft', 'Pending Approval', 'Principal Approved', 'DCR Approved', 'Vendor Confirmed', 'Bill Generated', 'Completed', 'Rejected'];
 
 export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -271,7 +275,6 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     }
   }
 
-
   const loadDashboardDataRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
   const loadDashboardData = useCallback(async (silent = false) => {
@@ -305,7 +308,6 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     }
   }, []);
 
-  // Keep a stable ref so the interval always calls the latest version
   useEffect(() => { loadDashboardDataRef.current = loadDashboardData; }, [loadDashboardData]);
 
   async function loadReportsData() {
@@ -354,11 +356,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     setPreferredLang(s.preferred_language || 'en');
     loadDashboardData();
 
-    // WebSocket-driven sync
     const handleOrderChanged = () => { loadDashboardData(true); };
     const handleUserChanged = () => { loadDashboardData(true); };
 
-    // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
       if (
         e.key === 'aharsetu_orders_v3' ||
@@ -373,7 +373,6 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       }
     };
 
-    // Cross-device sync: poll every 10 seconds silently
     const syncInterval = setInterval(() => {
       loadDashboardDataRef.current?.(true);
       const currentTab = window.location.hash ? window.location.hash.substring(1) : (initialTab || 'dashboard');
@@ -397,7 +396,6 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     };
   }, [router, initialTab]);
 
-  // Sync hash changes with state
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handleHash = () => {
@@ -423,7 +421,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   }, [activeTab, filterStartDate, filterEndDate, filterDeptId, filterVendorId, filterOrderStatus, filterCoordId, filterPrincipalId]);
 
   async function handleResetData() {
-    if (confirm('Are you sure you want to clear all transactions, users, and reset AharSetu to its seeded demo state?')) {
+    if (confirm('Are you sure you want to clear all transactions, users, and reset AharSetu to its seeded baseline state?')) {
       setResetting(true);
       try {
         await resetAllData();
@@ -449,277 +447,402 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   }
 
   async function handleComplete(orderId: string) {
-    if (confirm('Mark this order as complete?')) {
-      try {
-        await completeOrder(orderId);
-        loadDashboardData();
-      } catch (e: any) {
-        alert(e.message || 'Error completing order');
-      }
-    }
-  }
-
-  async function handleUpdateProfile(e: React.FormEvent) {
-    e.preventDefault();
-    if (!profileName.trim() || !session) return;
-    if (profileMobile) {
-      const digits = profileMobile.replace(/\D/g, '');
-      if (digits.length !== 10) {
-        setProfileMobileError('Mobile number must be exactly 10 digits');
-        return;
-      }
-      setProfileMobileError('');
-    }
-    setSubmitting(true);
-    setProfileMessage('');
+    if (!confirm('Mark order as physically delivered and settlement-ready?')) return;
     try {
+      await completeOrder(orderId);
+      loadDashboardData();
+    } catch (err) {
+      alert('Error completing order.');
+    }
+  }
+
+  async function handleProfileSave(e: React.FormEvent) {
+    e.preventDefault();
+    setProfileMessage('');
+    if (!profileName.trim()) return;
+
+    if (profileMobile.trim() && !/^[6-9]\d{9}$/.test(profileMobile.trim())) {
+      setProfileMobileError('Please enter a valid 10-digit Indian mobile number');
+      return;
+    }
+    setProfileMobileError('');
+
+    try {
+      let finalAvatarUrl: string | undefined = undefined;
       if (profileAvatarFile) {
-        await uploadAvatar(profileAvatarFile);
-        setProfileAvatarFile(null);
+        const updated = await uploadAvatar(profileAvatarFile);
+        finalAvatarUrl = updated.avatar_url ?? undefined;
       }
-      const mobileDigits = profileMobile.replace(/\D/g, '') || null;
-      const updated = await updateUserProfile({ name: profileName.trim(), mobile_number: mobileDigits });
-      setSession(updated);
-      setProfileMessage('Profile updated successfully!');
-      setTimeout(() => setProfileMessage(''), 4000);
+      await updateUserProfile({
+        name: profileName.trim(),
+        mobile_number: profileMobile.trim() || undefined,
+        avatar_url: finalAvatarUrl,
+      });
+      await updateSessionLanguage(preferredLang as any);
+      setProfileMessage('Institutional Admin profile updated successfully!');
+      setTimeout(() => setProfileMessage(''), 3500);
+      loadDashboardData();
     } catch (err: any) {
-      setProfileMessage(err.message || 'Failed to update profile.');
-    } finally {
-      setSubmitting(false);
+      setProfileMessage(err.message || 'Error updating profile');
     }
   }
 
-  async function handleLanguageChange(lang: string) {
-    setPreferredLang(lang);
-    if (session) {
-      await updateSessionLanguage(lang);
-      window.location.reload();
-    }
-  }
+  const filteredOrders = orders.filter(o => {
+    const matchSearch = orderSearch === '' || 
+      o.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      o.title.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      o.department_label?.toLowerCase().includes(orderSearch.toLowerCase());
+    const matchStatus = statusFilter === 'All' || o.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
 
-  async function handleMarkNotification(id: string) {
-    await markNotificationRead(id);
-    const nList = await getNotifications();
-    setNotifications(nList);
-  }
+  const todayStr = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
 
-  async function handleMarkAllNotifications() {
-    await markAllRead();
-    const nList = await getNotifications();
-    setNotifications(nList);
-  }
-
-  if (!session) return null;
-
-  // Filter orders matching search and status criteria
-  const filteredOrders = orders
-    .filter(o => !orderSearch || o.title.toLowerCase().includes(orderSearch.toLowerCase()) || o.id.toLowerCase().includes(orderSearch.toLowerCase()))
-    .filter(o => {
-      if (statusFilter === 'All') return true;
-      if (statusFilter === 'DCR Approved') return ['DCR Approved', 'Vendor Processing', 'Vendor Clarification Required', 'Vendor Confirmed', 'Bill Generated', 'Completed'].includes(o.status);
-      if (statusFilter === 'Principal Approved') return ['Principal Approved', 'DCR Reviewing', 'DCR Approved', 'Vendor Processing', 'Bill Generated', 'Completed'].includes(o.status);
-      if (statusFilter === 'Pending') return ['Sent for Approval', 'Principal Reviewing', 'DCR Reviewing', 'Vendor Processing'].includes(o.status);
-      if (statusFilter === 'Completed') return ['Vendor Confirmed', 'Bill Generated', 'Completed'].includes(o.status);
-      if (statusFilter === 'Rejected') return o.status.includes('Rejected');
-      return o.status === statusFilter;
-    });
-
-  // Orders that have bills generated
-  const ordersWithBills = orders.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
-
-  const ALL_STATUSES = [
-    'All', 'Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Approved',
-    'Principal Rejected', 'DCR Reviewing', 'DCR Approved', 'DCR Rejected', 'Vendor Processing',
-    'Vendor Clarification Required', 'Coordinator Updated', 'Vendor Confirmed', 'Bill Generated', 'Completed',
+  const TAB_ITEMS = [
+    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { id: 'users', label: 'Users Directory', icon: 'users' },
+    { id: 'departments', label: 'Departments', icon: 'departments' },
+    { id: 'vendors', label: 'Vendors', icon: 'vendors' },
+    { id: 'orders', label: 'All Orders', icon: 'orders' },
+    { id: 'bills', label: 'Bills & Settlements', icon: 'bills' },
+    { id: 'reports', label: 'Reports', icon: 'reports' },
+    { id: 'analytics', label: 'Analytics', icon: 'analytics' },
+    { id: 'audit', label: 'Audit Logs', icon: 'audit' },
+    { id: 'health', label: 'System Health', icon: 'health' },
+    { id: 'settings', label: 'Settings', icon: 'settings' },
+    { id: 'profile', label: 'Profile', icon: 'profile' },
   ];
 
   return (
-    <AppShell role="admin" currentPath="/admin">
-      <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
+    <AppShell role="admin">
+      <div className={styles.container}>
         
-        {/* Top Header Section with Official Brand Logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-          <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-              System Administrator — {t(`admin.tab_title_${activeTab}`, 'Dashboard')}
+        {/* 1. Hero Welcome Header */}
+        <div className={styles.heroHeader}>
+          <div className={styles.heroLeft}>
+            <h1>
+              <span>Executive Admin Portal</span>
             </h1>
-            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-              {t(`admin.tab_sub_${activeTab}`, 'Global administrative dashboard to control users, vendors, budgets and monitor health.')}
-            </div>
+            <p>
+              <span>{todayStr}</span>
+              <span>•</span>
+              <span className={styles.heroDateBadge}>⚡ Institutional Hub</span>
+              {session && <span>• Welcome back, <strong>{session.name}</strong></span>}
+            </p>
           </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <BrandLogo size={52} />
+
+          <div className={styles.heroRight}>
+            <div className={styles.systemStatusPill}>
+              <span className={styles.pulseDot} />
+              <span>All Systems Operational</span>
+            </div>
+
             <button
               onClick={handleResetData}
               disabled={resetting}
-              style={{
-                padding: '8px 16px', background: '#FEE2E2', color: '#991B1B',
-                border: '1px solid #FCA5A5', borderRadius: '10px',
-                fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer'
-              }}
+              className={styles.quickActionBtn}
+              style={{ color: '#DC2626', borderColor: '#FECACA', background: '#FEF2F2' }}
             >
-              {resetting ? 'Resetting System...' : '🔄 Reset All Data'}
+              <AppIcon name="health" size={15} color="#DC2626" />
+              <span>{resetting ? 'Resetting...' : 'Seed / Reset DB'}</span>
             </button>
           </div>
         </div>
 
-        {/* Tab Content Panel */}
+        {/* 2. Quick Action Bar */}
+        <div className={styles.quickActionsBar}>
+          <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={() => setActiveTab('users')}>
+            <AppIcon name="users" size={15} color="#FFFFFF" />
+            <span>+ Add / Manage Users</span>
+          </button>
+          <button className={styles.quickActionBtn} onClick={() => { setActiveTab('departments'); setShowDeptModal(true); }}>
+            <AppIcon name="departments" size={15} color="#F59E0B" />
+            <span>+ Add Department</span>
+          </button>
+          <button className={styles.quickActionBtn} onClick={() => { setActiveTab('vendors'); setShowAddVendorModal(true); }}>
+            <AppIcon name="vendors" size={15} color="#8B5CF6" />
+            <span>+ Add Food Vendor</span>
+          </button>
+          <button className={styles.quickActionBtn} onClick={() => setActiveTab('bills')}>
+            <AppIcon name="bills" size={15} color="#06B6D4" />
+            <span>Settle Monthly Bills</span>
+          </button>
+          <button className={styles.quickActionBtn} onClick={() => setActiveTab('reports')}>
+            <AppIcon name="reports" size={15} color="#0EA5E9" />
+            <span>Export Financial Audit</span>
+          </button>
+          <button className={styles.quickActionBtn} onClick={() => setActiveTab('health')}>
+            <AppIcon name="health" size={15} color="#10B981" />
+            <span>Live Server Diagnostics</span>
+          </button>
+        </div>
+
+        {/* 3. Segmented Tab Navigation */}
+        <div className={styles.tabNavContainer}>
+          {TAB_ITEMS.map((item) => {
+            const isActive = activeTab === item.id || (item.id === 'audit' && ['logs', 'audit-logs'].includes(activeTab));
+            const iconTheme = getIconTheme(item.icon);
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`${styles.tabNavBtn} ${isActive ? styles.tabNavActive : ''}`}
+              >
+                <AppIcon name={item.icon} size={15} color={isActive ? '#2563EB' : iconTheme.color} strokeWidth={2.2} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 4. Tab Views Content */}
         {loading && activeTab === 'dashboard' ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500)' }}>
-            <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
-            <div>{t('common.loading', 'Loading statistic summaries...')}</div>
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748B' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '12px', animation: 'spin 1s infinite linear' }}>🔄</div>
+            <div style={{ fontWeight: 700 }}>Synchronizing institutional metrics...</div>
           </div>
         ) : (
           <div>
             {/* TAB: DASHBOARD OVERVIEW */}
             {activeTab === 'dashboard' && (
-              <div>
-                {/* Stats grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                  {[
-                    { label: 'Total Orders Created', value: stats.total_orders, color: '#3B82F6', icon: '📋' },
-                    { label: 'Settled Requisitions', value: stats.completed_orders, color: '#10B981', icon: '✅' },
-                    { label: 'Consolidated Billing (₹)', value: stats.total_revenue.toFixed(2), color: '#10B981', icon: '💰' },
-                    { label: 'Active Food Vendors', value: stats.active_vendors, color: '#EC4899', icon: '🏪' }
-                  ].map((s, idx) => (
-                    <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${s.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{s.icon}</div>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gray-900)', lineHeight: '1.2' }}>{s.value}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', fontWeight: 600, marginTop: '2px' }}>{s.label}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* 4 KPI Stat Cards */}
+                <div className={styles.statsGrid}>
+                  <div className={styles.statCard} style={{ borderTop: '4px solid #10B981' }}>
+                    <div className={styles.statCardHeader}>
+                      <span className={styles.statLabel}>Consolidated Billing</span>
+                      <div className={styles.statIconWrap} style={{ background: 'rgba(16, 185, 129, 0.12)' }}>
+                        <AppIcon name="bills" size={22} color="#10B981" />
+                      </div>
                     </div>
-                  ))}
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div className="card" style={{ padding: '20px' }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🔒 Quick Access Administration</h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>Manage departmental coordinators, principals, auditors, and adjust security settings.</p>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button className="btn btn-primary btn-sm" onClick={() => setActiveTab('users')}>
-                        👥 User Directory
-                      </button>
-                      <button className="btn btn-ghost btn-sm" onClick={() => setActiveTab('vendors')}>
-                        🏪 Vendor Settings
-                      </button>
+                    <div className={styles.statValue}>₹{Number(stats.total_revenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    <div className={styles.statSub}>
+                      <span className={styles.statBadgePositive}>↑ Real-time Audit</span>
+                      <span>Total Requisitions</span>
                     </div>
                   </div>
 
-                  <div className="card" style={{ padding: '20px' }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>❤️ System Operational Health</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Database Node (PostgreSQL):</span>
-                        <strong style={{ color: '#10B981' }}>ONLINE</strong>
+                  <div className={styles.statCard} style={{ borderTop: '4px solid #3B82F6' }}>
+                    <div className={styles.statCardHeader}>
+                      <span className={styles.statLabel}>Total Orders Created</span>
+                      <div className={styles.statIconWrap} style={{ background: 'rgba(59, 130, 246, 0.12)' }}>
+                        <AppIcon name="orders" size={22} color="#3B82F6" />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>WebSocket Event Gateway:</span>
-                        <strong style={{ color: '#10B981' }}>CONNECTED</strong>
+                    </div>
+                    <div className={styles.statValue}>{stats.total_orders || 0}</div>
+                    <div className={styles.statSub}>
+                      <span>Settled: <strong>{stats.completed_orders || 0}</strong></span>
+                      <span style={{ color: '#2563EB', fontWeight: 700 }}>{stats.total_orders > 0 ? Math.round(((stats.completed_orders || 0) / stats.total_orders) * 100) : 100}% Settle Rate</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.statCard} style={{ borderTop: '4px solid #8B5CF6' }}>
+                    <div className={styles.statCardHeader}>
+                      <span className={styles.statLabel}>Active Food Vendors</span>
+                      <div className={styles.statIconWrap} style={{ background: 'rgba(139, 92, 246, 0.12)' }}>
+                        <AppIcon name="vendors" size={22} color="#8B5CF6" />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>API Server Latency:</span>
-                        <strong style={{ color: '#10B981' }}>EXCELLENT (14ms)</strong>
+                    </div>
+                    <div className={styles.statValue}>{stats.active_vendors || vendors.length}</div>
+                    <div className={styles.statSub}>
+                      <span>Campus Canteens</span>
+                      <button onClick={() => setActiveTab('vendors')} style={{ background: 'none', border: 'none', color: '#7C3AED', fontWeight: 800, cursor: 'pointer', padding: 0 }}>Manage →</button>
+                    </div>
+                  </div>
+
+                  <div className={styles.statCard} style={{ borderTop: '4px solid #F59E0B' }}>
+                    <div className={styles.statCardHeader}>
+                      <span className={styles.statLabel}>Academic Departments</span>
+                      <div className={styles.statIconWrap} style={{ background: 'rgba(245, 158, 11, 0.12)' }}>
+                        <AppIcon name="departments" size={22} color="#F59E0B" />
                       </div>
-                      <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start', padding: 0 }} onClick={() => setActiveTab('health')}>
-                        Detailed health analysis
-                      </button>
+                    </div>
+                    <div className={styles.statValue}>{departments.length || 4}</div>
+                    <div className={styles.statSub}>
+                      <span>Coordinators: <strong>{coordinators.length}</strong></span>
+                      <span>Principals: <strong>{principals.length}</strong></span>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* TAB: ALL ORDERS PIPELINE */}
-            {activeTab === 'orders' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                  <input
-                    className="form-input"
-                    style={{ maxWidth: '240px' }}
-                    placeholder="Search by title or ID..."
-                    value={orderSearch}
-                    onChange={e => setOrderSearch(e.target.value)}
-                  />
-                  <select
-                    className="form-input"
-                    style={{ maxWidth: '180px' }}
-                    value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value)}
-                  >
-                    {ALL_STATUSES.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
+                {/* Two Column Split: Recent Activity + Department Breakdown */}
+                <div className={styles.mainSplitGrid}>
+                  {/* Left Column: Recent Orders Activity */}
+                  <div className={styles.cardSection}>
+                    <div className={styles.sectionHeader}>
+                      <div>
+                        <div className={styles.sectionTitle}>
+                          <AppIcon name="orders" size={20} color="#2563EB" />
+                          <span>Recent Institutional Requisitions</span>
+                        </div>
+                        <div className={styles.sectionSubtitle}>Live orders across all departments and campus canteens</div>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('orders')}
+                        className={styles.quickActionBtn}
+                      >
+                        <span>View All ({orders.length})</span>
+                      </button>
+                    </div>
 
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title Description</th>
-                        <th>Department</th>
-                        <th>Prepared By</th>
-                        <th>Submitted Date</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Total Bill</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredOrders.map(o => (
-                        <tr key={o.id}>
-                          <td style={{ fontWeight: 700 }} onClick={() => router.push(`/order/${o.id}`)}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }} onClick={() => router.push(`/order/${o.id}`)}>{o.title}</td>
-                          <td onClick={() => router.push(`/order/${o.id}`)}>{o.department_label}</td>
-                          <td onClick={() => router.push(`/order/${o.id}`)}>{o.created_by_name}</td>
-                          <td style={{ fontSize: '0.8rem' }} onClick={() => router.push(`/order/${o.id}`)}>
-                            {new Date(o.created_at).toLocaleDateString('en-IN')}
-                          </td>
-                          <td><StatusBadge status={o.status} size="sm" /></td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                          <td style={{ textAlign: 'center' }}>
-                            {['Bill Generated', 'Vendor Confirmed'].includes(o.status) && (
-                              <button className="btn btn-primary btn-sm" onClick={() => handleComplete(o.id)}>
-                                Complete Order
-                              </button>
-                            )}
-                          </td>
-                        </tr>
+                    <div className={styles.activityList}>
+                      {orders.slice(0, 5).map((ord) => (
+                        <div key={ord.id} className={styles.activityItem}>
+                          <div className={styles.activityLeft}>
+                            <div
+                              style={{
+                                width: '38px',
+                                height: '38px',
+                                borderRadius: '10px',
+                                background: 'rgba(37, 99, 235, 0.1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#2563EB',
+                                fontWeight: 800,
+                                fontSize: '0.85rem',
+                                flexShrink: 0
+                              }}
+                            >
+                              #{ord.id.slice(-3)}
+                            </div>
+                            <div className={styles.activityMeta}>
+                              <div className={styles.activityTitle}>{ord.title}</div>
+                              <div className={styles.activitySubtitle}>
+                                <span>🏛️ {ord.department_label || 'Dept'}</span>
+                                <span>•</span>
+                                <span>👤 {ord.created_by_name || 'Coordinator'}</span>
+                                <span>•</span>
+                                <span>{new Date(ord.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className={styles.activityRight}>
+                            <div className={styles.activityAmount}>₹{ord.total_bill_amount || 0}</div>
+                            <StatusBadge status={ord.status} size="sm" />
+                            <button
+                              onClick={() => router.push(`/order/${ord.id}`)}
+                              className={styles.quickActionBtn}
+                              style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                            >
+                              Open
+                            </button>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+
+                      {orders.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '36px', color: '#94A3B8' }}>
+                          No orders created yet in system.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Department Spending & Live Health */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Department Spending Summary */}
+                    <div className={styles.cardSection}>
+                      <div className={styles.sectionHeader}>
+                        <div className={styles.sectionTitle}>
+                          <AppIcon name="departments" size={18} color="#F59E0B" />
+                          <span>Department Spending</span>
+                        </div>
+                        <span style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700 }}>Total: ₹{totalDeptExp.toLocaleString('en-IN')}</span>
+                      </div>
+
+                      <div className={styles.deptProgressList}>
+                        {departments.map((dept, idx) => {
+                          const deptOrders = orders.filter(o => o.department_id === dept.id);
+                          const deptSpent = deptOrders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
+                          const pct = totalDeptExp > 0 ? Math.min(100, Math.round((deptSpent / totalDeptExp) * 100)) : 25;
+                          const barColors = ['#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+                          const color = barColors[idx % barColors.length];
+
+                          return (
+                            <div key={dept.id} className={styles.deptProgressItem}>
+                              <div className={styles.deptProgressHeader}>
+                                <span>{dept.name}</span>
+                                <span>₹{deptSpent.toLocaleString('en-IN')} ({pct}%)</span>
+                              </div>
+                              <div className={styles.deptProgressBar}>
+                                <div
+                                  className={styles.deptProgressFill}
+                                  style={{ width: `${pct}%`, background: color }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Operational Diagnostics Card */}
+                    <div className={styles.cardSection}>
+                      <div className={styles.sectionHeader}>
+                        <div className={styles.sectionTitle}>
+                          <AppIcon name="health" size={18} color="#10B981" />
+                          <span>Live System Baseline</span>
+                        </div>
+                        <span className={styles.statBadgePositive}>Active</span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.82rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
+                          <span style={{ color: '#475569' }}>PostgreSQL Database Node</span>
+                          <strong style={{ color: '#059669' }}>ONLINE (0ms latency)</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
+                          <span style={{ color: '#475569' }}>Realtime WebSocket Gateway</span>
+                          <strong style={{ color: '#059669' }}>CONNECTED</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
+                          <span style={{ color: '#475569' }}>Multi-Language i18n Engine</span>
+                          <strong style={{ color: '#2563EB' }}>OPTIMIZED (v2.0)</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* TAB: USER DIRECTORY MANAGER */}
+            {/* TAB: USERS */}
             {activeTab === 'users' && (
-              <div className="card" style={{ padding: '20px' }}>
+              <div className={styles.cardSection}>
                 <UserManager />
               </div>
             )}
 
             {/* TAB: DEPARTMENTS */}
             {activeTab === 'departments' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
                   <div>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0 }}>🏢 Master Academic Departments</h3>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)' }}>Manage institutional departments, codes, and active status for requisitions.</div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="departments" size={20} color="#F59E0B" />
+                      <span>Institutional Academic Departments</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>Configure departments, official codes, and coordinator eligibility</div>
                   </div>
-                  <button className="btn btn-primary btn-sm" onClick={() => setShowDeptModal(true)}>
-                    ➕ Add Department
+                  <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={() => setShowDeptModal(true)}>
+                    + Add New Department
                   </button>
                 </div>
 
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
+                <div className={styles.tableContainer}>
+                  <table className={styles.dataTable}>
                     <thead>
                       <tr>
-                        <th>Code</th>
+                        <th>Dept Code</th>
                         <th>Department Name</th>
-                        <th>Description</th>
+                        <th>Description / Scope</th>
                         <th>Status</th>
                         <th style={{ textAlign: 'center' }}>Actions</th>
                       </tr>
@@ -727,9 +850,13 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     <tbody>
                       {departments.map((dept, idx) => (
                         <tr key={idx}>
-                          <td style={{ fontWeight: 700 }}>{dept.code || dept.id.toUpperCase()}</td>
-                          <td style={{ fontWeight: 600 }}>{dept.name}</td>
-                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>{dept.description || dept.label}</td>
+                          <td>
+                            <span style={{ fontWeight: 800, padding: '3px 8px', background: '#FEF3C7', color: '#92400E', borderRadius: '6px', fontSize: '0.8rem' }}>
+                              {dept.code || dept.id.toUpperCase()}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: 700, color: '#0F172A' }}>{dept.name}</td>
+                          <td style={{ color: '#64748B' }}>{dept.description || dept.label || 'Standard Academic Section'}</td>
                           <td>
                             <span className={`badge ${dept.active !== false ? 'badge-success' : 'badge-danger'}`}>
                               {dept.active !== false ? 'Active' : 'Inactive'}
@@ -737,8 +864,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             <button
-                              className="btn btn-ghost btn-sm"
-                              style={{ color: dept.active !== false ? '#DC2626' : '#10B981' }}
+                              className={styles.quickActionBtn}
+                              style={{ color: dept.active !== false ? '#DC2626' : '#10B981', padding: '4px 10px', fontSize: '0.78rem' }}
                               onClick={() => handleToggleDept(dept.id, dept.active !== false)}
                             >
                               {dept.active !== false ? 'Deactivate' : 'Activate'}
@@ -746,154 +873,81 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           </td>
                         </tr>
                       ))}
-                      {departments.length === 0 && (
-                        <tr>
-                          <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No departments found. Click 'Add Department' to create one.
-                          </td>
-                        </tr>
-                      )}
                     </tbody>
                   </table>
                 </div>
-
-                {/* Add Department Modal */}
-                {showDeptModal && (
-                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '400px', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
-                      <h3 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: 800 }}>➕ Add New Academic Department</h3>
-                      <form onSubmit={handleAddDeptSubmit}>
-                        <div style={{ marginBottom: '14px' }}>
-                          <label className="input-label" style={{ fontSize: '0.78rem', fontWeight: 700 }}>Department Name</label>
-                          <input
-                            type="text"
-                            required
-                            className="form-input"
-                            placeholder="e.g. Mechanical Engineering"
-                            value={deptName}
-                            onChange={e => setDeptName(e.target.value)}
-                          />
-                        </div>
-                        <div style={{ marginBottom: '14px' }}>
-                          <label className="input-label" style={{ fontSize: '0.78rem', fontWeight: 700 }}>Department Code</label>
-                          <input
-                            type="text"
-                            required
-                            className="form-input"
-                            placeholder="e.g. DEPT-MECH"
-                            value={deptCode}
-                            onChange={e => setDeptCode(e.target.value)}
-                          />
-                        </div>
-                        <div style={{ marginBottom: '16px' }}>
-                          <label className="input-label" style={{ fontSize: '0.78rem', fontWeight: 700 }}>Description</label>
-                          <textarea
-                            className="form-input"
-                            rows={2}
-                            placeholder="Brief description of department scope"
-                            value={deptDesc}
-                            onChange={e => setDeptDesc(e.target.value)}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Department</button>
-                          <button type="button" className="btn btn-ghost" onClick={() => setShowDeptModal(false)}>Cancel</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* TAB: VENDORS MANAGEMENT */}
+            {/* TAB: VENDORS */}
             {activeTab === 'vendors' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>🏪 Canteen Vendors Directory</h3>
-                  <button className="btn btn-primary btn-sm" onClick={() => setShowAddVendorModal(true)}>
-                    ➕ Add Canteen Vendor
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="vendors" size={20} color="#8B5CF6" />
+                      <span>Campus Canteen Vendors</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>Manage food vendor profiles, operational statuses, and settlements</div>
+                  </div>
+                  <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={() => setShowAddVendorModal(true)}>
+                    + Register Food Vendor
                   </button>
                 </div>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
-                  <table className="table">
+
+                <div className={styles.tableContainer}>
+                  <table className={styles.dataTable}>
                     <thead>
                       <tr>
                         <th>Vendor ID</th>
-                        <th>Vendor Name</th>
-                        <th>Owner Name</th>
-                        <th>Email Address</th>
-                        <th>Phone</th>
-                        <th>Operational Status</th>
-                        <th>Login Status</th>
-                        <th style={{ textAlign: 'right' }}>Revenue Earning</th>
+                        <th>Canteen / Business Name</th>
+                        <th>Proprietor / Contact</th>
+                        <th>Operational State</th>
+                        <th>Active</th>
                         <th style={{ textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {vendors.map(v => (
+                      {vendors.map((v) => (
                         <tr key={v.id}>
-                          <td style={{ fontWeight: 700, color: '#475569', fontSize: '0.82rem' }}>{v.id}</td>
-                          <td style={{ fontWeight: 800, color: '#0F172A' }}>{v.name}</td>
-                          <td style={{ fontWeight: 600 }}>{v.owner_name}</td>
-                          <td>{v.email}</td>
-                          <td>{v.phone}</td>
+                          <td style={{ fontWeight: 800, color: '#6366F1' }}>{v.id}</td>
+                          <td style={{ fontWeight: 700, color: '#0F172A' }}>{v.name}</td>
                           <td>
-                            <VendorStatusBadge status={v.status} size="sm" />
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span>👤 {v.owner_name || 'Owner'}</span>
+                              <span style={{ fontSize: '0.78rem', color: '#64748B' }}>📞 {v.phone || 'N/A'} • ✉️ {v.email || 'N/A'}</span>
+                            </div>
                           </td>
                           <td>
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '4px 10px',
-                              borderRadius: '9999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              background: v.active ? '#ECFDF5' : '#FEF2F2',
-                              color: v.active ? '#047857' : '#B91C1C'
-                            }}>
-                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: v.active ? '#10B981' : '#EF4444' }}></span>
-                              {v.active ? 'Active' : 'Suspended'}
+                            <VendorStatusBadge status={v.status || 'open'} />
+                          </td>
+                          <td>
+                            <span className={`badge ${v.active !== false ? 'badge-success' : 'badge-danger'}`}>
+                              {v.active !== false ? 'Enabled' : 'Disabled'}
                             </span>
                           </td>
-                          <td style={{ textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>
-                            ₹{v.revenue.toFixed(2)}
-                          </td>
                           <td style={{ textAlign: 'center' }}>
-                            <div style={{ display: 'inline-flex', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                               <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => { setSelectedVendor(v); setEditStatus(v.status); }}
-                                style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                                className={styles.quickActionBtn}
+                                style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                                onClick={() => { setSelectedVendor(v); setEditStatus(v.status || 'open'); }}
                               >
-                                ⚙️ Status
+                                State
                               </button>
                               <button
-                                className={`btn btn-sm ${v.active ? 'btn-danger' : 'btn-primary'}`}
+                                className={styles.quickActionBtn}
+                                style={{ padding: '4px 8px', fontSize: '0.75rem', color: v.active !== false ? '#D97706' : '#059669' }}
                                 onClick={() => handleToggleVendorActive(v.id)}
-                                style={{
-                                  padding: '6px 12px',
-                                  fontSize: '0.78rem',
-                                  background: v.active ? '#FEF2F2' : '#EFF6FF',
-                                  color: v.active ? '#EF4444' : '#2563EB',
-                                  border: `1px solid ${v.active ? '#FCA5A5' : '#BFDBFE'}`
-                                }}
                               >
-                                {v.active ? '🚫 Suspend' : '✅ Activate'}
+                                {v.active !== false ? 'Disable' : 'Enable'}
                               </button>
                               <button
-                                className="btn btn-sm"
+                                className={styles.quickActionBtn}
+                                style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#DC2626', borderColor: '#FECACA' }}
                                 onClick={() => handleDeleteVendor(v.id)}
-                                style={{
-                                  padding: '6px 12px',
-                                  fontSize: '0.78rem',
-                                  background: '#FFF5F5',
-                                  color: '#E53E3E',
-                                  border: '1px solid #FED7D7'
-                                }}
                               >
-                                🗑️ Delete
+                                ✕
                               </button>
                             </div>
                           </td>
@@ -902,311 +956,188 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     </tbody>
                   </table>
                 </div>
-
-                <div style={{ marginTop: '32px', borderTop: '2px dashed var(--gray-200)', paddingTop: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>🧾 Monthly Settlements & Accounts Due</h3>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => {
-                        setSelectedSettlementVendor('');
-                        setSelectedSettlementMonth(new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }));
-                        setSettlementTotalAmount(0);
-                        setSettlementPaidAmount(0);
-                        setSettlementError('');
-                        setSettlementSuccess('');
-                        setShowSettlementModal(true);
-                      }}
-                    >
-                      ➕ Record / Update Settlement
-                    </button>
-                  </div>
-
-                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Canteen Vendor</th>
-                          <th>Settlement Month</th>
-                          <th style={{ textAlign: 'right' }}>Total Billed Amount</th>
-                          <th style={{ textAlign: 'right' }}>Paid Amount</th>
-                          <th style={{ textAlign: 'right' }}>Due Amount Outstanding</th>
-                          <th style={{ textAlign: 'center' }}>Status</th>
-                          <th>Last Transaction Date</th>
-                          <th style={{ textAlign: 'center' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {settlements.map(s => {
-                          const due = s.due_amount;
-                          return (
-                            <tr key={s.id}>
-                              <td style={{ fontWeight: 800, color: '#0F172A' }}>{s.vendor_name || s.vendor_id}</td>
-                              <td style={{ fontWeight: 600 }}>{s.month}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{s.total_amount.toFixed(2)}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{s.paid_amount.toFixed(2)}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 800, color: due > 0 ? '#EF4444' : '#10B981' }}>₹{due.toFixed(2)}</td>
-                              <td style={{ textAlign: 'center' }}>
-                                <span style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '4px 10px',
-                                  borderRadius: '9999px',
-                                  fontSize: '0.72rem',
-                                  fontWeight: 700,
-                                  background: s.status === 'Settled' ? '#ECFDF5' : (s.status === 'Partially Settled' ? '#EFF6FF' : '#FEF2F2'),
-                                  color: s.status === 'Settled' ? '#047857' : (s.status === 'Partially Settled' ? '#2563EB' : '#B91C1C')
-                                }}>
-                                  {s.status}
-                                </span>
-                              </td>
-                              <td style={{ fontSize: '0.78rem', color: '#64748B' }}>{new Date(s.updated_at).toLocaleString('en-IN')}</td>
-                              <td style={{ textAlign: 'center' }}>
-                                <button
-                                  className="btn btn-ghost btn-sm"
-                                  onClick={() => {
-                                    setSelectedSettlementVendor(s.vendor_id);
-                                    setSelectedSettlementMonth(s.month);
-                                    setSettlementTotalAmount(s.total_amount);
-                                    setSettlementPaidAmount(s.paid_amount);
-                                    setSettlementError('');
-                                    setSettlementSuccess('');
-                                    setShowSettlementModal(true);
-                                  }}
-                                  style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 700 }}
-                                >
-                                  💸 Record Payment
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {settlements.length === 0 && (
-                          <tr>
-                            <td colSpan={8} style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>
-                              No monthly settlements recorded yet.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-
-                {/* Vendor Status Modal */}
-                {selectedVendor && (
-                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: '20px', padding: '28px', width: '380px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}>
-                      <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
-                        Update operational status
-                      </h3>
-                      <p style={{ margin: '0 0 20px', fontSize: '0.8rem', color: '#64748B' }}>Set the live operating availability for {selectedVendor.name}.</p>
-                      
-                      <select
-                        className="form-input"
-                        value={editStatus}
-                        onChange={e => setEditStatus(e.target.value)}
-                        style={{ marginBottom: '20px', width: '100%' }}
-                      >
-                        {Object.entries(VENDOR_STATUS_LABELS).map(([k, v]) => (
-                          <option key={k} value={k}>{v}</option>
-                        ))}
-                      </select>
-
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleUpdateVendorStatus}>
-                          Save Changes
-                        </button>
-                        <button className="btn btn-ghost" style={{ border: '1px solid #E2E8F0' }} onClick={() => setSelectedVendor(null)}>
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Add Vendor Overlay Modal */}
-                {showAddVendorModal && (
-                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: '24px', padding: '32px', width: '480px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', maxHeight: '90vh', overflowY: 'auto' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>➕ Add new canteen vendor</h3>
-                        <button onClick={() => setShowAddVendorModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#94A3B8' }}>✕</button>
-                      </div>
-
-                      <form onSubmit={handleAddVendorSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Vendor ID (Unique Key)</label>
-                          <input type="text" className="form-input" value={newVendorId} onChange={e => setNewVendorId(e.target.value)} required placeholder="e.g. v5, v6" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Canteen Name</label>
-                          <input type="text" className="form-input" value={newVendorName} onChange={e => setNewVendorName(e.target.value)} required placeholder="e.g. Nescafe Canteen, South Feast" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Owner Full Name</label>
-                          <input type="text" className="form-input" value={newVendorOwner} onChange={e => setNewVendorOwner(e.target.value)} required placeholder="e.g. Ramesh Patel" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Email Address</label>
-                          <input type="email" className="form-input" value={newVendorEmail} onChange={e => setNewVendorEmail(e.target.value)} required placeholder="e.g. nescafe@aharsetu.edu.in" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Phone Number</label>
-                          <input type="tel" className="form-input" value={newVendorPhone} onChange={e => setNewVendorPhone(e.target.value)} required placeholder="e.g. 9876543210" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Login Password</label>
-                          <input type="password" className="form-input" value={newVendorPassword} onChange={e => setNewVendorPassword(e.target.value)} required placeholder="••••••••" minLength={6} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Brand Image URL <span style={{ color: '#94A3B8', fontWeight: 500 }}>(optional)</span></label>
-                          <input type="url" className="form-input" value={newVendorImageUrl} onChange={e => setNewVendorImageUrl(e.target.value)} placeholder="https://example.com/logo.jpg" />
-                        </div>
-
-                        {addVendorError && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#EF4444' }}>⚠️ {addVendorError}</div>}
-                        {addVendorSuccess && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10B981' }}>✓ {addVendorSuccess}</div>}
-
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                          <button type="submit" disabled={submitting} className="btn btn-primary" style={{ flex: 1 }}>
-                            {submitting ? 'Adding...' : 'Add Vendor'}
-                          </button>
-                          <button type="button" className="btn btn-ghost" style={{ border: '1px solid #E2E8F0' }} onClick={() => setShowAddVendorModal(false)}>
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
-
-                {/* Record/Update Settlement Modal */}
-                {showSettlementModal && (
-                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: '24px', padding: '32px', width: '420px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
-                          💸 Record Vendor Settlement
-                        </h3>
-                        <button onClick={() => setShowSettlementModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#94A3B8' }}>✕</button>
-                      </div>
-
-                      <form onSubmit={handleUpdateSettlementSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Canteen Vendor</label>
-                          <select
-                            className="form-input"
-                            value={selectedSettlementVendor}
-                            onChange={e => setSelectedSettlementVendor(e.target.value)}
-                            required
-                            style={{ width: '100%' }}
-                          >
-                            <option value="">Select Vendor...</option>
-                            {vendors.map(v => (
-                              <option key={v.id} value={v.id}>{v.name}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Settlement Period (Month Year)</label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={selectedSettlementMonth}
-                            onChange={e => setSelectedSettlementMonth(e.target.value)}
-                            required
-                            placeholder="e.g. August 2026"
-                          />
-                        </div>
-
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Total Billed Amount (INR)</label>
-                          <input
-                            type="number"
-                            className="form-input"
-                            value={settlementTotalAmount}
-                            onChange={e => setSettlementTotalAmount(parseFloat(e.target.value) || 0)}
-                            required
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-
-                        <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#344054', display: 'block', marginBottom: '6px' }}>Amount Paid (INR)</label>
-                          <input
-                            type="number"
-                            className="form-input"
-                            value={settlementPaidAmount}
-                            onChange={e => setSettlementPaidAmount(parseFloat(e.target.value) || 0)}
-                            required
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-
-                        {/* Live calculation of dues */}
-                        <div style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>Dues Outstanding:</span>
-                          <span style={{ fontSize: '1rem', fontWeight: 800, color: Math.max(0.0, settlementTotalAmount - settlementPaidAmount) > 0 ? '#EF4444' : '#10B981' }}>
-                            ₹{Math.max(0.0, settlementTotalAmount - settlementPaidAmount).toFixed(2)}
-                          </span>
-                        </div>
-
-                        {settlementError && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#EF4444' }}>⚠️ {settlementError}</div>}
-                        {settlementSuccess && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10B981' }}>✓ {settlementSuccess}</div>}
-
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                          <button type="submit" disabled={submitting} className="btn btn-primary" style={{ flex: 1 }}>
-                            {submitting ? 'Updating...' : 'Record Payment'}
-                          </button>
-                          <button type="button" className="btn btn-ghost" style={{ border: '1px solid #E2E8F0' }} onClick={() => setShowSettlementModal(false)}>
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* TAB: BILLS / INVOICES */}
-            {activeTab === 'bills' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
+            {/* TAB: ALL ORDERS */}
+            {activeTab === 'orders' && (
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="orders" size={20} color="#F43F5E" />
+                      <span>All Institutional Orders & Requisitions</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>Search, filter, and audit every order created across the campus</div>
+                  </div>
+                </div>
+
+                <div className={styles.filterRow}>
+                  <div className={styles.searchBox}>
+                    <AppIcon name="search" size={16} color="#94A3B8" />
+                    <input
+                      type="text"
+                      className={styles.searchInput}
+                      placeholder="Search by order ID, title, requester, or department..."
+                      value={orderSearch}
+                      onChange={(e) => setOrderSearch(e.target.value)}
+                    />
+                  </div>
+
+                  <select
+                    className={styles.filterSelect}
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    {ALL_STATUSES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.tableContainer}>
+                  <table className={styles.dataTable}>
                     <thead>
                       <tr>
                         <th>Order ID</th>
-                        <th>Title Description</th>
+                        <th>Requisition Title</th>
                         <th>Department</th>
-                        <th>Billing Date</th>
+                        <th>Submitted By</th>
+                        <th>Date</th>
+                        <th>Status</th>
                         <th style={{ textAlign: 'right' }}>Total Bill</th>
                         <th style={{ textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {ordersWithBills.map(o => (
-                        <tr key={o.id}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td>{o.department_label}</td>
-                          <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                      {filteredOrders.map((ord) => (
+                        <tr key={ord.id}>
+                          <td style={{ fontWeight: 800, color: '#2563EB', cursor: 'pointer' }} onClick={() => router.push(`/order/${ord.id}`)}>
+                            {ord.id}
+                          </td>
+                          <td style={{ fontWeight: 700, color: '#0F172A', cursor: 'pointer' }} onClick={() => router.push(`/order/${ord.id}`)}>
+                            {ord.title}
+                          </td>
+                          <td>🏛️ {ord.department_label || 'Dept'}</td>
+                          <td>👤 {ord.created_by_name || 'Coordinator'}</td>
+                          <td style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                            {new Date(ord.created_at).toLocaleDateString('en-IN')}
+                          </td>
+                          <td><StatusBadge status={ord.status} size="sm" /></td>
+                          <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{ord.total_bill_amount || 0}</td>
                           <td style={{ textAlign: 'center' }}>
-                            <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
-                              🧾 Print Bill
-                            </Link>
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                              <button
+                                className={styles.quickActionBtn}
+                                style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                onClick={() => router.push(`/order/${ord.id}`)}
+                              >
+                                View
+                              </button>
+                              {['Bill Generated', 'Vendor Confirmed'].includes(ord.status) && (
+                                <button
+                                  className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
+                                  style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                  onClick={() => handleComplete(ord.id)}
+                                >
+                                  Complete
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
-                      {ordersWithBills.length === 0 && (
+                      {filteredOrders.length === 0 && (
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No invoice records available.
+                          <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#94A3B8' }}>
+                            No matching orders found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: BILLS & SETTLEMENTS */}
+            {activeTab === 'bills' && (
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="bills" size={20} color="#06B6D4" />
+                      <span>Vendor Monthly Billing & Settlements</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>Track monthly canteen billing cycles, settlements, and payment verifications</div>
+                  </div>
+                  <button
+                    className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
+                    onClick={() => {
+                      setShowSettlementModal(true);
+                      setSelectedSettlementVendor(vendors[0]?.id || '');
+                      setSelectedSettlementMonth(new Date().toISOString().slice(0, 7));
+                    }}
+                  >
+                    + Record Monthly Settlement
+                  </button>
+                </div>
+
+                <div className={styles.tableContainer}>
+                  <table className={styles.dataTable}>
+                    <thead>
+                      <tr>
+                        <th>Billing Cycle (Month)</th>
+                        <th>Food Vendor</th>
+                        <th style={{ textAlign: 'right' }}>Total Billed</th>
+                        <th style={{ textAlign: 'right' }}>Paid Amount</th>
+                        <th style={{ textAlign: 'right' }}>Pending Due</th>
+                        <th>Settlement Status</th>
+                        <th style={{ textAlign: 'center' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {settlements.map((s, idx) => {
+                        const vendor = vendors.find(v => v.id === s.vendor_id);
+                        const due = (s.total_amount || 0) - (s.paid_amount || 0);
+                        const isSettled = due <= 0;
+
+                        return (
+                          <tr key={idx}>
+                            <td style={{ fontWeight: 800, color: '#0F172A' }}>{s.month}</td>
+                            <td style={{ fontWeight: 700 }}>🏪 {vendor?.name || s.vendor_id}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 800 }}>₹{Number(s.total_amount || 0).toLocaleString('en-IN')}</td>
+                            <td style={{ textAlign: 'right', color: '#059669', fontWeight: 700 }}>₹{Number(s.paid_amount || 0).toLocaleString('en-IN')}</td>
+                            <td style={{ textAlign: 'right', color: due > 0 ? '#DC2626' : '#64748B', fontWeight: 800 }}>
+                              ₹{Math.max(0, due).toLocaleString('en-IN')}
+                            </td>
+                            <td>
+                              <span className={`badge ${isSettled ? 'badge-success' : 'badge-warning'}`}>
+                                {isSettled ? 'Settled' : 'Pending Payment'}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <button
+                                className={styles.quickActionBtn}
+                                style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                onClick={() => {
+                                  setSelectedSettlementVendor(s.vendor_id);
+                                  setSelectedSettlementMonth(s.month);
+                                  setSettlementTotalAmount(s.total_amount || 0);
+                                  setSettlementPaidAmount(s.paid_amount || 0);
+                                  setShowSettlementModal(true);
+                                }}
+                              >
+                                Edit Payout
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {settlements.length === 0 && (
+                        <tr>
+                          <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#94A3B8' }}>
+                            No settlements recorded yet. Use the button above to record a settlement.
                           </td>
                         </tr>
                       )}
@@ -1218,607 +1149,272 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
             {/* TAB: REPORTS */}
             {activeTab === 'reports' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {/* Filters Header Card */}
-                  <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-                      <div>
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>📊 System Financial & Order Reports</h3>
-                        <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#64748B' }}>Filter live canteen transactions and query real-time departmental statistics.</p>
-                      </div>
-                      {isMobileDevice && (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => setShowMobileFilters(!showMobileFilters)}
-                          style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                          🔍 {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
-                        </button>
-                      )}
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="reports" size={20} color="#0EA5E9" />
+                      <span>Executive Financial Audit Reports</span>
                     </div>
-
-                    {/* Filter Inputs Grid */}
-                    {(!isMobileDevice || showMobileFilters) && (
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '16px',
-                        paddingTop: '16px',
-                        borderTop: '1px solid #F1F5F9'
-                      }}>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Start Date</label>
-                          <input type="date" className="form-input" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>End Date</label>
-                          <input type="date" className="form-input" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Department</label>
-                          <select className="form-input" value={filterDeptId} onChange={e => setFilterDeptId(e.target.value)}>
-                            <option value="">All Departments</option>
-                            {departments.map(d => (
-                              <option key={d.id} value={d.id}>{d.label} - {d.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Canteen Vendor</label>
-                          <select className="form-input" value={filterVendorId} onChange={e => setFilterVendorId(e.target.value)}>
-                            <option value="">All Vendors</option>
-                            {vendors.map(v => (
-                              <option key={v.id} value={v.id}>{v.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Order Status</label>
-                          <select className="form-input" value={filterOrderStatus} onChange={e => setFilterOrderStatus(e.target.value)}>
-                            <option value="">All Statuses</option>
-                            <option value="Submitted">Submitted (Review Pending)</option>
-                            <option value="Principal Approved">Principal Approved</option>
-                            <option value="DCR Approved">DCR Approved (Procuring)</option>
-                            <option value="Vendor Processing">Vendor Processing</option>
-                            <option value="Vendor Confirmed">Vendor Confirmed</option>
-                            <option value="Bill Generated">Bill Generated</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Principal Rejected">Principal Rejected</option>
-                            <option value="DCR Rejected">DCR Rejected</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Coordinator (Creator)</label>
-                          <select className="form-input" value={filterCoordId} onChange={e => setFilterCoordId(e.target.value)}>
-                            <option value="">All Coordinators</option>
-                            {coordinators.map(c => (
-                              <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Principal HOD</label>
-                          <select className="form-input" value={filterPrincipalId} onChange={e => setFilterPrincipalId(e.target.value)}>
-                            <option value="">All HODs</option>
-                            {principals.map(p => (
-                              <option key={p.id} value={p.id}>{p.name} ({p.email})</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    )}
+                    <div className={styles.sectionSubtitle}>Filter by date range, department, coordinator, and export compliant logs</div>
                   </div>
-
-                  {/* KPI Metrics Dashboard Grid */}
-                  {reportMetrics && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #3B82F6' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>TOTAL TRANSACTIONS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: '6px' }}>{reportMetrics.total_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #10B981' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>COMPLETED ORDERS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#10B981', marginTop: '6px' }}>{reportMetrics.completed_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #F59E0B' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>PENDING REQUISITIONS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F59E0B', marginTop: '6px' }}>{reportMetrics.pending_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #EF4444' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>REJECTED ORDERS</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#EF4444', marginTop: '6px' }}>{reportMetrics.rejected_orders}</div>
-                      </div>
-                      <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #8B5CF6', gridColumn: isMobileDevice ? 'auto' : 'span 2' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>COMPLETED EXPENDITURE</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#8B5CF6', marginTop: '6px' }}>₹{reportMetrics.total_expenditure.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Redesigned SVG Sharing Trends & Breakdown Columns */}
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobileDevice ? '1fr' : '1fr 1fr', gap: '20px', alignItems: 'start' }}>
-                    
-                    {/* Department wise share card */}
-                    <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        🏢 Departmental Expenditure Shares
-                      </h3>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {deptReport.map(r => {
-                          const pct = totalDeptExp > 0 ? (r.revenue / totalDeptExp) * 100 : 0;
-                          return (
-                            <div key={r.department_id}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#334155' }}>
-                                <span>{r.label} - {r.department_name}</span>
-                                <span style={{ color: '#0F172A' }}>₹{r.revenue.toLocaleString()} ({pct.toFixed(1)}%)</span>
-                              </div>
-                              <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{
-                                  width: `${pct}%`,
-                                  height: '100%',
-                                  background: 'linear-gradient(90deg, #3B82F6, #1D4ED8)',
-                                  borderRadius: '4px',
-                                  transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-                                }}></div>
-                              </div>
-                              <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
-                                <span>Total: {r.total_orders} orders</span>
-                                <span>·</span>
-                                <span>Completed: {r.completed_orders}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {deptReport.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8', fontSize: '0.85rem' }}>No department statistics matching filters.</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Vendor share card */}
-                    <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        🏪 Food Vendor Settlement Shares
-                      </h3>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {vendorReport.map(v => {
-                          const pct = totalVendorRev > 0 ? (v.revenue / totalVendorRev) * 100 : 0;
-                          return (
-                            <div key={v.vendor_id}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#334155' }}>
-                                <span>{v.vendor_name} ({v.owner})</span>
-                                <span style={{ color: '#0F172A' }}>₹{v.revenue.toLocaleString()} ({pct.toFixed(1)}%)</span>
-                              </div>
-                              <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{
-                                  width: `${pct}%`,
-                                  height: '100%',
-                                  background: 'linear-gradient(90deg, #10B981, #047857)',
-                                  borderRadius: '4px',
-                                  transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-                                }}></div>
-                              </div>
-                              <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
-                                <span>Live Status: {v.status.toUpperCase()}</span>
-                                <span>·</span>
-                                <span>Items: {v.menu_count} active</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {vendorReport.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8', fontSize: '0.85rem' }}>No vendor statistics matching filters.</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Matched Orders List (Responsive Table/Card view) */}
-                  <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '20px' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>
-                      📋 Matched Transactions ({orders.length})
-                    </h3>
-
-                    {isMobileDevice ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        {orders.map(o => (
-                          <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
-                              <StatusBadge status={o.status} size="sm" />
-                            </div>
-                            <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                            <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Creator: {o.created_by_name} · Dept: {o.department_label}</p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
-                              <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        ))}
-                        {orders.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '32px 0', color: '#94A3B8', fontSize: '0.85rem' }}>No orders match the selected filters.</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
-                        <table className="table">
-                          <thead>
-                            <tr>
-                              <th>Order ID</th>
-                              <th>Description Title</th>
-                              <th>Department</th>
-                              <th>Creator Coordinator</th>
-                              <th>Order Status</th>
-                              <th>Creation Date</th>
-                              <th style={{ textAlign: 'right' }}>Total Bill</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {orders.map(o => (
-                              <tr key={o.id}>
-                                <td style={{ fontWeight: 800, color: '#475569' }}>{o.id}</td>
-                                <td style={{ fontWeight: 700, color: '#0F172A' }}>{o.title}</td>
-                                <td style={{ fontWeight: 600 }}>{o.department_label}</td>
-                                <td>{o.created_by_name}</td>
-                                <td>
-                                  <StatusBadge status={o.status} size="sm" />
-                                </td>
-                                <td style={{ fontSize: '0.82rem', color: '#64748B' }}>{new Date(o.created_at).toLocaleDateString()}</td>
-                                <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</td>
-                              </tr>
-                            ))}
-                            {orders.length === 0 && (
-                              <tr>
-                                <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#94A3B8' }}>No orders match the selected filters.</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className={styles.quickActionBtn} onClick={() => window.print()}>
+                      <span>🖨️ Print Report</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* Filter Controls */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Start Date</label>
+                    <input type="date" className={styles.filterSelect} style={{ width: '100%' }} value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>End Date</label>
+                    <input type="date" className={styles.filterSelect} style={{ width: '100%' }} value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Department</label>
+                    <select className={styles.filterSelect} style={{ width: '100%' }} value={filterDeptId} onChange={e => setFilterDeptId(e.target.value)}>
+                      <option value="">All Departments</option>
+                      {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Vendor</label>
+                    <select className={styles.filterSelect} style={{ width: '100%' }} value={filterVendorId} onChange={e => setFilterVendorId(e.target.value)}>
+                      <option value="">All Vendors</option>
+                      {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Summary Matrix Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1E40AF', textTransform: 'uppercase' }}>Filtered Order Volume</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#1E3A8A', marginTop: '4px' }}>{orders.length} Orders</div>
+                  </div>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: '#ECFDF5', border: '1px solid #A7F3D0' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#065F46', textTransform: 'uppercase' }}>Department Expenditure</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#064E3B', marginTop: '4px' }}>₹{totalDeptExp.toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: '#FAF5FF', border: '1px solid #E9D5FF' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#6B21A8', textTransform: 'uppercase' }}>Vendor Billings</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#581C87', marginTop: '4px' }}>₹{totalVendorRev.toLocaleString('en-IN')}</div>
+                  </div>
+                </div>
+              </div>
             )}
 
-            {/* TAB: ANALYTICS & INSIGHTS (MONTHLY & YEARLY STATS) */}
+            {/* TAB: ANALYTICS */}
             {activeTab === 'analytics' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                
-                {/* Timeframe View Switcher */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '16px 20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                      📊 Campus Procurement & Expenditure Analytics
-                    </h3>
-                    <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '2px 0 0 0' }}>
-                      Detailed monthly and yearly breakdown of canteen requisitions, budget expenditure, and vendor settlements.
-                    </p>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="analytics" size={20} color="#D946EF" />
+                      <span>Procurement & Consumption Analytics</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>Visual insights on departmental food ordering patterns and canteen distribution</div>
                   </div>
-
-                  <div style={{ display: 'flex', background: '#F1F5F9', padding: '4px', borderRadius: '10px' }}>
+                  <div style={{ display: 'flex', gap: '6px', background: '#F1F5F9', padding: '4px', borderRadius: '8px' }}>
                     <button
                       onClick={() => setAnalyticsTimeframe('monthly')}
-                      style={{
-                        padding: '6px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: analyticsTimeframe === 'monthly' ? '#2563EB' : 'transparent',
-                        color: analyticsTimeframe === 'monthly' ? 'white' : '#475569',
-                        fontWeight: 800,
-                        fontSize: '0.8rem',
-                        cursor: 'pointer'
-                      }}
+                      className={styles.quickActionBtn}
+                      style={{ background: analyticsTimeframe === 'monthly' ? '#FFFFFF' : 'transparent', border: 'none', padding: '4px 12px' }}
                     >
-                      📅 Monthly Stats
+                      Monthly View
                     </button>
                     <button
                       onClick={() => setAnalyticsTimeframe('yearly')}
-                      style={{
-                        padding: '6px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: analyticsTimeframe === 'yearly' ? '#2563EB' : 'transparent',
-                        color: analyticsTimeframe === 'yearly' ? 'white' : '#475569',
-                        fontWeight: 800,
-                        fontSize: '0.8rem',
-                        cursor: 'pointer'
-                      }}
+                      className={styles.quickActionBtn}
+                      style={{ background: analyticsTimeframe === 'yearly' ? '#FFFFFF' : 'transparent', border: 'none', padding: '4px 12px' }}
                     >
-                      📆 Yearly Stats
+                      Yearly View
                     </button>
                   </div>
                 </div>
 
-                {/* Key Metrics Bar */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px' }}>
-                  {[
-                    { label: analyticsTimeframe === 'monthly' ? 'August Orders' : '2026 Total Orders', value: orders.length, icon: '📋', color: '#3B82F6' },
-                    { label: analyticsTimeframe === 'monthly' ? 'Monthly Expenditure' : 'Yearly Expenditure', value: `₹${orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0).toFixed(0)}`, icon: '💰', color: '#10B981' },
-                    { label: 'Active Canteens', value: vendors.filter(v => v.status === 'open').length, icon: '🏪', color: '#8B5CF6' },
-                    { label: 'Settlement Efficiency', value: '98.4%', icon: '⚡', color: '#EC4899' }
-                  ].map((metric, idx) => (
-                    <div key={idx} className="card" style={{ padding: '20px', borderLeft: `6px solid ${metric.color}`, background: 'white', borderRadius: '16px' }}>
-                      <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>{metric.icon}</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gray-900)' }}>{metric.value}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--gray-500)', fontWeight: 600, marginTop: '2px' }}>{metric.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Breakdown Table */}
-                <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '16px' }}>
-                    {analyticsTimeframe === 'monthly' ? '📅 Monthly Expenditure Breakdown (2026)' : '📆 Multi-Year Institutional Overview'}
-                  </h3>
-
-                  <div className="table-wrapper" style={{ border: '1px solid #E2E8F0', borderRadius: '12px' }}>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Period</th>
-                          <th style={{ textAlign: 'center' }}>Total Requisitions</th>
-                          <th style={{ textAlign: 'center' }}>Completed Bills</th>
-                          <th style={{ textAlign: 'right' }}>Total Expenditure</th>
-                          <th style={{ textAlign: 'right' }}>Vendor Settlements</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {analyticsTimeframe === 'monthly' ? (
-                          [
-                            { period: 'August 2026 (Current)', orders: orders.length, bills: ordersWithBills.length, exp: orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0), settlements: vendors.reduce((s, v) => s + v.revenue, 0) },
-                            { period: 'July 2026', orders: 42, bills: 40, exp: 38400, settlements: 38400 },
-                            { period: 'June 2026', orders: 35, bills: 32, exp: 29500, settlements: 29500 },
-                            { period: 'May 2026', orders: 50, bills: 48, exp: 46200, settlements: 46200 },
-                            { period: 'April 2026', orders: 38, bills: 36, exp: 31000, settlements: 31000 },
-                          ].map((row, i) => (
-                            <tr key={i}>
-                              <td style={{ fontWeight: 700 }}>{row.period}</td>
-                              <td style={{ textAlign: 'center' }}>{row.orders}</td>
-                              <td style={{ textAlign: 'center' }}>{row.bills}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{row.exp.toFixed(2)}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{row.settlements.toFixed(2)}</td>
-                            </tr>
-                          ))
-                        ) : (
-                          [
-                            { period: 'Academic Year 2025-2026', orders: 412, bills: 398, exp: 384500, settlements: 384500 },
-                            { period: 'Academic Year 2024-2025', orders: 380, bills: 365, exp: 342000, settlements: 342000 },
-                            { period: 'Academic Year 2023-2024', orders: 290, bills: 280, exp: 265000, settlements: 265000 },
-                          ].map((row, i) => (
-                            <tr key={i}>
-                              <td style={{ fontWeight: 700 }}>{row.period}</td>
-                              <td style={{ textAlign: 'center' }}>{row.orders}</td>
-                              <td style={{ textAlign: 'center' }}>{row.bills}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{row.exp.toFixed(2)}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{row.settlements.toFixed(2)}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB: NOTIFICATIONS */}
-            {activeTab === 'notifications' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>🔔 System Wide Alerts</h3>
-                  {notifications.filter(n => !n.read).length > 0 && (
-                    <button className="btn btn-ghost btn-sm text-primary" onClick={handleMarkAllNotifications}>
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {notifications.map(n => {
-                    const loc = localizeNotificationMessage(n, lang);
-                    return (
-                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? '#FAFAFA' : 'var(--sidebar-bg)', border: '1px solid var(--sidebar-border)', borderRadius: '10px' }}>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <span style={{ fontSize: '1.2rem' }}>🔔</span>
-                        <div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: n.read ? 500 : 700, color: 'var(--gray-800)' }}>{loc.message}</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--gray-400)', marginTop: '2px' }}>{new Date(n.timestamp).toLocaleString()}</div>
+                <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                    {departments.map((dept, idx) => {
+                      const deptOrders = orders.filter(o => o.department_id === dept.id);
+                      const amount = deptOrders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
+                      return (
+                        <div key={idx} style={{ padding: '16px', background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                          <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 700 }}>{dept.name}</div>
+                          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0F172A', marginTop: '6px' }}>₹{amount.toLocaleString('en-IN')}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700, marginTop: '4px' }}>{deptOrders.length} Completed Orders</div>
                         </div>
-                      </div>
-                      {!n.read && (
-                        <button className="btn btn-ghost btn-sm" style={{ color: colors.accent }} onClick={() => handleMarkNotification(n.id)}>
-                          Check Read
-                        </button>
-                      )}
-                    </div>
-                  );})}
-                  {notifications.length === 0 && (
-                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400)' }}>
-                      No alerts or notifications recorded.
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* TAB: SYSTEM AUDIT LOGS */}
+            {/* TAB: AUDIT LOGS */}
             {['audit', 'logs', 'audit-logs'].includes(activeTab) && (
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px' }}>Immutable Security Audit Trail</h3>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="audit" size={20} color="#6366F1" />
+                      <span>Security & Institutional Audit Trail</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>Immutable event log capturing authentication, approvals, and order status transitions</div>
+                  </div>
+                  <button className={styles.quickActionBtn} onClick={loadAuditLogs}>
+                    <span>🔄 Refresh Logs</span>
+                  </button>
+                </div>
+
+                <div className={styles.tableContainer}>
+                  <table className={styles.dataTable}>
                     <thead>
                       <tr>
                         <th>Timestamp</th>
-                        <th>User</th>
-                        <th>Role</th>
-                        <th>Action</th>
-                        <th>Detail Payloads (Old → New)</th>
-                        <th>Metadata (IP & Browser)</th>
+                        <th>Actor / User</th>
+                        <th>Action Performed</th>
+                        <th>Resource Scope</th>
+                        <th>Details</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {auditLogs.map(l => (
-                        <tr key={l.id} style={{ fontSize: '0.8rem' }}>
-                          <td style={{ whiteSpace: 'nowrap', color: 'var(--gray-500)' }}>
-                            {new Date(l.timestamp).toLocaleString('en-IN')}
+                      {auditLogs.map((log, idx) => (
+                        <tr key={idx}>
+                          <td style={{ fontSize: '0.78rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
+                            {new Date(log.created_at || log.timestamp || Date.now()).toLocaleString('en-IN')}
                           </td>
-                          <td style={{ fontWeight: 700, color: 'var(--gray-800)' }}>{l.user_name}</td>
+                          <td style={{ fontWeight: 700, color: '#0F172A' }}>
+                            👤 {log.actor_name || log.user_email || 'System Admin'}
+                          </td>
                           <td>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
-                              {l.role}
+                            <span style={{ fontWeight: 800, padding: '3px 8px', borderRadius: '6px', background: '#EEF2FF', color: '#4338CA', fontSize: '0.75rem' }}>
+                              {log.action || 'UPDATE_ORDER'}
                             </span>
                           </td>
-                          <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{l.action}</td>
-                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {l.old_value || '—'} → {l.new_value || '—'}
-                          </td>
-                          <td style={{ color: 'var(--gray-500)', fontSize: '0.72rem' }}>
-                            {l.ip_address} | {l.browser.slice(0, 30)}...
-                          </td>
+                          <td style={{ color: '#475569', fontWeight: 600 }}>{log.resource_type || 'Order'} #{log.resource_id || log.order_id || 'N/A'}</td>
+                          <td style={{ fontSize: '0.8rem', color: '#64748B' }}>{log.details || log.description || 'Status changed'}</td>
                         </tr>
                       ))}
+                      {auditLogs.length === 0 && (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: '#94A3B8' }}>
+                            All audit actions are clean. No critical exceptions recorded.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             )}
 
-            {/* TAB: SETTINGS */}
-            {activeTab === 'settings' && (
-              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>⚙️ Dashboard Settings</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* TAB: SYSTEM HEALTH */}
+            {activeTab === 'health' && (
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Preferred Language / भाषा पसंद</label>
-                    <select className="form-input" value={preferredLang} onChange={e => handleLanguageChange(e.target.value)}>
-                      <option value="en">English (English)</option>
-                      <option value="hi">हिन्दी (Hindi)</option>
-                      <option value="gu">ગુજરાતી (Gujarati)</option>
-                    </select>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="health" size={20} color="#14B8A6" />
+                      <span>System Infrastructure & Health Telemetry</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>Live diagnostics on API availability, database connections, and memory state</div>
+                  </div>
+                  <span className={styles.statBadgePositive}>🟢 Live Node OK</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+                  <div style={{ padding: '20px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>DATABASE CLUSTER</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '6px 0' }}>PostgreSQL Node 1</div>
+                    <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700 }}>● Active • 0.8ms Ping</div>
                   </div>
 
-                  <hr style={{ margin: '18px 0', borderColor: 'var(--gray-200)' }} />
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>🛡️ Administrative System Settings</h3>
-
-                  {/* 1. Live Role Switcher Floating Dock */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ flex: 1, paddingRight: '12px' }}>
-                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--gray-900)' }}>Live Demo Role Switcher Dock</div>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--gray-500)', marginTop: '2px' }}>
-                        Shows floating bottom dock for 1-click persona switching (Board presentation mode)
-                      </div>
-                    </div>
-                    <UiverseToggle
-                      checked={demoSwitcherEnabled}
-                      onChange={(checked) => handleToggleDemoSwitcher(checked)}
-                      activeColor="#2563EB"
-                      size="md"
-                    />
+                  <div style={{ padding: '20px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>NEXT.JS APP RUNTIME</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '6px 0' }}>Turbopack Server</div>
+                    <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700 }}>● Fast SSR • 63 Routes Static</div>
                   </div>
 
-                  {/* 2. Login Quick-Access Demo Accounts */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', marginTop: '10px' }}>
-                    <div style={{ flex: 1, paddingRight: '12px' }}>
-                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--gray-900)' }}>Login Demo Accounts Board</div>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--gray-500)', marginTop: '2px' }}>
-                        Enables quick-fill mock credentials on the login screen
-                      </div>
-                    </div>
-                    <UiverseToggle
-                      checked={demoAccountsEnabled}
-                      onChange={(checked) => handleToggleDemoAccounts(checked)}
-                      activeColor="#2563EB"
-                      size="md"
-                    />
-                  </div>
-
-                  {settingsMessage && (
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: settingsMessage.includes('error') || settingsMessage.includes('Failed') ? '#EF4444' : '#10B981', marginTop: '8px' }}>
-                      ✓ {settingsMessage}
-                    </div>
-                  )}
-
-                  <hr style={{ margin: '18px 0', borderColor: 'var(--gray-200)' }} />
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px', color: '#DC2626' }}>⚠️ Destructive System Actions</h3>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#FEF2F2', borderRadius: '12px', border: '1px solid #FEE2E2' }}>
-                    <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#991B1B' }}>Deactivate Non-Admin User Directory</div>
-                      <div style={{ fontSize: '0.72rem', color: '#B91C1C', marginTop: '2px' }}>
-                        Deactivates all coordinators, principals, DCRs, and vendors in the database.
-                      </div>
-                    </div>
-                    
-                    <div style={{ marginTop: '6px' }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#991B1B', display: 'block', marginBottom: '6px' }}>
-                        Type "RESET USERS" to confirm:
-                      </label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="RESET USERS" 
-                        value={resetConfirmPhrase} 
-                        onChange={e => setResetConfirmPhrase(e.target.value)} 
-                        style={{ borderColor: '#FCA5A5' }}
-                      />
-                    </div>
-                    
-                    <button
-                      onClick={handleDeactivateAllUsers}
-                      disabled={submitting || resetConfirmPhrase !== 'RESET USERS'}
-                      style={{
-                        background: resetConfirmPhrase === 'RESET USERS' ? '#DC2626' : '#FCA5A5',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '10px 14px',
-                        fontSize: '0.82rem',
-                        fontWeight: 700,
-                        cursor: resetConfirmPhrase === 'RESET USERS' ? 'pointer' : 'not-allowed',
-                        textAlign: 'center',
-                        marginTop: '6px',
-                        transition: '0.2s'
-                      }}
-                    >
-                      {submitting ? 'Deactivating...' : '⚠️ Execute Bulk User Deactivation'}
-                    </button>
+                  <div style={{ padding: '20px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>WEBSOCKET GATEWAY</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '6px 0' }}>Event Stream v3.7</div>
+                    <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700 }}>● Broadcasting Live Alerts</div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* TAB: SYSTEM HEALTH */}
-            {['health', 'system-health'].includes(activeTab) && (
-              <div className="card" style={{ padding: '20px', maxWidth: '600px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>❤️ System Health Monitoring</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                    <div style={{ background: '#ECFDF5', padding: '16px', borderRadius: '10px', border: '1px solid #A7F3D0' }}>
-                      <div style={{ fontSize: '0.72rem', color: '#065F46', fontWeight: 700 }}>DATABASE STATUS</div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#047857', marginTop: '4px' }}>Online & Connected</div>
-                      <div style={{ fontSize: '0.7rem', color: '#065F46', marginTop: '4px' }}>PostgreSQL 16 @ Docker:5433</div>
+            {/* TAB: SETTINGS */}
+            {activeTab === 'settings' && (
+              <div className={styles.cardSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="settings" size={20} color="#64748B" />
+                      <span>Platform & Demonstration Configuration</span>
                     </div>
-                    <div style={{ background: '#ECFDF5', padding: '16px', borderRadius: '10px', border: '1px solid #A7F3D0' }}>
-                      <div style={{ fontSize: '0.72rem', color: '#065F46', fontWeight: 700 }}>WEBSOCKET SERVER</div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#047857', marginTop: '4px' }}>Gateway Online</div>
-                      <div style={{ fontSize: '0.7rem', color: '#065F46', marginTop: '4px' }}>Real-time listener connected</div>
-                    </div>
+                    <div className={styles.sectionSubtitle}>Configure demo modes, switcher visibility, and administrative controls</div>
                   </div>
-                  <hr style={{ borderColor: 'var(--gray-100)' }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Memory Allocated:</span>
-                      <strong>142.4 MB / 1024 MB</strong>
+                </div>
+
+                {settingsMessage && (
+                  <div style={{ padding: '12px 16px', background: '#ECFDF5', color: '#065F46', borderRadius: '10px', marginBottom: '16px', fontWeight: 700, fontSize: '0.86rem' }}>
+                    ✓ {settingsMessage}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '640px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, color: '#0F172A' }}>Live Role Switcher Bar</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Display floating bottom bar to switch roles instantaneously during evaluation</div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>CPU Utilization:</span>
-                      <strong>1.4%</strong>
+                    <UiverseToggle
+                      checked={demoSwitcherEnabled}
+                      onChange={handleToggleDemoSwitcher}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, color: '#0F172A' }}>Login Screen Demo Accounts Board</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Show 1-click login accounts selector on the authentication screen</div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Active WebSocket Sessions:</span>
-                      <strong>{stats.active_websocket_connections || 3} connected</strong>
+                    <UiverseToggle
+                      checked={demoAccountsEnabled}
+                      onChange={handleToggleDemoAccounts}
+                    />
+                  </div>
+
+                  {/* Emergency user reset */}
+                  <div style={{ padding: '20px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', marginTop: '16px' }}>
+                    <div style={{ fontWeight: 800, color: '#991B1B', fontSize: '0.95rem' }}>⚠️ Emergency User Reset (Compliance)</div>
+                    <div style={{ fontSize: '0.8rem', color: '#7F1D1D', margin: '4px 0 14px 0' }}>
+                      Deactivates all custom non-admin accounts. Type <strong>RESET USERS</strong> to confirm.
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <input
+                        type="text"
+                        className={styles.filterSelect}
+                        style={{ flex: 1, background: '#FFFFFF' }}
+                        placeholder="Type RESET USERS"
+                        value={resetConfirmPhrase}
+                        onChange={e => setResetConfirmPhrase(e.target.value)}
+                      />
+                      <button
+                        className={styles.quickActionBtn}
+                        style={{ background: '#DC2626', color: '#FFFFFF', borderColor: '#DC2626' }}
+                        disabled={resetConfirmPhrase !== 'RESET USERS' || submitting}
+                        onClick={handleDeactivateAllUsers}
+                      >
+                        {submitting ? 'Resetting...' : 'Execute Reset'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1826,86 +1422,350 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
             )}
 
             {/* TAB: PROFILE */}
-            {activeTab === 'profile' && (
-              <div style={{ maxWidth: '560px' }}>
-                <div className="card" style={{ padding: '28px', background: 'white', borderRadius: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0' }}>
-                    <div style={{ width: '72px', height: '72px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', outline: '2px solid #BFDBFE', boxShadow: '0 4px 12px rgba(37,99,235,0.15)' }}>
-                      {profileAvatarPreview ? (
-                        <img src={profileAvatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : session.avatar_url ? (
-                        <img src={`${session.avatar_url}?v=${session.avatar_version || 1}`} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #2563EB, #1D4ED8)', color: 'white', fontSize: '1.8rem', fontWeight: 800 }}>{session.name[0]}</div>
-                      )}
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>{session.name}</h3>
-                      <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, marginTop: '2px' }}>🟢 System Administrator</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '1px' }}>{session.email}</div>
-                    </div>
+            {activeTab === 'profile' && session && (
+              <div className={styles.cardSection} style={{ maxWidth: '640px' }}>
+                <div className={styles.sectionHeader}>
+                  <div className={styles.sectionTitle}>
+                    <AppIcon name="profile" size={20} color="#2563EB" />
+                    <span>System Administrator Profile</span>
+                  </div>
+                </div>
+
+                {profileMessage && (
+                  <div style={{ padding: '12px 16px', background: '#ECFDF5', color: '#065F46', borderRadius: '10px', marginBottom: '16px', fontWeight: 700, fontSize: '0.86rem' }}>
+                    ✓ {profileMessage}
+                  </div>
+                )}
+
+                <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Full Name</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={profileName}
+                      onChange={e => setProfileName(e.target.value)}
+                      required
+                    />
                   </div>
 
-                  <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>Profile Photo</label>
-                      <label style={{ cursor: 'pointer', background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', padding: '7px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        📷 {profileAvatarFile ? '✓ Photo Selected — Change' : 'Upload New Photo'}
-                        <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            if (file.size > 5 * 1024 * 1024) { setProfileMessage('Image must be less than 5MB.'); return; }
-                            const reader = new FileReader();
-                            reader.onload = (evt) => {
-                              if (evt.target?.result) {
-                                setCropSrc(evt.target.result as string);
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                            setProfileMessage('');
-                            e.target.value = '';
-                          }}
-                        />
-                      </label>
-                      <p style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: '5px' }}>JPEG, PNG or WEBP • Max 5MB</p>
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Full Name</label>
-                      <input type="text" className="form-input" value={profileName} onChange={e => setProfileName(e.target.value)} required placeholder="Your full name" />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Mobile Number <span style={{ color: '#94A3B8', fontWeight: 500 }}>(optional)</span></label>
-                      <input type="tel" className="form-input" value={profileMobile} onChange={e => { setProfileMobile(e.target.value); setProfileMobileError(''); }} placeholder="10-digit mobile number" maxLength={14} style={{ borderColor: profileMobileError ? '#EF4444' : undefined }} />
-                      {profileMobileError && <p style={{ fontSize: '0.76rem', color: '#EF4444', marginTop: '4px' }}>{profileMobileError}</p>}
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Email Address</label>
-                      <input type="email" className="form-input" value={session.email} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
-                    </div>
-                    <button type="submit" disabled={submitting} className="btn btn-primary" style={{ alignSelf: 'flex-start', minWidth: '140px' }}>
-                      {submitting ? '⏳ Saving...' : '✓ Save Profile'}
-                    </button>
-                    {profileMessage && (
-                      <div style={{ fontSize: '0.82rem', fontWeight: 600, color: profileMessage.includes('success') ? '#10B981' : '#EF4444' }}>
-                        {profileMessage}
-                      </div>
-                    )}
-                  </form>
-                  {cropSrc && (
-                    <ImageCropperModal
-                      imageSrc={cropSrc}
-                      onCrop={(croppedFile) => {
-                        setProfileAvatarFile(croppedFile);
-                        setProfileAvatarPreview(URL.createObjectURL(croppedFile));
-                        setCropSrc(null);
-                      }}
-                      onCancel={() => setCropSrc(null)}
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Email Address</label>
+                    <input
+                      type="email"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#F1F5F9', color: '#64748B' }}
+                      value={session.email}
+                      disabled
                     />
-                  )}
-                </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Mobile Number</label>
+                    <input
+                      type="tel"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={profileMobile}
+                      onChange={e => setProfileMobile(e.target.value)}
+                      placeholder="10-digit mobile number"
+                    />
+                    {profileMobileError && <div style={{ color: '#DC2626', fontSize: '0.75rem', marginTop: '4px' }}>{profileMobileError}</div>}
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Preferred Portal Language</label>
+                    <select
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={preferredLang}
+                      onChange={e => setPreferredLang(e.target.value)}
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">हिन्दी (Hindi)</option>
+                      <option value="gu">ગુજરાતી (Gujarati)</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
+                    style={{ alignSelf: 'flex-start', marginTop: '8px' }}
+                  >
+                    Save Changes
+                  </button>
+                </form>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Modal: Add Department */}
+        {showDeptModal && (
+          <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && setShowDeptModal(false)}>
+            <div className={styles.modalContent}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>
+                  <AppIcon name="departments" size={20} color="#F59E0B" />
+                  <span>Add Master Academic Department</span>
+                </h3>
+                <button className={styles.modalCloseBtn} onClick={() => setShowDeptModal(false)}>✕</button>
+              </div>
+              <form onSubmit={handleAddDeptSubmit}>
+                <div className={styles.modalBody}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Department Code *</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="e.g. CS, MECH, PHARMA"
+                      value={deptCode}
+                      onChange={e => setDeptCode(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Department Full Name *</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="e.g. Computer Science & Engineering"
+                      value={deptName}
+                      onChange={e => setDeptName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Description / Scope</label>
+                    <textarea
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF', minHeight: '80px' }}
+                      placeholder="e.g. Undergraduate engineering requisitions"
+                      value={deptDesc}
+                      onChange={e => setDeptDesc(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className={styles.modalFooter}>
+                  <button type="button" className={styles.quickActionBtn} onClick={() => setShowDeptModal(false)}>Cancel</button>
+                  <button type="submit" className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}>Create Department</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add Vendor */}
+        {showAddVendorModal && (
+          <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && setShowAddVendorModal(false)}>
+            <div className={styles.modalContent}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>
+                  <AppIcon name="vendors" size={20} color="#8B5CF6" />
+                  <span>Register Food Canteen Vendor</span>
+                </h3>
+                <button className={styles.modalCloseBtn} onClick={() => setShowAddVendorModal(false)}>✕</button>
+              </div>
+              <form onSubmit={handleAddVendorSubmit}>
+                <div className={styles.modalBody}>
+                  {addVendorError && <div style={{ color: '#DC2626', fontSize: '0.8rem', fontWeight: 700 }}>{addVendorError}</div>}
+                  {addVendorSuccess && <div style={{ color: '#059669', fontSize: '0.8rem', fontWeight: 700 }}>{addVendorSuccess}</div>}
+                  
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Unique Vendor ID *</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="e.g. sharma_canteen"
+                      value={newVendorId}
+                      onChange={e => setNewVendorId(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Canteen Display Name *</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="e.g. Sharma Canteen & Cafe"
+                      value={newVendorName}
+                      onChange={e => setNewVendorName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Proprietor / Contact Person *</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="e.g. Rajesh Sharma"
+                      value={newVendorOwner}
+                      onChange={e => setNewVendorOwner(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Contact Email *</label>
+                    <input
+                      type="email"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="vendor@aharsetu.edu.in"
+                      value={newVendorEmail}
+                      onChange={e => setNewVendorEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Phone Number *</label>
+                    <input
+                      type="tel"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="10-digit phone"
+                      value={newVendorPhone}
+                      onChange={e => setNewVendorPhone(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Initial Login Password *</label>
+                    <input
+                      type="password"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      placeholder="Password for vendor login"
+                      value={newVendorPassword}
+                      onChange={e => setNewVendorPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className={styles.modalFooter}>
+                  <button type="button" className={styles.quickActionBtn} onClick={() => setShowAddVendorModal(false)}>Cancel</button>
+                  <button type="submit" disabled={submitting} className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}>
+                    {submitting ? 'Registering...' : 'Register Vendor'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Edit Vendor Status */}
+        {selectedVendor && (
+          <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && setSelectedVendor(null)}>
+            <div className={styles.modalContent} style={{ maxWidth: '440px' }}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>
+                  <AppIcon name="vendors" size={20} color="#8B5CF6" />
+                  <span>Update Vendor State: {selectedVendor.name}</span>
+                </h3>
+                <button className={styles.modalCloseBtn} onClick={() => setSelectedVendor(null)}>✕</button>
+              </div>
+              <div className={styles.modalBody}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Select Operational State</label>
+                <select
+                  className={styles.filterSelect}
+                  style={{ width: '100%', background: '#FFFFFF' }}
+                  value={editStatus}
+                  onChange={e => setEditStatus(e.target.value)}
+                >
+                  <option value="open">🟢 Open (Taking Orders)</option>
+                  <option value="busy">🟡 Busy (High Volume)</option>
+                  <option value="closing_soon">🟠 Closing Soon</option>
+                  <option value="closed">🔴 Closed</option>
+                </select>
+              </div>
+              <div className={styles.modalFooter}>
+                <button className={styles.quickActionBtn} onClick={() => setSelectedVendor(null)}>Cancel</button>
+                <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={handleUpdateVendorStatus}>Update Status</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Settlement Update */}
+        {showSettlementModal && (
+          <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && setShowSettlementModal(false)}>
+            <div className={styles.modalContent}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>
+                  <AppIcon name="bills" size={20} color="#06B6D4" />
+                  <span>Record Vendor Monthly Settlement</span>
+                </h3>
+                <button className={styles.modalCloseBtn} onClick={() => setShowSettlementModal(false)}>✕</button>
+              </div>
+              <form onSubmit={handleUpdateSettlementSubmit}>
+                <div className={styles.modalBody}>
+                  {settlementError && <div style={{ color: '#DC2626', fontSize: '0.8rem', fontWeight: 700 }}>{settlementError}</div>}
+                  {settlementSuccess && <div style={{ color: '#059669', fontSize: '0.8rem', fontWeight: 700 }}>{settlementSuccess}</div>}
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Food Vendor *</label>
+                    <select
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={selectedSettlementVendor}
+                      onChange={e => setSelectedSettlementVendor(e.target.value)}
+                      required
+                    >
+                      {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Billing Cycle Month (YYYY-MM) *</label>
+                    <input
+                      type="month"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={selectedSettlementMonth}
+                      onChange={e => setSelectedSettlementMonth(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Total Amount Billed (₹) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={settlementTotalAmount}
+                      onChange={e => setSettlementTotalAmount(parseFloat(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Paid / Disbursed Amount (₹) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={settlementPaidAmount}
+                      onChange={e => setSettlementPaidAmount(parseFloat(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className={styles.modalFooter}>
+                  <button type="button" className={styles.quickActionBtn} onClick={() => setShowSettlementModal(false)}>Cancel</button>
+                  <button type="submit" disabled={submitting} className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}>
+                    {submitting ? 'Saving...' : 'Save Settlement'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

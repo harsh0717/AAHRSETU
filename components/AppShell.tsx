@@ -14,7 +14,7 @@ import ToastContainer from './Toast';
 import BrandLogo from './BrandLogo';
 import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
 import AvatarImage from './AvatarImage';
-import AppIcon from './ui/AppIcon';
+import AppIcon, { getIconTheme } from './ui/AppIcon';
 import styles from './AppShell.module.css';
 
 interface AppShellProps {
@@ -175,6 +175,7 @@ export default function AppShell({ children, role }: AppShellProps) {
             const isActive =
               pathname === item.href ||
               (item.href !== `/${role}` && pathname?.startsWith(item.href));
+            const iconTheme = getIconTheme(item.icon);
 
             return (
               <Link
@@ -183,9 +184,16 @@ export default function AppShell({ children, role }: AppShellProps) {
                 className={`${styles.navItem} ${isActive ? styles.navActive : ''}`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <span className={styles.navIcon} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AppIcon name={item.icon} size={18} />
-                </span>
+                <div
+                  className={styles.navIconBadge}
+                  style={{
+                    background: iconTheme.bg,
+                    color: iconTheme.color,
+                    boxShadow: isActive ? `0 2px 10px ${iconTheme.glow}` : undefined,
+                  }}
+                >
+                  <AppIcon name={item.icon} size={16} color={iconTheme.color} strokeWidth={2.2} />
+                </div>
                 <span>{t(item.labelKey)}</span>
               </Link>
             );
@@ -194,8 +202,22 @@ export default function AppShell({ children, role }: AppShellProps) {
 
         {/* Footer */}
         <div className={styles.sidebarFooter}>
-          <button onClick={handleLogout} className={styles.logoutBtn} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AppIcon name="logout" size={16} /> <span>{t('auth.logout')}</span>
+          <button onClick={handleLogout} className={styles.logoutBtn} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <AppIcon name="logout" size={14} color="#EF4444" strokeWidth={2.2} />
+            </div>
+            <span>{t('auth.logout')}</span>
           </button>
         </div>
       </aside>
@@ -347,6 +369,7 @@ export default function AppShell({ children, role }: AppShellProps) {
               item.id === 'more'
                 ? moreDrawerOpen
                 : pathname === item.href || (item.href !== `/${role}` && pathname?.startsWith(item.href));
+            const iconTheme = getIconTheme(item.icon);
 
             if (item.id === 'more') {
               return (
@@ -356,7 +379,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   className={`${styles.bottomNavItem} ${isItemActive ? styles.bottomNavItemActive : ''}`}
                 >
                   <span className={styles.bottomNavIcon}>
-                    <AppIcon name={item.icon} size={20} />
+                    <AppIcon name={item.icon} size={20} color={isItemActive ? iconTheme.color : '#64748B'} />
                   </span>
                   <span>{item.label}</span>
                 </button>
@@ -370,7 +393,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                 className={`${styles.bottomNavItem} ${isItemActive ? styles.bottomNavItemActive : ''}`}
               >
                 <span className={styles.bottomNavIcon}>
-                  <AppIcon name={item.icon} size={20} />
+                  <AppIcon name={item.icon} size={20} color={isItemActive ? iconTheme.color : '#64748B'} />
                 </span>
                 <span>{item.label}</span>
               </Link>

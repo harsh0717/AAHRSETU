@@ -301,7 +301,7 @@ function LoginFormContent() {
               <div className={`${styles.stepCircle} ${activeStep >= 3 ? styles.stepActiveCircle : ''}`}>
                 3
               </div>
-              <span className={`${styles.stepLabel} ${activeStep === 3 ? styles.stepActiveLabel : ''}`}>Verify</span>
+              <span className={`${styles.stepLabel} ${activeStep === 3 ? styles.stepActiveLabel : ''}`}>{t('common.verify', 'Verify')}</span>
             </div>
           </div>
 
@@ -417,7 +417,7 @@ function LoginFormContent() {
                   onChange={(e) => setRememberDevice(e.target.checked)}
                   style={{ width: '16px', height: '16px', borderRadius: '4px', accentColor: '#2563EB' }}
                 />
-                <span>Remember this device</span>
+                <span>{t('login.remember_device', 'Remember this device')}</span>
               </label>
             </div>
 

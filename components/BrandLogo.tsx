@@ -1,7 +1,4 @@
-'use client';
-
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 
 // AaharSetu official brand logo — uses /images/logo.png
 
@@ -22,26 +19,15 @@ export default function BrandLogo({
 }) {
   void dark; void language;
 
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
-    }
-  }, []);
-
-  const actualSize = isMobile ? Math.min(size, 46) : size;
-
   if (variant === 'icon') {
     return (
       <div
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          width: actualSize,
-          height: actualSize,
+          width: size,
+          height: size,
+          maxWidth: '100%',
           overflow: 'hidden',
           flexShrink: 0,
           ...style,
@@ -51,11 +37,12 @@ export default function BrandLogo({
         <Image
           src="/images/logo.png"
           alt="AaharSetu Logo"
-          width={actualSize * 3}
-          height={actualSize}
+          width={size * 3}
+          height={size}
+          sizes={`${size * 3}px`}
           style={{
-            width: actualSize * 3,
-            height: actualSize,
+            width: size * 3,
+            height: size,
             objectFit: 'cover',
             objectPosition: 'left center',
           }}
@@ -65,7 +52,7 @@ export default function BrandLogo({
     );
   }
 
-  const logoHeight = actualSize;
+  const logoHeight = size;
   const logoWidth = Math.round(logoHeight * 3.0);
 
   return (
@@ -75,6 +62,7 @@ export default function BrandLogo({
         alignItems: 'center',
         flexShrink: 1,
         minWidth: 0,
+        maxWidth: '100%',
         ...style,
       }}
       className={className}
@@ -84,9 +72,12 @@ export default function BrandLogo({
         alt="AaharSetu — AAHAR सेतु"
         width={logoWidth}
         height={logoHeight}
+        sizes={`(max-width: 768px) ${Math.min(logoWidth, 140)}px, ${logoWidth}px`}
         style={{
-          width: logoWidth,
-          height: logoHeight,
+          width: 'auto',
+          height: `${logoHeight}px`,
+          maxWidth: '100%',
+          maxHeight: '100%',
           objectFit: 'contain',
         }}
         priority

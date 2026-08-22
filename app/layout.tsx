@@ -2,6 +2,9 @@ import './globals.css';
 import { I18nProvider } from '@/lib/i18n';
 import BootGate from '@/components/BootGate';
 import type { Metadata, Viewport } from 'next';
+import { NotificationProvider } from '@/components/NotificationProvider';
+import ToastContainer from '@/components/ToastContainer';
+import RoleSwitcherBar from '@/components/RoleSwitcherBar';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -23,10 +26,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { NotificationProvider } from '@/components/NotificationProvider';
-import ToastContainer from '@/components/ToastContainer';
-import RoleSwitcherBar from '@/components/RoleSwitcherBar';
-
 interface RootLayoutProps {
   children: React.ReactNode;
 }
@@ -45,17 +44,24 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="apple-mobile-web-app-title" content="AharSetu" />
         <meta name="theme-color" content="#2563EB" />
         
-        {/* Preconnect to Font domains for zero-latency DNS & TLS negotiation */}
+        {/* Preconnect for zero-latency font DNS/TLS */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Non-render-blocking asynchronous font stylesheet */}
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+          media="print"
+          // @ts-ignore
+          onLoad="this.media='all'"
         />
-
-        {/* High-priority asset preloading to prevent LCP discovery delay */}
-        <link rel="preload" as="image" href="/images/food_login_bg.webp" type="image/webp" />
-        <link rel="preload" as="image" href="/images/logo.png" type="image/png" />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+          />
+        </noscript>
       </head>
       <body>
         <I18nProvider>

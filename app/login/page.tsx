@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { login, getSession } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -216,6 +217,17 @@ function LoginFormContent() {
       
       {/* 1. Left Panel - Creative Hero */}
       <section className={styles.hero}>
+        <Image
+          src="/images/food_login_bg.webp"
+          alt="Campus Food Platform"
+          fill
+          priority
+          quality={80}
+          sizes="(max-width: 992px) 100vw, 45vw"
+          className={styles.heroBgImage}
+        />
+        <div className={styles.heroOverlay} />
+
         <div className={styles.heroHeader}>
           <BrandLogo size={64} />
           

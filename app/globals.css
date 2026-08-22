@@ -2,8 +2,8 @@
 
 /* ── CSS Variables / Design Tokens ─────────────────────────────────────────── */
 :root {
-  --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: var(--font-outfit), var(--font-inter), 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Semantic shortcuts */
   --bg-main: #F8FAFC;

@@ -32,8 +32,8 @@ const LOCAL_VENDORS_KEY = 'aharsetu_vendors_v3';
 const LOCAL_MENUS_KEY = 'aharsetu_menus_v3';
 
 const FALLBACK_VENDORS: Vendor[] = [
-  { id: 'v1', name: 'Sharma Canteen', owner_name: 'M. Khan', email: 'vendor1@aharsetu.edu.in', phone: '+91 9911223344', status: 'open', revenue: 150.0 },
-  { id: 'v2', name: 'Fresh Bites', owner_name: 'R. Patel', email: 'vendor2@aharsetu.edu.in', phone: '+91 9922334455', status: 'open', revenue: 450.0 },
+  { id: 'v1', name: 'Sharma Canteen', owner_name: 'M. Khan', email: 'vendor1@aharsetu.edu.in', phone: '+91 9911223344', status: 'open', revenue: 0.0 },
+  { id: 'v2', name: 'Fresh Bites', owner_name: 'R. Patel', email: 'vendor2@aharsetu.edu.in', phone: '+91 9922334455', status: 'open', revenue: 0.0 },
   { id: 'v3', name: 'Hot Meals', owner_name: 'S. Shah', email: 'vendor3@aharsetu.edu.in', phone: '+91 9933445566', status: 'closed', revenue: 0.0 },
   { id: 'v4', name: 'Quick Snacks', owner_name: 'P. Mehta', email: 'vendor4@aharsetu.edu.in', phone: '+91 9944556677', status: 'temporarily_unavailable', revenue: 0.0 },
 ];
@@ -406,13 +406,7 @@ export interface VendorMonthlySettlement {
 
 const LOCAL_SETTLEMENTS_KEY = 'aharsetu_settlements_v1';
 
-const FALLBACK_SETTLEMENTS: VendorMonthlySettlement[] = [
-  { id: 1, vendor_id: 'v1', vendor_name: 'Sharma Canteen', month: 'August 2026', total_amount: 15000.0, paid_amount: 12000.0, due_amount: 3000.0, status: 'Partially Settled', updated_at: new Date().toISOString() },
-  { id: 2, vendor_id: 'v2', vendor_name: 'Fresh Bites', month: 'August 2026', total_amount: 28400.0, paid_amount: 28400.0, due_amount: 0.0, status: 'Settled', updated_at: new Date().toISOString() },
-  { id: 3, vendor_id: 'v3', vendor_name: 'Hot Meals', month: 'August 2026', total_amount: 5000.0, paid_amount: 0.0, due_amount: 5000.0, status: 'Pending', updated_at: new Date().toISOString() },
-  { id: 4, vendor_id: 'v1', vendor_name: 'Sharma Canteen', month: 'July 2026', total_amount: 12000.0, paid_amount: 12000.0, due_amount: 0.0, status: 'Settled', updated_at: new Date().toISOString() },
-  { id: 5, vendor_id: 'v2', vendor_name: 'Fresh Bites', month: 'July 2026', total_amount: 26400.0, paid_amount: 26400.0, due_amount: 0.0, status: 'Settled', updated_at: new Date().toISOString() },
-];
+const FALLBACK_SETTLEMENTS: VendorMonthlySettlement[] = [];
 
 function getLocalSettlements(): VendorMonthlySettlement[] {
   if (typeof window === 'undefined') return FALLBACK_SETTLEMENTS;

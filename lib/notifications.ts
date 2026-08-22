@@ -98,42 +98,7 @@ export function buildActionDetails(
   }
 }
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif-init-1',
-    recipient_id: 8,
-    recipient_role: 'coordinator',
-    department_id: 'diploma',
-    vendor_id: null,
-    type: 'SYSTEM_ALERT',
-    title: 'System Ready',
-    message: 'Welcome to AharSetu v3.7. Actionable deep-linking is active.',
-    order_id: 'ORD-001',
-    vendor_order_id: null,
-    action_url: '/coordinator/orders',
-    action_type: 'OPEN_ORDER',
-    action_label: 'View Orders →',
-    read: false,
-    timestamp: new Date().toISOString()
-  },
-  {
-    id: 'notif-init-2',
-    recipient_id: 14,
-    recipient_role: 'vendor',
-    department_id: null,
-    vendor_id: 'v1',
-    type: 'VENDOR_ORDER_ASSIGNED',
-    title: 'New Canteen Order',
-    message: 'Requisition ORD-003 assigned to Sharma Canteen for order processing.',
-    order_id: 'ORD-003',
-    vendor_order_id: 'VORD-003-1',
-    action_url: '/vendor/orders/incoming',
-    action_type: 'OPEN_VENDOR_ORDER',
-    action_label: 'Process Order →',
-    read: false,
-    timestamp: new Date(Date.now() - 1800000).toISOString()
-  }
-];
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
 
 function getLocalNotifs(): NotificationItem[] {
   if (typeof window === 'undefined') return INITIAL_NOTIFICATIONS;

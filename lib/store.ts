@@ -63,141 +63,7 @@ export interface MasterOrder {
 
 const LOCAL_ORDERS_KEY = 'aharsetu_orders_v3';
 
-// Baseline fallback seed orders for Version 1 parity
-const FALLBACK_ORDERS: MasterOrder[] = [
-  {
-    id: 'ORD-001',
-    title: 'Tea for Morning Meeting',
-    purpose: 'Staff meeting in main conference room',
-    department_id: 'diploma',
-    department_label: 'Diploma Department',
-    created_by_id: 8,
-    created_by_name: 'Priya Sharma',
-    status: 'Sent for Approval',
-    total_bill_amount: 0,
-    bill_generated_at: null,
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-    updated_at: new Date(Date.now() - 3600000).toISOString(),
-    vendor_orders: [
-      {
-        id: 'VORD-001-1',
-        master_order_id: 'ORD-001',
-        vendor_id: 'v1',
-        vendor_name: 'Sharma Canteen',
-        status: 'Pending',
-        bill_amount: 0,
-        invoice_number: null,
-        items: [{ id: 1, name: 'Tea', quantity: 15, price: 10.0, unit: 'per cup', menu_item_id: 'v1m1' }]
-      }
-    ],
-    history: [
-      { action: 'Order Created', role: 'coordinator', user_name: 'Priya Sharma', remarks: 'Created Order draft', timestamp: new Date(Date.now() - 7200000).toISOString(), master_order_id: 'ORD-001' },
-      { action: 'Submitted for Approval', role: 'coordinator', user_name: 'Priya Sharma', remarks: 'Sent to Principal for review', timestamp: new Date(Date.now() - 3600000).toISOString(), master_order_id: 'ORD-001' }
-    ]
-  },
-  {
-    id: 'ORD-002',
-    title: 'Lunch for Board Meeting',
-    purpose: 'Admissions Board Annual Meet',
-    department_id: 'degree',
-    department_label: 'Degree Department',
-    created_by_id: 9,
-    created_by_name: 'Ravi Kumar',
-    status: 'Principal Approved',
-    total_bill_amount: 0,
-    bill_generated_at: null,
-    created_at: new Date(Date.now() - 18000000).toISOString(),
-    updated_at: new Date(Date.now() - 10800000).toISOString(),
-    vendor_orders: [
-      {
-        id: 'VORD-002-1',
-        master_order_id: 'ORD-002',
-        vendor_id: 'v2',
-        vendor_name: 'Fresh Bites',
-        status: 'Pending',
-        bill_amount: 0,
-        invoice_number: null,
-        items: [{ id: 2, name: 'Veg Lunch', quantity: 12, price: 80.0, unit: 'per plate', menu_item_id: 'v2m1' }]
-      }
-    ],
-    history: [
-      { action: 'Order Created', role: 'coordinator', user_name: 'Ravi Kumar', remarks: 'Created Order draft', timestamp: new Date(Date.now() - 18000000).toISOString(), master_order_id: 'ORD-002' },
-      { action: 'Submitted for Approval', role: 'coordinator', user_name: 'Ravi Kumar', remarks: 'Sent to Principal', timestamp: new Date(Date.now() - 14400000).toISOString(), master_order_id: 'ORD-002' },
-      { action: 'Principal Approved', role: 'principal', user_name: 'Dr. Arvind Mehta', remarks: 'Approved lunch count', timestamp: new Date(Date.now() - 10800000).toISOString(), master_order_id: 'ORD-002' }
-    ]
-  },
-  {
-    id: 'ORD-003',
-    title: 'Snacks for Training Session',
-    purpose: '3-day orientation program',
-    department_id: 'degree',
-    department_label: 'Degree Department',
-    created_by_id: 9,
-    created_by_name: 'Ravi Kumar',
-    status: 'Vendor Processing',
-    total_bill_amount: 0,
-    bill_generated_at: null,
-    created_at: new Date(Date.now() - 36000000).toISOString(),
-    updated_at: new Date(Date.now() - 25200000).toISOString(),
-    vendor_orders: [
-      {
-        id: 'VORD-003-1',
-        master_order_id: 'ORD-003',
-        vendor_id: 'v1',
-        vendor_name: 'Sharma Canteen',
-        status: 'Pending',
-        bill_amount: 0,
-        invoice_number: null,
-        items: [{ id: 3, name: 'Kachori', quantity: 25, price: 18.0, unit: 'per piece', menu_item_id: 'v1m3' }]
-      }
-    ],
-    history: [
-      { action: 'Order Created', role: 'coordinator', user_name: 'Ravi Kumar', remarks: 'Created Order draft', timestamp: new Date(Date.now() - 36000000).toISOString(), master_order_id: 'ORD-003' },
-      { action: 'Submitted for Approval', role: 'coordinator', user_name: 'Ravi Kumar', remarks: 'Sent to Principal', timestamp: new Date(Date.now() - 32400000).toISOString(), master_order_id: 'ORD-003' },
-      { action: 'Principal Approved', role: 'principal', user_name: 'Dr. Arvind Mehta', remarks: 'Approved', timestamp: new Date(Date.now() - 28800000).toISOString(), master_order_id: 'ORD-003' },
-      { action: 'DCR Approved & Forwarded', role: 'dcr', user_name: 'S. Patil', remarks: 'Budget looks fine', timestamp: new Date(Date.now() - 25200000).toISOString(), master_order_id: 'ORD-003' }
-    ]
-  },
-  {
-    id: 'ORD-004',
-    title: 'Tea & Coffee for Visitor Day',
-    purpose: 'VIP visits from partner colleges',
-    department_id: 'diploma',
-    department_label: 'Diploma Department',
-    created_by_id: 8,
-    created_by_name: 'Priya Sharma',
-    status: 'Completed',
-    total_bill_amount: 600,
-    bill_generated_at: new Date(Date.now() - 3600000).toISOString(),
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1800000).toISOString(),
-    vendor_orders: [
-      {
-        id: 'VORD-004-1',
-        master_order_id: 'ORD-004',
-        vendor_id: 'v1',
-        vendor_name: 'Sharma Canteen',
-        status: 'Vendor Confirmed',
-        bill_amount: 150,
-        invoice_number: 'INV-ORD-004-V1',
-        items: [{ id: 4, name: 'Tea', quantity: 15, price: 10.0, unit: 'per cup', menu_item_id: 'v1m1' }]
-      },
-      {
-        id: 'VORD-004-2',
-        master_order_id: 'ORD-004',
-        vendor_id: 'v2',
-        vendor_name: 'Fresh Bites',
-        status: 'Vendor Confirmed',
-        bill_amount: 450,
-        invoice_number: 'INV-ORD-004-V2',
-        items: [{ id: 5, name: 'Fruit Bowl', quantity: 9, price: 50.0, unit: 'per bowl', menu_item_id: 'v2m4' }]
-      }
-    ],
-    history: [
-      { action: 'Order Completed', role: 'admin', user_name: 'Rajesh Gupta', remarks: 'Order finalized successfully', timestamp: new Date(Date.now() - 1800000).toISOString(), master_order_id: 'ORD-004' }
-    ]
-  }
-];
+const FALLBACK_ORDERS: MasterOrder[] = [];
 
 function sanitizeOrderItems(orders: MasterOrder[]): MasterOrder[] {
   return orders.map(o => {
@@ -1020,7 +886,21 @@ export async function resolveModification(
   throw new Error('Modification request not found');
 }
 
-export function resetAllData(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(LOCAL_ORDERS_KEY);
+export async function resetAllData(): Promise<void> {
+  try {
+    await api.post('/seed', {});
+  } catch (e) {
+    console.warn('[RESET] Backend seed call failed or offline:', e);
+  }
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(LOCAL_ORDERS_KEY);
+    localStorage.removeItem('aharsetu_settlements_v1');
+    localStorage.removeItem('aharsetu_notifications_v3.7');
+    localStorage.removeItem('aharsetu_audit_logs_v3');
+    try {
+      window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'reset', orders: [] } }));
+      window.dispatchEvent(new CustomEvent('aharsetu_notification_changed', { detail: { count: 0 } }));
+      window.dispatchEvent(new CustomEvent('aharsetu_user_changed'));
+    } catch {}
+  }
 }

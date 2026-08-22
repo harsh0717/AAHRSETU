@@ -218,13 +218,13 @@ function LoginFormContent() {
       {/* 1. Left Panel - Creative Hero */}
       <section className={styles.hero}>
         <Image
-          src="/images/food_login_bg.webp"
+          src="/images/campus_dining_hero_v2.webp"
           alt="Campus Food Platform"
           fill
           priority
           // @ts-ignore
           fetchPriority="high"
-          quality={92}
+          quality={95}
           sizes="(max-width: 992px) 100vw, 45vw"
           className={styles.heroBgImage}
         />
@@ -232,7 +232,7 @@ function LoginFormContent() {
 
         <div className={styles.heroHeader}>
           <div className={styles.heroLogoGlassWrapper}>
-            <BrandLogo size={52} />
+            <BrandLogo size={56} />
           </div>
           
           <div className={styles.langRow}>

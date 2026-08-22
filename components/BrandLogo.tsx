@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-// AaharSetu official brand logo — uses /images/logo.png
+// AaharSetu official brand logo — uses transparent /images/logo.png with optional glassmorphism
 
 export default function BrandLogo({
   size = 48,
@@ -8,6 +8,7 @@ export default function BrandLogo({
   className,
   style,
   dark = false,
+  glass = false,
   language,
 }: {
   size?: number;
@@ -15,9 +16,22 @@ export default function BrandLogo({
   className?: string;
   style?: React.CSSProperties;
   dark?: boolean;
+  glass?: boolean;
   language?: string;
 }) {
   void dark; void language;
+
+  const glassStyle: React.CSSProperties = glass
+    ? {
+        background: 'rgba(255, 255, 255, 0.88)',
+        backdropFilter: 'blur(16px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+        borderRadius: '16px',
+        padding: '8px 16px',
+        border: '1px solid rgba(255, 255, 255, 0.75)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9)',
+      }
+    : {};
 
   if (variant === 'icon') {
     return (
@@ -25,11 +39,13 @@ export default function BrandLogo({
         style={{
           display: 'inline-flex',
           alignItems: 'center',
+          justifyContent: 'center',
           width: size,
           height: size,
           maxWidth: '100%',
           overflow: 'hidden',
           flexShrink: 0,
+          ...glassStyle,
           ...style,
         }}
         className={className}
@@ -60,9 +76,11 @@ export default function BrandLogo({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
+        justifyContent: 'center',
         flexShrink: 1,
         minWidth: 0,
         maxWidth: '100%',
+        ...glassStyle,
         ...style,
       }}
       className={className}

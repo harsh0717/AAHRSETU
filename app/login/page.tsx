@@ -231,7 +231,9 @@ function LoginFormContent() {
         <div className={styles.heroOverlay} />
 
         <div className={styles.heroHeader}>
-          <BrandLogo size={64} />
+          <div className={styles.heroLogoGlassWrapper}>
+            <BrandLogo size={52} />
+          </div>
           
           <div className={styles.langRow}>
             {LANGUAGES.map((l) => (

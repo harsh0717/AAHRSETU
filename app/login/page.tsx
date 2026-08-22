@@ -222,7 +222,9 @@ function LoginFormContent() {
           alt="Campus Food Platform"
           fill
           priority
-          quality={80}
+          // @ts-ignore
+          fetchPriority="high"
+          quality={60}
           sizes="(max-width: 992px) 100vw, 45vw"
           className={styles.heroBgImage}
         />

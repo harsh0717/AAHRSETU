@@ -44,10 +44,16 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="apple-mobile-web-app-title" content="AharSetu" />
         <meta name="theme-color" content="#2563EB" />
         
-        {/* Preconnect for zero-latency font DNS/TLS */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
+        {/* High-priority LCP Background Image Preload */}
+        <link
+          rel="preload"
+          as="image"
+          href="/images/food_login_bg.webp"
+          type="image/webp"
+          // @ts-ignore
+          fetchPriority="high"
+        />
+
         {/* Non-render-blocking asynchronous font stylesheet */}
         <link
           rel="stylesheet"

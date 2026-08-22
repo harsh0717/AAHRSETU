@@ -404,21 +404,22 @@ export interface VendorMonthlySettlement {
   updated_at: string;
 }
 
-const LOCAL_SETTLEMENTS_KEY = 'aharsetu_settlements_v1';
+const LOCAL_SETTLEMENTS_KEY = 'aharsetu_settlements_v4';
 
 const FALLBACK_SETTLEMENTS: VendorMonthlySettlement[] = [];
 
 function getLocalSettlements(): VendorMonthlySettlement[] {
-  if (typeof window === 'undefined') return FALLBACK_SETTLEMENTS;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(LOCAL_SETTLEMENTS_KEY);
     if (!raw) {
-      localStorage.setItem(LOCAL_SETTLEMENTS_KEY, JSON.stringify(FALLBACK_SETTLEMENTS));
-      return FALLBACK_SETTLEMENTS;
+      localStorage.setItem(LOCAL_SETTLEMENTS_KEY, JSON.stringify([]));
+      return [];
     }
-    return JSON.parse(raw);
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
   } catch {
-    return FALLBACK_SETTLEMENTS;
+    return [];
   }
 }
 

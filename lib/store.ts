@@ -61,9 +61,38 @@ export interface MasterOrder {
   history: ApprovalHistory[];
 }
 
-const LOCAL_ORDERS_KEY = 'aharsetu_orders_v3';
+const LOCAL_ORDERS_KEY = 'aharsetu_orders_v4';
 
 const FALLBACK_ORDERS: MasterOrder[] = [];
+
+// Automatic one-time client purge of demo data from previous runs
+if (typeof window !== 'undefined') {
+  try {
+    const FRESH_KEY = 'aharsetu_fresh_v2';
+    if (!localStorage.getItem(FRESH_KEY)) {
+      const keysToRemove = [
+        'aharsetu_orders_v1',
+        'aharsetu_orders_v2',
+        'aharsetu_orders_v3',
+        'aharsetu_orders_v4',
+        'aharsetu_settlements_v1',
+        'aharsetu_settlements_v2',
+        'aharsetu_notifications_v1',
+        'aharsetu_notifications_v2',
+        'aharsetu_notifications_v3',
+        'aharsetu_notifications_v3.7',
+        'aharsetu_notifications_v4',
+        'aharsetu_audit_logs_v1',
+        'aharsetu_audit_logs_v2',
+        'aharsetu_audit_logs_v3',
+        'aharsetu_custom_orders'
+      ];
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
+      localStorage.setItem(FRESH_KEY, 'true');
+    }
+  } catch {}
+}
 
 function sanitizeOrderItems(orders: MasterOrder[]): MasterOrder[] {
   return orders.map(o => {
@@ -107,17 +136,17 @@ function sanitizeOrderItems(orders: MasterOrder[]): MasterOrder[] {
 }
 
 function getLocalOrders(): MasterOrder[] {
-  if (typeof window === 'undefined') return sanitizeOrderItems(FALLBACK_ORDERS);
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(LOCAL_ORDERS_KEY);
     if (!raw) {
-      localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(FALLBACK_ORDERS));
-      return sanitizeOrderItems(FALLBACK_ORDERS);
+      localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
+      return [];
     }
     const list = JSON.parse(raw);
-    return sanitizeOrderItems(Array.isArray(list) ? list : FALLBACK_ORDERS);
+    return sanitizeOrderItems(Array.isArray(list) ? list : []);
   } catch {
-    return sanitizeOrderItems(FALLBACK_ORDERS);
+    return [];
   }
 }
 

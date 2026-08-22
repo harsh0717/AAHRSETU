@@ -91,6 +91,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   // Search & Filter
   const [orderSearch, setOrderSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [billsSubTab, setBillsSubTab] = useState<'invoices' | 'settlements'>('invoices');
+  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [invoiceVendorFilter, setInvoiceVendorFilter] = useState('All');
   
   // Vendor Edit modal
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
@@ -293,7 +296,18 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       ]);
       setOrders(oList);
       setVendors(vList);
-      setStats(sysStats);
+      
+      const calcRevenue = oList.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
+      const calcTotalOrders = oList.length;
+      const calcCompleted = oList.filter(o => o.status === 'Completed').length;
+      const calcActiveVendors = vList.filter(v => v.active !== false).length;
+
+      setStats({
+        total_orders: calcTotalOrders,
+        completed_orders: calcCompleted,
+        total_revenue: calcRevenue,
+        active_vendors: calcActiveVendors || (vList.length > 0 ? vList.length : (sysStats?.active_vendors || 0))
+      });
       setNotifications(nList);
       setDepartments(deptList);
       setCoordinators(usersList.filter((u: any) => u.role === 'coordinator'));
@@ -361,11 +375,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
     const handleStorageChange = (e: StorageEvent) => {
       if (
+        e.key === 'aharsetu_orders_v4' ||
         e.key === 'aharsetu_orders_v3' ||
+        e.key === 'aharsetu_settlements_v4' ||
+        e.key === 'aharsetu_settlements_v1' ||
+        e.key === 'aharsetu_notifications_v4' ||
         e.key === 'aharsetu_notifications_v3.7' ||
         e.key === 'aharsetu_users_timestamp' ||
         e.key === 'aharsetu_custom_users' ||
         e.key === 'aharsetu_deleted_user_ids' ||
+        e.key === 'aharsetu_vendors_v4' ||
         e.key === 'aharsetu_vendors_v3' ||
         e.key === 'aharsetu_departments_v3'
       ) {
@@ -1060,90 +1079,252 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
               </div>
             )}
 
-            {/* TAB: BILLS & SETTLEMENTS */}
+            {/* TAB: BILLS & INVOICES */}
             {activeTab === 'bills' && (
-              <div className={styles.cardSection}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <div className={styles.sectionTitle}>
-                      <AppIcon name="bills" size={20} color="#06B6D4" />
-                      <span>Vendor Monthly Billing & Settlements</span>
-                    </div>
-                    <div className={styles.sectionSubtitle}>Track monthly canteen billing cycles, settlements, and payment verifications</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* Sub-navigation Tabs */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '8px', background: '#F1F5F9', padding: '4px', borderRadius: '12px' }}>
+                    <button
+                      className={`${styles.quickActionBtn} ${billsSubTab === 'invoices' ? styles.quickActionPrimary : ''}`}
+                      style={{ border: 'none', background: billsSubTab === 'invoices' ? '#2563EB' : 'transparent', color: billsSubTab === 'invoices' ? '#FFFFFF' : '#64748B' }}
+                      onClick={() => setBillsSubTab('invoices')}
+                    >
+                      <AppIcon name="bills" size={15} color={billsSubTab === 'invoices' ? '#FFFFFF' : '#64748B'} />
+                      <span>All Order Bills & Invoices ({orders.filter(o => (o.total_bill_amount || 0) > 0 || ['Bill Generated', 'Completed', 'Vendor Confirmed'].includes(o.status)).length})</span>
+                    </button>
+                    <button
+                      className={`${styles.quickActionBtn} ${billsSubTab === 'settlements' ? styles.quickActionPrimary : ''}`}
+                      style={{ border: 'none', background: billsSubTab === 'settlements' ? '#2563EB' : 'transparent', color: billsSubTab === 'settlements' ? '#FFFFFF' : '#64748B' }}
+                      onClick={() => setBillsSubTab('settlements')}
+                    >
+                      <AppIcon name="revenue" size={15} color={billsSubTab === 'settlements' ? '#FFFFFF' : '#64748B'} />
+                      <span>Vendor Monthly Settlements ({settlements.length})</span>
+                    </button>
                   </div>
-                  <button
-                    className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
-                    onClick={() => {
-                      setShowSettlementModal(true);
-                      setSelectedSettlementVendor(vendors[0]?.id || '');
-                      setSelectedSettlementMonth(new Date().toISOString().slice(0, 7));
-                    }}
-                  >
-                    + Record Monthly Settlement
-                  </button>
+
+                  {billsSubTab === 'settlements' && (
+                    <button
+                      className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
+                      onClick={() => {
+                        setShowSettlementModal(true);
+                        setSelectedSettlementVendor(vendors[0]?.id || '');
+                        setSelectedSettlementMonth(new Date().toISOString().slice(0, 7));
+                      }}
+                    >
+                      + Record Monthly Settlement
+                    </button>
+                  )}
                 </div>
 
-                <div className={styles.tableContainer}>
-                  <table className={styles.dataTable}>
-                    <thead>
-                      <tr>
-                        <th>Billing Cycle (Month)</th>
-                        <th>Food Vendor</th>
-                        <th style={{ textAlign: 'right' }}>Total Billed</th>
-                        <th style={{ textAlign: 'right' }}>Paid Amount</th>
-                        <th style={{ textAlign: 'right' }}>Pending Due</th>
-                        <th>Settlement Status</th>
-                        <th style={{ textAlign: 'center' }}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {settlements.map((s, idx) => {
-                        const vendor = vendors.find(v => v.id === s.vendor_id);
-                        const due = (s.total_amount || 0) - (s.paid_amount || 0);
-                        const isSettled = due <= 0;
+                {/* SUB-VIEW 1: ALL ORDER BILLS & INVOICES */}
+                {billsSubTab === 'invoices' && (
+                  <div className={styles.cardSection}>
+                    <div className={styles.sectionHeader}>
+                      <div>
+                        <div className={styles.sectionTitle}>
+                          <AppIcon name="bills" size={20} color="#06B6D4" />
+                          <span>Institutional Invoices & Billing Vouchers</span>
+                        </div>
+                        <div className={styles.sectionSubtitle}>View, audit, download, and print official verified vouchers for all campus orders</div>
+                      </div>
+                    </div>
 
-                        return (
-                          <tr key={idx}>
-                            <td style={{ fontWeight: 800, color: '#0F172A' }}>{s.month}</td>
-                            <td style={{ fontWeight: 700 }}>🏪 {vendor?.name || s.vendor_id}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 800 }}>₹{Number(s.total_amount || 0).toLocaleString('en-IN')}</td>
-                            <td style={{ textAlign: 'right', color: '#059669', fontWeight: 700 }}>₹{Number(s.paid_amount || 0).toLocaleString('en-IN')}</td>
-                            <td style={{ textAlign: 'right', color: due > 0 ? '#DC2626' : '#64748B', fontWeight: 800 }}>
-                              ₹{Math.max(0, due).toLocaleString('en-IN')}
-                            </td>
-                            <td>
-                              <span className={`badge ${isSettled ? 'badge-success' : 'badge-warning'}`}>
-                                {isSettled ? 'Settled' : 'Pending Payment'}
-                              </span>
-                            </td>
-                            <td style={{ textAlign: 'center' }}>
-                              <button
-                                className={styles.quickActionBtn}
-                                style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                                onClick={() => {
-                                  setSelectedSettlementVendor(s.vendor_id);
-                                  setSelectedSettlementMonth(s.month);
-                                  setSettlementTotalAmount(s.total_amount || 0);
-                                  setSettlementPaidAmount(s.paid_amount || 0);
-                                  setShowSettlementModal(true);
-                                }}
-                              >
-                                Edit Payout
-                              </button>
-                            </td>
+                    {/* Filter & Search */}
+                    <div className={styles.filterRow}>
+                      <div className={styles.searchBox}>
+                        <AppIcon name="search" size={16} color="#94A3B8" />
+                        <input
+                          type="text"
+                          className={styles.searchInput}
+                          placeholder="Search by Invoice #, Order ID, Title, Dept, or Vendor..."
+                          value={invoiceSearch}
+                          onChange={(e) => setInvoiceSearch(e.target.value)}
+                        />
+                      </div>
+
+                      <select
+                        className={styles.filterSelect}
+                        value={invoiceVendorFilter}
+                        onChange={(e) => setInvoiceVendorFilter(e.target.value)}
+                      >
+                        <option value="All">All Canteen Vendors</option>
+                        {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Invoices Table */}
+                    <div className={styles.tableContainer}>
+                      <table className={styles.dataTable}>
+                        <thead>
+                          <tr>
+                            <th>Invoice / Ref #</th>
+                            <th>Requisition Title</th>
+                            <th>Department</th>
+                            <th>Vendor(s)</th>
+                            <th>Date</th>
+                            <th style={{ textAlign: 'right' }}>Billed Amount</th>
+                            <th>Status</th>
+                            <th style={{ textAlign: 'center' }}>Actions</th>
                           </tr>
-                        );
-                      })}
-                      {settlements.length === 0 && (
-                        <tr>
-                          <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#94A3B8' }}>
-                            No settlements recorded yet. Use the button above to record a settlement.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        </thead>
+                        <tbody>
+                          {orders
+                            .filter(o => {
+                              const matchSearch = !invoiceSearch || 
+                                o.id.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
+                                o.title.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
+                                (o.order_reference && o.order_reference.toLowerCase().includes(invoiceSearch.toLowerCase())) ||
+                                (o.department_label && o.department_label.toLowerCase().includes(invoiceSearch.toLowerCase())) ||
+                                o.vendor_orders.some(vo => vo.vendor_name?.toLowerCase().includes(invoiceSearch.toLowerCase()) || (vo.invoice_number && vo.invoice_number.toLowerCase().includes(invoiceSearch.toLowerCase())));
+                              const matchVendor = invoiceVendorFilter === 'All' || o.vendor_orders.some(vo => vo.vendor_id === invoiceVendorFilter);
+                              return matchSearch && matchVendor;
+                            })
+                            .map((ord) => {
+                              const refNo = ord.order_reference || `AS-2026-${ord.id.replace(/[^0-9]/g, '').slice(-4) || ord.id.slice(-4)}`;
+                              const vendorNames = ord.vendor_orders.map(vo => vo.vendor_name || vo.vendor_id).join(', ') || 'Canteen';
+
+                              return (
+                                <tr key={ord.id}>
+                                  <td>
+                                    <span style={{ fontWeight: 800, color: '#2563EB', fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}>
+                                      {refNo}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <div style={{ fontWeight: 700, color: '#0F172A' }}>{ord.title}</div>
+                                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Order ID: #{ord.id}</div>
+                                  </td>
+                                  <td>🏛️ {ord.department_label || 'Dept'}</td>
+                                  <td>🏪 {vendorNames}</td>
+                                  <td style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                                    {new Date(ord.bill_generated_at || ord.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </td>
+                                  <td style={{ textAlign: 'right', fontWeight: 900, color: '#0F172A', fontSize: '0.95rem' }}>
+                                    ₹{Number(ord.total_bill_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                  </td>
+                                  <td>
+                                    <StatusBadge status={ord.status} size="sm" />
+                                  </td>
+                                  <td style={{ textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                      <button
+                                        className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
+                                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                        onClick={() => router.push(`/bill/${ord.id}`)}
+                                      >
+                                        📄 View Voucher
+                                      </button>
+                                      <button
+                                        className={styles.quickActionBtn}
+                                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                        onClick={() => window.open(`/bill/${ord.id}`, '_blank')}
+                                      >
+                                        🖨️ Print
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          {orders.length === 0 && (
+                            <tr>
+                              <td colSpan={8} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748B' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🧾</div>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A' }}>No Institutional Bills Generated Yet</div>
+                                <div style={{ fontSize: '0.82rem', color: '#64748B', maxWidth: '420px', margin: '4px auto 0 auto' }}>
+                                  As soon as coordinators create requisitions and canteen vendors fulfill them, all verified printable vouchers with QR authentication will appear here automatically.
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB-VIEW 2: MONTHLY VENDOR SETTLEMENTS */}
+                {billsSubTab === 'settlements' && (
+                  <div className={styles.cardSection}>
+                    <div className={styles.sectionHeader}>
+                      <div>
+                        <div className={styles.sectionTitle}>
+                          <AppIcon name="revenue" size={20} color="#10B981" />
+                          <span>Vendor Monthly Settlements Ledger</span>
+                        </div>
+                        <div className={styles.sectionSubtitle}>Track monthly billing disbursement cycles and pending payouts per food vendor</div>
+                      </div>
+                    </div>
+
+                    <div className={styles.tableContainer}>
+                      <table className={styles.dataTable}>
+                        <thead>
+                          <tr>
+                            <th>Billing Cycle (Month)</th>
+                            <th>Food Vendor</th>
+                            <th style={{ textAlign: 'right' }}>Total Billed</th>
+                            <th style={{ textAlign: 'right' }}>Paid Amount</th>
+                            <th style={{ textAlign: 'right' }}>Pending Due</th>
+                            <th>Settlement Status</th>
+                            <th style={{ textAlign: 'center' }}>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {settlements.map((s, idx) => {
+                            const vendor = vendors.find(v => v.id === s.vendor_id);
+                            const due = (s.total_amount || 0) - (s.paid_amount || 0);
+                            const isSettled = due <= 0;
+
+                            return (
+                              <tr key={idx}>
+                                <td style={{ fontWeight: 800, color: '#0F172A' }}>{s.month}</td>
+                                <td style={{ fontWeight: 700 }}>🏪 {vendor?.name || s.vendor_id}</td>
+                                <td style={{ textAlign: 'right', fontWeight: 800 }}>₹{Number(s.total_amount || 0).toLocaleString('en-IN')}</td>
+                                <td style={{ textAlign: 'right', color: '#059669', fontWeight: 700 }}>₹{Number(s.paid_amount || 0).toLocaleString('en-IN')}</td>
+                                <td style={{ textAlign: 'right', color: due > 0 ? '#DC2626' : '#64748B', fontWeight: 800 }}>
+                                  ₹{Math.max(0, due).toLocaleString('en-IN')}
+                                </td>
+                                <td>
+                                  <span className={`badge ${isSettled ? 'badge-success' : 'badge-warning'}`}>
+                                    {isSettled ? 'Settled' : 'Pending Payment'}
+                                  </span>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <button
+                                    className={styles.quickActionBtn}
+                                    style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                    onClick={() => {
+                                      setSelectedSettlementVendor(s.vendor_id);
+                                      setSelectedSettlementMonth(s.month);
+                                      setSettlementTotalAmount(s.total_amount || 0);
+                                      setSettlementPaidAmount(s.paid_amount || 0);
+                                      setShowSettlementModal(true);
+                                    }}
+                                  >
+                                    Edit Payout
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {settlements.length === 0 && (
+                            <tr>
+                              <td colSpan={7} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748B' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💳</div>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A' }}>No Monthly Settlements Recorded</div>
+                                <div style={{ fontSize: '0.82rem', color: '#64748B', maxWidth: '420px', margin: '4px auto 0 auto' }}>
+                                  Use the &quot;+ Record Monthly Settlement&quot; button above to disburse and settle monthly canteen billing cycles.
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

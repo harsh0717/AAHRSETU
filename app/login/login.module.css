@@ -30,7 +30,7 @@
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.28) 40%, rgba(15, 23, 42, 0.85) 100%);
+  background: linear-gradient(180deg, rgba(10, 15, 29, 0.72) 0%, rgba(10, 15, 29, 0.52) 45%, rgba(10, 15, 29, 0.88) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -119,46 +119,49 @@
 
 .heroBadge {
   display: inline-flex;
-  padding: 6px 14px;
+  padding: 7px 16px;
   background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.35);
   color: #FFFFFF;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 800;
   border-radius: 20px;
   margin-bottom: 20px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 .heroTitle {
-  font-size: 2.7rem;
+  font-size: 2.85rem;
   font-weight: 900;
   line-height: 1.12;
   letter-spacing: -0.03em;
   margin: 0 0 16px;
   color: #FFFFFF;
-  text-shadow: 0 3px 20px rgba(0, 0, 0, 0.7), 0 1px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.9);
 }
 
 .heroTitle span {
-  background: linear-gradient(135deg, #FDBA74 0%, #38BDF8 50%, #4ADE80 100%);
+  display: inline-block;
+  color: #FB923C;
+  background: linear-gradient(135deg, #FDE047 0%, #FB923C 50%, #EA580C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.95));
 }
 
 .heroSub {
-  font-size: 1.05rem;
-  color: #FFFFFF;
+  font-size: 1.1rem;
+  color: #F1F5F9;
   font-weight: 600;
   line-height: 1.6;
   margin: 0 0 36px;
   max-width: 440px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
 }
 
 .featuresGrid {

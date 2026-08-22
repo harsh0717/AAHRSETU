@@ -218,7 +218,7 @@ function LoginFormContent() {
       {/* 1. Left Panel - Creative Hero */}
       <section className={styles.hero}>
         <Image
-          src="/images/campus_dining_hero_v2.webp"
+          src="/images/campus_dining_hero_v3.webp"
           alt="Campus Food Platform"
           fill
           priority

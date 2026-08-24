@@ -683,12 +683,13 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                         </div>
                         <div className={styles.sectionSubtitle}>Live orders across all departments and campus canteens</div>
                       </div>
-                      <button
+                      <UiverseButton
+                        variant="secondary"
+                        size="sm"
                         onClick={() => setActiveTab('orders')}
-                        className={styles.quickActionBtn}
                       >
-                        <span>View All ({orders.length})</span>
-                      </button>
+                        View All ({orders.length})
+                      </UiverseButton>
                     </div>
 
                     <div className={styles.activityList}>
@@ -727,13 +728,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           <div className={styles.activityRight}>
                             <div className={styles.activityAmount}>₹{ord.total_bill_amount || 0}</div>
                             <StatusBadge status={ord.status} size="sm" />
-                            <button
+                            <UiverseButton
+                              variant="outline"
+                              size="sm"
+                              style={{ height: '30px', padding: '4px 12px', fontSize: '0.75rem' }}
                               onClick={() => router.push(`/order/${ord.id}`)}
-                              className={styles.quickActionBtn}
-                              style={{ padding: '5px 10px', fontSize: '0.75rem' }}
                             >
                               Open
-                            </button>
+                            </UiverseButton>
                           </div>
                         </div>
                       ))}
@@ -832,9 +834,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     </div>
                     <div className={styles.sectionSubtitle}>Configure departments, official codes, and coordinator eligibility</div>
                   </div>
-                  <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={() => setShowDeptModal(true)}>
+                  <UiverseButton variant="primary" size="sm" onClick={() => setShowDeptModal(true)}>
                     + Add New Department
-                  </button>
+                  </UiverseButton>
                 </div>
 
                 <div className={styles.tableContainer}>
@@ -891,9 +893,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     </div>
                     <div className={styles.sectionSubtitle}>Manage food vendor profiles, operational statuses, and settlements</div>
                   </div>
-                  <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={() => setShowAddVendorModal(true)}>
+                  <UiverseButton variant="primary" size="sm" onClick={() => setShowAddVendorModal(true)}>
                     + Register Food Vendor
-                  </button>
+                  </UiverseButton>
                 </div>
 
                 <div className={styles.tableContainer}>
@@ -1028,21 +1030,23 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{ord.total_bill_amount || 0}</td>
                           <td style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                              <button
-                                className={styles.quickActionBtn}
-                                style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                              <UiverseButton
+                                variant="outline"
+                                size="sm"
+                                style={{ height: '30px', padding: '4px 10px', fontSize: '0.75rem' }}
                                 onClick={() => router.push(`/order/${ord.id}`)}
                               >
                                 View
-                              </button>
+                              </UiverseButton>
                               {['Bill Generated', 'Vendor Confirmed'].includes(ord.status) && (
-                                <button
-                                  className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
-                                  style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                <UiverseButton
+                                  variant="success"
+                                  size="sm"
+                                  style={{ height: '30px', padding: '4px 10px', fontSize: '0.75rem' }}
                                   onClick={() => handleComplete(ord.id)}
                                 >
                                   Complete
-                                </button>
+                                </UiverseButton>
                               )}
                             </div>
                           </td>
@@ -1087,8 +1091,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
 
                   {billsSubTab === 'settlements' && (
-                    <button
-                      className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
+                    <UiverseButton
+                      variant="primary"
+                      size="sm"
                       onClick={() => {
                         setShowSettlementModal(true);
                         setSelectedSettlementVendor(vendors[0]?.id || '');
@@ -1096,7 +1101,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       }}
                     >
                       + Record Monthly Settlement
-                    </button>
+                    </UiverseButton>
                   )}
                 </div>
 
@@ -1322,9 +1327,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     <div className={styles.sectionSubtitle}>Filter by date range, department, coordinator, and export compliant logs</div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className={styles.quickActionBtn} onClick={() => window.print()}>
-                      <span>🖨️ Print Report</span>
-                    </button>
+                    <UiverseButton
+                      variant="primary"
+                      size="sm"
+                      leftIcon={<span>🖨️</span>}
+                      onClick={() => window.print()}
+                    >
+                      Print Report
+                    </UiverseButton>
                   </div>
                 </div>
 
@@ -1570,14 +1580,15 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                         value={resetConfirmPhrase}
                         onChange={e => setResetConfirmPhrase(e.target.value)}
                       />
-                      <button
-                        className={styles.quickActionBtn}
-                        style={{ background: '#DC2626', color: '#FFFFFF', borderColor: '#DC2626' }}
+                      <UiverseButton
+                        variant="danger"
+                        size="sm"
                         disabled={resetConfirmPhrase !== 'RESET USERS' || submitting}
+                        isLoading={submitting}
                         onClick={handleDeactivateAllUsers}
                       >
-                        {submitting ? 'Resetting...' : 'Execute Reset'}
-                      </button>
+                        Execute Reset
+                      </UiverseButton>
                     </div>
                   </div>
                 </div>
@@ -1586,23 +1597,100 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
             {/* TAB: PROFILE */}
             {activeTab === 'profile' && session && (
-              <div className={styles.cardSection} style={{ maxWidth: '640px' }}>
+              <div className={styles.cardSection} style={{ maxWidth: '680px' }}>
                 <div className={styles.sectionHeader}>
-                  <div className={styles.sectionTitle}>
-                    <AppIcon name="profile" size={20} color="#2563EB" />
-                    <span>System Administrator Profile</span>
+                  <div>
+                    <div className={styles.sectionTitle}>
+                      <AppIcon name="profile" size={22} color="#2563EB" />
+                      <span>Administrator Account Profile</span>
+                    </div>
+                    <div className={styles.sectionSubtitle}>
+                      Manage official credentials, upload your photo, and configure preferences
+                    </div>
                   </div>
                 </div>
 
                 {profileMessage && (
-                  <div style={{ padding: '12px 16px', background: '#ECFDF5', color: '#065F46', borderRadius: '10px', marginBottom: '16px', fontWeight: 700, fontSize: '0.86rem' }}>
+                  <div style={{ padding: '12px 16px', background: '#ECFDF5', color: '#065F46', borderRadius: '12px', border: '1px solid #A7F3D0', fontWeight: 700, fontSize: '0.86rem' }}>
                     ✓ {profileMessage}
                   </div>
                 )}
 
-                <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  
+                  {/* Photo Upload Section */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '18px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      {profileAvatarPreview || session.avatar_url ? (
+                        <img
+                          src={profileAvatarPreview || session.avatar_url || ''}
+                          alt={session.name}
+                          style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #FFFFFF', boxShadow: '0 4px 14px rgba(0,0,0,0.1)' }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '80px',
+                            height: '80px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.8rem',
+                            fontWeight: 800,
+                            boxShadow: '0 4px 14px rgba(37,99,235,0.25)'
+                          }}
+                        >
+                          {session.name ? session.name.charAt(0).toUpperCase() : 'A'}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A' }}>Profile Picture</label>
+                      <div>
+                        <UiverseButton
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          leftIcon={<span style={{ fontSize: '1rem' }}>📷</span>}
+                          onClick={() => {
+                            const fileInput = document.getElementById('admin-avatar-file-input');
+                            if (fileInput) fileInput.click();
+                          }}
+                        >
+                          {profileAvatarFile ? '✓ Change Selected Photo' : 'Upload Profile Photo'}
+                        </UiverseButton>
+                        <input
+                          id="admin-avatar-file-input"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) { setProfileMessage('Image must be less than 5MB.'); return; }
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              if (evt.target?.result) {
+                                setCropSrc(evt.target.result as string);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                            setProfileMessage('');
+                            e.target.value = '';
+                          }}
+                        />
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Supports JPG, PNG or WEBP (Max 5MB). Photo will be cropped in a square.</div>
+                    </div>
+                  </div>
+
+                  {/* Full Name */}
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Full Name</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Administrator Full Name *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
@@ -1610,55 +1698,75 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       value={profileName}
                       onChange={e => setProfileName(e.target.value)}
                       required
+                      placeholder="e.g. Dr. Rajesh Sharma"
                     />
                   </div>
 
+                  {/* Email */}
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Email Address</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Email Address (System ID)</label>
                     <input
                       type="email"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#F1F5F9', color: '#64748B' }}
+                      style={{ width: '100%', background: '#F1F5F9', color: '#64748B', cursor: 'not-allowed' }}
                       value={session.email}
                       disabled
                     />
                   </div>
 
+                  {/* Mobile */}
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Mobile Number</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+                      Contact Mobile Number <span style={{ color: '#94A3B8', fontWeight: 500 }}>(10 digits)</span>
+                    </label>
                     <input
                       type="tel"
                       className={styles.filterSelect}
                       style={{ width: '100%', background: '#FFFFFF' }}
                       value={profileMobile}
-                      onChange={e => setProfileMobile(e.target.value)}
+                      onChange={e => { setProfileMobile(e.target.value); setProfileMobileError(''); }}
                       placeholder="10-digit mobile number"
                     />
-                    {profileMobileError && <div style={{ color: '#DC2626', fontSize: '0.75rem', marginTop: '4px' }}>{profileMobileError}</div>}
+                    {profileMobileError && <div style={{ color: '#DC2626', fontSize: '0.75rem', marginTop: '4px', fontWeight: 600 }}>{profileMobileError}</div>}
                   </div>
 
+                  {/* Language */}
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Preferred Portal Language</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Preferred Language</label>
                     <select
                       className={styles.filterSelect}
                       style={{ width: '100%', background: '#FFFFFF' }}
                       value={preferredLang}
                       onChange={e => setPreferredLang(e.target.value)}
                     >
-                      <option value="en">English</option>
+                      <option value="en">English (English)</option>
                       <option value="hi">हिन्दी (Hindi)</option>
                       <option value="gu">ગુજરાતી (Gujarati)</option>
                     </select>
                   </div>
 
-                  <button
-                    type="submit"
-                    className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
-                    style={{ alignSelf: 'flex-start', marginTop: '8px' }}
-                  >
-                    Save Changes
-                  </button>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                    <UiverseButton
+                      type="submit"
+                      variant="primary"
+                      isLoading={submitting}
+                    >
+                      Save Profile Changes
+                    </UiverseButton>
+                  </div>
                 </form>
+
+                {cropSrc && (
+                  <ImageCropperModal
+                    imageSrc={cropSrc}
+                    onCrop={(croppedFile) => {
+                      setProfileAvatarFile(croppedFile);
+                      setProfileAvatarPreview(URL.createObjectURL(croppedFile));
+                      setCropSrc(null);
+                    }}
+                    onCancel={() => setCropSrc(null)}
+                  />
+                )}
               </div>
             )}
           </div>

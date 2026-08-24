@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getSession, login, UserProfile } from '@/lib/auth';
+import { getSession, getSavedUsers, login, UserProfile } from '@/lib/auth';
 import { isDemoSwitcherEnabled } from '@/lib/systemSettings';
 import AppIcon from './ui/AppIcon';
 
@@ -121,6 +121,7 @@ export default function RoleSwitcherBar() {
   const router = useRouter();
   const pathname = usePathname();
   const [currentSession, setCurrentSession] = useState<UserProfile | null>(null);
+  const [savedUsers, setSavedUsers] = useState<UserProfile[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
@@ -129,6 +130,7 @@ export default function RoleSwitcherBar() {
   const refreshSession = useCallback(() => {
     const s = getSession();
     setCurrentSession(s);
+    setSavedUsers(getSavedUsers());
     setSwitcherEnabled(isDemoSwitcherEnabled());
   }, []);
 
@@ -144,12 +146,14 @@ export default function RoleSwitcherBar() {
     };
 
     if (typeof window !== 'undefined') {
+      window.addEventListener('aharsetu_user_changed', handleAuthChange);
       window.addEventListener('aharsetu_profile_changed', handleAuthChange);
       window.addEventListener('aharsetu_settings_changed', handleSettingsChange);
       window.addEventListener('storage', handleAuthChange);
     }
     return () => {
       if (typeof window !== 'undefined') {
+        window.removeEventListener('aharsetu_user_changed', handleAuthChange);
         window.removeEventListener('aharsetu_profile_changed', handleAuthChange);
         window.removeEventListener('aharsetu_settings_changed', handleSettingsChange);
         window.removeEventListener('storage', handleAuthChange);
@@ -312,6 +316,8 @@ export default function RoleSwitcherBar() {
             {DEMO_PERSONAS.map((p) => {
               const isActive = currentEmail === p.email.toLowerCase();
               const isBusy = switching === p.id;
+              const matchedUser = savedUsers.find(u => u.email.toLowerCase() === p.email.toLowerCase());
+              const personaName = matchedUser?.name || p.name;
 
               return (
                 <button
@@ -361,7 +367,7 @@ export default function RoleSwitcherBar() {
                   </div>
 
                   <div style={{ fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isActive ? '#1E293B' : '#E2E8F0' }}>
-                    {p.name}
+                    {personaName}
                   </div>
                   <div style={{ fontSize: '0.64rem', color: isActive ? '#64748B' : '#94A3B8' }}>
                     {p.subLabel}

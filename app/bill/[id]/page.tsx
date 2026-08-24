@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getSession, UserProfile } from '@/lib/auth';
+import { getSession, getSavedUsers, UserProfile } from '@/lib/auth';
 import { getOrderById, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
 import { getMenuItemName } from '@/lib/vendors';
 import { COLLEGE_INFO } from '@/lib/constants';
@@ -33,6 +33,7 @@ export default function BillPage() {
   const [downloading, setDownloading] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [savedUsers, setSavedUsers] = useState<UserProfile[]>([]);
 
   const loadOrderRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
@@ -61,6 +62,7 @@ export default function BillPage() {
       return;
     }
     setSession(s);
+    setSavedUsers(getSavedUsers());
     loadOrder();
 
     // Cross-device sync: poll every 10 seconds silently
@@ -70,16 +72,19 @@ export default function BillPage() {
 
     const handleOrderChanged = () => {
       loadOrderRef.current?.(true);
+      setSavedUsers(getSavedUsers());
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7') {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_custom_users') {
         loadOrderRef.current?.(true);
+        setSavedUsers(getSavedUsers());
       }
     };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.addEventListener('aharsetu_user_changed', handleOrderChanged);
       window.addEventListener('storage', handleStorageChange);
     }
 
@@ -87,6 +92,7 @@ export default function BillPage() {
       clearInterval(syncInterval);
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+        window.removeEventListener('aharsetu_user_changed', handleOrderChanged);
         window.removeEventListener('storage', handleStorageChange);
       }
     };
@@ -113,13 +119,12 @@ export default function BillPage() {
 
   const title = selectedVO ? `${selectedVO.vendor_name || 'Vendor'} Sub-Invoice` : 'Master Invoice';
 
-  // Null-safe items array — the previous crash point
+  // Null-safe items array
   const items: (OrderItem & { vendorName?: string })[] = useMemo(() => {
     try {
       if (selectedVO) {
         return Array.isArray(selectedVO.items) ? selectedVO.items : [];
       }
-      // Flatten all vendor order items, safely skipping any with null/undefined items
       return allVendorOrders.flatMap(vo => {
         if (!Array.isArray(vo?.items)) return [];
         return vo.items.map(item => ({ ...item, vendorName: vo.vendor_name || 'Vendor' }));
@@ -139,26 +144,39 @@ export default function BillPage() {
     const rawTotal = selectedVO ? (selectedVO.bill_amount ?? 0) : (order.total_bill_amount ?? 0);
     if (rawTotal > 0) return rawTotal;
     if (computedItemTotal > 0) return computedItemTotal;
-    return 150.0; // fallback demo amount
+    return 150.0;
   }, [order, selectedVO, computedItemTotal]);
 
-  // Load QR code asynchronously (never blocks render)
+  // Load QR code asynchronously
   useEffect(() => {
     if (!invoiceNo) return;
     let cancelled = false;
 
     async function loadQR() {
       try {
-        const { generateInvoiceQRCodeDataURL } = await import('@/lib/qr');
-        const url = await generateInvoiceQRCodeDataURL(invoiceNo);
+        const QRCode = (await import('qrcode')).default;
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://aharsetu.edu.in';
+        const verifyUrl = `${origin}/verify/invoice/${invoiceNo}`;
+        const url = await QRCode.toDataURL(verifyUrl, {
+          width: 140,
+          margin: 1,
+          color: { dark: '#0F172A', light: '#FFFFFF' }
+        });
         if (!cancelled) setQrCodeUrl(url);
-      } catch {
-        // QR is optional — don't crash
+      } catch (err) {
+        console.warn('QR Code generation failed, continuing without QR:', err);
       }
     }
+
     loadQR();
     return () => { cancelled = true; };
   }, [invoiceNo]);
+
+  function handlePrint() {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  }
 
   // ── PDF Generation ────────────────────────────────────────────────────────
   async function generatePDF() {
@@ -358,7 +376,7 @@ export default function BillPage() {
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
 
         {/* Navigation */}
-        <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600, marginBottom: '10px' }}>
+        <div className="no-print" style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600, marginBottom: '10px' }}>
           <Link href={`/${session.role}`} style={{ color: '#64748B', textDecoration: 'none' }}>Dashboard</Link>{' / '}
           {session.role !== 'vendor' && session.role !== 'admin' ? (
             <><Link href={`/order/${order.id}`} style={{ color: '#64748B', textDecoration: 'none' }}>Order {order.id}</Link>{' / '}</>
@@ -366,46 +384,79 @@ export default function BillPage() {
           <span>Invoice {invoiceNo}</span>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-          <Link href={roleBackLink} style={{ color: '#4F46E5', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+        <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+          <Link href={roleBackLink} style={{ color: '#2563EB', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
             ← {session.role === 'vendor' ? 'Back to Dashboard' : (session.role === 'admin' ? 'Back to Admin Portal' : 'Back to Order Details')}
           </Link>
 
-          {session.role !== 'vendor' && allVendorOrders.length > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>Select Invoice:</span>
-              <select
-                value={selectedVendorId}
-                onChange={e => setSelectedVendorId(e.target.value)}
-                style={{ height: '36px', padding: '0 10px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, background: 'white' }}
-              >
-                <option value="master">Master College Bill</option>
-                {allVendorOrders.map(vo => (
-                  <option key={vo.vendor_id} value={vo.vendor_id}>{vo.vendor_name} Sub-Bill</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {session.role !== 'vendor' && allVendorOrders.length > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>Select Invoice:</span>
+                <select
+                  value={selectedVendorId}
+                  onChange={e => setSelectedVendorId(e.target.value)}
+                  style={{ height: '36px', padding: '0 10px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, background: 'white' }}
+                >
+                  <option value="master">Master College Bill</option>
+                  {allVendorOrders.map(vo => (
+                    <option key={vo.vendor_id} value={vo.vendor_id}>{vo.vendor_name} Sub-Bill</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-          <button
-            onClick={generatePDF}
-            disabled={downloading}
-            style={{
-              padding: '8px 18px', background: '#4F46E5', color: 'white',
-              border: 'none', borderRadius: '10px', cursor: downloading ? 'not-allowed' : 'pointer',
-              fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px',
-              opacity: downloading ? 0.7 : 1, boxShadow: '0 4px 6px -1px rgba(79,70,229,0.15)'
-            }}
-          >
-            {downloading ? '⏳ Generating PDF...' : '📥 Download Official A4 PDF'}
-          </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              style={{
+                padding: '8px 16px',
+                background: '#2563EB',
+                color: 'white',
+                border: '1px solid #1D4ED8',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
+              }}
+            >
+              🖨️ Print Official Bill
+            </button>
+
+            <button
+              type="button"
+              onClick={generatePDF}
+              disabled={downloading}
+              style={{
+                padding: '8px 16px',
+                background: '#FFFFFF',
+                color: '#334155',
+                border: '1px solid #CBD5E1',
+                borderRadius: '8px',
+                cursor: downloading ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                opacity: downloading ? 0.7 : 1,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+            >
+              {downloading ? '⏳ Generating PDF...' : '📥 Download PDF'}
+            </button>
+          </div>
         </div>
 
         {/* Bill Preview Sheet */}
         <div id="bill-print" style={{ background: 'white', borderRadius: '16px', padding: '40px', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
 
           {/* Header */}
-          <div style={{ textAlign: 'center', borderBottom: '2px solid #4F46E5', paddingBottom: '16px', marginBottom: '24px' }}>
+          <div style={{ textAlign: 'center', borderBottom: '2px solid #2563EB', paddingBottom: '16px', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 4px' }}>{COLLEGE_INFO.name}</h2>
             <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '4px 0' }}>{COLLEGE_INFO.address}</p>
             <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
@@ -416,7 +467,7 @@ export default function BillPage() {
           {/* Title & Metadata */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '20px' }}>
             <div style={{ flex: 1, minWidth: '280px' }}>
-              <h3 style={{ color: '#4F46E5', fontSize: '1.1rem', fontWeight: 800, margin: '0 0 10px' }}>
+              <h3 style={{ color: '#2563EB', fontSize: '1.1rem', fontWeight: 800, margin: '0 0 10px' }}>
                 {title.toUpperCase()}
               </h3>
               <table style={{ fontSize: '0.8125rem', borderCollapse: 'collapse', width: '100%' }}>
@@ -427,8 +478,8 @@ export default function BillPage() {
                     ['Date:', new Date(order.bill_generated_at || order.updated_at || order.created_at).toLocaleDateString('en-IN')],
                     ['Department:', order.department_label || 'All Departments'],
                     ['Coordinator:', order.created_by_name || 'N/A'],
-                    ['Principal:', principalApproval ? `Approved by ${principalApproval.user_name}` : 'Approved by Dr. Arvind Mehta'],
-                    ['DCR Audit:', dcrApproval ? `Approved by ${dcrApproval.user_name}` : 'Approved by S. Patil'],
+                    ['Principal:', principalApproval ? `Approved by ${principalApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'principal')?.name || 'Principal'}`],
+                    ['DCR Audit:', dcrApproval ? `Approved by ${dcrApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'dcr')?.name || 'DCR Auditor'}`],
                   ].map(([label, value]) => (
                     <tr key={label}>
                       <td style={{ color: '#64748B', paddingRight: '12px', paddingBottom: '4px', whiteSpace: 'nowrap' }}>{label}</td>
@@ -523,6 +574,27 @@ export default function BillPage() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media print {
+          body, html {
+            background: #FFFFFF !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          #bill-print {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 10px 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

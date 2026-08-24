@@ -79,13 +79,13 @@ export function getSavedUsers(): UserProfile[] {
     const raw = localStorage.getItem(CUSTOM_USERS_KEY);
     const custom: UserProfile[] = raw ? JSON.parse(raw) : [];
 
-    // Map by email and ID so custom accounts override demo accounts
+    // Map by email so custom accounts override demo accounts
     const userMap = new Map<string, UserProfile>();
 
     // Add demo users first (unless deleted)
     DEMO_USERS.forEach(u => {
       if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-        userMap.set(u.email.toLowerCase(), u);
+        userMap.set(u.email.toLowerCase(), { ...u });
       }
     });
 
@@ -93,7 +93,11 @@ export function getSavedUsers(): UserProfile[] {
     if (Array.isArray(custom)) {
       custom.forEach(u => {
         if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-          userMap.set(u.email.toLowerCase(), u);
+          const existing = userMap.get(u.email.toLowerCase());
+          userMap.set(u.email.toLowerCase(), {
+            ...(existing || {}),
+            ...u,
+          });
         }
       });
     }
@@ -115,11 +119,29 @@ export function saveCustomUser(user: UserProfile) {
 
     const raw = localStorage.getItem(CUSTOM_USERS_KEY);
     let custom: UserProfile[] = raw ? JSON.parse(raw) : [];
-    const idx = custom.findIndex(u => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase());
-    if (idx >= 0) custom[idx] = user;
+    const idx = custom.findIndex(u => String(u.id) === String(user.id) || u.email.toLowerCase() === user.email.toLowerCase());
+    if (idx >= 0) custom[idx] = { ...custom[idx], ...user };
     else custom.unshift(user);
     localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(custom));
+
+    // Update active session if it matches this user
+    try {
+      const activeRaw = sessionStorage.getItem(SESSION_KEY);
+      if (activeRaw) {
+        const active = JSON.parse(activeRaw);
+        if (String(active.id) === String(user.id) || active.email?.toLowerCase() === user.email?.toLowerCase()) {
+          const updatedActive = { ...active, ...user };
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(updatedActive));
+          localStorage.setItem('aharsetu_persistent_session', JSON.stringify(updatedActive));
+          if (updatedActive.role) {
+            localStorage.setItem(`aharsetu_remember_${updatedActive.role}`, JSON.stringify(updatedActive));
+          }
+        }
+      }
+    } catch {}
+
     notifyUsersChanged();
+    window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: user }));
   } catch (e) {}
 }
 
@@ -502,11 +524,15 @@ export async function updateUserProfile(payload: {
   const session = getSession();
   if (!session) throw new Error('No active session');
 
-  // Call backend API - this is the source of truth
-  const res = await api.put<UserProfile>(`/users/${session.id}`, payload);
+  let res: UserProfile | null = null;
+  try {
+    res = await api.put<UserProfile>(`/users/${session.id}`, payload);
+  } catch (e) {
+    console.warn('[AUTH] Backend update failed, saving locally:', e);
+  }
   const updated = res || { ...session, ...payload };
 
-  // Update session cache with backend response
+  saveCustomUser(updated);
   setSession(updated, true);
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updated }));

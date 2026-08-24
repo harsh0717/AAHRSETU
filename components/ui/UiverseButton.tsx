@@ -17,152 +17,130 @@ export default function UiverseButton({
   isLoading = false,
   leftIcon,
   rightIcon,
-  glow = true,
+  glow = false,
   className = "",
   style = {},
   disabled,
   ...props
 }: UiverseButtonProps) {
   const sizeStyles = {
-    sm: { padding: "8px 16px", fontSize: "0.8rem", height: "34px", borderRadius: "10px" },
-    md: { padding: "12px 24px", fontSize: "0.92rem", height: "44px", borderRadius: "14px" },
-    lg: { padding: "15px 32px", fontSize: "1.05rem", height: "52px", borderRadius: "16px" },
+    sm: { padding: "5px 12px", fontSize: "0.8rem", minHeight: "32px", borderRadius: "8px", fontWeight: 600 },
+    md: { padding: "9px 18px", fontSize: "0.875rem", minHeight: "38px", borderRadius: "8px", fontWeight: 600 },
+    lg: { padding: "12px 24px", fontSize: "0.95rem", minHeight: "46px", borderRadius: "10px", fontWeight: 700 },
   }[size];
 
-  const variantStyles = {
+  const variantStyles: { [key: string]: React.CSSProperties } = {
     primary: {
-      background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #1E40AF 100%)",
+      background: "#2563EB",
       color: "#FFFFFF",
-      boxShadow: glow ? "0 4px 20px -2px rgba(37, 99, 235, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)" : "0 2px 4px rgba(0, 0, 0, 0.1)",
-      border: "1px solid rgba(255, 255, 255, 0.18)",
-    },
-    admin: {
-      background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
-      color: "#FFFFFF",
-      boxShadow: glow ? "0 4px 18px rgba(15, 23, 42, 0.35)" : "none",
-      border: "1px solid rgba(255, 255, 255, 0.12)",
+      border: "1px solid #1D4ED8",
+      boxShadow: "0 1px 2px rgba(37, 99, 235, 0.2)",
     },
     login: {
-      background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
+      background: "#2563EB",
       color: "#FFFFFF",
-      boxShadow: "0 8px 24px -4px rgba(37, 99, 235, 0.45)",
-      border: "1px solid rgba(255, 255, 255, 0.2)",
+      border: "1px solid #1D4ED8",
+      boxShadow: "0 2px 4px rgba(37, 99, 235, 0.25)",
+    },
+    admin: {
+      background: "#0F172A",
+      color: "#FFFFFF",
+      border: "1px solid #1E293B",
+      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
     },
     success: {
-      background: "linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%)",
+      background: "#059669",
       color: "#FFFFFF",
-      boxShadow: glow ? "0 4px 20px -2px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)" : "0 2px 4px rgba(0, 0, 0, 0.1)",
-      border: "1px solid rgba(255, 255, 255, 0.2)",
+      border: "1px solid #047857",
+      boxShadow: "0 1px 2px rgba(5, 150, 105, 0.2)",
     },
     danger: {
-      background: "linear-gradient(135deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)",
+      background: "#DC2626",
       color: "#FFFFFF",
-      boxShadow: glow ? "0 4px 20px -2px rgba(239, 68, 68, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)" : "0 2px 4px rgba(0, 0, 0, 0.1)",
-      border: "1px solid rgba(255, 255, 255, 0.2)",
-    },
-    glass: {
-      background: "rgba(255, 255, 255, 0.85)",
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      color: "#1E293B",
-      border: "1px solid rgba(226, 232, 240, 0.9)",
-      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
-    },
-    outline: {
-      background: "transparent",
-      color: "#2563EB",
-      border: "1.5px solid #2563EB",
-      boxShadow: "none",
+      border: "1px solid #B91C1C",
+      boxShadow: "0 1px 2px rgba(220, 38, 38, 0.2)",
     },
     secondary: {
-      background: "#F1F5F9",
+      background: "#FFFFFF",
       color: "#334155",
-      border: "1px solid #E2E8F0",
+      border: "1px solid #CBD5E1",
       boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
     },
-  }[variant] || {
-    background: "#2563EB",
-    color: "#FFFFFF",
-    border: "none",
-    boxShadow: "none",
+    outline: {
+      background: "#FFFFFF",
+      color: "#2563EB",
+      border: "1px solid #93C5FD",
+      boxShadow: "0 1px 2px rgba(37, 99, 235, 0.05)",
+    },
+    glass: {
+      background: "#FFFFFF",
+      color: "#1E293B",
+      border: "1px solid #E2E8F0",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+    },
   };
+
+  const selectedVariant = variantStyles[variant] || variantStyles.primary;
 
   return (
     <button
       {...props}
       disabled={disabled || isLoading}
-      className={`uiverse-btn ${className}`}
+      className={`ahar-btn ahar-btn-${variant} ${className}`}
       style={{
-        position: "relative",
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "8px",
-        fontWeight: 700,
-        letterSpacing: "-0.01em",
+        gap: "6px",
         cursor: (disabled || isLoading) ? "not-allowed" : "pointer",
         opacity: disabled ? 0.6 : 1,
         outline: "none",
-        overflow: "hidden",
-        transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-        transform: "translateY(0)",
+        transition: "all 0.15s ease",
+        lineHeight: 1.4,
         ...sizeStyles,
-        ...variantStyles,
+        ...selectedVariant,
         ...style,
       }}
     >
-      <span className="uiverse-shimmer" />
-
       {isLoading ? (
         <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <span className="uiverse-spinner" />
+          <span
+            style={{
+              width: "14px",
+              height: "14px",
+              border: "2px solid rgba(255, 255, 255, 0.4)",
+              borderTopColor: "#ffffff",
+              borderRadius: "50%",
+              animation: "aharSpin 0.7s linear infinite",
+              display: "inline-block",
+            }}
+          />
           <span>Processing...</span>
         </span>
       ) : (
         <>
-          {leftIcon && <span style={{ display: "flex", alignItems: "center" }}>{leftIcon}</span>}
+          {leftIcon && <span style={{ display: "inline-flex", alignItems: "center" }}>{leftIcon}</span>}
           <span>{children}</span>
-          {rightIcon && <span style={{ display: "flex", alignItems: "center" }}>{rightIcon}</span>}
+          {rightIcon && <span style={{ display: "inline-flex", alignItems: "center" }}>{rightIcon}</span>}
         </>
       )}
 
       <style>{`
-        .uiverse-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          filter: brightness(1.06);
+        .ahar-btn:hover:not(:disabled) {
+          filter: brightness(0.96);
+          transform: translateY(-1px);
         }
-        .uiverse-btn:active:not(:disabled) {
-          transform: translateY(1px);
-          filter: brightness(0.95);
+        .ahar-btn:active:not(:disabled) {
+          transform: translateY(0);
+          filter: brightness(0.92);
         }
-        .uiverse-shimmer {
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.25),
-            transparent
-          );
-          transition: 0.5s;
-          pointer-events: none;
+        .ahar-btn-secondary:hover:not(:disabled),
+        .ahar-btn-outline:hover:not(:disabled),
+        .ahar-btn-glass:hover:not(:disabled) {
+          background-color: #F8FAFC !important;
+          border-color: #94A3B8 !important;
         }
-        .uiverse-btn:hover .uiverse-shimmer {
-          left: 100%;
-          transition: 0.6s ease-in-out;
-        }
-        .uiverse-spinner {
-          width: 14px;
-          height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.4);
-          border-top-color: #ffffff;
-          border-radius: 50%;
-          animation: uiverseSpin 0.7s linear infinite;
-        }
-        @keyframes uiverseSpin {
+        @keyframes aharSpin {
           to { transform: rotate(360deg); }
         }
       `}</style>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { login, getSession } from '@/lib/auth';
+import { login, getSession, getSavedUsers, UserProfile } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
@@ -37,20 +37,20 @@ function formatBrandText(text: string, currentLang: string = 'en') {
 
   // Language-aware suffix:
   // If language is Gujarati ('gu') -> 'સેતુ'
-  // If language is Hindi ('hi') or English ('en') -> 'सेतु' (English defaults to Hindi 'सेतु' as requested)
-  const setuSuffix = currentLang === 'gu' ? 'સેતુ' : 'सेतु';
+  // If language is Hindi ('hi') or English ('en') -> 'सेતુ' (English defaults to Hindi 'सेતુ' as requested)
+  const setuSuffix = currentLang === 'gu' ? 'સેતુ' : 'सेતુ';
   const fontFamily = currentLang === 'gu'
     ? "'Noto Sans Gujarati', 'Gujarati Sangam MN', sans-serif"
     : "'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Mukta', 'Inter', sans-serif";
 
-  const brandRegex = /(AaharSetu|AharSetu|Aaharसेतु|Aharसेतु|Aaharસેતુ|Aharસેતુ|Setu|સેતુ|सेतु)/g;
+  const brandRegex = /(AaharSetu|AharSetu|Aaharसेતુ|Aharसेતુ|Aaharસેતુ|Aharસેતુ|Setu|સેતુ|सेतु)/g;
 
   if (brandRegex.test(text)) {
     const parts = text.split(brandRegex);
     return (
       <>
         {parts.map((part, idx) => {
-          if (part.match(/^(AaharSetu|AharSetu|Aaharसेतु|Aharसेतु|Aaharસેતુ|Aharસેતુ)$/)) {
+          if (part.match(/^(AaharSetu|AharSetu|Aaharसेતુ|Aharसेતુ|Aaharસેતુ|Aharસેતુ)$/)) {
             return (
               <span key={idx} style={{ display: 'inline-flex', alignItems: 'baseline' }}>
                 Aahar
@@ -113,9 +113,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
+  const [savedUsers, setSavedUsers] = useState<UserProfile[]>([]);
 
   useEffect(() => {
     setDemoAccountsEnabled(isDemoAccountsEnabled());
+    setSavedUsers(getSavedUsers());
 
     const handleSettingsChange = (e: any) => {
       if (e.detail && typeof e.detail.demo_accounts_enabled === 'boolean') {
@@ -125,14 +127,24 @@ export default function LoginPage() {
       }
     };
 
+    const handleUsersChange = () => {
+      setSavedUsers(getSavedUsers());
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_settings_changed', handleSettingsChange);
+      window.addEventListener('aharsetu_user_changed', handleUsersChange);
+      window.addEventListener('aharsetu_profile_changed', handleUsersChange);
       window.addEventListener('storage', handleSettingsChange);
+      window.addEventListener('storage', handleUsersChange);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_settings_changed', handleSettingsChange);
+        window.removeEventListener('aharsetu_user_changed', handleUsersChange);
+        window.removeEventListener('aharsetu_profile_changed', handleUsersChange);
         window.removeEventListener('storage', handleSettingsChange);
+        window.removeEventListener('storage', handleUsersChange);
       }
     };
   }, []);
@@ -471,21 +483,26 @@ export default function LoginPage() {
 
               {showDemo && (
                 <div className={styles.demoGrid}>
-                  {DEMO_ACCOUNTS.map((acc, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => fillDemo(acc)}
-                      className={styles.demoCard}
-                    >
-                      <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
-                        <AppIcon name={acc.icon as any} size={20} color="#2563EB" />
-                      </span>
-                      <div className={styles.demoMeta}>
-                        <h5>{acc.label}</h5>
-                        <p>{acc.email}</p>
+                  {DEMO_ACCOUNTS.map((acc, idx) => {
+                    const matchedUser = savedUsers.find(u => u.email.toLowerCase() === acc.email.toLowerCase());
+                    const displayName = matchedUser?.name || acc.label;
+
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => fillDemo(acc)}
+                        className={styles.demoCard}
+                      >
+                        <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
+                          <AppIcon name={acc.icon as any} size={20} color="#2563EB" />
+                        </span>
+                        <div className={styles.demoMeta}>
+                          <h5>{displayName}</h5>
+                          <p>{acc.email}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

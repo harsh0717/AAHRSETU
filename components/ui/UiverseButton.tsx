@@ -2,7 +2,7 @@
 import React from "react";
 
 export interface UiverseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "success" | "danger" | "glass" | "secondary";
+  variant?: "primary" | "success" | "danger" | "glass" | "secondary" | "outline" | "admin" | "login";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -36,6 +36,18 @@ export default function UiverseButton({
       boxShadow: glow ? "0 4px 20px -2px rgba(37, 99, 235, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1)" : "0 2px 4px rgba(0, 0, 0, 0.1)",
       border: "1px solid rgba(255, 255, 255, 0.18)",
     },
+    admin: {
+      background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
+      color: "#FFFFFF",
+      boxShadow: glow ? "0 4px 18px rgba(15, 23, 42, 0.35)" : "none",
+      border: "1px solid rgba(255, 255, 255, 0.12)",
+    },
+    login: {
+      background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
+      color: "#FFFFFF",
+      boxShadow: "0 8px 24px -4px rgba(37, 99, 235, 0.45)",
+      border: "1px solid rgba(255, 255, 255, 0.2)",
+    },
     success: {
       background: "linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%)",
       color: "#FFFFFF",
@@ -56,13 +68,24 @@ export default function UiverseButton({
       border: "1px solid rgba(226, 232, 240, 0.9)",
       boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
     },
+    outline: {
+      background: "transparent",
+      color: "#2563EB",
+      border: "1.5px solid #2563EB",
+      boxShadow: "none",
+    },
     secondary: {
       background: "#F1F5F9",
       color: "#334155",
       border: "1px solid #E2E8F0",
       boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
     },
-  }[variant];
+  }[variant] || {
+    background: "#2563EB",
+    color: "#FFFFFF",
+    border: "none",
+    boxShadow: "none",
+  };
 
   return (
     <button

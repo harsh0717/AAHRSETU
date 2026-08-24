@@ -1,9 +1,9 @@
-/* ── AharSetu Enterprise Admin Design System ── */
+/* ── AharSetu Enterprise Admin Design System (Uiverse.io Enhanced) ── */
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
@@ -24,18 +24,18 @@
   }
 }
 
-/* ── 1. Hero Welcome Header ── */
+/* ── 1. Hero Executive Header ── */
 .heroHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 24px 28px;
-  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+  padding: 22px 28px;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFD 100%);
   border-radius: 20px;
   border: 1px solid #E2E8F0;
-  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
   position: relative;
   overflow: hidden;
 }
@@ -45,16 +45,16 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 6px;
+  width: 5px;
   height: 100%;
   background: linear-gradient(180deg, #2563EB 0%, #3B82F6 100%);
 }
 
 .heroLeft h1 {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #0F172A;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   letter-spacing: -0.02em;
   display: flex;
   align-items: center;
@@ -62,7 +62,7 @@
 }
 
 .heroLeft p {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: #64748B;
   margin: 0;
   display: flex;
@@ -75,10 +75,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 3px 10px;
   background: #F1F5F9;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  border-radius: 16px;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #475569;
 }
@@ -127,98 +127,41 @@
   }
 }
 
-/* ── 2. Quick Actions Bar ── */
-.quickActionsBar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 4px 2px;
-}
-
-.quickActionBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  color: #334155;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-}
-
-.quickActionBtn:hover {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
-  color: #0F172A;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
-}
-
-.quickActionPrimary {
-  background: #2563EB;
-  border-color: #2563EB;
-  color: #FFFFFF;
-}
-
-.quickActionPrimary:hover {
-  background: #1D4ED8;
-  border-color: #1D4ED8;
-  color: #FFFFFF;
-}
-
-/* ── 3. KPI Metrics Grid ── */
-.metricsGrid {
+/* ── 2. KPI Metrics Grid ── */
+.statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
 }
 
-.kpiCard {
+.statCard {
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
   border-radius: 18px;
-  padding: 20px 22px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.03);
-}
-
-.kpiCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
-  border-color: #CBD5E1;
-}
-
-.kpiCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--kpi-accent, #2563EB);
-  opacity: 0.85;
-}
-
-.kpiInfo {
+  padding: 22px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.kpiLabel {
+.statCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+  border-color: #CBD5E1;
+}
+
+.statCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.statLabel {
   font-size: 0.78rem;
   font-weight: 700;
   color: #64748B;
@@ -226,146 +169,101 @@
   letter-spacing: 0.04em;
 }
 
-.kpiValue {
-  font-size: 1.75rem;
-  font-weight: 900;
-  color: #0F172A;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin: 2px 0 4px 0;
-}
-
-.kpiSubtext {
-  font-size: 0.76rem;
-  color: #94A3B8;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.kpiSubtextBadge {
-  color: #059669;
-  font-weight: 700;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-
-.kpiIconWrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+.statIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
   flex-shrink: 0;
+  transition: transform 0.2s;
 }
 
-/* ── 4. Main Two-Column Layout ── */
-.mainDashboardGrid {
+.statCard:hover .statIconWrap {
+  transform: scale(1.08);
+}
+
+.statValue {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #0F172A;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+
+.statSub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #64748B;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.statBadgePositive {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #059669;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* ── 3. Main Two-Column Split Layout ── */
+.mainSplitGrid {
   display: grid;
-  grid-template-columns: 1.65fr 1fr;
+  grid-template-columns: 1.7fr 1fr;
   gap: 20px;
 }
 
-@media (max-width: 1100px) {
-  .mainDashboardGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sectionCard {
+.cardSection {
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
   border-radius: 18px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
   padding: 24px;
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   gap: 18px;
+  transition: all 0.2s ease-out;
+}
+
+.cardSection:hover {
+  border-color: #CBD5E1;
 }
 
 .sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
-.sectionTitleGroup h3 {
-  font-size: 1.15rem;
+.sectionTitle {
+  font-size: 1.08rem;
   font-weight: 800;
   color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.sectionTitleGroup p {
+.sectionSubtitle {
   font-size: 0.8rem;
   color: #64748B;
-  margin: 2px 0 0 0;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
-.sectionActionBtn {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #2563EB;
-  background: rgba(37, 99, 235, 0.06);
-  border: 1px solid rgba(37, 99, 235, 0.15);
-  padding: 6px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.sectionActionBtn:hover {
-  background: #2563EB;
-  color: white;
-}
-
-/* ── 5. Segmented Tabs Bar ── */
-.tabNavContainer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #F1F5F9;
-  padding: 5px;
-  border-radius: 14px;
-  flex-wrap: wrap;
-}
-
-.tabNavBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 10px;
-  border: none;
-  background: transparent;
-  color: #64748B;
-  font-size: 0.84rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.tabNavBtn:hover {
-  color: #0F172A;
-}
-
-.tabNavActive {
-  background: #FFFFFF;
-  color: #2563EB;
-  font-weight: 800;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-/* ── 6. Modern Data Table ── */
+/* ── 4. Modern Data Table ── */
 .tableContainer {
   width: 100%;
   overflow-x: auto;
@@ -406,7 +304,7 @@
 }
 
 .dataTable td {
-  padding: 14px 16px;
+  padding: 13px 16px;
   border-bottom: 1px solid #F1F5F9;
   color: #334155;
   vertical-align: middle;
@@ -421,36 +319,49 @@
   background: #F8FAFC;
 }
 
-/* ── 7. Activity Cards List ── */
+/* ── 5. Activity Cards List ── */
 .activityList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .activityItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 13px 16px;
   border-radius: 14px;
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
 }
 
 .activityItem:hover {
   background: #FFFFFF;
-  border-color: #CBD5E1;
-  transform: translateX(2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-color: #3B82F6;
+  transform: translateX(3px);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.06);
 }
 
 .activityLeft {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
+}
+
+.activityIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(37, 99, 235, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #2563EB;
 }
 
 .activityMeta {
@@ -462,7 +373,7 @@
 
 .activityTitle {
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: #0F172A;
   white-space: nowrap;
   overflow: hidden;
@@ -470,7 +381,7 @@
 }
 
 .activitySubtitle {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #64748B;
   display: flex;
   align-items: center;
@@ -487,16 +398,16 @@
 
 .activityAmount {
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: #0F172A;
   text-align: right;
 }
 
-/* ── 8. Department Spending Progress ── */
+/* ── 6. Department Spending Progress ── */
 .deptProgressList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .deptProgressItem {
@@ -509,14 +420,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #1E293B;
 }
 
 .deptProgressBar {
   width: 100%;
-  height: 8px;
+  height: 7px;
   background: #E2E8F0;
   border-radius: 4px;
   overflow: hidden;
@@ -528,7 +439,64 @@
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── 9. Filter & Search Row ── */
+/* ── 7. Cards Grids for Departments & Vendors ── */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.entityCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.entityCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+  border-color: #CBD5E1;
+}
+
+.entityCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.entityTitleGroup h4 {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 3px 0;
+}
+
+.entityTitleGroup p {
+  font-size: 0.78rem;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.entityCardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #F1F5F9;
+  font-size: 0.78rem;
+  color: #64748B;
+}
+
+/* ── 8. Filter & Search Row ── */
 .filterRow {
   display: flex;
   align-items: center;
@@ -541,13 +509,20 @@
 .searchBox {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #F8FAFC;
+  gap: 10px;
+  background: #FFFFFF;
   border: 1px solid #CBD5E1;
-  border-radius: 10px;
-  padding: 8px 14px;
+  border-radius: 12px;
+  padding: 9px 14px;
   min-width: 240px;
   flex: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+}
+
+.searchBox:focus-within {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .searchInput {
@@ -560,22 +535,29 @@
 }
 
 .filterSelect {
-  background: #F8FAFC;
+  background: #FFFFFF;
   border: 1px solid #CBD5E1;
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 12px;
+  padding: 9px 14px;
   font-size: 0.84rem;
   font-weight: 600;
   color: #334155;
   outline: none;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
 }
 
-/* ── 10. Modal Dialogs ── */
+.filterSelect:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* ── 9. Modal Dialogs ── */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -590,7 +572,7 @@
   background: #FFFFFF;
   border-radius: 20px;
   width: 100%;
-  max-width: 540px;
+  max-width: 520px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   border: 1px solid #E2E8F0;
   overflow: hidden;
@@ -661,7 +643,7 @@
   gap: 10px;
 }
 
-/* ── 11. Responsive Breakpoints ── */
+/* ── 10. Responsive Breakpoints ── */
 @media (max-width: 1200px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -687,7 +669,7 @@
     gap: 12px;
   }
   .cardSection {
-    padding: 16px;
+    padding: 18px;
     border-radius: 16px;
   }
   .statValue {

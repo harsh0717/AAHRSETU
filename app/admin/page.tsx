@@ -15,6 +15,8 @@ import { getNotifications, markNotificationRead, markAllRead, NotificationItem, 
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
 import UiverseToggle from '@/components/ui/UiverseToggle';
+import UiverseButton from '@/components/ui/UiverseButton';
+import UiverseBadge from '@/components/ui/UiverseBadge';
 import AppIcon, { getIconTheme } from '@/components/ui/AppIcon';
 import { getSystemSettings, updateSystemSettings } from '@/lib/systemSettings';
 import { api } from '@/lib/api';
@@ -546,6 +548,23 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     { id: 'profile', label: 'Profile', icon: 'profile' },
   ];
 
+  const TAB_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
+    dashboard: { title: 'Executive Admin Dashboard', subtitle: 'Global telemetry, active requisitions, budget utilization, and server baseline.', icon: 'dashboard' },
+    users: { title: 'User Accounts Directory', subtitle: 'Manage coordinators, department principals, auditors, and permissions.', icon: 'users' },
+    departments: { title: 'Academic Departments', subtitle: 'Configure institutional departments, official codes, and active statuses.', icon: 'departments' },
+    vendors: { title: 'Campus Canteen Vendors', subtitle: 'Manage food vendor profiles, live operating statuses, and kitchen settlements.', icon: 'vendors' },
+    orders: { title: 'Master Requisitions Pipeline', subtitle: 'Live institutional orders stream across all departments and campus canteens.', icon: 'orders' },
+    bills: { title: 'Bills & Monthly Settlements', subtitle: 'Reconcile vendor invoices, audit disbursements, and record settlements.', icon: 'bills' },
+    reports: { title: 'Institutional Audit Reports', subtitle: 'Comprehensive financial breakdowns by department, vendor, and timeframe.', icon: 'reports' },
+    analytics: { title: 'Financial & Volume Analytics', subtitle: 'Data visualizations of campus dining expenditures and trends.', icon: 'analytics' },
+    audit: { title: 'Security & Activity Audit Logs', subtitle: 'Chronological activity stream of all authentication and approval events.', icon: 'audit' },
+    health: { title: 'Operational Diagnostics', subtitle: 'Real-time telemetry of PostgreSQL database, WebSocket gateway, and latency.', icon: 'health' },
+    settings: { title: 'System Configuration', subtitle: 'Global platform preferences, language localization, and data integrity safeguards.', icon: 'settings' },
+    profile: { title: 'Administrator Profile', subtitle: 'Manage administrative credentials, contact details, and avatar.', icon: 'profile' },
+  };
+
+  const currentTabInfo = TAB_TITLES[activeTab] || TAB_TITLES.dashboard;
+
   return (
     <AppShell role="admin">
       <div className={styles.container}>
@@ -554,7 +573,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
         <div className={styles.heroHeader}>
           <div className={styles.heroLeft}>
             <h1>
-              <span>Executive Admin Portal</span>
+              <AppIcon name={currentTabInfo.icon} size={24} color="#2563EB" />
+              <span>{currentTabInfo.title}</span>
             </h1>
             <p>
               <span>{todayStr}</span>
@@ -565,20 +585,19 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
           </div>
 
           <div className={styles.heroRight}>
-            <div className={styles.systemStatusPill}>
-              <span className={styles.pulseDot} />
-              <span>All Systems Operational</span>
-            </div>
+            <UiverseBadge variant="pulse">
+              All Systems Operational
+            </UiverseBadge>
 
-            <button
+            <UiverseButton
+              variant="danger"
+              size="sm"
               onClick={handleResetData}
               disabled={resetting}
-              className={styles.quickActionBtn}
-              style={{ color: '#DC2626', borderColor: '#FECACA', background: '#FEF2F2' }}
+              leftIcon={<AppIcon name="health" size={14} color="#FFFFFF" />}
             >
-              <AppIcon name="health" size={15} color="#DC2626" />
-              <span>{resetting ? 'Resetting...' : 'Seed / Reset DB'}</span>
-            </button>
+              {resetting ? 'Resetting...' : 'Seed / Reset DB'}
+            </UiverseButton>
           </div>
         </div>
 
@@ -1694,8 +1713,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
                 </div>
                 <div className={styles.modalFooter}>
-                  <button type="button" className={styles.quickActionBtn} onClick={() => setShowDeptModal(false)}>Cancel</button>
-                  <button type="submit" className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}>Create Department</button>
+                  <UiverseButton type="button" variant="secondary" onClick={() => setShowDeptModal(false)}>Cancel</UiverseButton>
+                  <UiverseButton type="submit" variant="primary">Create Department</UiverseButton>
                 </div>
               </form>
             </div>
@@ -1792,10 +1811,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
                 </div>
                 <div className={styles.modalFooter}>
-                  <button type="button" className={styles.quickActionBtn} onClick={() => setShowAddVendorModal(false)}>Cancel</button>
-                  <button type="submit" disabled={submitting} className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}>
-                    {submitting ? 'Registering...' : 'Register Vendor'}
-                  </button>
+                  <UiverseButton type="button" variant="secondary" onClick={() => setShowAddVendorModal(false)}>Cancel</UiverseButton>
+                  <UiverseButton type="submit" variant="primary" isLoading={submitting}>
+                    Register Vendor
+                  </UiverseButton>
                 </div>
               </form>
             </div>
@@ -1828,8 +1847,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 </select>
               </div>
               <div className={styles.modalFooter}>
-                <button className={styles.quickActionBtn} onClick={() => setSelectedVendor(null)}>Cancel</button>
-                <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={handleUpdateVendorStatus}>Update Status</button>
+                <UiverseButton variant="secondary" onClick={() => setSelectedVendor(null)}>Cancel</UiverseButton>
+                <UiverseButton variant="primary" onClick={handleUpdateVendorStatus}>Update Status</UiverseButton>
               </div>
             </div>
           </div>
@@ -1903,10 +1922,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
                 </div>
                 <div className={styles.modalFooter}>
-                  <button type="button" className={styles.quickActionBtn} onClick={() => setShowSettlementModal(false)}>Cancel</button>
-                  <button type="submit" disabled={submitting} className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}>
-                    {submitting ? 'Saving...' : 'Save Settlement'}
-                  </button>
+                  <UiverseButton type="button" variant="secondary" onClick={() => setShowSettlementModal(false)}>Cancel</UiverseButton>
+                  <UiverseButton type="submit" variant="primary" isLoading={submitting}>
+                    Save Settlement
+                  </UiverseButton>
                 </div>
               </form>
             </div>

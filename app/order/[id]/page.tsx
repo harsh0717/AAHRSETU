@@ -399,12 +399,21 @@ export default function OrderDetailsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {(order.vendor_orders || []).map(vo => (
                 <div key={vo.id} className="card" style={{ padding: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid var(--gray-200)', paddingBottom: '8px' }}>
-                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>🏪 {vo.vendor_name}</h4>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
-                      Sub-ID: {vo.id}
-                    </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid var(--gray-200)', paddingBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 800 }}>🏪 {vo.vendor_name}</h4>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
+                        Sub-ID: {vo.id}
+                      </span>
+                    </div>
+                    <StatusBadge status={vo.status || 'Pending'} size="sm" />
                   </div>
+
+                  {vo.status === 'Vendor Rejected' && (
+                    <div style={{ padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', fontSize: '0.78rem', color: '#991B1B', fontWeight: 600, marginBottom: '12px' }}>
+                      ⚠️ Canteen unable to fulfill this portion. Excluded from final billing.
+                    </div>
+                  )}
                   
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <thead>
@@ -440,9 +449,9 @@ export default function OrderDetailsPage() {
                   </table>
                   
                   {vo.bill_amount > 0 && (
-                    <div style={{ textAlign: 'right', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-success)' }}>
-                      Bill Confirmed: ₹{vo.bill_amount}
-                      {vo.invoice_number && <div style={{ fontSize: '0.68rem', color: 'var(--gray-400)', fontWeight: 500 }}>Invoice: {vo.invoice_number}</div>}
+                    <div style={{ textAlign: 'right', fontSize: '0.85rem', fontWeight: 800, color: '#059669', background: '#ECFDF5', padding: '8px 12px', borderRadius: '8px', border: '1px solid #A7F3D0' }}>
+                      ✓ Bill Confirmed: ₹{vo.bill_amount}
+                      {vo.invoice_number && <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 600, marginTop: '2px' }}>Invoice: {vo.invoice_number}</div>}
                     </div>
                   )}
                 </div>

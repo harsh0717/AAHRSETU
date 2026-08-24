@@ -308,36 +308,23 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
                 </td>
                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                    <button 
+                    <UiverseButton 
+                      variant="outline"
+                      size="sm"
+                      style={{ height: '28px', padding: '2px 10px', fontSize: '0.75rem' }}
                       onClick={() => openEdit(user)}
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '8px',
-                        border: '1px solid #CBD5E1',
-                        background: '#FFFFFF',
-                        color: '#2563EB',
-                        fontWeight: 700,
-                        fontSize: '0.76rem',
-                        cursor: 'pointer'
-                      }}
                     >
-                      {t('common.edit', 'Edit')}
-                    </button>
-                    <button 
+                      ✏️ {t('common.edit', 'Edit')}
+                    </UiverseButton>
+                    <UiverseButton 
+                      variant="danger"
+                      size="sm"
+                      style={{ height: '28px', padding: '2px 8px', fontSize: '0.75rem' }}
                       onClick={() => handleDelete(user)}
-                      style={{
-                        padding: '4px 8px',
-                        borderRadius: '8px',
-                        border: '1px solid #FECACA',
-                        background: '#FEF2F2',
-                        color: '#DC2626',
-                        fontWeight: 700,
-                        fontSize: '0.76rem',
-                        cursor: 'pointer'
-                      }}
+                      title="Delete User"
                     >
-                      ✕
-                    </button>
+                      🗑️
+                    </UiverseButton>
                   </div>
                 </td>
               </tr>

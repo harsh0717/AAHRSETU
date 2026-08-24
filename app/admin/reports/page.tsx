@@ -25,6 +25,7 @@ import {
   Legend,
   CartesianGrid
 } from 'recharts';
+import UiverseButton from '@/components/ui/UiverseButton';
 
 export default function StandaloneReportsPage() {
   const router = useRouter();
@@ -194,25 +195,13 @@ export default function StandaloneReportsPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button
+            <UiverseButton
+              variant="success"
               onClick={handleCsvExport}
-              style={{
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                padding: '10px 18px',
-                fontSize: '0.88rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
-              }}
+              leftIcon={<span>📥</span>}
             >
-              📥 Export CSV Report
-            </button>
+              Export CSV Report
+            </UiverseButton>
           </div>
         </div>
 
@@ -246,23 +235,13 @@ export default function StandaloneReportsPage() {
               </select>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
+              <UiverseButton
+                variant="secondary"
                 onClick={clearFilters}
-                style={{
-                  background: '#F1F5F9',
-                  color: '#475569',
-                  border: '1px solid #CBD5E1',
-                  borderRadius: '10px',
-                  padding: '10px 14px',
-                  fontSize: '0.88rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  flex: 1,
-                  textAlign: 'center'
-                }}
+                style={{ width: '100%', height: '42px' }}
               >
-                Clear
-              </button>
+                Clear Filters
+              </UiverseButton>
             </div>
           </div>
         </div>

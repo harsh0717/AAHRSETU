@@ -866,13 +866,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                             </span>
                           </td>
                           <td style={{ textAlign: 'center' }}>
-                            <button
-                              className={styles.quickActionBtn}
-                              style={{ color: dept.active !== false ? '#DC2626' : '#10B981', padding: '4px 10px', fontSize: '0.78rem' }}
+                            <UiverseButton
+                              variant={dept.active !== false ? 'danger' : 'success'}
+                              size="sm"
+                              style={{ height: '30px', padding: '4px 12px', fontSize: '0.75rem' }}
                               onClick={() => handleToggleDept(dept.id, dept.active !== false)}
                             >
                               {dept.active !== false ? 'Deactivate' : 'Activate'}
-                            </button>
+                            </UiverseButton>
                           </td>
                         </tr>
                       ))}
@@ -930,28 +931,32 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                             </span>
                           </td>
                           <td style={{ textAlign: 'center' }}>
-                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                              <button
-                                className={styles.quickActionBtn}
-                                style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                              <UiverseButton
+                                variant="outline"
+                                size="sm"
+                                style={{ height: '30px', padding: '4px 10px', fontSize: '0.75rem' }}
                                 onClick={() => { setSelectedVendor(v); setEditStatus(v.status || 'open'); }}
                               >
-                                State
-                              </button>
-                              <button
-                                className={styles.quickActionBtn}
-                                style={{ padding: '4px 8px', fontSize: '0.75rem', color: v.active !== false ? '#D97706' : '#059669' }}
+                                ⚙️ State
+                              </UiverseButton>
+                              <UiverseButton
+                                variant={v.active !== false ? 'secondary' : 'success'}
+                                size="sm"
+                                style={{ height: '30px', padding: '4px 10px', fontSize: '0.75rem' }}
                                 onClick={() => handleToggleVendorActive(v.id)}
                               >
                                 {v.active !== false ? 'Disable' : 'Enable'}
-                              </button>
-                              <button
-                                className={styles.quickActionBtn}
-                                style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#DC2626', borderColor: '#FECACA' }}
+                              </UiverseButton>
+                              <UiverseButton
+                                variant="danger"
+                                size="sm"
+                                style={{ height: '30px', padding: '4px 8px', fontSize: '0.75rem' }}
                                 onClick={() => handleDeleteVendor(v.id)}
+                                title="Delete vendor"
                               >
-                                ✕
-                              </button>
+                                🗑️
+                              </UiverseButton>
                             </div>
                           </td>
                         </tr>

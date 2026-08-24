@@ -11,6 +11,7 @@ import { getNotifications, markNotificationRead, markAllRead, NotificationItem, 
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
 import UiverseToggle from '@/components/ui/UiverseToggle';
+import UiverseButton from '@/components/ui/UiverseButton';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -355,19 +356,18 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     }
   }
 
-  /** @deprecated Use initModRequest instead. Reject is no longer shown in UI. */
   async function handleQuickReject(vendorOrderId: string) {
-    if (confirm('Reject this canteen order?')) {
-      setSaving(true);
-      try {
-        await rejectVendorOrder(vendorOrderId, 'Vendor unable to fulfill kitchen order.');
-        alert('Canteen sub-order rejected successfully.');
-        await loadData(vendorId);
-      } catch (e: any) {
-        alert(e.message || 'Error rejecting order.');
-      } finally {
-        setSaving(false);
-      }
+    const reason = prompt('Please enter the reason for declining this order (e.g. out of ingredients, beyond capacity):', 'Vendor unable to fulfill kitchen order due to capacity/stock.');
+    if (reason === null) return; // User cancelled prompt
+    setSaving(true);
+    try {
+      await rejectVendorOrder(vendorOrderId, reason.trim() || 'Vendor unable to fulfill kitchen order.');
+      alert('Canteen sub-order declined.');
+      await loadData(vendorId);
+    } catch (e: any) {
+      alert(e.message || 'Error rejecting order.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -650,91 +650,53 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       {/* Action Buttons */}
                       {isPricingThis ? (
                         <div style={{ display: 'flex', gap: '10px' }}>
-                          <button
+                          <UiverseButton
+                            variant="primary"
+                            isLoading={saving}
                             onClick={() => handleSubmitPricing(myVO.id)}
-                            disabled={saving}
-                            style={{
-                              background: '#2563EB',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '10px',
-                              padding: '10px 20px',
-                              fontSize: '0.88rem',
-                              fontWeight: 800,
-                              cursor: 'pointer',
-                              flex: 1
-                            }}
+                            style={{ flex: 1 }}
                           >
-                            {saving ? 'Saving...' : '✓ Submit Custom Prices'}
-                          </button>
-                          <button
-                            onClick={() => setPricingOrderId(null)}
+                            ✓ Submit Custom Prices
+                          </UiverseButton>
+                          <UiverseButton
+                            variant="secondary"
                             disabled={saving}
-                            style={{
-                              background: '#F1F5F9',
-                              color: '#475569',
-                              border: '1px solid #E2E8F0',
-                              borderRadius: '10px',
-                              padding: '10px 16px',
-                              fontSize: '0.88rem',
-                              fontWeight: 800,
-                              cursor: 'pointer'
-                            }}
+                            onClick={() => setPricingOrderId(null)}
                           >
                             Cancel
-                          </button>
+                          </UiverseButton>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                          <button
+                          <UiverseButton
+                            variant="success"
+                            isLoading={saving}
                             onClick={() => handleQuickApprove(myVO.id)}
-                            disabled={saving}
-                            style={{
-                              background: '#10B981',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '10px',
-                              padding: '10px 20px',
-                              fontSize: '0.88rem',
-                              fontWeight: 800,
-                              cursor: 'pointer',
-                              flex: 1
-                            }}
+                            style={{ flex: 1, minWidth: '180px' }}
                           >
                             ✓ Accept & Start Cooking
-                          </button>
-                          <button
-                            onClick={() => initPricingInput(o)}
+                          </UiverseButton>
+                          <UiverseButton
+                            variant="secondary"
                             disabled={saving}
-                            style={{
-                              background: '#EFF6FF',
-                              color: '#2563EB',
-                              border: '1px solid #BFDBFE',
-                              borderRadius: '10px',
-                              padding: '10px 16px',
-                              fontSize: '0.88rem',
-                              fontWeight: 800,
-                              cursor: 'pointer'
-                            }}
+                            onClick={() => initPricingInput(o)}
                           >
                             ⚙️ Custom Pricing
-                          </button>
-                          <button
-                            onClick={() => initModRequest(myVO.id)}
+                          </UiverseButton>
+                          <UiverseButton
+                            variant="outline"
                             disabled={saving}
-                            style={{
-                              background: '#FFF7ED',
-                              color: '#C2410C',
-                              border: '1px solid #FED7AA',
-                              borderRadius: '10px',
-                              padding: '10px 16px',
-                              fontSize: '0.88rem',
-                              fontWeight: 800,
-                              cursor: 'pointer'
-                            }}
+                            onClick={() => initModRequest(myVO.id)}
                           >
-                            ✏️ Modify Request
-                          </button>
+                            ✏️ Request Mod
+                          </UiverseButton>
+                          <UiverseButton
+                            variant="danger"
+                            disabled={saving}
+                            onClick={() => handleQuickReject(myVO.id)}
+                          >
+                            🚫 Decline
+                          </UiverseButton>
                         </div>
                       )}
                     </div>

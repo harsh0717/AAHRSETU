@@ -737,6 +737,70 @@ async def set_vendor_pricing(
     return read_order_by_id(vo.master_order_id, db, current_user)
 
 
+@router.post("/vendor-order/{vendor_order_id}/reject", response_model=MasterOrderResponse)
+async def reject_vendor_order_endpoint(
+    vendor_order_id: str,
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["vendor", "admin"]))
+) -> Any:
+    """
+    Vendor rejects sub-order (or admin does on vendor's behalf).
+    """
+    from backend.models.order import ApprovalHistory
+    order_repo = OrderRepository(db)
+    vo = order_repo.get_vendor_order(vendor_order_id)
+    if not vo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendor order not found"
+        )
+    reason = payload.get("reason", "Vendor unable to fulfill kitchen order.")
+    vo.status = "Vendor Rejected"
+    vo.bill_amount = 0.0
+    
+    master = vo.master_order
+    now = datetime.now(timezone.utc)
+    vo.updated_at = now
+    
+    active_vos = [v for v in master.vendor_orders if v.status != "Vendor Rejected"]
+    confirmed_vos = [v for v in master.vendor_orders if v.status == "Vendor Confirmed"]
+    
+    if len(active_vos) == 0:
+        master.status = "Vendor Rejected"
+    elif len(confirmed_vos) > 0 and len(confirmed_vos) == len(active_vos):
+        master.status = "Completed"
+        master.bill_generated_at = now
+        master.total_bill_amount = sum(v.bill_amount for v in confirmed_vos)
+    else:
+        master.status = "Vendor Processing"
+        
+    master.updated_at = now
+    
+    order_repo.create_history_entry(
+        ApprovalHistory(
+            master_order_id=master.id,
+            action="Vendor Rejected Sub-Order",
+            role="vendor",
+            user_id=current_user.id,
+            remarks=f"Sub-order rejected by {vo.vendor.name if vo.vendor else 'Vendor'}. Reason: {reason}"
+        )
+    )
+    db.commit()
+    db.refresh(master)
+    
+    notif_service = NotificationService(db)
+    await notif_service.create_and_send_notification(
+        msg_key="rejected",
+        params={"title": master.title, "reason": reason},
+        msg_type="rejected",
+        recipient_id=master.created_by_id,
+        order_id=master.id
+    )
+    await notif_service.notify_order_updated(master.id)
+    return read_order_by_id(master.id, db, current_user)
+
+
 @router.post("/vendor-order/{vendor_order_id}/modification", response_model=MasterOrderResponse)
 async def request_vendor_modification(
     vendor_order_id: str,

@@ -750,6 +750,23 @@ export async function rejectVendorOrder(
   vendorOrderId: string,
   reason: string
 ): Promise<MasterOrder> {
+  try {
+    const res = await api.post<MasterOrder>(
+      `/orders/vendor-order/${vendorOrderId}/reject`,
+      { reason: reason || 'Vendor unable to fulfill kitchen order.' }
+    );
+    if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      saveLocalOrders(localList);
+      pushNotification(`Vendor rejected sub-order in requisition ${res.id}. Reason: ${reason}`, 'coordinator', res.id, { type: 'VENDOR_REJECTED' });
+      return res;
+    }
+  } catch (err) {
+    console.warn('[STORE] Backend offline, rejecting vendor order locally');
+  }
+
   const localList = getLocalOrders();
   let updatedMaster: MasterOrder | null = null;
   for (const o of localList) {
@@ -771,7 +788,7 @@ export async function rejectVendorOrder(
         pushNotification(`Requisition ${o.id} completed with ${confirmedVOs.length} confirmed canteen bill(s). Sub-order ${vo.id} rejected by ${vo.vendor_name}.`, 'coordinator', o.id);
       } else {
         o.status = 'Vendor Processing';
-        pushNotification(`Vendor ${vo.vendor_name} rejected sub-order ${vo.id}. Reason: ${reason}`, 'coordinator', o.id);
+        pushNotification(`Vendor ${vo.vendor_name || 'Canteen'} rejected sub-order ${vo.id}. Reason: ${reason}`, 'coordinator', o.id);
       }
 
       o.history.push({

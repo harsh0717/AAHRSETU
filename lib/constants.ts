@@ -152,12 +152,15 @@ export const STATUS = {
   VENDOR_CONFIRMED:          'Vendor Confirmed',
   BILL_GENERATED:            'Bill Generated',
   COMPLETED:                 'Completed',
+  VENDOR_REJECTED:           'Vendor Rejected',
+  PENDING:                   'Pending',
   CANCELLED:                 'Cancelled',
   DRAFT:                     'Draft',
 };
 
 export const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   'Draft':                         { bg: '#F8FAFC', text: '#64748B',  border: '#CBD5E1' },
+  'Pending':                       { bg: '#F8FAFC', text: '#64748B',  border: '#CBD5E1' },
   'Created':                       { bg: '#F3F4F6', text: '#6B7280',  border: '#D1D5DB' },
   'Sent for Approval':             { bg: '#F3F4F6', text: '#4B5563',  border: '#D1D5DB' },
   'Principal Reviewing':           { bg: '#EFF6FF', text: '#2563EB',  border: '#BFDBFE' },
@@ -170,6 +173,7 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string; border: s
   'Vendor Clarification Required': { bg: '#FFF7ED', text: '#C2410C',  border: '#FDBA74' },
   'Coordinator Updated':           { bg: '#EFF6FF', text: '#1D4ED8',  border: '#93C5FD' },
   'Vendor Confirmed':              { bg: '#ECFDF5', text: '#047857',  border: '#6EE7B7' },
+  'Vendor Rejected':               { bg: '#FEF2F2', text: '#DC2626',  border: '#FECACA' },
   'Bill Generated':                { bg: '#F0FDFA', text: '#0D9488',  border: '#99F6E4' },
   'Completed':                     { bg: '#DCFCE7', text: '#166534',  border: '#86EFAC' },
   'Cancelled':                     { bg: '#FEF2F2', text: '#991B1B',  border: '#FCA5A5' },

@@ -582,53 +582,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
           </div>
         </div>
 
-        {/* 2. Quick Action Bar */}
-        <div className={styles.quickActionsBar}>
-          <button className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`} onClick={() => setActiveTab('users')}>
-            <AppIcon name="users" size={15} color="#FFFFFF" />
-            <span>+ Add / Manage Users</span>
-          </button>
-          <button className={styles.quickActionBtn} onClick={() => { setActiveTab('departments'); setShowDeptModal(true); }}>
-            <AppIcon name="departments" size={15} color="#F59E0B" />
-            <span>+ Add Department</span>
-          </button>
-          <button className={styles.quickActionBtn} onClick={() => { setActiveTab('vendors'); setShowAddVendorModal(true); }}>
-            <AppIcon name="vendors" size={15} color="#8B5CF6" />
-            <span>+ Add Food Vendor</span>
-          </button>
-          <button className={styles.quickActionBtn} onClick={() => setActiveTab('bills')}>
-            <AppIcon name="bills" size={15} color="#06B6D4" />
-            <span>Settle Monthly Bills</span>
-          </button>
-          <button className={styles.quickActionBtn} onClick={() => setActiveTab('reports')}>
-            <AppIcon name="reports" size={15} color="#0EA5E9" />
-            <span>Export Financial Audit</span>
-          </button>
-          <button className={styles.quickActionBtn} onClick={() => setActiveTab('health')}>
-            <AppIcon name="health" size={15} color="#10B981" />
-            <span>Live Server Diagnostics</span>
-          </button>
-        </div>
-
-        {/* 3. Segmented Tab Navigation */}
-        <div className={styles.tabNavContainer}>
-          {TAB_ITEMS.map((item) => {
-            const isActive = activeTab === item.id || (item.id === 'audit' && ['logs', 'audit-logs'].includes(activeTab));
-            const iconTheme = getIconTheme(item.icon);
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`${styles.tabNavBtn} ${isActive ? styles.tabNavActive : ''}`}
-              >
-                <AppIcon name={item.icon} size={15} color={isActive ? '#2563EB' : iconTheme.color} strokeWidth={2.2} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 4. Tab Views Content */}
+        {/* Main Content Area */}
         {loading && activeTab === 'dashboard' ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748B' }}>
             <div style={{ fontSize: '2rem', marginBottom: '12px', animation: 'spin 1s infinite linear' }}>🔄</div>

@@ -263,6 +263,36 @@ export default function LoginPage() {
           <p className={styles.heroSub}>
             {t('login.hero_sub', 'Connecting People Through Better Food.')}
           </p>
+
+          <div className={styles.featuresGrid}>
+            {[
+              { icon: '🍕', tag: 'CHEF\'S SPECIAL', title: 'Artisanal Pepperoni Pizza', price: '₹120', vendor: 'Fresh Bites Canteen' },
+              { icon: '🍔', tag: 'POPULAR TODAY', title: 'Gourmet Cheeseburger & Fries', price: '₹95', vendor: 'Fresh Bites Canteen' },
+              { icon: '🍵', tag: 'MORNING REFRESHMENT', title: 'Masala Tea & Samosa', price: '₹25', vendor: 'Sharma Canteen' },
+            ].map((f, idx) => (
+              <div key={idx} className={styles.featureCard} style={{
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '16px',
+                padding: '14px 18px',
+                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'nowrap', width: '100%' }}>
+                  <div style={{ fontSize: '2rem', background: 'rgba(255, 255, 255, 0.2)', padding: '8px', borderRadius: '12px', flexShrink: 0 }}>{f.icon}</div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#F59E0B', letterSpacing: '0.05em' }}>{f.tag}</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>🏪 {f.vendor}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className={styles.heroFooter}>
@@ -270,102 +300,97 @@ export default function LoginPage() {
         </div>
       </section>
 
+      {/* 2. Right Panel - Form Interface */}
       <section className={styles.formPanel}>
         <div className={styles.formCard}>
           
+          {/* Stepper Progress */}
           <div className={styles.stepsHeader}>
-            <div className={styles.stepItem}>
-              <div className={`${styles.stepNumber} ${activeStep >= 1 ? styles.stepActive : ''}`}>
+            <div className={styles.stepNode}>
+              <div className={`${styles.stepCircle} ${activeStep >= 1 ? styles.stepActiveCircle : ''} ${activeStep > 1 ? styles.stepDoneCircle : ''}`}>
                 {activeStep > 1 ? '✓' : '1'}
               </div>
-              <span className={styles.stepLabel}>{t('login.step_role', 'Select Role')}</span>
+              <span className={`${styles.stepLabel} ${activeStep === 1 ? styles.stepActiveLabel : ''}`}>{t('common.role', 'Role')}</span>
             </div>
-            <div className={`${styles.stepDivider} ${activeStep >= 2 ? styles.dividerActive : ''}`} />
-            <div className={styles.stepItem}>
-              <div className={`${styles.stepNumber} ${activeStep >= 2 ? styles.stepActive : ''}`}>
+            <div className={styles.stepNode}>
+              <div className={`${styles.stepCircle} ${activeStep >= 2 ? styles.stepActiveCircle : ''} ${activeStep > 2 ? styles.stepDoneCircle : ''}`}>
                 {activeStep > 2 ? '✓' : '2'}
               </div>
-              <span className={styles.stepLabel}>
-                {deptRequired ? t('login.step_dept', 'Department') : t('login.step_auth', 'Authenticate')}
-              </span>
+              <span className={`${styles.stepLabel} ${activeStep === 2 ? styles.stepActiveLabel : ''}`}>{t('common.department', 'Dept')}</span>
             </div>
-            <div className={`${styles.stepDivider} ${activeStep >= 3 ? styles.dividerActive : ''}`} />
-            <div className={styles.stepItem}>
-              <div className={`${styles.stepNumber} ${activeStep >= 3 ? styles.stepActive : ''}`}>
+            <div className={styles.stepNode}>
+              <div className={`${styles.stepCircle} ${activeStep >= 3 ? styles.stepActiveCircle : ''}`}>
                 3
               </div>
-              <span className={styles.stepLabel}>
-                {deptRequired ? t('login.step_auth', 'Authenticate') : t('login.step_ready', 'Access')}
-              </span>
+              <span className={`${styles.stepLabel} ${activeStep === 3 ? styles.stepActiveLabel : ''}`}>{t('common.verify', 'Verify')}</span>
             </div>
           </div>
 
-          <div className={styles.formTitleGroup}>
-            <h1 className={styles.title}>{t('auth.welcome_back', 'Welcome Back')}</h1>
-            <p className={styles.subtitle}>{t('auth.sign_in_desc', 'Authenticate using your institutional profile credentials')}</p>
+          <div className={styles.formHeader}>
+            <h3 className={styles.formTitle}>
+              {formatBrandText(t('login.welcome_title', 'Welcome to AharSetu'), lang)}
+            </h3>
+            <p className={styles.formSub}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
           </div>
 
           {error && (
-            <div className={styles.alertError}>
-              <span>⚠️</span>
+            <div className={styles.errorBanner} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AppIcon name="rejected" size={18} color="#DC2626" />
               <div>{error}</div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('login.choose_role', '1. Select Your Portal Role')}</label>
+          <form onSubmit={handleSubmit}>
+            {/* Step 1: Role Selection Grid */}
+            <div style={{ marginBottom: '20px' }}>
+              <label className={styles.inputLabel}>{t('login.step1_title', 'Step 1: Choose Your Role')}</label>
               <div className={styles.roleGrid}>
                 {ROLES_LIST.map((r) => (
-                  <button
+                  <div
                     key={r.id}
-                    type="button"
                     onClick={() => {
                       setRole(r.id);
+                      setDepartmentId('');
                       setError('');
-                      if (!['coordinator', 'principal'].includes(r.id)) {
-                        setDepartmentId('');
-                      }
                     }}
-                    className={`${styles.roleCard} ${role === r.id ? styles.roleActive : ''}`}
+                    className={`${styles.roleCard} ${role === r.id ? styles.roleSelected : ''}`}
                   >
-                    <div className={styles.roleCardIcon}>
-                      <AppIcon name={r.icon as any} size={20} />
+                    {role === r.id && <span className={styles.roleSelectedIcon}>✓</span>}
+                    <div className={styles.roleIcon} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <AppIcon name={r.icon as any} size={26} color={role === r.id ? '#2563EB' : '#64748B'} />
                     </div>
-                    <div className={styles.roleCardText}>
-                      <div className={styles.roleCardTitle}>{t(`roles.${r.id}`, r.label)}</div>
-                      <div className={styles.roleCardDesc}>{r.desc}</div>
-                    </div>
-                  </button>
+                    <div className={styles.roleName}>{t(`role.${r.id}`, r.label)}</div>
+                  </div>
                 ))}
               </div>
             </div>
 
+            {/* Step 2: Department Selection Chips */}
             {deptRequired && (
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="dept-select">
-                  {t('login.select_dept', '2. Select Department')}
-                </label>
-                <div className={styles.selectWrapper}>
-                  <select
-                    id="dept-select"
-                    value={departmentId}
-                    onChange={(e) => {
-                      setDepartmentId(e.target.value);
-                      setError('');
-                    }}
-                    className={styles.select}
-                  >
-                    <option value="">{t('login.choose_department_placeholder', '-- Choose Department --')}</option>
-                    {DEPARTMENTS.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {t(`departments.${d.id}`, d.name)} ({d.label})
-                      </option>
-                    ))}
-                  </select>
+              <div style={{ marginBottom: '20px', animation: 'slideDown 0.2s ease-out' }}>
+                <label className={styles.inputLabel}>{t('login.step2_title', 'Step 2: Choose Department')}</label>
+                <div className={styles.deptGrid}>
+                  {DEPARTMENTS.map((d) => (
+                    <div
+                      key={d.id}
+                      onClick={() => {
+                        setDepartmentId(d.id);
+                        setError('');
+                      }}
+                      className={`${styles.deptChip} ${departmentId === d.id ? styles.deptSelected : ''}`}
+                    >
+                      {t(`dept.${d.id}`, d.name)}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
+
+            {/* Step 3: Credentials fields */}
+            <div style={{ marginBottom: '24px' }}>
+              <label className={styles.inputLabel}>
+                {deptRequired ? t('login.step3_title', 'Step 3: Enter Credentials') : t('login.step2_cred_title', 'Step 2: Enter Credentials')}
+              </label>
 
               {/* Email */}
               <div className={styles.inputField}>
@@ -377,7 +402,7 @@ export default function LoginPage() {
                     type="email"
                     placeholder={t('login.email_ph', 'Institutional Email (e.g. name@aharsetu.edu.in)')}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     className={styles.input}
                     required
                   />
@@ -394,7 +419,7 @@ export default function LoginPage() {
                     type={showPass ? 'text' : 'password'}
                     placeholder={t('login.pass_ph', 'Verification Password')}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
                     className={styles.input}
                     required
                   />
@@ -420,6 +445,7 @@ export default function LoginPage() {
                 />
                 <span>{t('login.remember_device', 'Remember this device')}</span>
               </label>
+            </div>
 
             <UiverseButton
               type="submit"
@@ -428,7 +454,7 @@ export default function LoginPage() {
               variant="primary"
               style={{ width: '100%', marginTop: '8px' }}
             >
-              {t('login.secure_btn', 'Secure Log In')}
+              {loading ? t('login.verifying_btn', 'Verifying Identity...') : t('login.secure_btn', 'Secure Log In')}
             </UiverseButton>
           </form>
 
@@ -452,7 +478,7 @@ export default function LoginPage() {
                       className={styles.demoCard}
                     >
                       <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
-                        <AppIcon name={acc.icon} size={20} color="#2563EB" />
+                        <AppIcon name={acc.icon as any} size={20} color="#2563EB" />
                       </span>
                       <div className={styles.demoMeta}>
                         <h5>{acc.label}</h5>
@@ -464,9 +490,6 @@ export default function LoginPage() {
               )}
             </div>
           )}
-
-        </div>
-      </section>
 
       <PwaInstallPrompt />
     </div>

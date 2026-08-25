@@ -72,7 +72,7 @@ def get_summary(
     coordinator_id: Optional[int] = Query(None),
     principal_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Global KPI summary — total, completed, pending, rejected, billed expenditure."""
     query = apply_order_filters(
@@ -117,7 +117,7 @@ def get_departments_report(
     end_date: Optional[str] = Query(None),
     vendor_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Department-wise expenditure breakdown."""
     user_repo = UserRepository(db)
@@ -157,7 +157,7 @@ def get_department_detail(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Single department drill-down with vendor breakdown and monthly trends."""
     orders = apply_order_filters(
@@ -220,7 +220,7 @@ def get_vendors_report(
     end_date: Optional[str] = Query(None),
     department_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Vendor performance report."""
     vendors = db.query(Vendor).filter(Vendor.active == True).all()
@@ -270,7 +270,7 @@ def get_vendor_detail(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Single vendor drill-down."""
     v = db.query(Vendor).filter(Vendor.id == vendor_id).first()
@@ -329,7 +329,7 @@ def get_trends(
     department_id: Optional[str] = Query(None),
     vendor_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Time-series order counts and expenditure."""
     query = apply_order_filters(
@@ -368,7 +368,7 @@ def get_popular_items(
     vendor_id: Optional[str] = Query(None),
     limit: int = Query(10),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Top N most ordered menu items."""
     order_query = apply_order_filters(
@@ -406,7 +406,7 @@ def get_approval_analytics(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Approval stage timing analytics."""
     query = apply_order_filters(
@@ -473,7 +473,7 @@ def get_order_funnel(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Order status funnel counts."""
     query = apply_order_filters(db.query(MasterOrder), start_date, end_date, db=db)
@@ -680,7 +680,7 @@ def get_filtered_summary(
     coordinator_id: Optional[int] = None,
     principal_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(['admin', 'dcr']))
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Comprehensive filtered report (legacy combined endpoint)."""
     query = apply_order_filters(

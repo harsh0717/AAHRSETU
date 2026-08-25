@@ -232,3 +232,259 @@ def generate_invoice_pdf(
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
+
+
+def generate_monthly_bills_pdf(month: int, year: int, bills: list, summary: dict) -> bytes:
+    """
+    Generate professional monthly bill consolidation PDF.
+    """
+    import calendar
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+    story = []
+    styles = getSampleStyleSheet()
+
+    month_name = calendar.month_name[month] if 1 <= month <= 12 else str(month)
+
+    title_style = ParagraphStyle(
+        'RepTitle', parent=styles['Heading1'],
+        fontName='Helvetica-Bold', fontSize=20, leading=24,
+        textColor=colors.HexColor('#1E3A8A'), spaceAfter=2
+    )
+    sub_style = ParagraphStyle(
+        'RepSub', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=11, leading=13,
+        textColor=colors.HexColor('#F97316'), spaceAfter=12
+    )
+    sec_style = ParagraphStyle(
+        'RepSec', parent=styles['Heading2'],
+        fontName='Helvetica-Bold', fontSize=11, leading=13,
+        textColor=colors.HexColor('#1E3A8A'), spaceBefore=10, spaceAfter=4
+    )
+    th_style = ParagraphStyle(
+        'RepTH', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=8, leading=10, textColor=colors.white
+    )
+    tc_style = ParagraphStyle(
+        'RepTC', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=8, leading=10, textColor=colors.HexColor('#334155')
+    )
+    tc_bold = ParagraphStyle(
+        'RepTCB', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=8, leading=10, textColor=colors.HexColor('#0F172A')
+    )
+
+    story.append(Paragraph("Aaharसेतु (AaharSetu) — Monthly Billing Report", title_style))
+    story.append(Paragraph(f"Institutional Canteen Expenditure | {month_name} {year}", sub_style))
+
+    # Summary table
+    sum_data = [
+        [
+            Paragraph("Total Invoices:", tc_bold), Paragraph(str(summary.get('total_bills', len(bills))), tc_style),
+            Paragraph("Total Expenditure:", tc_bold), Paragraph(f"INR {float(summary.get('total_amount', 0)):,.2f}", tc_bold)
+        ],
+        [
+            Paragraph("Settled Amount:", tc_bold), Paragraph(f"INR {float(summary.get('settled_amount', 0)):,.2f}", tc_style),
+            Paragraph("Pending Settlement:", tc_bold), Paragraph(f"INR {float(summary.get('pending_amount', 0)):,.2f}", tc_bold)
+        ],
+        [
+            Paragraph("Generated At:", tc_bold), Paragraph(datetime.now().strftime("%Y-%m-%d %H:%M"), tc_style),
+            Paragraph("Reporting Period:", tc_bold), Paragraph(f"{month_name} {year}", tc_style)
+        ]
+    ]
+    sum_table = Table(sum_data, colWidths=[110, 160, 110, 160])
+    sum_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+        ('TOPPADDING', (0,0), (-1,-1), 3),
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F8FAFC')),
+        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
+    ]))
+    story.append(sum_table)
+    story.append(Spacer(1, 10))
+
+    # Itemized bills table
+    story.append(Paragraph("Bill Register", sec_style))
+    b_rows = [[
+        Paragraph("Invoice #", th_style),
+        Paragraph("Order ID", th_style),
+        Paragraph("Department", th_style),
+        Paragraph("Vendor", th_style),
+        Paragraph("Amount", th_style),
+        Paragraph("Status", th_style),
+    ]]
+    for b in bills:
+        b_rows.append([
+            Paragraph(str(b.get('invoice_number', '')), tc_bold),
+            Paragraph(str(b.get('order_id', '')), tc_style),
+            Paragraph(str(b.get('department_label', '') or b.get('department_id', '')), tc_style),
+            Paragraph(str(b.get('vendor_name', '') or 'Master Invoice'), tc_style),
+            Paragraph(f"INR {float(b.get('amount', 0)):,.2f}", tc_bold),
+            Paragraph(str(b.get('settlement_status', 'PENDING_SETTLEMENT')), tc_style),
+        ])
+
+    b_table = Table(b_rows, colWidths=[110, 80, 110, 110, 70, 60])
+    b_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E3A8A')),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+    ]))
+    story.append(b_table)
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+
+def generate_settlement_pdf(settlement: dict, dept_breakdown: list, vendor_breakdown: list) -> bytes:
+    """
+    Generate professional monthly settlement PDF report.
+    """
+    import calendar
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+    story = []
+    styles = getSampleStyleSheet()
+
+    month = settlement.get('month', 1)
+    month_name = calendar.month_name[month] if 1 <= month <= 12 else str(month)
+    year = settlement.get('year', datetime.now().year)
+
+    title_style = ParagraphStyle(
+        'SetTitle', parent=styles['Heading1'],
+        fontName='Helvetica-Bold', fontSize=20, leading=24,
+        textColor=colors.HexColor('#0F766E'), spaceAfter=2
+    )
+    sub_style = ParagraphStyle(
+        'SetSub', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=11, leading=13,
+        textColor=colors.HexColor('#D97706'), spaceAfter=12
+    )
+    sec_style = ParagraphStyle(
+        'SetSec', parent=styles['Heading2'],
+        fontName='Helvetica-Bold', fontSize=11, leading=13,
+        textColor=colors.HexColor('#0F766E'), spaceBefore=10, spaceAfter=4
+    )
+    th_style = ParagraphStyle(
+        'SetTH', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=8, leading=10, textColor=colors.white
+    )
+    tc_style = ParagraphStyle(
+        'SetTC', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=8, leading=10, textColor=colors.HexColor('#334155')
+    )
+    tc_bold = ParagraphStyle(
+        'SetTCB', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=8, leading=10, textColor=colors.HexColor('#0F172A')
+    )
+
+    story.append(Paragraph("Aaharसेतु (AaharSetu) — Monthly Settlement Report", title_style))
+    story.append(Paragraph(f"Period: {month_name} {year} | Settlement Ref: {settlement.get('settlement_number', '')}", sub_style))
+
+    # Summary table
+    meta_data = [
+        [
+            Paragraph("Settlement #:", tc_bold), Paragraph(str(settlement.get('settlement_number', '')), tc_bold),
+            Paragraph("Status:", tc_bold), Paragraph(str(settlement.get('status', '')), tc_bold)
+        ],
+        [
+            Paragraph("Total Invoices:", tc_bold), Paragraph(str(settlement.get('total_bills', 0)), tc_style),
+            Paragraph("Total Amount:", tc_bold), Paragraph(f"INR {float(settlement.get('total_amount', 0)):,.2f}", tc_bold)
+        ],
+        [
+            Paragraph("Settled Amount:", tc_bold), Paragraph(f"INR {float(settlement.get('settled_amount', 0)):,.2f}", tc_style),
+            Paragraph("Pending Amount:", tc_bold), Paragraph(f"INR {float(settlement.get('pending_amount', 0)):,.2f}", tc_bold)
+        ],
+        [
+            Paragraph("Finalized By:", tc_bold), Paragraph(str(settlement.get('creator_name', '') or '—'), tc_style),
+            Paragraph("Finalized Date:", tc_bold), Paragraph(str(settlement.get('finalized_at', 'Not Finalized')), tc_style)
+        ]
+    ]
+    meta_table = Table(meta_data, colWidths=[110, 160, 110, 160])
+    meta_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+        ('TOPPADDING', (0,0), (-1,-1), 3),
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F0FDFA')),
+        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#99F6E4')),
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 10))
+
+    # Department Breakdown
+    story.append(Paragraph("Department Expenditure Breakdown", sec_style))
+    d_rows = [[
+        Paragraph("Department", th_style),
+        Paragraph("Bill Count", th_style),
+        Paragraph("Total Amount", th_style),
+        Paragraph("Settled Amount", th_style),
+        Paragraph("Pending Amount", th_style),
+    ]]
+    for d in dept_breakdown:
+        d_rows.append([
+            Paragraph(str(d.get('department_name', '')), tc_style),
+            Paragraph(str(d.get('bill_count', 0)), tc_style),
+            Paragraph(f"INR {float(d.get('total_amount', 0)):,.2f}", tc_bold),
+            Paragraph(f"INR {float(d.get('settled_amount', 0)):,.2f}", tc_style),
+            Paragraph(f"INR {float(d.get('pending_amount', 0)):,.2f}", tc_style),
+        ])
+    d_table = Table(d_rows, colWidths=[160, 80, 100, 100, 100])
+    d_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F766E')),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+    ]))
+    story.append(d_table)
+    story.append(Spacer(1, 10))
+
+    # Vendor Breakdown
+    story.append(Paragraph("Vendor Settlement Breakdown", sec_style))
+    v_rows = [[
+        Paragraph("Vendor", th_style),
+        Paragraph("Bill Count", th_style),
+        Paragraph("Total Amount", th_style),
+        Paragraph("Settled Amount", th_style),
+        Paragraph("Pending Amount", th_style),
+    ]]
+    for v in vendor_breakdown:
+        v_rows.append([
+            Paragraph(str(v.get('vendor_name', '')), tc_style),
+            Paragraph(str(v.get('bill_count', 0)), tc_style),
+            Paragraph(f"INR {float(v.get('total_amount', 0)):,.2f}", tc_bold),
+            Paragraph(f"INR {float(v.get('settled_amount', 0)):,.2f}", tc_style),
+            Paragraph(f"INR {float(v.get('pending_amount', 0)):,.2f}", tc_style),
+        ])
+    v_table = Table(v_rows, colWidths=[160, 80, 100, 100, 100])
+    v_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F766E')),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+    ]))
+    story.append(v_table)
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+

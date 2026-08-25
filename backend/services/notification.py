@@ -16,39 +16,51 @@ TRANSLATIONS = {
         "order_submitted": "Master order \"{title}\" has been submitted for approval.",
         "approved": "Your order \"{title}\" has been approved.",
         "rejected": "Your order \"{title}\" has been rejected: {remarks}",
-        "dcr_approved": "DCR has approved your order \"{title}\".",
-        "dcr_rejected": "DCR has rejected your order \"{title}\": {remarks}",
+        "dcr_approved": "Administration has approved your order \"{title}\".",
+        "dcr_rejected": "Administration has rejected your order \"{title}\": {remarks}",
         "mod_requested": "{vendor} has requested a modification for order \"{title}\".",
         "vendor_confirmed": "{vendor} has confirmed pricing for order \"{title}\".",
         "bill_generated": "Invoice generated for order \"{title}\". Total: ₹{amount}",
         "completed": "Your order \"{title}\" has been marked as completed.",
-        "administrative": "Administrative notice: {message}"
+        "administrative": "Administrative notice: {message}",
+        "settlement_finalized": "Settlement {settlement_number} for {month} {year} has been finalized. Total: ₹{amount}",
+        "bill_pending_settlement": "New bill {invoice_number} is pending settlement. Amount: ₹{amount}",
+        "settlement_reopened": "Settlement {settlement_number} for {month} {year} was reopened.",
+        "month_end_reminder": "Month-End Settlement Reminder: Approximately {days} days remaining. Please review pending canteen bills and complete the required settlement."
     },
     "hi": {
         "new_order": "{dept} विभाग से नया ऑर्डर प्राप्त हुआ: \"{title}\"",
         "order_submitted": "मास्टर ऑर्डर \"{title}\" अनुमोदन के लिए जमा कर दिया गया है।",
         "approved": "आपका ऑर्डर \"{title}\" स्वीकृत हो गया है।",
         "rejected": "आपका ऑर्डर \"{title}\" अस्वीकृत हो गया है: {remarks}",
-        "dcr_approved": "DCR ने आपके ऑर्डर \"{title}\" को मंजूरी दे दी है।",
-        "dcr_rejected": "DCR ने आपके ऑर्डर \"{title}\" को खारिज कर दिया है: {remarks}",
+        "dcr_approved": "प्रशासन ने आपके ऑर्डर \"{title}\" को मंजूरी दे दी है।",
+        "dcr_rejected": "प्रशासन ने आपके ऑर्डर \"{title}\" को खारिज कर दिया है: {remarks}",
         "mod_requested": "{vendor} ने ऑर्डर \"{title}\" के लिए संशोधन का अनुरोध किया है।",
         "vendor_confirmed": "{vendor} ने ऑर्डर \"{title}\" के लिए मूल्य की पुष्टि कर दी है।",
         "bill_generated": "ऑर्डर \"{title}\" का चालान बनाया गया। कुल: ₹{amount}",
         "completed": "आपका ऑर्डर \"{title}\" पूर्ण चिह्नित किया गया है।",
-        "administrative": "प्रशासनिक सूचना: {message}"
+        "administrative": "प्रशासनिक सूचना: {message}",
+        "settlement_finalized": "मासिक निपटान {settlement_number} ({month} {year}) को अंतिम रूप दिया गया है। कुल: ₹{amount}",
+        "bill_pending_settlement": "नया बिल {invoice_number} निपटान के लिए लंबित है। राशि: ₹{amount}",
+        "settlement_reopened": "निपटान {settlement_number} पुनः खोला गया।",
+        "month_end_reminder": "माह-अंत निपटान अनुस्मारक: लगभग {days} दिन शेष हैं। कृपया लंबित कैंटीन बिलों की समीक्षा करें।"
     },
     "gu": {
         "new_order": "{dept} વિભાગ તરફથી નવો ઑર્ડર મળ્યો: \"{title}\"",
         "order_submitted": "માસ્ટર ઑર્ડર \"{title}\" મંજૂરી માટે સબમિટ કરવામાં આવ્યો છે.",
         "approved": "તમારો ઑર્ડર \"{title}\" મંજૂર થઈ ગયો છે.",
         "rejected": "તમારો ઑર્ડર \"{title}\" નામંજૂર થયો છે: {remarks}",
-        "dcr_approved": "DCR એ તમારા ઑર્ડર \"{title}\" ને મંજૂરી આપી દીધી છે.",
-        "dcr_rejected": "DCR એ તમારા ઑર્ડર \"{title}\" ને નકારી કાઢ્યો છે: {remarks}",
+        "dcr_approved": "વહીવટી વિભાગે તમારા ઑર્ડર \"{title}\" ને મંજૂરી આપી દીધી છે.",
+        "dcr_rejected": "વહીવટી વિભાગે તમારા ઑર્ડર \"{title}\" ને નકારી કાઢ્યો છે: {remarks}",
         "mod_requested": "{vendor} એ ઑર્ડર \"{title}\" માટે સુધારા વિનંતી કરી છે.",
         "vendor_confirmed": "{vendor} એ ઑર્ડર \"{title}\" માટે કિંમતની પુષ્ટિ કરી છે.",
         "bill_generated": "ઑર્ડર \"{title}\" નું બિલ બન્યું છે. કુલ: ₹{amount}",
         "completed": "તમારો ઑર્ડર \"{title}\" પૂર્ણ તરીકે ચિહ્નિત થયો છે.",
-        "administrative": "વહીવટી સૂચના: {message}"
+        "administrative": "વહીવટી સૂચના: {message}",
+        "settlement_finalized": "માસિક પતાવટ {settlement_number} ({month} {year}) પૂર્ણ થઈ ગઈ છે. કુલ: ₹{amount}",
+        "bill_pending_settlement": "નવું બિલ {invoice_number} પતાવટ માટે બાકી છે. રકમ: ₹{amount}",
+        "settlement_reopened": "પતાવટ {settlement_number} ફરીથી ખોલવામાં આવી.",
+        "month_end_reminder": "મહિનાના અંતની પતાવટ રીમાઇન્ડર: આશરે {days} દિવસ બાકી છે. કૃપા કરીને બાકી બિલોની સમીક્ષા કરો."
     }
 }
 
@@ -244,9 +256,12 @@ class NotificationService:
             for p in principals:
                 recipient_ids.add(p.id)
                 
-        # 3. DCR
-        dcrs = self.db.query(User).filter(User.role == "dcr", User.active == True).all()
-        for d in dcrs:
+        # 3. Administration / DCR
+        admin_users = self.db.query(User).filter(
+            User.role.in_(["dcr", "administration"]),
+            User.active == True
+        ).all()
+        for d in admin_users:
             recipient_ids.add(d.id)
             
         # 4. Vendors
@@ -271,3 +286,40 @@ class NotificationService:
         }
         for u_id in recipient_ids:
             await manager.send_personal_message(ws_payload, u_id)
+
+    async def notify_settlement_event(
+        self,
+        settlement_number: str,
+        month: int,
+        year: int,
+        amount: float,
+        event_type: str = "settlement_finalized"
+    ):
+        """
+        Notify Administration and Admin users of settlement events.
+        """
+        import calendar
+        month_name = calendar.month_name[month] if 1 <= month <= 12 else str(month)
+        await self.send_notification(
+            recipient_roles=["admin", "dcr", "administration"],
+            msg_type=event_type,
+            template_kwargs={
+                "settlement_number": settlement_number,
+                "month": month_name,
+                "year": year,
+                "amount": f"{amount:,.2f}"
+            }
+        )
+
+    async def notify_month_end_reminder(self, days_remaining: int):
+        """
+        Send month-end payment/settlement reminder to Administration and Admin users.
+        """
+        await self.send_notification(
+            recipient_roles=["admin", "dcr", "administration"],
+            msg_type="month_end_reminder",
+            template_kwargs={
+                "days": days_remaining
+            }
+        )
+

@@ -1,11 +1,13 @@
 // ── AharSetu Centralized Navigation Registry ─────────────────────────────────
+// NOTE: Both 'dcr' and 'administration' keys are maintained during role migration.
+// New sessions use 'administration'; old sessions (role=dcr) still work via 'dcr' key.
 
 export interface NavItem {
   id: string;
   labelKey: string;
   href: string;
   icon: string;
-  role: 'coordinator' | 'principal' | 'dcr' | 'vendor' | 'admin';
+  role: 'coordinator' | 'principal' | 'dcr' | 'administration' | 'vendor' | 'admin';
 }
 
 export const NAVIGATION_CONFIG: Record<string, NavItem[]> = {
@@ -33,17 +35,33 @@ export const NAVIGATION_CONFIG: Record<string, NavItem[]> = {
     { id: 'profile',      labelKey: 'nav.profile',          href: '/principal/profile',           icon: 'profile', role: 'principal' },
     { id: 'settings',     labelKey: 'nav.settings',         href: '/principal/settings',          icon: 'settings', role: 'principal' },
   ],
+  // Legacy 'dcr' key — kept for sessions that haven't migrated yet
   dcr: [
-    { id: 'dashboard',    labelKey: 'nav.dashboard',        href: '/dcr',                         icon: 'dashboard', role: 'dcr' },
-    { id: 'queue',        labelKey: 'nav.approval_queue',   href: '/dcr/approvals',               icon: 'queue', role: 'dcr' },
-    { id: 'approved',     labelKey: 'nav.approved_orders',  href: '/dcr/approved',                icon: 'approved', role: 'dcr' },
-    { id: 'rejected',     labelKey: 'nav.rejected_orders',  href: '/dcr/rejected',                icon: 'rejected', role: 'dcr' },
-    { id: 'history',      labelKey: 'nav.audit_history',    href: '/dcr/history',                 icon: 'history', role: 'dcr' },
-    { id: 'reports',      labelKey: 'nav.reports',          href: '/dcr/reports',                 icon: 'reports', role: 'dcr' },
-    { id: 'bills',        labelKey: 'nav.bills',            href: '/dcr/bills',                   icon: 'bills', role: 'dcr' },
-    { id: 'notifications',labelKey: 'nav.notifications',    href: '/dcr/notifications',           icon: 'notifications', role: 'dcr' },
-    { id: 'profile',      labelKey: 'nav.profile',          href: '/dcr/profile',                 icon: 'profile', role: 'dcr' },
-    { id: 'settings',     labelKey: 'nav.settings',         href: '/dcr/settings',                icon: 'settings', role: 'dcr' },
+    { id: 'dashboard',     labelKey: 'nav.dashboard',          href: '/dcr',                       icon: 'dashboard', role: 'dcr' },
+    { id: 'approvals',     labelKey: 'nav.approval_queue',     href: '/dcr/approvals',             icon: 'queue', role: 'dcr' },
+    { id: 'approved',      labelKey: 'nav.approved_orders',    href: '/dcr/approved',              icon: 'approved', role: 'dcr' },
+    { id: 'rejected',      labelKey: 'nav.rejected_orders',    href: '/dcr/rejected',              icon: 'rejected', role: 'dcr' },
+    { id: 'history',       labelKey: 'nav.audit_history',      href: '/dcr/history',               icon: 'history', role: 'dcr' },
+    { id: 'bills',         labelKey: 'nav.bills_invoices',     href: '/dcr/bills',                 icon: 'bills', role: 'dcr' },
+    { id: 'settlements',   labelKey: 'nav.settlements',        href: '/dcr/settlements',           icon: 'settlements', role: 'dcr' },
+    { id: 'reports',       labelKey: 'nav.financial_reports',  href: '/dcr/reports',               icon: 'reports', role: 'dcr' },
+    { id: 'notifications', labelKey: 'nav.notifications',      href: '/dcr/notifications',         icon: 'notifications', role: 'dcr' },
+    { id: 'profile',       labelKey: 'nav.profile',            href: '/dcr/profile',               icon: 'profile', role: 'dcr' },
+    { id: 'settings',      labelKey: 'nav.settings',           href: '/dcr/settings',              icon: 'settings', role: 'dcr' },
+  ],
+  // New 'administration' key — same routes as dcr (same URL space)
+  administration: [
+    { id: 'dashboard',     labelKey: 'nav.dashboard',          href: '/dcr',                       icon: 'dashboard', role: 'administration' },
+    { id: 'approvals',     labelKey: 'nav.approval_queue',     href: '/dcr/approvals',             icon: 'queue', role: 'administration' },
+    { id: 'approved',      labelKey: 'nav.approved_orders',    href: '/dcr/approved',              icon: 'approved', role: 'administration' },
+    { id: 'rejected',      labelKey: 'nav.rejected_orders',    href: '/dcr/rejected',              icon: 'rejected', role: 'administration' },
+    { id: 'history',       labelKey: 'nav.audit_history',      href: '/dcr/history',               icon: 'history', role: 'administration' },
+    { id: 'bills',         labelKey: 'nav.bills_invoices',     href: '/dcr/bills',                 icon: 'bills', role: 'administration' },
+    { id: 'settlements',   labelKey: 'nav.settlements',        href: '/dcr/settlements',           icon: 'settlements', role: 'administration' },
+    { id: 'reports',       labelKey: 'nav.financial_reports',  href: '/dcr/reports',               icon: 'reports', role: 'administration' },
+    { id: 'notifications', labelKey: 'nav.notifications',      href: '/dcr/notifications',         icon: 'notifications', role: 'administration' },
+    { id: 'profile',       labelKey: 'nav.profile',            href: '/dcr/profile',               icon: 'profile', role: 'administration' },
+    { id: 'settings',      labelKey: 'nav.settings',           href: '/dcr/settings',              icon: 'settings', role: 'administration' },
   ],
   vendor: [
     { id: 'dashboard',    labelKey: 'nav.dashboard',        href: '/vendor',                      icon: 'dashboard', role: 'vendor' },

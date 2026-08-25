@@ -41,6 +41,10 @@ try:
             db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
             db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS billing_status VARCHAR(50);"))
             db.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS route VARCHAR(250);"))
+            db.execute(text("ALTER TABLE bills ADD COLUMN IF NOT EXISTS settlement_status VARCHAR(50) DEFAULT 'PENDING_SETTLEMENT';"))
+            db.execute(text("ALTER TABLE bills ADD COLUMN IF NOT EXISTS settlement_id INTEGER;"))
+            db.execute(text("UPDATE users SET role='administration' WHERE role='dcr';"))
+            db.execute(text("UPDATE approval_history SET role='administration' WHERE role='dcr';"))
             db.commit()
         else:
             for stmt in [
@@ -54,7 +58,11 @@ try:
                 "ALTER TABLE vendors ADD COLUMN active BOOLEAN DEFAULT TRUE;",
                 "ALTER TABLE vendors ADD COLUMN image_url VARCHAR(500);",
                 "ALTER TABLE master_orders ADD COLUMN billing_status VARCHAR(50);",
-                "ALTER TABLE notifications ADD COLUMN route VARCHAR(250);"
+                "ALTER TABLE notifications ADD COLUMN route VARCHAR(250);",
+                "ALTER TABLE bills ADD COLUMN settlement_status VARCHAR(50) DEFAULT 'PENDING_SETTLEMENT';",
+                "ALTER TABLE bills ADD COLUMN settlement_id INTEGER;",
+                "UPDATE users SET role='administration' WHERE role='dcr';",
+                "UPDATE approval_history SET role='administration' WHERE role='dcr';"
             ]:
                 try:
                     db.execute(text(stmt))

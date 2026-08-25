@@ -447,7 +447,7 @@ export function getSession(): UserProfile | null {
     const path = window.location.pathname;
     const pathRole = path.split('/')[1];
 
-    if (pathRole && ['coordinator', 'principal', 'dcr', 'vendor', 'admin'].includes(pathRole)) {
+    if (pathRole && ['coordinator', 'principal', 'dcr', 'administration', 'vendor', 'admin'].includes(pathRole)) {
       const roleRaw = localStorage.getItem(`aharsetu_remember_${pathRole}`);
       if (roleRaw) {
         const roleUser = JSON.parse(roleRaw);

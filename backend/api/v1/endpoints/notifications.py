@@ -64,7 +64,75 @@ def mark_all_as_read(
         Notification.read == False
     ).update({"read": True}, synchronize_session=False)
     db.commit()
-    return None
+
+
+@router.get("/month-end-check")
+def check_month_end_reminder(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
+) -> Any:
+    """
+    Check if a month-end payment reminder should be shown.
+    Fires when <= 7 days remaining in current month and current month has unfinalized settlement.
+    """
+    import calendar
+    from backend.models.settlement import Settlement
+    from backend.models.bill import Bill
+
+    now = datetime.now(timezone.utc)
+    cur_m = now.month
+    cur_y = now.year
+
+    # Days in current month
+    _, last_day = calendar.monthrange(cur_y, cur_m)
+    days_remaining = last_day - now.day
+
+    # Check if settlement finalized for current month
+    finalized_settlement = db.query(Settlement).filter(
+        Settlement.month == cur_m,
+        Settlement.year == cur_y,
+        Settlement.status == 'FINALIZED'
+    ).first()
+
+    # Check if there are unsettled bills in this month
+    unsettled_bills = db.query(Bill).filter(
+        extract('month', Bill.generated_at) == cur_m,
+        extract('year', Bill.generated_at) == cur_y,
+        Bill.settlement_status != 'SETTLED'
+    ).count()
+
+    should_remind = (days_remaining <= 7) and (finalized_settlement is None) and (unsettled_bills > 0)
+
+    return {
+        "should_remind": should_remind,
+        "days_remaining": days_remaining,
+        "month": cur_m,
+        "year": cur_y,
+        "has_pending_settlement": finalized_settlement is None,
+        "unsettled_bills_count": unsettled_bills
+    }
+
+
+@router.post("/month-end-trigger")
+async def trigger_month_end_reminder(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
+) -> Any:
+    """
+    Trigger month-end notification dispatch to all admin and administration users.
+    """
+    import calendar
+    now = datetime.now(timezone.utc)
+    _, last_day = calendar.monthrange(now.year, now.month)
+    days_remaining = max(last_day - now.day, 1)
+
+    notif_service = NotificationService(db)
+    notifs = await notif_service.notify_month_end_reminder(days_remaining=days_remaining)
+
+    return {
+        "message": f"Month-end reminder dispatched to administrative users ({days_remaining} days remaining).",
+        "notifications_sent": len(notifs) if notifs else 0
+    }
 
 
 @router.websocket("/ws")

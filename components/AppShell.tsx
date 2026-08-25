@@ -46,11 +46,18 @@ const BOTTOM_NAV_CONFIG: Record<string, { label: string; href: string; icon: str
     { id: 'more', label: 'More', href: '#more', icon: 'menu_btn' },
   ],
   dcr: [
-    { id: 'home', label: 'Home', href: '/dcr', icon: 'home' },
-    { id: 'approvals', label: 'Audit', href: '/dcr/approvals', icon: 'active' },
-    { id: 'history', label: 'Orders', href: '/dcr/history', icon: 'history' },
-    { id: 'notifications', label: 'Alerts', href: '/dcr/notifications', icon: 'notifications' },
-    { id: 'profile', label: 'Profile', href: '/dcr/profile', icon: 'profile' },
+    { id: 'home',          label: 'Home',        href: '/dcr',               icon: 'home' },
+    { id: 'approvals',     label: 'Audit',       href: '/dcr/approvals',     icon: 'active' },
+    { id: 'bills',         label: 'Bills',       href: '/dcr/bills',         icon: 'bills' },
+    { id: 'settlements',   label: 'Settlements', href: '/dcr/settlements',   icon: 'settlements' },
+    { id: 'more',          label: 'More',        href: '#more',              icon: 'menu_btn' },
+  ],
+  administration: [
+    { id: 'home',          label: 'Home',        href: '/dcr',               icon: 'home' },
+    { id: 'approvals',     label: 'Audit',       href: '/dcr/approvals',     icon: 'active' },
+    { id: 'bills',         label: 'Bills',       href: '/dcr/bills',         icon: 'bills' },
+    { id: 'settlements',   label: 'Settlements', href: '/dcr/settlements',   icon: 'settlements' },
+    { id: 'more',          label: 'More',        href: '#more',              icon: 'menu_btn' },
   ],
   admin: [
     { id: 'home', label: 'Home', href: '/admin', icon: 'home' },

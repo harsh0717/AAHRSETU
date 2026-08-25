@@ -17,7 +17,11 @@ class Bill(Base):
     pdf_data = Column(LargeBinary, nullable=True)
     system_generated = Column(Boolean, default=True, nullable=False)
 
+    settlement_status = Column(String(50), default="PENDING_SETTLEMENT", nullable=False)
+    settlement_id = Column(Integer, ForeignKey("settlements.id", ondelete="SET NULL"), nullable=True)
+
     # Relationships
+    settlement = relationship("Settlement", back_populates="bills")
     order = relationship("MasterOrder")
     vendor = relationship("Vendor")
     department = relationship("Department")

@@ -4,6 +4,8 @@ from backend.models.vendor import Vendor, VendorMenuItem
 from backend.models.order import MasterOrder, VendorOrder, VendorOrderItem, VendorOrderModification, ApprovalHistory
 from backend.models.notification import Notification
 from backend.models.audit import AuditLog
+from backend.models.settlement import Settlement
+from backend.models.payment import Payment
 from backend.models.bill import Bill
 
 __all__ = [
@@ -21,5 +23,7 @@ __all__ = [
     "ApprovalHistory",
     "Notification",
     "AuditLog",
+    "Settlement",
+    "Payment",
     "Bill"
 ]

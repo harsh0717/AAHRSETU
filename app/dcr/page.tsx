@@ -12,11 +12,14 @@ import { getNotifications, markNotificationRead, markAllRead, NotificationItem, 
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
 
+import { api } from '@/lib/api';
+
 export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
   const { t, lang } = useI18n();
   const [session, setSession] = useState<UserProfile | null>(null);
-  const colors = ROLE_COLORS.dcr;
+  // Support both 'dcr' (legacy) and 'administration' (new) role
+  const colors = ROLE_COLORS['administration'] || ROLE_COLORS.dcr;
 
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -26,6 +29,10 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Financial summary & reminder
+  const [financialSummary, setFinancialSummary] = useState<any>(null);
+  const [reminderState, setReminderState] = useState<any>(null);
 
   // Profile Edit State
   const [profileName, setProfileName] = useState('');
@@ -45,18 +52,16 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     if (!silent) setLoading(true);
     const safetyTimer = !silent ? setTimeout(() => setLoading(false), 2500) : null;
     try {
-      const [oList, nList] = await Promise.all([
-        getOrders().catch((err) => {
-          console.warn('Error fetching orders:', err);
-          return [];
-        }),
-        getNotifications().catch((err) => {
-          console.warn('Error fetching notifications:', err);
-          return [];
-        })
+      const [oList, nList, fSum, rState] = await Promise.all([
+        getOrders().catch(() => []),
+        getNotifications().catch(() => []),
+        api.get('/bills/financial-summary').catch(() => null),
+        api.get('/notifications/month-end-check').catch(() => null)
       ]);
       setOrders(oList);
       setNotifications(nList);
+      if (fSum) setFinancialSummary(fSum);
+      if (rState) setReminderState(rState);
     } catch (err) {
       console.warn('Error in dcr loadData:', err);
     } finally {
@@ -75,11 +80,12 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
       window.location.href = '/login';
       return;
     }
-    if (s.role !== 'dcr') {
+    if (s.role !== 'dcr' && s.role !== 'administration') {
       window.location.href = `/${s.role}`;
       return;
     }
     setSession(s);
+
     setProfileName(s.name);
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
@@ -212,17 +218,17 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   const deptAuditRows = Object.values(deptAuditSummary);
 
   return (
-    <AppShell role="dcr" currentPath="/dcr">
+    <AppShell role={(session?.role as 'dcr' | 'administration') || 'dcr'} currentPath="/dcr">
       <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
         
         {/* Title Section with Official Brand Logo */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-              {t(`dcr.tab_title_${activeTab}`, 'DCR Auditor Dashboard')}
+              {t(`dcr.tab_title_${activeTab}`, 'Administration Dashboard')}
             </h1>
             <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-              {t(`dcr.tab_sub_${activeTab}`, 'Financial budget audits, expenditure reports, and requisition clearing.')}
+              {t(`dcr.tab_sub_${activeTab}`, 'Institutional financial position, pending settlements and audit overview.')}
             </div>
           </div>
           <BrandLogo size={52} />
@@ -239,32 +245,95 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
             {/* TAB: DASHBOARD OVERVIEW */}
             {activeTab === 'dashboard' && (
               <div>
-                {/* Stats Grid */}
+                {/* Month-End Reminder Alert Banner */}
+                {reminderState?.should_remind && (
+                  <div style={{ background: '#FFFBEB', border: '1px solid #F59E0B', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <span style={{ fontSize: '1.8rem' }}>⏰</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 800, color: '#92400E', fontSize: '0.95rem', marginBottom: '2px' }}>
+                        Month-End Settlement Notice — {reminderState.days_remaining} Days Remaining
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: '#78350F' }}>
+                        {reminderState.unsettled_bills_count} bill(s) are awaiting monthly settlement. Finalize the monthly settlement before month end.
+                      </div>
+                    </div>
+                    <Link href="/dcr/settlements" style={{ padding: '8px 18px', borderRadius: '8px', background: '#D97706', color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                      Review Settlements →
+                    </Link>
+                  </div>
+                )}
+
+                {/* Real-time Institutional Financial Stats Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
                   {[
-                    { label: t('dcr.stats_pending', 'Pending Audits'), value: totalPending, color: '#D97706', icon: '⏳' },
-                    { label: t('dcr.stats_approved', 'Audited & Cleared'), value: totalApproved, color: '#10B981', icon: '✅' },
-                    { label: t('dcr.stats_rejected', 'Rejected Budgets'), value: totalRejected, color: '#EF4444', icon: '❌' },
-                    { label: 'Total Audited Expenditure (₹)', value: `₹${orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0).toFixed(2)}`, color: '#3B82F6', icon: '💰' }
+                    {
+                      label: t('dcr.stats_pending', 'Pending Audits'),
+                      value: totalPending,
+                      sub: 'Requisitions in queue',
+                      color: '#D97706',
+                      icon: '⏳'
+                    },
+                    {
+                      label: 'Pending Settlement',
+                      value: financialSummary ? `₹${Number(financialSummary.pending_settlement_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—',
+                      sub: `${financialSummary?.pending_settlement_bills || 0} bills pending`,
+                      color: '#DC2626',
+                      icon: '💳'
+                    },
+                    {
+                      label: 'Settled This Year',
+                      value: financialSummary ? `₹${Number(financialSummary.settled_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—',
+                      sub: `${financialSummary?.settled_bills || 0} bills settled`,
+                      color: '#059669',
+                      icon: '✅'
+                    },
+                    {
+                      label: `${financialSummary?.current_month_name || 'Current Month'} Spend`,
+                      value: financialSummary ? `₹${Number(financialSummary.current_month_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : `₹${orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0).toFixed(2)}`,
+                      sub: `${financialSummary?.current_month_bills || ordersWithBills.length} invoices generated`,
+                      color: '#2563EB',
+                      icon: '📊'
+                    }
                   ].map((s, idx) => (
                     <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${s.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
                       <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{s.icon}</div>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gray-900)' }}>{s.value}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', fontWeight: 600 }}>{s.label}</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gray-900)' }}>{s.value}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--gray-700)', fontWeight: 700, marginTop: '2px' }}>{s.label}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--gray-400)', marginTop: '2px' }}>{s.sub}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* Quick actions & recent items */}
+                {/* Quick actions & modules grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px', alignItems: 'start' }}>
+                  {/* Financial Review Queue */}
                   <div className="card" style={{ padding: '20px' }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>⏳ Financial Review Queue</h3>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '8px' }}>⏳ Financial Review Queue</h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>There are currently {totalPending} order requests awaiting budget verification and clearance.</p>
                     <button className="btn btn-primary" onClick={() => setActiveTab('queue')}>
-                      📋 Open Audit Queue
+                      📋 Open Audit Queue ({totalPending})
                     </button>
                   </div>
 
+                  {/* Bills & Invoices Hub */}
+                  <div className="card" style={{ padding: '20px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '8px' }}>🧾 Bills & Invoices</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>Access itemized invoices, server-side bill search, filter by department or vendor, and export PDF/Excel.</p>
+                    <Link href="/dcr/bills" className="btn" style={{ background: '#0D9488', color: 'white', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      🧾 View Bills & Invoices →
+                    </Link>
+                  </div>
+
+                  {/* Monthly Settlements Hub */}
+                  <div className="card" style={{ padding: '20px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '8px' }}>💳 Monthly Settlements</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>Create monthly institutional settlement records, review department/vendor breakdowns, and finalize payments.</p>
+                    <Link href="/dcr/settlements" className="btn" style={{ background: '#059669', color: 'white', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      💳 Payments & Settlements →
+                    </Link>
+                  </div>
+
+                  {/* Recent Notifications */}
                   <div className="card" style={{ padding: '20px' }}>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🔔 Recent Notifications</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

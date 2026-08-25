@@ -1,4 +1,6 @@
 // ── AharSetu v2.0 Constants ───────────────────────────────────────────────────
+// NOTE: 'dcr' role is being migrated to 'administration'. Both keys are kept
+// here so that existing sessions continue working during the DB migration.
 
 export const COLLEGE_INFO = {
   name: 'AaharSetu Institute of Education',
@@ -28,19 +30,21 @@ export const PRINCIPAL_DEPT_MAP = {
 };
 
 export const ROLES = {
-  COORDINATOR: 'coordinator',
-  PRINCIPAL:   'principal',
-  DCR:         'dcr',
-  VENDOR:      'vendor',
-  ADMIN:       'admin',
+  COORDINATOR:    'coordinator',
+  PRINCIPAL:      'principal',
+  DCR:            'dcr',            // Legacy — being migrated to ADMINISTRATION
+  ADMINISTRATION: 'administration', // New role name for DCR
+  VENDOR:         'vendor',
+  ADMIN:          'admin',
 };
 
 export const ROLE_LABELS: Record<string, string> = {
-  coordinator: 'Coordinator',
-  principal:   'Principal',
-  dcr:         'DCR',
-  vendor:      'Canteen Vendor',
-  admin:       'System / Admin',
+  coordinator:    'Coordinator',
+  principal:      'Principal',
+  dcr:            'Administration',  // Legacy key — shown as Administration
+  administration: 'Administration',
+  vendor:         'Canteen Vendor',
+  admin:          'System Admin',
 };
 
 export const ROLE_COLORS: Record<string, { 
@@ -77,15 +81,26 @@ export const ROLE_COLORS: Record<string, {
     text: '#1E3A8A' 
   },
   dcr: { 
-    accent: '#2563EB',
-    sidebar: '#EFF6FF',
-    sidebarText: '#1E3A8A',
-    sidebarTextMuted: '#3B82F6',
-    sidebarHoverBg: '#DBEAFE',
-    sidebarActiveBg: '#DBEAFE',
-    sidebarBorder: '#BFDBFE',
-    light: '#EFF6FF', 
-    text: '#1E3A8A' 
+    accent: '#0D9488',
+    sidebar: '#F0FDFA',
+    sidebarText: '#0F766E',
+    sidebarTextMuted: '#14B8A6',
+    sidebarHoverBg: '#CCFBF1',
+    sidebarActiveBg: '#CCFBF1',
+    sidebarBorder: '#99F6E4',
+    light: '#F0FDFA', 
+    text: '#0F766E' 
+  },
+  administration: { 
+    accent: '#0D9488',
+    sidebar: '#F0FDFA',
+    sidebarText: '#0F766E',
+    sidebarTextMuted: '#14B8A6',
+    sidebarHoverBg: '#CCFBF1',
+    sidebarActiveBg: '#CCFBF1',
+    sidebarBorder: '#99F6E4',
+    light: '#F0FDFA', 
+    text: '#0F766E' 
   },
   vendor: { 
     accent: '#2563EB',
@@ -112,11 +127,12 @@ export const ROLE_COLORS: Record<string, {
 };
 
 export const ROLE_ICONS: Record<string, string> = {
-  coordinator: '👤',
-  principal:   '🎓',
-  dcr:         '📋',
-  vendor:      '🍽️',
-  admin:       '⚙️',
+  coordinator:    '👤',
+  principal:      '🎓',
+  dcr:            '🏛️',  // Legacy — shown as Administration
+  administration: '🏛️',
+  vendor:         '🍽️',
+  admin:          '⚙️',
 };
 
 export const VENDOR_STATUS = {
@@ -180,14 +196,14 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string; border: s
 };
 
 export const PIPELINE_STAGES = [
-  { key: 'coordinator', label: 'Order Created',     icon: '📝', role: 'coordinator' },
-  { key: 'sent',        label: 'Sent for Approval', icon: '📤', role: 'coordinator' },
-  { key: 'principal',   label: 'Principal Review',  icon: '🎓', role: 'principal'   },
-  { key: 'dcr',         label: 'DCR Review',        icon: '📋', role: 'dcr'         },
-  { key: 'vendor',      label: 'Vendor Processing', icon: '🍽️', role: 'vendor'      },
-  { key: 'confirmed',   label: 'Vendor Confirmed',  icon: '✔️', role: 'vendor'      },
-  { key: 'bill',        label: 'Bill Generated',    icon: '🧾', role: 'admin'       },
-  { key: 'completed',   label: 'Completed',         icon: '✅', role: 'admin'       },
+  { key: 'coordinator', label: 'Order Created',         icon: '📝', role: 'coordinator'    },
+  { key: 'sent',        label: 'Sent for Approval',     icon: '📤', role: 'coordinator'    },
+  { key: 'principal',   label: 'Principal Review',      icon: '🎓', role: 'principal'      },
+  { key: 'dcr',         label: 'Administration Review', icon: '🏛️', role: 'administration' },
+  { key: 'vendor',      label: 'Vendor Processing',     icon: '🍽️', role: 'vendor'        },
+  { key: 'confirmed',   label: 'Vendor Confirmed',      icon: '✔️', role: 'vendor'        },
+  { key: 'bill',        label: 'Bill Generated',        icon: '🧾', role: 'admin'         },
+  { key: 'completed',   label: 'Completed',             icon: '✅', role: 'admin'         },
 ];
 
 export const STATUS_TO_STAGE: Record<string, number> = {

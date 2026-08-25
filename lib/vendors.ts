@@ -232,12 +232,10 @@ export async function getAvailableVendors(): Promise<Vendor[]> {
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
   try {
     const session = getSession();
-    let res;
+    let res: Vendor | undefined;
     if (session?.role === 'vendor') {
-      res = await api.request<Vendor>('/vendors/me/availability', {
-        method: 'PATCH',
-        body: JSON.stringify({ status })
-      });
+      // Vendor always uses the /me/availability endpoint — identity comes from JWT
+      res = await api.patch<Vendor>('/vendors/me/availability', { status });
     } else {
       res = await api.put<Vendor>(`/vendors/${vendorId}/status`, { status });
     }
@@ -249,10 +247,16 @@ export async function updateVendorStatus(vendorId: string, status: string): Prom
       return res;
     }
   } catch (err: any) {
-    console.warn(`[VENDORS] Remote status update for ${vendorId} failed (${err?.status || err?.message}), falling back to local update:`, err);
+    // Auth failures (401, 403) and validation errors (422) must propagate to the caller.
+    // Only connectivity failures (503, network error) should fall back to localStorage.
+    if (err?.status === 401 || err?.status === 403 || err?.status === 422 || err?.status === 404) {
+      throw err;
+    }
+    // Network / backend-down — fall through to offline localStorage update
+    console.warn(`[VENDORS] Backend unreachable for status update on ${vendorId} — using offline fallback:`, err?.message);
   }
 
-  // Graceful local store fallback (offline / demo session / static deploy)
+  // Offline fallback: update localStorage only (backend is genuinely down)
   const localVendors = await getVendors();
   const target = localVendors.find(v => v.id === vendorId) || FALLBACK_VENDORS.find(v => v.id === vendorId);
   if (target) {

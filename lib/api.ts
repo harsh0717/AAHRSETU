@@ -12,6 +12,35 @@ const BASE_URL = '/api/v1';
 const ACCESS_TOKEN_KEY = 'aharsetu_access_token';
 const REFRESH_TOKEN_KEY = 'aharsetu_refresh_token';
 
+/**
+ * Returns a human-readable error message based on HTTP status code.
+ * Prevents all auth/server errors from being labelled "Session expired".
+ */
+function buildErrorMessage(httpStatus: number, backendDetail?: string): string {
+  if (backendDetail) {
+    // Use the backend's message if it's specific enough (not a generic fallback)
+    const generic = ['an error occurred', 'internal server error', 'bad request'];
+    const isGeneric = generic.some(g => backendDetail.toLowerCase().includes(g));
+    if (!isGeneric) return backendDetail;
+  }
+  switch (httpStatus) {
+    case 401:
+      return 'Your session has expired. Please log in again.';
+    case 403:
+      return backendDetail || 'You do not have permission to perform this action.';
+    case 404:
+      return backendDetail || 'The requested resource could not be found.';
+    case 422:
+      return backendDetail || 'Invalid request data. Please check your input.';
+    case 500:
+      return 'A server error occurred. Please try again later.';
+    case 503:
+      return 'Service unavailable. Please check your connection and try again.';
+    default:
+      return backendDetail || 'An unexpected error occurred.';
+  }
+}
+
 class ApiClient {
   private isRefreshing = false;
   private refreshSubscribers: ((token: string) => void)[] = [];
@@ -50,6 +79,17 @@ class ApiClient {
     } catch {}
   }
 
+  /**
+   * Returns true when the stored access token is clearly a mock/offline token
+   * (not a real JWT). Mock tokens must never be sent to the authenticated backend
+   * because the backend no longer supports the mock-token bypass.
+   */
+  public hasMockToken(): boolean {
+    const token = this.getAccessToken();
+    if (!token) return false;
+    return token.startsWith('mock-token-') || token.startsWith('demo-');
+  }
+
   private subscribeTokenRefresh(cb: (token: string) => void) {
     this.refreshSubscribers.push(cb);
   }
@@ -71,7 +111,13 @@ class ApiClient {
     const refresh = this.getRefreshToken();
     if (!refresh) {
       this.clearTokens();
-      throw new Error('No refresh token available');
+      throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
+    }
+
+    // Do NOT attempt to refresh mock/offline tokens — they are not real JWTs
+    if (refresh.startsWith('mock-token-') || refresh.startsWith('demo-')) {
+      this.clearTokens();
+      throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
     }
 
     this.isRefreshing = true;
@@ -89,7 +135,13 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        throw new Error('Refresh token invalid');
+        // Parse backend error detail if available
+        let detail = 'Your session has expired. Please log in again.';
+        try {
+          const errData = await response.json();
+          if (typeof errData.detail === 'string') detail = errData.detail;
+        } catch {}
+        throw { message: detail, status: response.status } as ApiError;
       }
 
       const data = await response.json();
@@ -97,9 +149,11 @@ class ApiClient {
       this.isRefreshing = false;
       this.onTokenRefreshed(data.access_token);
       return data.access_token;
-    } catch (err) {
+    } catch (err: any) {
       this.isRefreshing = false;
-      throw err;
+      // Propagate structured errors as-is; wrap raw errors
+      if (err?.status) throw err;
+      throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
     } finally {
       clearTimeout(timer);
     }
@@ -133,14 +187,14 @@ class ApiClient {
       });
     } catch (fetchErr: any) {
       clearTimeout(timer);
-      // Silence continuous background polling warnings when serving local fallback store
       throw { message: 'Service unavailable or connection reset. Please try again.', status: 503 } as ApiError;
     } finally {
       clearTimeout(timer);
     }
 
     if (response.status === 401) {
-      if (token) {
+      // Only attempt token refresh if we have a real (non-mock) token
+      if (token && !token.startsWith('mock-token-') && !token.startsWith('demo-')) {
         try {
           const newToken = await this.refreshTokens();
           headers.set('Authorization', `Bearer ${newToken}`);
@@ -156,11 +210,15 @@ class ApiClient {
           } finally {
             clearTimeout(retryTimer);
           }
-        } catch (err) {
-          throw { message: 'Session expired. Please log in again.', status: 401 } as ApiError;
+        } catch (err: any) {
+          // Propagate the specific error from refreshTokens or the retried request
+          if (err?.status) throw err;
+          throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
         }
       } else {
-        throw { message: 'Not authenticated', status: 401 } as ApiError;
+        // Mock/offline token — clear it and signal session expired
+        this.clearTokens();
+        throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
       }
     }
 
@@ -169,28 +227,28 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      let message = 'An error occurred';
-      let code = undefined;
+      let backendDetail: string | undefined;
+      let code: string | undefined;
       try {
         const errorData = await response.json();
-        // FastAPI Pydantic validation errors return detail as an array of objects:
-        // [{ "loc": [...], "msg": "...", "type": "..." }]
+        // FastAPI Pydantic validation errors return detail as an array
         if (Array.isArray(errorData.detail)) {
-          // Extract the first human-readable message from validation errors
           const firstError = errorData.detail[0];
-          message = firstError?.msg || firstError?.message || message;
-          // Strip the Pydantic "Value error, " prefix if present
-          message = message.replace(/^Value error,\s*/i, '');
+          backendDetail = firstError?.msg || firstError?.message;
+          if (backendDetail) {
+            backendDetail = backendDetail.replace(/^Value error,\s*/i, '');
+          }
         } else if (typeof errorData.detail === 'string') {
-          message = errorData.detail;
+          backendDetail = errorData.detail;
         } else if (typeof errorData.message === 'string') {
-          message = errorData.message;
+          backendDetail = errorData.message;
         }
         code = errorData.code;
       } catch (e) {
-        // Fallback for non-JSON errors
-        message = response.statusText || message;
+        backendDetail = response.statusText || undefined;
       }
+
+      const message = buildErrorMessage(response.status, backendDetail);
       throw { message, code, status: response.status } as ApiError;
     }
 
@@ -218,6 +276,14 @@ class ApiClient {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    });
+  }
+
+  public patch<T>(endpoint: string, body?: any, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
       body: body instanceof FormData ? body : JSON.stringify(body),
     });
   }

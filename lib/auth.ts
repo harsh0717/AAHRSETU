@@ -352,6 +352,8 @@ export async function toggleDepartmentStatus(id: string, active: boolean): Promi
 
 export async function login(payload: any): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
   const rememberDevice = Boolean(payload.remember_device);
+
+  // ── 1. Try real backend authentication ────────────────────────────────────────
   try {
     const data = await api.post<any>('/auth/login', payload);
     if (data && data.access_token && data.user) {
@@ -360,54 +362,38 @@ export async function login(payload: any): Promise<{ success: boolean; user?: Us
       setSession(sessionUser, rememberDevice);
       if (typeof window !== 'undefined') {
         localStorage.setItem('aharsetu_lang', sessionUser.preferred_language || 'en');
+        localStorage.removeItem('aharsetu_offline_session');
       }
       return { success: true, user: sessionUser };
     }
   } catch (err: any) {
-    if (typeof window !== 'undefined') {
-      const demoEnabled = localStorage.getItem('aharsetu_demo_enabled') !== 'false';
-      if (!demoEnabled) {
-        throw err;
-      }
+    // 4xx = credentials rejected by server — do NOT fall through to offline mode
+    if (err?.status && err.status >= 400 && err.status < 500) {
+      return { success: false, error: err.message || 'Incorrect email or password.' };
     }
-    // Fallback to local accounts lookup
+    // Network / backend-down error — fall through to offline session
+    console.warn('[AUTH] Backend unreachable — offline session mode:', err?.message);
   }
 
+  // ── 2. Offline fallback (backend unreachable only) ───────────────────────
+  // Uses 'offline-session' tokens. api.ts will NOT send these to the backend,
+  // preventing the false "Session expired" loop caused by mock tokens.
   const allUsers = getSavedUsers();
   const matched = allUsers.find(u => u.email.toLowerCase() === payload.email?.toLowerCase());
   if (matched) {
     const userToUse = { ...matched };
-    if (payload.role) userToUse.role = payload.role;
     if (payload.department_id) userToUse.department_id = payload.department_id;
-    
-    const mockToken = `mock-token-${userToUse.id}-${Date.now()}`;
-    api.setTokens(mockToken, mockToken);
+    const offlineToken = `offline-session-${userToUse.id}-${Date.now()}`;
+    api.setTokens(offlineToken, offlineToken);
     setSession(userToUse, rememberDevice);
     if (typeof window !== 'undefined') {
       localStorage.setItem('aharsetu_lang', userToUse.preferred_language || 'en');
+      localStorage.setItem('aharsetu_offline_session', 'true');
     }
     return { success: true, user: userToUse };
   }
 
-  // Dynamic session for new test login email
-  const role = payload.role || 'coordinator';
-  const demoSession: UserProfile = {
-    id: Date.now(),
-    name: payload.email?.split('@')[0] || 'Institutional User',
-    email: payload.email || 'user@aharsetu.edu.in',
-    role,
-    department_id: role === 'coordinator' ? (payload.department_id || 'diploma') : null,
-    vendor_id: role === 'vendor' ? 'v1' : null,
-    preferred_language: 'en',
-    active: true,
-    principal_depts: role === 'principal' ? (PRINCIPAL_DEPT_MAP[payload.email?.split('@')[0]?.replace('.', '-') as keyof typeof PRINCIPAL_DEPT_MAP] || (payload.department_id ? [payload.department_id] : ['diploma', 'degree'])) : [],
-    created_at: new Date().toISOString()
-  };
-
-  const mockToken = `mock-token-${demoSession.id}-${Date.now()}`;
-  api.setTokens(mockToken, mockToken);
-  setSession(demoSession, rememberDevice);
-  return { success: true, user: demoSession };
+  return { success: false, error: 'Unable to connect to the server. Please check your connection and try again.' };
 }
 
 export async function logout() {
@@ -422,7 +408,8 @@ export async function logout() {
   }
 
   const refresh = typeof window !== 'undefined' ? localStorage.getItem('aharsetu_refresh_token') : null;
-  if (refresh && !refresh.startsWith('mock-token')) {
+  const isOfflineToken = refresh && (refresh.startsWith('mock-token') || refresh.startsWith('offline-session'));
+  if (refresh && !isOfflineToken) {
     try {
       await fetch('/api/v1/auth/logout', {
         method: 'POST',
@@ -492,6 +479,7 @@ export function clearSession() {
     localStorage.removeItem('aharsetu_persistent_session');
     localStorage.removeItem('aharsetu_access_token');
     localStorage.removeItem('aharsetu_refresh_token');
+    localStorage.removeItem('aharsetu_offline_session');
   } catch {}
 }
 

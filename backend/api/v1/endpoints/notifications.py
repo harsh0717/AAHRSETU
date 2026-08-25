@@ -172,28 +172,36 @@ async def websocket_endpoint(
 
     user_id = None
     try:
-        if actual_token.startswith("demo-"):
-            demo_role = actual_token.replace("demo-", "")
-            user = db.query(User).filter(User.role == demo_role, User.active == True).first()
-            if user:
-                user_id = user.id
-            else:
-                user_id = 1
-        else:
-            payload = jwt.decode(actual_token, settings.SECRET_KEY, algorithms=["HS256"])
-            exp = payload.get("exp")
-            if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
-                logger.warning("[WS AUTH] Connection rejected: Token expired")
-                await websocket.accept(subprotocol=subprotocol_selected)
-                await websocket.close(code=1008)
-                return
-            user_id_str = payload.get("sub")
-            if not user_id_str:
-                logger.warning("[WS AUTH] Connection rejected: Missing sub claim")
-                await websocket.accept(subprotocol=subprotocol_selected)
-                await websocket.close(code=1008)
-                return
-            user_id = int(user_id_str)
+        # Reject offline/demo tokens — WebSocket requires real JWT
+        if actual_token.startswith(("demo-", "mock-token-", "offline-session-")):
+            logger.warning("[WS AUTH] Connection rejected: Offline/demo tokens not accepted for WebSocket")
+            await websocket.accept(subprotocol=subprotocol_selected)
+            await websocket.close(code=1008)
+            return
+
+        payload = jwt.decode(actual_token, settings.SECRET_KEY, algorithms=["HS256"])
+        token_type = payload.get("type")
+        if token_type != "access":
+            logger.warning("[WS AUTH] Connection rejected: Not an access token")
+            await websocket.accept(subprotocol=subprotocol_selected)
+            await websocket.close(code=1008)
+            return
+
+        from datetime import datetime, timezone
+        exp = payload.get("exp")
+        if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
+            logger.warning("[WS AUTH] Connection rejected: Token expired")
+            await websocket.accept(subprotocol=subprotocol_selected)
+            await websocket.close(code=1008)
+            return
+
+        user_id_str = payload.get("sub")
+        if not user_id_str:
+            logger.warning("[WS AUTH] Connection rejected: Missing sub claim")
+            await websocket.accept(subprotocol=subprotocol_selected)
+            await websocket.close(code=1008)
+            return
+        user_id = int(user_id_str)
     except JWTError as err:
         logger.warning(f"[WS AUTH] Connection rejected: JWT verification failed: {err}")
         await websocket.accept(subprotocol=subprotocol_selected)

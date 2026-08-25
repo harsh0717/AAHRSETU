@@ -46,6 +46,35 @@ try:
             db.execute(text("UPDATE users SET role='administration' WHERE role='dcr';"))
             db.execute(text("UPDATE approval_history SET role='administration' WHERE role='dcr';"))
             db.commit()
+            # Performance indexes — idempotent, safe to re-run
+            perf_indexes = [
+                "CREATE INDEX IF NOT EXISTS idx_users_vendor_id ON users(vendor_id);",
+                "CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);",
+                "CREATE INDEX IF NOT EXISTS idx_users_active ON users(active);",
+                "CREATE INDEX IF NOT EXISTS idx_master_orders_status ON master_orders(status);",
+                "CREATE INDEX IF NOT EXISTS idx_master_orders_dept_id ON master_orders(department_id);",
+                "CREATE INDEX IF NOT EXISTS idx_master_orders_created_by ON master_orders(created_by_id);",
+                "CREATE INDEX IF NOT EXISTS idx_master_orders_created_at ON master_orders(created_at DESC);",
+                "CREATE INDEX IF NOT EXISTS idx_vendor_orders_master_id ON vendor_orders(master_order_id);",
+                "CREATE INDEX IF NOT EXISTS idx_vendor_orders_vendor_id ON vendor_orders(vendor_id);",
+                "CREATE INDEX IF NOT EXISTS idx_vendor_orders_status ON vendor_orders(status);",
+                "CREATE INDEX IF NOT EXISTS idx_vendor_order_items_vendor_order_id ON vendor_order_items(vendor_order_id);",
+                "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(recipient_id);",
+                "CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);",
+                "CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);",
+                "CREATE INDEX IF NOT EXISTS idx_approval_history_order_id ON approval_history(master_order_id);",
+                "CREATE INDEX IF NOT EXISTS idx_bills_order_id ON bills(master_order_id);",
+                "CREATE INDEX IF NOT EXISTS idx_bills_settlement_status ON bills(settlement_status);",
+                "CREATE INDEX IF NOT EXISTS idx_vendor_menu_items_vendor_id ON vendor_menu_items(vendor_id);",
+                "CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);",
+                "CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);",
+            ]
+            for idx_stmt in perf_indexes:
+                try:
+                    db.execute(text(idx_stmt))
+                    db.commit()
+                except Exception:
+                    db.rollback()
         else:
             for stmt in [
                 "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500);",

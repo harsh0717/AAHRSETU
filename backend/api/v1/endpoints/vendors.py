@@ -38,10 +38,15 @@ async def update_my_vendor_status(
     Update the authenticated vendor's canteen status (open, closed, temporarily unavailable).
     Determines vendor identity strictly from the authenticated JWT session context.
     """
-    if current_user.role != "vendor" or not current_user.vendor_id:
+    if current_user.role != "vendor":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only authenticated vendors can update availability."
+            detail="Only users with the 'vendor' role can update their availability."
+        )
+    if not current_user.vendor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not associated with any vendor profile."
         )
     
     vendor_repo = VendorRepository(db)
@@ -49,7 +54,7 @@ async def update_my_vendor_status(
     if not vendor:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Vendor profile not found for the user."
+            detail="The vendor profile associated with your account could not be found."
         )
         
     old_status = vendor.status
@@ -100,12 +105,10 @@ async def update_vendor_status(
     Update vendor status (open, closed, temporarily unavailable).
     Role restricted: Admin can update any, Vendor users can only update their linked vendor.
     """
-    if current_user.role != "admin" and (
-        current_user.role != "vendor" or current_user.vendor_id != vendor_id
-    ):
+    if current_user.role != "admin" and current_user.vendor_id != vendor_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Unauthorized status update"
+            detail="You do not have permission to update this vendor's status."
         )
         
     vendor_repo = VendorRepository(db)

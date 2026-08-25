@@ -281,10 +281,22 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
   async function handleToggleStatus(statusStr: string) {
     setLoading(true);
     try {
-      await updateVendorStatus(vendorId, statusStr);
-      await loadData(vendorId);
+      const updatedVendor = await updateVendorStatus(vendorId, statusStr);
+      // Update vendor details from the authoritative API response
+      setVendorDetails(updatedVendor);
     } catch (err: any) {
-      alert(err.message || 'Error updating status');
+      const status = err?.status;
+      let msg: string;
+      if (status === 401) {
+        msg = 'Your session has expired. Please log in again.';
+      } else if (status === 403) {
+        msg = err.message || 'You do not have permission to update the canteen status.';
+      } else if (status === 404) {
+        msg = 'Canteen vendor profile not found. Please contact the administrator.';
+      } else {
+        msg = err.message || 'Unable to update canteen status. Please try again.';
+      }
+      alert(msg);
     } finally {
       setLoading(false);
     }

@@ -103,13 +103,15 @@ export default function BillsPage() {
     // Compute local summary fallback
     setSummary({
       current_month_total: 0,
+      current_month_bills: 0,
       previous_month_total: 0,
-      ytd_total: 0,
       pending_settlement_total: 0,
+      pending_settlement_bills: 0,
       settled_total: 0,
-      total_bills_count: 0,
-      pending_bills_count: 0,
-      settled_bills_count: 0
+      settled_bills: 0,
+      ytd_total: 0,
+      current_month_name: '',
+      previous_month_name: ''
     });
   }, []);
 

@@ -68,7 +68,7 @@ const FALLBACK_ORDERS: MasterOrder[] = [];
 // Automatic one-time client purge of records to guarantee a clean fresh start
 if (typeof window !== 'undefined') {
   try {
-    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v7';
+    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v8';
     if (!localStorage.getItem(FRESH_KEY)) {
       const keysToRemove = [
         'aharsetu_orders_v1',
@@ -92,14 +92,26 @@ if (typeof window !== 'undefined') {
         'aharsetu_audit_logs_v3',
         'aharsetu_custom_orders',
         'aharsetu_fresh_v2',
-        'aharsetu_fresh_start_2026_08_25_v6'
+        'aharsetu_fresh_start_2026_08_25_v6',
+        'aharsetu_fresh_start_2026_08_25_v7',
+        // Clear stale mock/offline session tokens so next login uses real JWT
+        'aharsetu_offline_session',
       ];
       keysToRemove.forEach(k => localStorage.removeItem(k));
+      // Also clear stale access tokens that may be offline-session tokens
+      const staleToken = localStorage.getItem('aharsetu_access_token');
+      if (staleToken && (staleToken.startsWith('mock-token-') || staleToken.startsWith('offline-session-'))) {
+        localStorage.removeItem('aharsetu_access_token');
+        localStorage.removeItem('aharsetu_refresh_token');
+        sessionStorage.removeItem('aharsetu_access_token');
+        sessionStorage.removeItem('aharsetu_refresh_token');
+      }
       localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
       localStorage.setItem(FRESH_KEY, 'true');
     }
   } catch {}
 }
+
 
 function sanitizeOrderItems(orders: MasterOrder[]): MasterOrder[] {
   return orders.map(o => {

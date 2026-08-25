@@ -194,14 +194,15 @@ export async function getVendors(): Promise<Vendor[]> {
   try {
     const apiVendors = await api.get<Vendor[]>('/vendors');
     if (apiVendors && Array.isArray(apiVendors) && apiVendors.length > 0) {
-      // Backend is source of truth — do NOT apply any localStorage overrides
+      // Backend is authoritative source of truth. Save to local storage for offline use.
+      saveLocalVendors(apiVendors);
       return apiVendors;
     }
   } catch (err) {
     console.warn('[VENDORS] API fetch failed, using local fallback:', err);
   }
-  // True offline fallback — use FALLBACK_VENDORS (hardcoded seed data)
-  return FALLBACK_VENDORS;
+  // True offline fallback — use cached or fallback vendors
+  return getLocalVendors();
 }
 
 export async function getVendorById(id: string): Promise<Vendor | null> {
@@ -241,6 +242,10 @@ export async function updateVendorStatus(vendorId: string, status: string): Prom
     }
 
     if (res) {
+      // Update local storage cache
+      const local = getLocalVendors();
+      const updatedList = local.map(v => v.id === vendorId ? { ...v, ...res } : v);
+      saveLocalVendors(updatedList);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: { vendorId, status, vendor: res } }));
       }
@@ -285,12 +290,13 @@ export async function getVendorMenu(vendorId: string): Promise<MenuItem[]> {
   try {
     const res = await api.get<MenuItem[]>(`/vendors/${vendorId}/menu`);
     if (res && Array.isArray(res)) {
+      saveLocalMenu(vendorId, res);
       return res;
     }
   } catch (err) {
     console.warn(`[VENDORS] API menu fetch for ${vendorId} failed, serving local fallback`);
   }
-  return FALLBACK_MENUS[vendorId] || [];
+  return getLocalMenu(vendorId);
 }
 
 export async function upsertVendorMenuItem(vendorId: string, item: any): Promise<MenuItem> {

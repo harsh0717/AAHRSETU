@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { getSession, logout, UserProfile } from '@/lib/auth';
+import { getSession, logout, initializeApplication, UserProfile } from '@/lib/auth';
 import { ROLE_COLORS, ROLE_LABELS, ROLE_ICONS, DEPARTMENTS } from '@/lib/constants';
 import { NAVIGATION_CONFIG } from '@/lib/navigationConfig';
 import { useI18n } from '@/lib/i18n';
@@ -95,16 +95,30 @@ export default function AppShell({ children, role }: AppShellProps) {
     }
     setSession(s);
 
+    // Refresh user profile asynchronously from backend on mount so names/avatars are fresh
+    initializeApplication().then((fresh) => {
+      if (fresh) setSession(fresh);
+    }).catch(() => {});
+
     // Re-read session whenever profile is updated (from any device via WS or same-device)
-    const handleProfileChange = () => {
-      const updated = getSession();
-      if (updated) setSession(updated);
+    const handleProfileChange = (e?: any) => {
+      if (e?.detail && typeof e.detail === 'object' && e.detail.name) {
+        setSession(e.detail);
+      } else {
+        const updated = getSession();
+        if (updated) setSession(updated);
+      }
     };
+
     window.addEventListener('aharsetu_profile_changed', handleProfileChange);
+    window.addEventListener('aharsetu_session_changed', handleProfileChange);
+    window.addEventListener('aharsetu_user_changed', handleProfileChange);
     window.addEventListener('focus', handleProfileChange);
 
     return () => {
       window.removeEventListener('aharsetu_profile_changed', handleProfileChange);
+      window.removeEventListener('aharsetu_session_changed', handleProfileChange);
+      window.removeEventListener('aharsetu_user_changed', handleProfileChange);
       window.removeEventListener('focus', handleProfileChange);
     };
   }, [router]);

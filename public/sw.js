@@ -1,5 +1,5 @@
 // ── AharSetu Enterprise PWA Service Worker & Mobile Push ──────────────────────
-const CACHE_NAME = "aharsetu-v4.0-shell";
+const CACHE_NAME = "aharsetu-v5.0-shell";
 
 const PRECACHE_ASSETS = [
   "/",

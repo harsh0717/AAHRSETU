@@ -65,10 +65,10 @@ const LOCAL_ORDERS_KEY = 'aharsetu_orders_v5';
 
 const FALLBACK_ORDERS: MasterOrder[] = [];
 
-// Automatic one-time client purge of records to guarantee a clean fresh start
+// Automatic one-time client purge of records to guarantee a clean fresh start & sync
 if (typeof window !== 'undefined') {
   try {
-    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v8';
+    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v9';
     if (!localStorage.getItem(FRESH_KEY)) {
       const keysToRemove = [
         'aharsetu_orders_v1',
@@ -94,8 +94,21 @@ if (typeof window !== 'undefined') {
         'aharsetu_fresh_v2',
         'aharsetu_fresh_start_2026_08_25_v6',
         'aharsetu_fresh_start_2026_08_25_v7',
-        // Clear stale mock/offline session tokens so next login uses real JWT
+        'aharsetu_fresh_start_2026_08_25_v8',
         'aharsetu_offline_session',
+        // Purge stale local user/vendor/menu caches so latest server data syncs cleanly
+        'aharsetu_custom_users',
+        'aharsetu_deleted_user_ids',
+        'aharsetu_vendors_v1',
+        'aharsetu_vendors_v2',
+        'aharsetu_vendors_v3',
+        'aharsetu_menus_v1',
+        'aharsetu_menus_v2',
+        'aharsetu_menus_v3',
+        'aharsetu_menus_v3_v1',
+        'aharsetu_menus_v3_v2',
+        'aharsetu_menus_v3_v3',
+        'aharsetu_menus_v3_v4',
       ];
       keysToRemove.forEach(k => localStorage.removeItem(k));
       // Also clear stale access tokens that may be offline-session tokens

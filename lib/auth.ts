@@ -146,52 +146,22 @@ export function saveCustomUser(user: UserProfile) {
 }
 
 export async function getUsers(): Promise<UserProfile[]> {
-  let baseUsers: UserProfile[] = [];
   try {
     const res = await api.get<UserProfile[]>('/users');
     if (res && Array.isArray(res) && res.length > 0) {
-      baseUsers = res;
+      // Backend is authoritative source of truth. Update local cache for offline use.
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(res));
+        } catch {}
+      }
+      return res;
     }
   } catch (err) {
-    // Serve local users directory
+    // Serve local users directory when offline
   }
 
-  if (baseUsers.length === 0) {
-    return getSavedUsers();
-  }
-
-  // Merge custom user overrides (names, roles, depts) over backend baseUsers
-  try {
-    const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(CUSTOM_USERS_KEY) : null;
-    const custom: UserProfile[] = raw ? JSON.parse(raw) : [];
-    
-    const userMap = new Map<string, UserProfile>();
-    
-    // 1. Add base users from backend
-    baseUsers.forEach(u => {
-      if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-        userMap.set(u.email.toLowerCase(), u);
-      }
-    });
-
-    // 2. Custom users ALWAYS override base users (preserving user updates forever)
-    if (Array.isArray(custom)) {
-      custom.forEach(u => {
-        if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-          const existing = userMap.get(u.email.toLowerCase());
-          userMap.set(u.email.toLowerCase(), {
-            ...(existing || {}),
-            ...u,
-          });
-        }
-      });
-    }
-
-    return Array.from(userMap.values());
-  } catch (e) {
-    return baseUsers;
-  }
+  return getSavedUsers();
 }
 
 export async function createUser(userData: any): Promise<UserProfile> {
@@ -468,6 +438,11 @@ export function setSession(session: UserProfile, rememberDevice = false) {
       localStorage.setItem('aharsetu_persistent_session', JSON.stringify(session));
     } catch {}
   }
+
+  try {
+    window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: session }));
+    window.dispatchEvent(new CustomEvent('aharsetu_session_changed', { detail: session }));
+  } catch {}
 }
 
 export function clearSession() {
@@ -524,6 +499,7 @@ export async function updateUserProfile(payload: {
   setSession(updated, true);
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updated }));
+    window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: updated }));
   }
   return updated;
 }
@@ -544,6 +520,7 @@ export async function uploadAvatar(file: File): Promise<UserProfile> {
   setSession(updated, true);
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: updated }));
+    window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: updated }));
   }
   return updated;
 }
@@ -558,10 +535,15 @@ export async function initializeApplication(): Promise<UserProfile | null> {
     const freshUser = await api.get<UserProfile>('/auth/me');
     if (freshUser) {
       setSession(freshUser, true);
+      saveCustomUser(freshUser);
       if (freshUser.preferred_language) {
         if (typeof window !== 'undefined') {
           localStorage.setItem('aharsetu_lang', freshUser.preferred_language);
         }
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: freshUser }));
+        window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: freshUser }));
       }
       return freshUser;
     }

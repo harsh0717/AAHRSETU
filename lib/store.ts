@@ -61,20 +61,21 @@ export interface MasterOrder {
   history: ApprovalHistory[];
 }
 
-const LOCAL_ORDERS_KEY = 'aharsetu_orders_v4';
+const LOCAL_ORDERS_KEY = 'aharsetu_orders_v5';
 
 const FALLBACK_ORDERS: MasterOrder[] = [];
 
 // Automatic one-time client purge of records to guarantee a clean fresh start
 if (typeof window !== 'undefined') {
   try {
-    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v6';
+    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v7';
     if (!localStorage.getItem(FRESH_KEY)) {
       const keysToRemove = [
         'aharsetu_orders_v1',
         'aharsetu_orders_v2',
         'aharsetu_orders_v3',
         'aharsetu_orders_v4',
+        'aharsetu_orders_v5',
         'aharsetu_bills',
         'aharsetu_bills_v1',
         'aharsetu_settlements',
@@ -90,7 +91,8 @@ if (typeof window !== 'undefined') {
         'aharsetu_audit_logs_v2',
         'aharsetu_audit_logs_v3',
         'aharsetu_custom_orders',
-        'aharsetu_fresh_v2'
+        'aharsetu_fresh_v2',
+        'aharsetu_fresh_start_2026_08_25_v6'
       ];
       keysToRemove.forEach(k => localStorage.removeItem(k));
       localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
@@ -194,14 +196,10 @@ export async function getOrders(): Promise<MasterOrder[]> {
   let orders: MasterOrder[] = [];
   try {
     const apiOrders = await api.get<MasterOrder[]>('/orders');
-    if (apiOrders && Array.isArray(apiOrders) && apiOrders.length > 0) {
-      // Merge: keep API orders as base, then add any locally-created orders not in API response
-      const localOrders = getLocalOrders();
-      const apiIds = new Set(apiOrders.map(o => o.id));
-      const localOnly = localOrders.filter(o => !apiIds.has(o.id));
-      const merged = [...apiOrders, ...localOnly];
-      saveLocalOrders(merged);
-      orders = merged;
+    if (apiOrders && Array.isArray(apiOrders)) {
+      // Backend is authoritative source of truth
+      saveLocalOrders(apiOrders);
+      orders = apiOrders;
     } else {
       orders = getLocalOrders();
     }

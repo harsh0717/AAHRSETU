@@ -65,18 +65,22 @@ const LOCAL_ORDERS_KEY = 'aharsetu_orders_v4';
 
 const FALLBACK_ORDERS: MasterOrder[] = [];
 
-// Automatic one-time client purge of demo data from previous runs
+// Automatic one-time client purge of records to guarantee a clean fresh start
 if (typeof window !== 'undefined') {
   try {
-    const FRESH_KEY = 'aharsetu_fresh_v2';
+    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v6';
     if (!localStorage.getItem(FRESH_KEY)) {
       const keysToRemove = [
         'aharsetu_orders_v1',
         'aharsetu_orders_v2',
         'aharsetu_orders_v3',
         'aharsetu_orders_v4',
+        'aharsetu_bills',
+        'aharsetu_bills_v1',
+        'aharsetu_settlements',
         'aharsetu_settlements_v1',
         'aharsetu_settlements_v2',
+        'aharsetu_settlements_v4',
         'aharsetu_notifications_v1',
         'aharsetu_notifications_v2',
         'aharsetu_notifications_v3',
@@ -85,7 +89,8 @@ if (typeof window !== 'undefined') {
         'aharsetu_audit_logs_v1',
         'aharsetu_audit_logs_v2',
         'aharsetu_audit_logs_v3',
-        'aharsetu_custom_orders'
+        'aharsetu_custom_orders',
+        'aharsetu_fresh_v2'
       ];
       keysToRemove.forEach(k => localStorage.removeItem(k));
       localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
@@ -945,6 +950,9 @@ export async function resetAllData(): Promise<void> {
       'aharsetu_orders_v2',
       'aharsetu_orders_v3',
       'aharsetu_orders_v4',
+      'aharsetu_bills',
+      'aharsetu_bills_v1',
+      'aharsetu_settlements',
       'aharsetu_settlements_v1',
       'aharsetu_settlements_v2',
       'aharsetu_settlements_v4',

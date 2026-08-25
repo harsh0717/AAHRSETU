@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from backend.core.security import get_password_hash
 from backend.models import (
     User, Department, Vendor, VendorMenuItem, MasterOrder,
-    VendorOrder, VendorOrderItem, VendorOrderModification, ApprovalHistory, Notification, AuditLog, UserSession
+    VendorOrder, VendorOrderItem, VendorOrderModification, ApprovalHistory, Notification, AuditLog, UserSession,
+    Bill, Settlement, Payment
 )
 
 
@@ -15,6 +16,9 @@ def seed_all_database(db: Session):
     db.query(AuditLog).delete()
     db.query(UserSession).delete()
     db.query(Notification).delete()
+    db.query(Payment).delete()
+    db.query(Bill).delete()
+    db.query(Settlement).delete()
     db.query(VendorOrderItem).delete()
     db.query(VendorOrderModification).delete()
     db.query(VendorOrder).delete()

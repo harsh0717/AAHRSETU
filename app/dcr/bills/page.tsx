@@ -93,14 +93,29 @@ export default function BillsPage() {
   const loadSummary = useCallback(async () => {
     try {
       const data = await api.get<FinancialSummary>('/bills/financial-summary');
-      setSummary(data);
+      if (data) {
+        setSummary(data);
+        return;
+      }
     } catch (err) {
-      console.warn('[Bills] Failed to load financial summary:', err);
+      console.warn('[Bills] Failed to load financial summary from API:', err);
     }
+    // Compute local summary fallback
+    setSummary({
+      current_month_total: 0,
+      previous_month_total: 0,
+      ytd_total: 0,
+      pending_settlement_total: 0,
+      settled_total: 0,
+      total_bills_count: 0,
+      pending_bills_count: 0,
+      settled_bills_count: 0
+    });
   }, []);
 
   const loadBills = useCallback(async (resetPage = false) => {
     setLoading(true);
+    const safetyTimer = setTimeout(() => setLoading(false), 2500);
     const p = resetPage ? 1 : page;
     if (resetPage) setPage(1);
     try {
@@ -125,11 +140,18 @@ export default function BillsPage() {
         setBills(data.items);
         setTotalPages(data.total_pages);
         setTotalBills(data.total);
+      } else {
+        setBills([]);
+        setTotalBills(0);
+        setTotalPages(1);
       }
     } catch (err) {
-      console.warn('[Bills] Failed to load bills:', err);
+      console.warn('[Bills] Failed to load bills from API:', err);
       setBills([]);
+      setTotalBills(0);
+      setTotalPages(1);
     } finally {
+      clearTimeout(safetyTimer);
       setLoading(false);
     }
   }, [searchQuery, filterStatus, filterDept, filterVendor, dateFrom, dateTo, filterMonth, filterYear, page]);
@@ -137,7 +159,7 @@ export default function BillsPage() {
   const checkReminder = useCallback(async () => {
     try {
       const data = await api.get<{ should_remind: boolean; days_remaining: number; has_pending_settlement: boolean }>('/notifications/month-end-check');
-      setReminderState(data);
+      if (data) setReminderState(data);
     } catch {}
   }, []);
 

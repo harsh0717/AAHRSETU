@@ -81,13 +81,15 @@ export default function SettlementsPage() {
 
   const loadSettlements = useCallback(async () => {
     setLoading(true);
+    const safetyTimer = setTimeout(() => setLoading(false), 2500);
     try {
       const data = await api.get<Settlement[]>('/settlements');
       setSettlements(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.warn('[Settlements] Failed to load:', err);
+      console.warn('[Settlements] Failed to load from API:', err);
       setSettlements([]);
     } finally {
+      clearTimeout(safetyTimer);
       setLoading(false);
     }
   }, []);

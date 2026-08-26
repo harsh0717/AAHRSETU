@@ -349,10 +349,12 @@ export async function toggleDepartmentStatus(id: string, active: boolean): Promi
 
 export async function login(payload: any): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
   const rememberDevice = Boolean(payload.remember_device);
+  const normalizedRole = payload.role === 'administration' ? 'dcr' : payload.role;
+  const backendPayload = { ...payload, role: normalizedRole };
 
   // ── 1. Try real backend authentication ────────────────────────────────────────
   try {
-    const data = await api.post<any>('/auth/login', payload);
+    const data = await api.post<any>('/auth/login', backendPayload);
     if (data && data.access_token && data.user) {
       api.setTokens(data.access_token, data.refresh_token);
       const sessionUser: UserProfile = data.user;
@@ -432,7 +434,9 @@ export function getSession(): UserProfile | null {
     const pathRole = path.split('/')[1];
 
     if (pathRole && ['coordinator', 'principal', 'dcr', 'administration', 'vendor', 'admin'].includes(pathRole)) {
-      const roleRaw = localStorage.getItem(`aharsetu_remember_${pathRole}`);
+      const roleRaw = localStorage.getItem(`aharsetu_remember_${pathRole}`) ||
+        (pathRole === 'administration' ? localStorage.getItem('aharsetu_remember_dcr') : null) ||
+        (pathRole === 'dcr' ? localStorage.getItem('aharsetu_remember_administration') : null);
       if (roleRaw) {
         const roleUser = JSON.parse(roleRaw);
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(roleUser));
@@ -458,6 +462,11 @@ export function setSession(session: UserProfile, rememberDevice = false) {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
   localStorage.setItem(`aharsetu_remember_${session.role}`, JSON.stringify(session));
+  if (session.role === 'dcr') {
+    localStorage.setItem('aharsetu_remember_administration', JSON.stringify(session));
+  } else if (session.role === 'administration') {
+    localStorage.setItem('aharsetu_remember_dcr', JSON.stringify(session));
+  }
 
   if (rememberDevice) {
     try {

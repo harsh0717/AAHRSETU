@@ -27,8 +27,10 @@ class AuthService:
         if not verify_password(password, user.password_hash):
             return None
             
-        # Verify role matches
-        if user.role != role:
+        # Verify role matches (treat dcr and administration as interchangeable)
+        user_role = "dcr" if user.role == "administration" else user.role
+        req_role = "dcr" if role == "administration" else role
+        if user_role != req_role:
             return None
             
         # Verify department matches (for coordinator)

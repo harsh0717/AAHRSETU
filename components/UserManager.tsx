@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getUsers, createUser, upsertUser, deleteUser, getDepartments, UserProfile } from '@/lib/auth';
 import { getVendors, Vendor } from '@/lib/vendors';
-import { ROLE_LABELS, ROLE_ICONS } from '@/lib/constants';
+import { ROLE_LABELS, ROLE_ICONS, ROLE_OPTIONS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 
 import UiverseButton from '@/components/ui/UiverseButton';
@@ -193,13 +193,16 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
     const matchSearch = !search || 
       u.name.toLowerCase().includes(search.toLowerCase()) || 
       u.email.toLowerCase().includes(search.toLowerCase());
-    const matchRole = roleFilter === 'all' || u.role === roleFilter;
+    const matchRole = roleFilter === 'all' || 
+      u.role === roleFilter || 
+      ((roleFilter === 'administration' || roleFilter === 'dcr') && (u.role === 'administration' || u.role === 'dcr'));
     return matchSearch && matchRole;
   });
 
   const ROLE_COLORS_MAP: Record<string, string> = { 
     admin: '#2563EB', 
-    dcr: '#2563EB', 
+    dcr: '#0D9488', 
+    administration: '#0D9488',
     principal: '#2563EB', 
     coordinator: '#2563EB', 
     vendor: '#2563EB' 
@@ -253,7 +256,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
           onChange={e => setRoleFilter(e.target.value)}
         >
           <option value="all">All Roles</option>
-          {Object.entries(ROLE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          {ROLE_OPTIONS.map(opt => <option key={opt.key} value={opt.key}>{opt.icon} {opt.label}</option>)}
         </select>
         
         <UiverseButton 
@@ -468,10 +471,10 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
                     cursor: 'pointer',
                     boxSizing: 'border-box'
                   }}
-                  value={form.role} 
+                  value={form.role === 'dcr' ? 'administration' : form.role} 
                   onChange={e => setForm(f => ({ ...f, role: e.target.value, department_id: '', principal_depts: [], vendor_id: '' }))}
                 >
-                  {Object.entries(ROLE_LABELS).map(([k, v]) => <option key={k} value={k}>{ROLE_ICONS[k]} {v}</option>)}
+                  {ROLE_OPTIONS.map(opt => <option key={opt.key} value={opt.key}>{opt.icon} {opt.label}</option>)}
                 </select>
               </div>
 

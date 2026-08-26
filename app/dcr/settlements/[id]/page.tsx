@@ -76,6 +76,14 @@ export default function SettlementDetailPage() {
   const [loading, setLoading] = useState(true);
   const [exportLoading, setExportLoading] = useState<string | null>(null);
 
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   useEffect(() => {
     if (!settlementId) return;
     const s = getSession();
@@ -92,7 +100,6 @@ export default function SettlementDetailPage() {
         const data = await api.get<Settlement>(`/settlements/${settlementId}/report`);
         setSettlement(data);
       } catch {
-        // Fallback to basic GET
         try {
           const data = await api.get<Settlement>(`/settlements/${settlementId}`);
           setSettlement(data);
@@ -104,7 +111,7 @@ export default function SettlementDetailPage() {
       }
     };
     load();
-  }, [settlementId]);
+  }, [settlementId, router]);
 
   const handleExport = async (type: 'pdf' | 'excel') => {
     if (!settlement) return;
@@ -160,36 +167,35 @@ export default function SettlementDetailPage() {
 
   return (
     <AppShell role={(session.role as 'dcr' | 'administration') || 'dcr'} currentPath="/dcr/settlements">
-      <div>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '32px' }}>
         {/* Header */}
-        <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px 24px', marginBottom: '24px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-            <Link href="/dcr" style={{ color: '#6B7280', textDecoration: 'none', fontSize: '0.85rem' }}>Administration</Link>
-            <span style={{ color: '#D1D5DB' }}>›</span>
-            <Link href="/dcr/settlements" style={{ color: '#6B7280', textDecoration: 'none', fontSize: '0.85rem' }}>Settlements</Link>
-            <span style={{ color: '#D1D5DB' }}>›</span>
-            <span style={{ fontSize: '0.85rem', color: '#0D9488', fontWeight: 600 }}>{settlement.settlement_number}</span>
+        <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>
+            <Link href="/dcr" style={{ color: '#64748B', textDecoration: 'none' }}>Administration</Link>
+            <span>›</span>
+            <Link href="/dcr/settlements" style={{ color: '#64748B', textDecoration: 'none' }}>Settlements</Link>
+            <span>›</span>
+            <span style={{ color: '#0D9488', fontWeight: 700 }}>{settlement.settlement_number}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h1 style={{ margin: '0 0 4px', fontWeight: 800, color: '#0F172A', fontSize: '1.5rem' }}>
-                Settlement Report — {MONTHS[settlement.month - 1]} {settlement.year}
-              </h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#0F766E', fontSize: '0.9rem' }}>{settlement.settlement_number}</span>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, background: ss.bg, color: ss.text, border: `1px solid ${ss.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h1 style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: '1.3rem' }}>
+                  Settlement Report — {MONTHS[settlement.month - 1]} {settlement.year}
+                </h1>
+                <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, background: ss.bg, color: ss.text, border: `1px solid ${ss.border}` }}>
                   {ss.label}
                 </span>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button onClick={() => handleExport('pdf')} disabled={exportLoading === 'pdf'} style={{ padding: '8px 16px', borderRadius: '8px', background: '#EF4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
-                {exportLoading === 'pdf' ? '⏳' : '📄'} Export PDF
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <button onClick={() => handleExport('pdf')} disabled={exportLoading === 'pdf'} style={{ padding: '6px 12px', borderRadius: '8px', background: '#FEF2F2', color: '#991B1B', border: '1px solid #FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>
+                {exportLoading === 'pdf' ? '⏳' : '📄'} PDF
               </button>
-              <button onClick={() => handleExport('excel')} disabled={exportLoading === 'excel'} style={{ padding: '8px 16px', borderRadius: '8px', background: '#22C55E', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
-                {exportLoading === 'excel' ? '⏳' : '📊'} Export Excel
+              <button onClick={() => handleExport('excel')} disabled={exportLoading === 'excel'} style={{ padding: '6px 12px', borderRadius: '8px', background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>
+                {exportLoading === 'excel' ? '⏳' : '📊'} Excel
               </button>
-              <button onClick={() => window.print()} style={{ padding: '8px 16px', borderRadius: '8px', background: '#374151', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
+              <button onClick={() => window.print()} style={{ padding: '6px 12px', borderRadius: '8px', background: '#F8FAFC', color: '#334155', border: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>
                 🖨️ Print
               </button>
             </div>
@@ -197,180 +203,107 @@ export default function SettlementDetailPage() {
         </div>
 
         {/* Settlement KPIs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '12px', marginBottom: '16px' }}>
           {[
-            { label: 'Total Bills', value: String(settlement.total_bills), color: '#3B82F6', icon: '🧾' },
-            { label: 'Total Amount', value: fmtAmount(settlement.total_amount), color: '#0D9488', icon: '💰' },
+            { label: 'Total Bills', value: String(settlement.total_bills), color: '#0284C7', icon: '🧾' },
+            { label: 'Total Amount', value: fmtAmount(settlement.total_amount), color: '#0F766E', icon: '💰' },
             { label: 'Settled Amount', value: fmtAmount(settlement.settled_amount), color: '#059669', icon: '✅' },
             { label: 'Pending Amount', value: fmtAmount(settlement.pending_amount), color: '#D97706', icon: '⏳' },
           ].map((card, i) => (
-            <div key={i} style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderTop: `4px solid ${card.color}`, padding: '16px 20px' }}>
-              <div style={{ fontSize: '1.2rem', marginBottom: '6px' }}>{card.icon}</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: card.color }}>{card.value}</div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', marginTop: '2px' }}>{card.label}</div>
+            <div key={i} style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderTop: `4px solid ${card.color}`, padding: '14px 16px' }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 900, color: card.color }}>{card.value}</div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', marginTop: '2px' }}>{card.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Settlement metadata */}
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px', marginBottom: '20px' }}>
-          <h3 style={{ margin: '0 0 16px', fontWeight: 800, color: '#374151', fontSize: '0.95rem' }}>Settlement Information</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.85rem' }}>
-            {[
-              ['Settlement Number', settlement.settlement_number],
-              ['Period', `${MONTHS[settlement.month - 1]} ${settlement.year}`],
-              ['Status', ss.label],
-              ['Created', fmtDate(settlement.created_at)],
-              ['Finalized', fmtDate(settlement.finalized_at)],
-              ['Created By', settlement.creator_name || '—'],
-            ].map(([label, value], i) => (
-              <div key={i}>
-                <div style={{ color: '#9CA3AF', fontWeight: 700, marginBottom: '2px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-                <div style={{ fontWeight: 700, color: '#0F172A' }}>{value}</div>
-              </div>
-            ))}
-          </div>
-          {settlement.notes && (
-            <div style={{ marginTop: '12px', padding: '10px 14px', background: '#F8FAFC', borderRadius: '8px', fontSize: '0.85rem', color: '#6B7280' }}>
-              <strong>Notes:</strong> {settlement.notes}
-            </div>
-          )}
-        </div>
-
         {/* Department Breakdown */}
         {settlement.department_breakdown && settlement.department_breakdown.length > 0 && (
-          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '20px' }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
-              <h3 style={{ margin: 0, fontWeight: 800, color: '#374151', fontSize: '0.95rem' }}>🏫 Department Expenditure</h3>
+          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '16px' }}>
+            <div style={{ padding: '12px 18px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+              <h3 style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>🏫 Department Expenditure</h3>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Department</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Total Amount</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Settled</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Pending</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {settlement.department_breakdown.map((d, i) => (
-                    <tr key={d.department_id} style={{ borderBottom: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                      <td style={{ padding: '10px 16px', fontWeight: 700 }}>{d.department_name}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', color: '#6B7280' }}>{d.bill_count}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(d.total_amount)}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>{fmtAmount(d.settled_amount)}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', color: '#D97706', fontWeight: 600 }}>{fmtAmount(d.pending_amount)}</td>
+            {isMobileDevice ? (
+              <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {settlement.department_breakdown.map(d => (
+                  <div key={d.department_id} style={{ border: '1px solid #E2E8F0', borderRadius: '10px', padding: '10px 12px', background: '#FAFAFA' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.85rem', color: '#0F172A' }}>{d.department_name}</span>
+                      <span style={{ fontWeight: 900, color: '#0F766E', fontSize: '0.9rem' }}>{fmtAmount(d.total_amount)}</span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>{d.bill_count} bills</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #E2E8F0', background: '#F8FAFC' }}>
+                      <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Department</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Total Amount</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Settled</th>
                     </tr>
-                  ))}
-                  <tr style={{ borderTop: '2px solid #E2E8F0', background: '#F0FDFA' }}>
-                    <td style={{ padding: '10px 16px', fontWeight: 800 }}>TOTAL</td>
-                    <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 800 }}>{settlement.total_bills}</td>
-                    <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 800, color: '#0D9488' }}>{fmtAmount(settlement.total_amount)}</td>
-                    <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>{fmtAmount(settlement.settled_amount)}</td>
-                    <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 800, color: '#D97706' }}>{fmtAmount(settlement.pending_amount)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {settlement.department_breakdown.map((d, i) => (
+                      <tr key={d.department_id} style={{ borderBottom: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                        <td style={{ padding: '8px 14px', fontWeight: 700 }}>{d.department_name}</td>
+                        <td style={{ padding: '8px 14px', textAlign: 'right', color: '#6B7280' }}>{d.bill_count}</td>
+                        <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(d.total_amount)}</td>
+                        <td style={{ padding: '8px 14px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>{fmtAmount(d.settled_amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
         {/* Vendor Breakdown */}
         {settlement.vendor_breakdown && settlement.vendor_breakdown.length > 0 && (
-          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '20px' }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
-              <h3 style={{ margin: 0, fontWeight: 800, color: '#374151', fontSize: '0.95rem' }}>🍽️ Vendor Settlement</h3>
+          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '16px' }}>
+            <div style={{ padding: '12px 18px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+              <h3 style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>🍽️ Vendor Settlements</h3>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Vendor</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Total Amount</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Settled</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Pending</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {settlement.vendor_breakdown.map((v, i) => (
-                    <tr key={v.vendor_id} style={{ borderBottom: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                      <td style={{ padding: '10px 16px', fontWeight: 700 }}>{v.vendor_name}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', color: '#6B7280' }}>{v.bill_count}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(v.total_amount)}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>{fmtAmount(v.settled_amount)}</td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right', color: '#D97706', fontWeight: 600 }}>{fmtAmount(v.pending_amount)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Bill Register */}
-        {settlement.bills && settlement.bills.length > 0 && (
-          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              <h3 style={{ margin: 0, fontWeight: 800, color: '#374151', fontSize: '0.95rem' }}>
-                📋 Bill Register ({settlement.bills.length} bills total)
-              </h3>
-              <div style={{ display: 'flex', gap: '8px', fontSize: '0.75rem', fontWeight: 600 }}>
-                <span style={{ background: '#F0FDFA', border: '1px solid #0D9488', borderRadius: '6px', padding: '3px 8px', color: '#0F766E' }}>
-                  🍽️ Vendor Bill = counted in settlement
-                </span>
-                <span style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', padding: '3px 8px', color: '#6B7280' }}>
-                  📄 Master Invoice = audit record only
-                </span>
+            {isMobileDevice ? (
+              <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {settlement.vendor_breakdown.map(v => (
+                  <div key={v.vendor_id} style={{ border: '1px solid #E2E8F0', borderRadius: '10px', padding: '10px 12px', background: '#FAFAFA' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.85rem', color: '#0F172A' }}>{v.vendor_name}</span>
+                      <span style={{ fontWeight: 900, color: '#059669', fontSize: '0.9rem' }}>{fmtAmount(v.total_amount)}</span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>{v.bill_count} bills</div>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div style={{ padding: '10px 20px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE', fontSize: '0.78rem', color: '#1E40AF' }}>
-              ℹ️ <strong>Note:</strong> Master invoices are consolidated department receipts and are <strong>excluded from settlement amounts</strong> to avoid double-counting. Only vendor-specific bills are used to calculate the settlement total.
-            </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #E2E8F0', background: '#F8FAFC' }}>
-                    <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Type</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Invoice #</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Order ID</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Department</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Vendor</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Amount</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {settlement.bills.map((bill, i) => {
-                    const isMaster = !bill.vendor_name || bill.vendor_name === 'Master Invoice';
-                    return (
-                      <tr key={bill.id} style={{ borderBottom: '1px solid #F3F4F6', background: isMaster ? '#F8FAFC' : (i % 2 === 0 ? 'white' : '#FAFFFE'), opacity: isMaster ? 0.75 : 1 }}>
-                        <td style={{ padding: '8px 14px' }}>
-                          {isMaster
-                            ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#F1F5F9', color: '#64748B', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '2px 6px' }}>MASTER</span>
-                            : <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#F0FDFA', color: '#0F766E', border: '1px solid #0D9488', borderRadius: '4px', padding: '2px 6px' }}>VENDOR</span>
-                          }
-                        </td>
-                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', fontWeight: 700, color: isMaster ? '#94A3B8' : '#0F766E' }}>{bill.invoice_number || bill.id}</td>
-                        <td style={{ padding: '8px 14px', color: '#6B7280' }}>{bill.order_id}</td>
-                        <td style={{ padding: '8px 14px' }}>{bill.department_label || '—'}</td>
-                        <td style={{ padding: '8px 14px', color: isMaster ? '#9CA3AF' : '#374151', fontStyle: isMaster ? 'italic' : 'normal' }}>
-                          {isMaster ? 'Master Invoice (not settled separately)' : bill.vendor_name}
-                        </td>
-                        <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: isMaster ? '#9CA3AF' : '#0F172A' }}>{fmtAmount(bill.amount)}</td>
-                        <td style={{ padding: '8px 14px' }}>
-                          <span style={{ padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700, background: bill.settlement_status === 'SETTLED' ? '#F0FDF4' : '#FFF7ED', color: bill.settlement_status === 'SETTLED' ? '#15803D' : '#C2410C', border: `1px solid ${bill.settlement_status === 'SETTLED' ? '#BBF7D0' : '#FED7AA'}` }}>
-                            {bill.settlement_status?.replace('_', ' ')}
-                          </span>
-                        </td>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #E2E8F0', background: '#F8FAFC' }}>
+                      <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Vendor</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Total Amount</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Settled</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlement.vendor_breakdown.map((v, i) => (
+                      <tr key={v.vendor_id} style={{ borderBottom: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                        <td style={{ padding: '8px 14px', fontWeight: 700 }}>{v.vendor_name}</td>
+                        <td style={{ padding: '8px 14px', textAlign: 'right', color: '#6B7280' }}>{v.bill_count}</td>
+                        <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(v.total_amount)}</td>
+                        <td style={{ padding: '8px 14px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>{fmtAmount(v.settled_amount)}</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

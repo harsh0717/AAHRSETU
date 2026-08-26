@@ -69,6 +69,14 @@ export default function VendorLedgerPage() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Filters
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'INVOICE' | 'PAYMENT'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -398,6 +406,50 @@ export default function VendorLedgerPage() {
             <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📖</div>
               <div style={{ fontWeight: 700 }}>No transaction entries match the filter</div>
+            </div>
+          ) : isMobileDevice ? (
+            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {sortedEntries.map((e, idx) => {
+                const isInvoice = e.type === 'INVOICE';
+                return (
+                  <div key={idx} style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '12px 14px', background: isInvoice ? '#F8FAFC' : '#F0FDF4' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: isInvoice ? '#EFF6FF' : '#DCFCE7',
+                        color: isInvoice ? '#1D4ED8' : '#15803D'
+                      }}>
+                        {isInvoice ? '🧾 INVOICE' : '💸 PAYMENT'}
+                      </span>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 900, color: isInvoice ? '#0369A1' : '#059669' }}>
+                        {isInvoice ? fmtAmount(e.debit) : fmtAmount(e.credit)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.74rem', color: '#64748B', marginBottom: '4px' }}>
+                      {fmtDateTime(e.date)} · Ref: <strong style={{ fontFamily: 'monospace' }}>{e.reference}</strong>
+                    </div>
+                    {e.description && (
+                      <div style={{ fontSize: '0.74rem', color: '#334155', marginBottom: '6px' }}>{e.description}</div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(0,0,0,0.05)', fontSize: '0.74rem' }}>
+                      <span style={{ color: '#64748B' }}>Balance: <strong style={{ color: e.balance > 0 ? '#991B1B' : '#15803D' }}>{fmtAmount(e.balance)}</strong></span>
+                      <span style={{
+                        padding: '1px 6px',
+                        borderRadius: '10px',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        background: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#DCFCE7' : '#FEF3C7',
+                        color: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#15803D' : '#92400E'
+                      }}>
+                        {e.settlement_status}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>

@@ -16,14 +16,14 @@ import styles from './login.module.css';
 const ROLES_LIST = [
   { id: 'coordinator', label: 'Coordinator', icon: 'coordinator', desc: 'Draft department requests' },
   { id: 'principal', label: 'Principal', icon: 'principal', desc: 'Oversee & approve department bills' },
-  { id: 'dcr', label: 'DCR Auditor', icon: 'dcr', desc: 'Audit budgets & settle accounts' },
+  { id: 'dcr', label: 'Administration', icon: 'dcr', desc: 'Audit budgets & settle accounts' },
   { id: 'vendor', label: 'Canteen Vendor', icon: 'vendor', desc: 'Update prices & settle kitchen orders' },
   { id: 'admin', label: 'System Admin', icon: 'admin', desc: 'Configure users & system baseline' },
 ];
 
 const DEMO_ACCOUNTS = [
   { label: 'System Admin', email: 'admin@aharsetu.edu.in', password: 'Admin@123', role: 'admin', department_id: null, icon: 'admin' },
-  { label: 'DCR Auditor', email: 'dcr@aharsetu.edu.in', password: 'DCR@123', role: 'dcr', department_id: null, icon: 'dcr' },
+  { label: 'Administration', email: 'dcr@aharsetu.edu.in', password: 'DCR@123', role: 'dcr', department_id: null, icon: 'dcr' },
   { label: 'Principal (DD)', email: 'principal.dd@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'diploma', icon: 'principal' },
   { label: 'Principal (Pharma)', email: 'principal.pharma@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'pharmacy', icon: 'principal' },
   { label: 'Coordinator (Diploma)', email: 'coord.diploma@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'diploma', icon: 'coordinator' },

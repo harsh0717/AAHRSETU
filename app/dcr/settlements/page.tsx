@@ -1,9 +1,8 @@
 'use client';
 /**
  * Administration Payments & Settlements Hub
- * Professional-grade payment tracking, aging analysis, direct disbursement recording,
- * and monthly settlement finalization workflow.
- * All financial calculations are server-computed (vendor-bills only, no double-counting).
+ * Minimalist, intuitive design for tracking vendor payables, recording disbursements,
+ * and closing monthly institutional reconciliation accounts.
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -139,8 +138,17 @@ export default function SettlementsPage() {
   const router = useRouter();
   const [session, setSession] = useState<UserProfile | null>(null);
 
-  // Tab navigation
-  const [activeTab, setActiveTab] = useState<'overview' | 'record_payment' | 'history' | 'new'>('overview');
+  // Responsive device tracking
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 3 Primary Tabs
+  const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'reconciliation'>('overview');
 
   // Overview / Outstanding state
   const [outstandingData, setOutstandingData] = useState<OutstandingData | null>(null);
@@ -179,9 +187,6 @@ export default function SettlementsPage() {
   const [exportLoading, setExportLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-
-  // Quick Pay Modal from Overview tab
-  const [quickPayVendor, setQuickPayVendor] = useState<OutstandingVendor | null>(null);
 
   const loadOutstanding = useCallback(async () => {
     setOutstandingLoading(true);
@@ -233,9 +238,8 @@ export default function SettlementsPage() {
     }
     setSession(s);
     refreshAll();
-  }, [refreshAll]);
+  }, [refreshAll, router]);
 
-  // Initialise per-vendor details when draft loads
   const initVendorPayments = (vendors: VendorBreakdown[]) => {
     const init: Record<string, VendorPaymentDetail> = {};
     vendors.forEach(v => {
@@ -277,12 +281,11 @@ export default function SettlementsPage() {
       await api.post(`/settlements/${draft.id}/finalize`, {
         vendor_payments: vendorPayments
       });
-      setSuccessMsg(`Settlement ${draft.settlement_number} finalized successfully! All ${draft.vendor_breakdown?.length || 0} vendor(s) recorded.`);
+      setSuccessMsg(`Settlement ${draft.settlement_number} finalized successfully!`);
       setDraft(null);
       setConfirmOpen(false);
       setVendorPayments({});
       await refreshAll();
-      setActiveTab('history');
       setTimeout(() => setSuccessMsg(''), 6000);
     } catch (err: any) {
       setError(err?.detail || err?.message || 'Finalization failed. Please verify settlement totals.');
@@ -326,7 +329,6 @@ export default function SettlementsPage() {
       setPayAmount('');
       setPayUtr('');
       setPayNotes('');
-      setQuickPayVendor(null);
       await refreshAll();
       setTimeout(() => setSuccessMsg(''), 6000);
     } catch (err: any) {
@@ -341,8 +343,7 @@ export default function SettlementsPage() {
     setPayAmount(vendor.outstanding > 0 ? String(vendor.outstanding) : '');
     setPayUtr(`UTR-${Date.now().toString().slice(-6)}`);
     setPayNotes(`Dues settlement for ${vendor.vendor_name}`);
-    setQuickPayVendor(vendor);
-    setActiveTab('record_payment');
+    setActiveTab('payments');
   };
 
   const handleExport = async (settlementId: number, type: 'pdf' | 'excel', number: string) => {
@@ -368,7 +369,6 @@ export default function SettlementsPage() {
 
   const fmtAmount = (n: number) => `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-  const fmtDateTime = (s: string | null) => s ? new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
   if (!session) return null;
 
@@ -384,64 +384,61 @@ export default function SettlementsPage() {
 
   return (
     <AppShell role={(session.role as 'dcr' | 'administration') || 'dcr'} currentPath="/dcr/settlements">
-      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        {/* Top Header Card */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '32px' }}>
+        
+        {/* Minimalist Top Header */}
         <div style={{
           background: 'white',
           borderRadius: '16px',
           border: '1px solid #E2E8F0',
-          padding: '20px 24px',
-          marginBottom: '20px',
+          padding: '16px 20px',
+          marginBottom: '16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '16px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+          gap: '12px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <Link href="/dcr" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>Administration</Link>
-              <span style={{ color: '#CBD5E1' }}>›</span>
-              <span style={{ fontSize: '0.82rem', color: '#0D9488', fontWeight: 700 }}>Payments & Settlements</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>
+              <Link href="/dcr" style={{ color: '#64748B', textDecoration: 'none' }}>Administration</Link>
+              <span>›</span>
+              <span style={{ color: '#0D9488', fontWeight: 700 }}>Settlements & Payments</span>
             </div>
-            <h1 style={{ fontSize: '1.45rem', fontWeight: 800, margin: '0 0 4px', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span>💳</span> Vendor Payments & Settlements
+            <h1 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>
+              💳 Vendor Payments & Settlements
             </h1>
-            <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748B' }}>
-              Enterprise financial ledger, aging analytics, direct disbursement recording, and monthly reconciliation.
-            </p>
           </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <Link href="/dcr/bills" style={{ padding: '8px 14px', borderRadius: '8px', background: '#F8FAFC', color: '#0F766E', border: '1px solid #CBD5E1', textDecoration: 'none', fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🧾 All Bills
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <Link href="/dcr/bills" style={{ padding: '7px 12px', borderRadius: '8px', background: '#F8FAFC', color: '#0F766E', border: '1px solid #CBD5E1', textDecoration: 'none', fontWeight: 700, fontSize: '0.8rem' }}>
+              🧾 Bills Hub
             </Link>
-            <button onClick={refreshAll} style={{ padding: '8px 14px', borderRadius: '8px', background: '#F0FDFA', color: '#0D9488', border: '1px solid #99F6E4', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🔄 Refresh Data
+            <button onClick={refreshAll} style={{ padding: '7px 12px', borderRadius: '8px', background: '#F0FDFA', color: '#0D9488', border: '1px solid #99F6E4', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>
+              🔄 Refresh
             </button>
           </div>
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#15803D', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ✅ {successMsg}
+          <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: '10px', padding: '10px 16px', marginBottom: '14px', color: '#15803D', fontWeight: 700, fontSize: '0.85rem' }}>
+            ✓ {successMsg}
           </div>
         )}
         {error && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#991B1B', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ⚠️ {error}
-            <button onClick={() => setError('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#991B1B', fontWeight: 800, fontSize: '1rem' }}>✕</button>
+          <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '10px', padding: '10px 16px', marginBottom: '14px', color: '#991B1B', fontWeight: 700, fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>⚠️ {error}</span>
+            <button onClick={() => setError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991B1B', fontWeight: 800 }}>✕</button>
           </div>
         )}
 
-        {/* Main Tab Navigation */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #E2E8F0', paddingBottom: '10px', overflowX: 'auto' }}>
+        {/* 3 Clean Modern Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px', overflowX: 'auto' }}>
           {[
-            { id: 'overview', label: '📊 Dues & Aging Overview', count: outstandingData?.summary.vendors_with_dues_count ? `${outstandingData.summary.vendors_with_dues_count} with dues` : undefined },
-            { id: 'record_payment', label: '💸 Record Payment', count: paymentsList.length > 0 ? `${paymentsList.length} logs` : undefined },
-            { id: 'history', label: '📋 Monthly Settlements', count: settlements.length > 0 ? `${settlements.length}` : undefined },
-            { id: 'new', label: '➕ New Monthly Settlement' },
+            { id: 'overview', label: '📊 Dues & Balances', count: outstandingData?.summary.vendors_with_dues_count ? `${outstandingData.summary.vendors_with_dues_count} Dues` : undefined },
+            { id: 'payments', label: '💸 Disburse Payment', count: paymentsList.length > 0 ? `${paymentsList.length}` : undefined },
+            { id: 'reconciliation', label: '📋 Monthly Reconciliation', count: settlements.length > 0 ? `${settlements.length}` : undefined },
           ].map(tab => {
             const isActive = activeTab === tab.id;
             return (
@@ -449,10 +446,10 @@ export default function SettlementsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 style={{
-                  padding: '10px 18px',
+                  padding: '9px 16px',
                   borderRadius: '10px',
                   fontWeight: 700,
-                  fontSize: '0.88rem',
+                  fontSize: '0.85rem',
                   border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
@@ -460,16 +457,16 @@ export default function SettlementsPage() {
                   gap: '8px',
                   background: isActive ? '#0D9488' : '#F1F5F9',
                   color: isActive ? 'white' : '#475569',
-                  boxShadow: isActive ? '0 2px 8px rgba(13, 148, 136, 0.25)' : 'none',
-                  transition: 'all 0.15s ease'
+                  boxShadow: isActive ? '0 2px 6px rgba(13, 148, 136, 0.2)' : 'none',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 <span>{tab.label}</span>
                 {tab.count && (
                   <span style={{
-                    fontSize: '0.72rem',
-                    padding: '2px 7px',
-                    borderRadius: '12px',
+                    fontSize: '0.7rem',
+                    padding: '2px 6px',
+                    borderRadius: '10px',
                     background: isActive ? 'rgba(255,255,255,0.25)' : '#E2E8F0',
                     color: isActive ? 'white' : '#64748B',
                     fontWeight: 800
@@ -483,125 +480,126 @@ export default function SettlementsPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* TAB 1: OUTSTANDING DUES & AGING OVERVIEW */}
+        {/* TAB 1: OVERVIEW & VENDOR DUES */}
         {/* ========================================================================= */}
         {activeTab === 'overview' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* KPI Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-              <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '18px 20px', borderLeft: '5px solid #DC2626' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Outstanding Dues</span>
-                  <span style={{ fontSize: '1.1rem' }}>⏳</span>
-                </div>
-                <div style={{ fontSize: '1.55rem', fontWeight: 900, color: '#991B1B' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Minimal KPI Metric Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '12px' }}>
+              <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderTop: '4px solid #DC2626', padding: '14px 16px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Outstanding Dues</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#991B1B', marginTop: '2px' }}>
                   {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.grand_outstanding || 0)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '4px' }}>
-                  Across {outstandingData?.summary.vendors_with_dues_count || 0} vendor(s) with pending bills
+                <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>
+                  {outstandingData?.summary.vendors_with_dues_count || 0} vendor(s) pending clearance
                 </div>
               </div>
 
-              <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '18px 20px', borderLeft: '5px solid #059669' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Disbursed / Paid</span>
-                  <span style={{ fontSize: '1.1rem' }}>✅</span>
-                </div>
-                <div style={{ fontSize: '1.55rem', fontWeight: 900, color: '#059669' }}>
+              <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderTop: '4px solid #059669', padding: '14px 16px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Disbursed / Paid</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#059669', marginTop: '2px' }}>
                   {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.grand_paid || 0)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '4px' }}>
-                  Total cleared payment disbursements
+                <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>
+                  All cleared vendor payments
                 </div>
               </div>
 
-              <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '18px 20px', borderLeft: '5px solid #0284C7' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Invoiced / Billed</span>
-                  <span style={{ fontSize: '1.1rem' }}>🧾</span>
-                </div>
-                <div style={{ fontSize: '1.55rem', fontWeight: 900, color: '#0369A1' }}>
+              <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderTop: '4px solid #0284C7', padding: '14px 16px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Invoiced / Billed</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0369A1', marginTop: '2px' }}>
                   {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.grand_billed || 0)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '4px' }}>
-                  {outstandingData?.summary.total_pending_bills || 0} pending bill records
+                <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>
+                  {outstandingData?.summary.total_pending_bills || 0} pending bill vouchers
                 </div>
               </div>
             </div>
 
-            {/* Aging Breakdown Buckets Banner */}
-            <div style={{ background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '18px 20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>⏱️</span> Outstanding Payables Aging Analysis
-                </h3>
-                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Real-time maturity tracking</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                <div style={{ background: 'white', borderRadius: '10px', border: '1px solid #86EFAC', padding: '12px 16px' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#15803D', textTransform: 'uppercase' }}>🟢 0 - 30 Days (Current)</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#15803D', marginTop: '4px' }}>
-                    {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.aging_0_30 || 0)}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>Normal payment window</div>
-                </div>
-
-                <div style={{ background: 'white', borderRadius: '10px', border: '1px solid #FDE047', padding: '12px 16px' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#B45309', textTransform: 'uppercase' }}>🟡 31 - 60 Days (Due)</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#B45309', marginTop: '4px' }}>
-                    {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.aging_31_60 || 0)}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>Requires upcoming clearance</div>
-                </div>
-
-                <div style={{ background: 'white', borderRadius: '10px', border: '1px solid #FCA5A5', padding: '12px 16px' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#B91C1C', textTransform: 'uppercase' }}>🔴 &gt; 60 Days (Overdue)</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#B91C1C', marginTop: '4px' }}>
-                    {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.aging_over_60 || 0)}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>Priority settlement needed</div>
-                </div>
+            {/* Compact Aging Status Bar */}
+            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>⏱️ Maturity Aging:</span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ background: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC', borderRadius: '6px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 700 }}>
+                  0-30d: {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.aging_0_30 || 0)}
+                </span>
+                <span style={{ background: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A', borderRadius: '6px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 700 }}>
+                  31-60d: {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.aging_31_60 || 0)}
+                </span>
+                <span style={{ background: '#FEE2E2', color: '#B91C1C', border: '1px solid #FCA5A5', borderRadius: '6px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                  &gt;60d: {outstandingLoading ? '...' : fmtAmount(outstandingData?.summary.aging_over_60 || 0)}
+                </span>
               </div>
             </div>
 
-            {/* Vendor Outstanding Table */}
+            {/* Vendor Balance Register */}
             <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', background: '#FAF5FF' }}>
-                <div>
-                  <h3 style={{ margin: 0, fontWeight: 800, color: '#581C87', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>🍽️</span> Vendor Dues & Settlement Register
-                  </h3>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#7E22CE' }}>
-                    Click &quot;Pay Vendor&quot; to disburse funds, or &quot;Passbook&quot; to inspect full debit/credit history.
-                  </p>
-                </div>
-                <button onClick={() => setActiveTab('record_payment')} style={{ padding: '8px 14px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  💸 Direct Payment Entry
-                </button>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: '0.92rem' }}>
+                  🍽️ Vendor Balance Register
+                </h3>
+                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>{outstandingData?.vendors.length || 0} Canteens</span>
               </div>
 
               {outstandingLoading ? (
-                <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div> Loading vendor ledger analytics...
+                <div style={{ padding: '36px', textAlign: 'center', color: '#94A3B8' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>⏳</div> Loading vendor balances...
                 </div>
               ) : !outstandingData || outstandingData.vendors.length === 0 ? (
-                <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
-                  <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🎉</div>
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: '#1E293B' }}>All vendor accounts are clear!</div>
-                  <div style={{ fontSize: '0.82rem', marginTop: '4px' }}>No outstanding dues or pending vendor bills found.</div>
+                <div style={{ padding: '36px', textAlign: 'center', color: '#94A3B8' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '6px' }}>🎉</div>
+                  <div style={{ fontWeight: 800, color: '#1E293B' }}>All vendor accounts are clear!</div>
+                </div>
+              ) : isMobileDevice ? (
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {outstandingData.vendors.map(v => {
+                    const hasDues = v.outstanding > 0;
+                    return (
+                      <div key={v.vendor_id} style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '14px', background: hasDues ? '#FEF2F2' : '#F8FAFC' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A' }}>{v.vendor_name}</span>
+                          <span style={{ fontSize: '1rem', fontWeight: 900, color: hasDues ? '#DC2626' : '#15803D' }}>
+                            {fmtAmount(v.outstanding)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '10px' }}>
+                          Owner: {v.owner_name} · 📞 {v.phone}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '0.72rem', color: '#475569', marginBottom: '10px' }}>
+                          <div>Invoiced: <strong>{fmtAmount(v.total_billed)}</strong></div>
+                          <div>Paid: <strong style={{ color: '#059669' }}>{fmtAmount(v.total_paid)}</strong></div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                          {hasDues && (
+                            <button
+                              onClick={() => openQuickPay(v)}
+                              style={{ flex: 1, padding: '8px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer' }}
+                            >
+                              💳 Pay Dues
+                            </button>
+                          )}
+                          <Link
+                            href={`/dcr/settlements/vendor/${v.vendor_id}`}
+                            style={{ flex: 1, textAlign: 'center', padding: '8px', borderRadius: '8px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', textDecoration: 'none', fontWeight: 700, fontSize: '0.78rem' }}
+                          >
+                            📖 Passbook
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                     <thead>
                       <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Vendor / Contact</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Total Invoiced</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Total Paid</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>Net Outstanding</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Aging Breakdown</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Last Payment</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Actions</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Vendor</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Invoiced</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Paid</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>Outstanding</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -609,100 +607,34 @@ export default function SettlementsPage() {
                         const hasDues = v.outstanding > 0;
                         return (
                           <tr key={v.vendor_id} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                            <td style={{ padding: '12px 16px' }}>
-                              <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem' }}>🍽️ {v.vendor_name}</div>
-                              <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '2px' }}>
-                                Owner: {v.owner_name} · 📞 {v.phone}
-                              </div>
+                            <td style={{ padding: '10px 14px' }}>
+                              <div style={{ fontWeight: 800, color: '#0F172A' }}>🍽️ {v.vendor_name}</div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{v.owner_name} · {v.phone}</div>
                             </td>
-                            <td style={{ padding: '12px 16px', textAlign: 'right', color: '#475569' }}>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: '#475569' }}>
                               {fmtAmount(v.total_billed)}
-                              <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{v.total_bills_count} bills</div>
                             </td>
-                            <td style={{ padding: '12px 16px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>
                               {fmtAmount(v.total_paid)}
                             </td>
-                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                              <span style={{
-                                fontSize: '1rem',
-                                fontWeight: 900,
-                                color: hasDues ? '#DC2626' : '#15803D'
-                              }}>
+                            <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                              <span style={{ fontSize: '0.92rem', fontWeight: 900, color: hasDues ? '#DC2626' : '#15803D' }}>
                                 {fmtAmount(v.outstanding)}
                               </span>
-                              {hasDues && (
-                                <div style={{ fontSize: '0.7rem', color: '#DC2626', fontWeight: 700 }}>
-                                  {v.pending_bills_count} pending bill{v.pending_bills_count !== 1 ? 's' : ''}
-                                </div>
-                              )}
                             </td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                {v.aging_0_30 > 0 && (
-                                  <span style={{ background: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC', borderRadius: '6px', padding: '2px 6px', fontSize: '0.7rem', fontWeight: 700 }} title="0-30 days old">
-                                    0-30d: {fmtAmount(v.aging_0_30)}
-                                  </span>
-                                )}
-                                {v.aging_31_60 > 0 && (
-                                  <span style={{ background: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A', borderRadius: '6px', padding: '2px 6px', fontSize: '0.7rem', fontWeight: 700 }} title="31-60 days old">
-                                    31-60d: {fmtAmount(v.aging_31_60)}
-                                  </span>
-                                )}
-                                {v.aging_over_60 > 0 && (
-                                  <span style={{ background: '#FEE2E2', color: '#B91C1C', border: '1px solid #FCA5A5', borderRadius: '6px', padding: '2px 6px', fontSize: '0.7rem', fontWeight: 800 }} title="Over 60 days overdue">
-                                    &gt;60d: {fmtAmount(v.aging_over_60)}
-                                  </span>
-                                )}
-                                {!hasDues && (
-                                  <span style={{ color: '#15803D', fontSize: '0.75rem', fontWeight: 700 }}>Settled 0.00</span>
-                                )}
-                              </div>
-                            </td>
-                            <td style={{ padding: '12px 16px' }}>
-                              {v.last_payment_date ? (
-                                <div>
-                                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
-                                    {fmtDate(v.last_payment_date)}
-                                  </div>
-                                  <div style={{ fontSize: '0.72rem', color: '#64748B', fontFamily: 'monospace' }}>
-                                    {v.last_payment_ref || 'Bank Transfer'}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span style={{ color: '#94A3B8', fontSize: '0.75rem' }}>No recent payment</span>
-                              )}
-                            </td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                                 {hasDues && (
                                   <button
                                     onClick={() => openQuickPay(v)}
-                                    style={{
-                                      padding: '5px 12px',
-                                      borderRadius: '6px',
-                                      background: '#0D9488',
-                                      color: 'white',
-                                      border: 'none',
-                                      cursor: 'pointer',
-                                      fontWeight: 700,
-                                      fontSize: '0.75rem'
-                                    }}
+                                    style={{ padding: '5px 12px', borderRadius: '6px', background: '#0D9488', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}
                                   >
                                     💳 Pay Dues
                                   </button>
                                 )}
                                 <Link
                                   href={`/dcr/settlements/vendor/${v.vendor_id}`}
-                                  style={{
-                                    padding: '5px 10px',
-                                    borderRadius: '6px',
-                                    background: '#EFF6FF',
-                                    color: '#1D4ED8',
-                                    border: '1px solid #BFDBFE',
-                                    textDecoration: 'none',
-                                    fontWeight: 700,
-                                    fontSize: '0.75rem'
-                                  }}
+                                  style={{ padding: '5px 10px', borderRadius: '6px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}
                                 >
                                   📖 Passbook
                                 </Link>
@@ -720,25 +652,22 @@ export default function SettlementsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 2: RECORD PAYMENT (DIRECT DISBURSEMENT & LOGS) */}
+        {/* TAB 2: DISBURSE PAYMENT & RECENT LOGS */}
         {/* ========================================================================= */}
-        {activeTab === 'record_payment' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '20px', alignItems: 'start' }}>
-            {/* Payment Form */}
+        {activeTab === 'payments' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '16px', alignItems: 'start' }}>
+            {/* Clean Payment Form */}
             <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#F0FDFA' }}>
-                <h3 style={{ margin: 0, fontWeight: 800, color: '#0F766E', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>💳</span> Record Vendor Payment Entry
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', background: '#F0FDFA' }}>
+                <h3 style={{ margin: 0, fontWeight: 800, color: '#0F766E', fontSize: '0.95rem' }}>
+                  💳 Record Vendor Payment Entry
                 </h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#64748B' }}>
-                  Log actual bank disbursement to vendor account with UTR audit trail.
-                </p>
               </div>
 
-              <form onSubmit={handleRecordPaymentSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <form onSubmit={handleRecordPaymentSubmit} style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '6px', fontSize: '0.82rem' }}>
-                    Select Vendor <span style={{ color: '#DC2626' }}>*</span>
+                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.8rem' }}>
+                    Select Canteen Vendor *
                   </label>
                   <select
                     value={payVendorId}
@@ -753,7 +682,7 @@ export default function SettlementsPage() {
                     style={inputStyle}
                     required
                   >
-                    <option value="">-- Choose Canteen Vendor --</option>
+                    <option value="">-- Choose Vendor --</option>
                     {outstandingData?.vendors.map(v => (
                       <option key={v.vendor_id} value={v.vendor_id}>
                         {v.vendor_name} (Due: ₹{v.outstanding.toLocaleString('en-IN')})
@@ -762,20 +691,14 @@ export default function SettlementsPage() {
                   </select>
                 </div>
 
-                {/* Vendor Balance Live Indicator */}
                 {selectedPayVendorObj && (
-                  <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Current Outstanding</div>
-                      <div style={{ fontSize: '1.15rem', fontWeight: 900, color: selectedPayVendorObj.outstanding > 0 ? '#DC2626' : '#15803D' }}>
-                        {fmtAmount(selectedPayVendorObj.outstanding)}
-                      </div>
-                    </div>
+                  <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Outstanding: <strong style={{ color: selectedPayVendorObj.outstanding > 0 ? '#DC2626' : '#15803D' }}>{fmtAmount(selectedPayVendorObj.outstanding)}</strong></span>
                     {selectedPayVendorObj.outstanding > 0 && (
                       <button
                         type="button"
                         onClick={() => setPayAmount(String(selectedPayVendorObj.outstanding))}
-                        style={{ padding: '4px 10px', borderRadius: '6px', background: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}
+                        style={{ padding: '3px 8px', borderRadius: '4px', background: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC', cursor: 'pointer', fontWeight: 700, fontSize: '0.72rem' }}
                       >
                         ⚡ Set Full Amount
                       </button>
@@ -783,11 +706,9 @@ export default function SettlementsPage() {
                   </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '6px', fontSize: '0.82rem' }}>
-                      Amount (₹) <span style={{ color: '#DC2626' }}>*</span>
-                    </label>
+                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.8rem' }}>Amount (₹) *</label>
                     <input
                       type="number"
                       step="0.01"
@@ -799,11 +720,8 @@ export default function SettlementsPage() {
                       required
                     />
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '6px', fontSize: '0.82rem' }}>
-                      Payment Date
-                    </label>
+                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.8rem' }}>Payment Date</label>
                     <input
                       type="date"
                       value={payDate}
@@ -814,41 +732,26 @@ export default function SettlementsPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '6px', fontSize: '0.82rem' }}>
-                      Payment Mode
-                    </label>
-                    <select
-                      value={payMode}
-                      onChange={e => setPayMode(e.target.value)}
-                      style={inputStyle}
-                    >
+                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.8rem' }}>Payment Mode</label>
+                    <select value={payMode} onChange={e => setPayMode(e.target.value)} style={inputStyle}>
                       {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '6px', fontSize: '0.82rem' }}>
-                      Bank Name
-                    </label>
-                    <select
-                      value={payBank}
-                      onChange={e => setPayBank(e.target.value)}
-                      style={inputStyle}
-                    >
+                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.8rem' }}>Bank / Account</label>
+                    <select value={payBank} onChange={e => setPayBank(e.target.value)} style={inputStyle}>
                       {POPULAR_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '6px', fontSize: '0.82rem' }}>
-                    UTR / Cheque / Transaction Ref #
-                  </label>
+                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.8rem' }}>UTR / Reference #</label>
                   <input
                     type="text"
-                    placeholder="e.g. UTR-SBI-2026082600129"
+                    placeholder="e.g. UTR-SBI-20260826001"
                     value={payUtr}
                     onChange={e => setPayUtr(e.target.value)}
                     style={inputStyle}
@@ -856,9 +759,7 @@ export default function SettlementsPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '6px', fontSize: '0.82rem' }}>
-                    Notes / Remarks (Optional)
-                  </label>
+                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.8rem' }}>Notes (optional)</label>
                   <input
                     type="text"
                     placeholder="e.g. Cleared via Institutional Account"
@@ -872,19 +773,15 @@ export default function SettlementsPage() {
                   type="submit"
                   disabled={recordingPayment}
                   style={{
-                    padding: '12px',
+                    padding: '11px',
                     borderRadius: '8px',
                     background: '#0D9488',
                     color: 'white',
                     border: 'none',
                     cursor: recordingPayment ? 'not-allowed' : 'pointer',
                     fontWeight: 800,
-                    fontSize: '0.95rem',
-                    marginTop: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
+                    fontSize: '0.9rem',
+                    marginTop: '4px'
                   }}
                 >
                   {recordingPayment ? '⏳ Recording...' : '💾 Save Payment Record'}
@@ -894,20 +791,14 @@ export default function SettlementsPage() {
 
             {/* Payment Transactions Log */}
             <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div>
-                  <h3 style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>📜</span> Disbursement Transaction Log
-                  </h3>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748B' }}>
-                    Historical record of all payments made to vendors.
-                  </p>
-                </div>
-
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <h3 style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '0.92rem' }}>
+                  📜 Recent Payments Log
+                </h3>
                 <select
                   value={paymentVendorFilter}
                   onChange={e => setPaymentVendorFilter(e.target.value)}
-                  style={{ ...inputStyle, width: 'auto', padding: '6px 10px', fontSize: '0.78rem' }}
+                  style={{ ...inputStyle, width: 'auto', padding: '5px 8px', fontSize: '0.75rem' }}
                 >
                   <option value="all">All Vendors</option>
                   {outstandingData?.vendors.map(v => (
@@ -917,46 +808,53 @@ export default function SettlementsPage() {
               </div>
 
               {paymentsLoading ? (
-                <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div> Loading disbursement log...
+                <div style={{ padding: '36px', textAlign: 'center', color: '#94A3B8' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>⏳</div> Loading payments...
                 </div>
               ) : filteredPayments.length === 0 ? (
-                <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
-                  <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📝</div>
-                  <div style={{ fontWeight: 700 }}>No payment transactions found</div>
-                  <div style={{ fontSize: '0.8rem', marginTop: '4px' }}>Recorded payments will appear here in chronological order.</div>
+                <div style={{ padding: '36px', textAlign: 'center', color: '#94A3B8' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '6px' }}>📝</div>
+                  <div style={{ fontWeight: 700 }}>No payments recorded yet</div>
+                </div>
+              ) : isMobileDevice ? (
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {filteredPayments.map(p => (
+                    <div key={p.id} style={{ border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px', background: '#F8FAFC' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: 800, fontSize: '0.85rem', color: '#0F172A' }}>{p.vendor_name}</span>
+                        <span style={{ fontWeight: 900, color: '#059669', fontSize: '0.92rem' }}>{fmtAmount(p.amount)}</span>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        {fmtDate(p.payment_date)} · {p.payment_method} ({p.payment_reference || 'Ref'})
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto', maxHeight: '550px' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                <div style={{ overflowX: 'auto', maxHeight: '480px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                     <thead>
                       <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0', position: 'sticky', top: 0, zIndex: 1 }}>
-                        <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Date & Ref</th>
-                        <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Vendor</th>
-                        <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Mode & Bank</th>
-                        <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>Amount</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Date & Ref</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Vendor</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Mode</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>Amount</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredPayments.map((p, idx) => (
                         <tr key={p.id} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                          <td style={{ padding: '10px 14px' }}>
+                          <td style={{ padding: '8px 12px' }}>
                             <div style={{ fontWeight: 700, color: '#0F172A' }}>{fmtDate(p.payment_date)}</div>
-                            <div style={{ fontSize: '0.72rem', color: '#0D9488', fontFamily: 'monospace', fontWeight: 700 }}>
-                              {p.payment_reference}
-                            </div>
+                            <div style={{ fontSize: '0.7rem', color: '#0D9488', fontFamily: 'monospace' }}>{p.payment_reference}</div>
                           </td>
-                          <td style={{ padding: '10px 14px' }}>
-                            <div style={{ fontWeight: 700, color: '#334155' }}>{p.vendor_name}</div>
-                            {p.notes && <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{p.notes}</div>}
-                          </td>
-                          <td style={{ padding: '10px 14px' }}>
-                            <span style={{ padding: '2px 6px', borderRadius: '4px', background: '#F1F5F9', color: '#334155', fontWeight: 700, fontSize: '0.72rem' }}>
+                          <td style={{ padding: '8px 12px', fontWeight: 600, color: '#334155' }}>{p.vendor_name}</td>
+                          <td style={{ padding: '8px 12px' }}>
+                            <span style={{ padding: '2px 6px', borderRadius: '4px', background: '#F1F5F9', color: '#334155', fontWeight: 700, fontSize: '0.7rem' }}>
                               {p.payment_method}
                             </span>
-                            <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px' }}>{p.bank_name || 'Direct Transfer'}</div>
                           </td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 900, color: '#059669', fontSize: '0.92rem' }}>
+                          <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>
                             {fmtAmount(p.amount)}
                           </td>
                         </tr>
@@ -970,316 +868,221 @@ export default function SettlementsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 3: MONTHLY SETTLEMENTS HISTORY */}
+        {/* TAB 3: MONTHLY RECONCILIATION */}
         {/* ========================================================================= */}
-        {activeTab === 'history' && (
-          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC' }}>
-              <div>
-                <h3 style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>📋</span> Monthly Reconciliation Ledger
+        {activeTab === 'reconciliation' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Quick Month Reconcile Generator */}
+            <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '16px 20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h3 style={{ margin: 0, fontWeight: 800, color: '#0F766E', fontSize: '0.95rem' }}>
+                  🗓️ Reconcile Institutional Month
                 </h3>
-                <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748B' }}>
-                  Permanent monthly audit records and institution reconciliation summaries.
-                </p>
+                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Consolidate monthly vendor bills</span>
               </div>
-              <button onClick={() => setActiveTab('new')} style={{ padding: '8px 14px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ➕ Generate Monthly Settlement
-              </button>
-            </div>
 
-            {historyLoading ? (
-              <div style={{ padding: '48px', textAlign: 'center', color: '#9CA3AF' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div> Loading settlements...
-              </div>
-            ) : settlements.length === 0 ? (
-              <div style={{ padding: '48px', textAlign: 'center', color: '#9CA3AF' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>💳</div>
-                <div style={{ fontWeight: 700, marginBottom: '4px' }}>No monthly settlements created yet</div>
-                <div style={{ fontSize: '0.85rem', marginBottom: '16px' }}>Calculate and finalize monthly settlements to maintain permanent records.</div>
-                <button onClick={() => setActiveTab('new')} style={{ padding: '10px 20px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
-                  ➕ Create First Monthly Settlement
-                </button>
-              </div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                  <thead>
-                    <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Settlement #</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Period</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Vendor Bills</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Total Amount</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Status</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Finalized At</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#374151' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {settlements.map((s, idx) => {
-                      const ss = STATUS_STYLES[s.status] || STATUS_STYLES['DRAFT'];
-                      return (
-                        <tr key={s.id} style={{ borderBottom: '1px solid #F3F4F6', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                          <td style={{ padding: '12px 16px', fontWeight: 800, color: '#0F766E', fontFamily: 'monospace' }}>{s.settlement_number}</td>
-                          <td style={{ padding: '12px 16px', fontWeight: 700 }}>{MONTHS[s.month - 1]} {s.year}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', color: '#374151' }}>{s.total_bills}</td>
-                          <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>{fmtAmount(s.total_amount)}</td>
-                          <td style={{ padding: '12px 16px' }}>
-                            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, background: ss.bg, color: ss.text, border: `1px solid ${ss.border}` }}>
-                              {ss.label}
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px 16px', color: '#6B7280', fontSize: '0.8rem' }}>
-                            {s.finalized_at ? fmtDateTime(s.finalized_at) : '—'}
-                          </td>
-                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                              <Link href={`/dcr/settlements/${s.id}`} style={{ padding: '5px 10px', borderRadius: '6px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>
-                                📊 View Details
-                              </Link>
-                              <button
-                                onClick={() => handleExport(s.id, 'pdf', s.settlement_number)}
-                                disabled={exportLoading === `${s.id}-pdf`}
-                                style={{ padding: '5px 10px', borderRadius: '6px', background: '#FEF2F2', color: '#991B1B', border: '1px solid #FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}
-                              >
-                                {exportLoading === `${s.id}-pdf` ? '⏳' : '📄'} PDF
-                              </button>
-                              <button
-                                onClick={() => handleExport(s.id, 'excel', s.settlement_number)}
-                                disabled={exportLoading === `${s.id}-excel`}
-                                style={{ padding: '5px 10px', borderRadius: '6px', background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}
-                              >
-                                {exportLoading === `${s.id}-excel` ? '⏳' : '📊'} Excel
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* TAB 4: NEW MONTHLY SETTLEMENT WORKFLOW */}
-        {/* ========================================================================= */}
-        {activeTab === 'new' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Step 1: Configure */}
-            <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#F0FDFA' }}>
-                <h3 style={{ margin: 0, fontWeight: 800, color: '#0F766E', fontSize: '1rem' }}>Step 1 — Select Reconciliation Period</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6B7280' }}>Choose the month and year to consolidate vendor bill totals</p>
-              </div>
-              <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', alignItems: 'end' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', alignItems: 'end' }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.85rem' }}>Month</label>
-                  <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setDraft(null); setVendorPayments({}); }} style={{ ...inputStyle, padding: '10px 12px' }}>
+                  <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>Month</label>
+                  <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setDraft(null); setVendorPayments({}); }} style={inputStyle}>
                     {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.85rem' }}>Year</label>
-                  <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setDraft(null); setVendorPayments({}); }} style={{ ...inputStyle, padding: '10px 12px' }}>
+                  <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>Year</label>
+                  <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setDraft(null); setVendorPayments({}); }} style={inputStyle}>
                     {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.85rem' }}>Notes (optional)</label>
-                  <input
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    placeholder="e.g. Monthly settlement Aug 2026"
-                    style={{ ...inputStyle, padding: '10px 12px' }}
-                  />
-                </div>
-                <div>
+                <div style={{ gridColumn: 'span 2' }}>
                   <button
                     onClick={handleCalculate}
                     disabled={calculating}
-                    style={{ width: '100%', padding: '11px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', cursor: calculating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', cursor: calculating ? 'not-allowed' : 'pointer', fontWeight: 800, fontSize: '0.85rem' }}
                   >
-                    {calculating ? '⏳ Calculating...' : '🔢 Calculate Settlement'}
+                    {calculating ? '⏳ Consolidating...' : '🔢 Calculate Monthly Settlement'}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Step 2: Per-vendor review cards */}
+            {/* Calculated Draft Summary Card */}
             {draft && (
-              <div style={{ background: 'white', borderRadius: '14px', border: '2px solid #0D9488', overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#F0FDF4', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ background: 'white', borderRadius: '14px', border: '2px solid #0D9488', padding: '18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
-                    <h3 style={{ margin: 0, fontWeight: 800, color: '#15803D', fontSize: '1rem' }}>
-                      Step 2 — Verify & Record Vendor Disbursements
-                    </h3>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6B7280' }}>
-                      {MONTHS[draft.month - 1]} {draft.year} · {draft.settlement_number} · {vendorsInDraft.length} vendor{vendorsInDraft.length !== 1 ? 's' : ''}
-                    </p>
+                    <h4 style={{ margin: 0, fontWeight: 800, color: '#0F766E', fontSize: '0.95rem' }}>
+                      Settlement Draft: {MONTHS[draft.month - 1]} {draft.year} ({draft.settlement_number})
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: '#64748B' }}>{vendorsInDraft.length} vendor(s) · {draft.total_bills} bills</span>
                   </div>
-                  <div style={{ background: '#DCFCE7', border: '1px solid #86EFAC', borderRadius: '8px', padding: '6px 14px', fontWeight: 900, color: '#15803D', fontSize: '1.05rem' }}>
-                    Total to Settle: {fmtAmount(grandDraftTotal)}
+                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#059669' }}>
+                    Total: {fmtAmount(grandDraftTotal)}
                   </div>
                 </div>
 
-                {vendorsInDraft.length === 0 ? (
-                  <div style={{ padding: '36px', textAlign: 'center', color: '#9CA3AF' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔍</div>
-                    <div style={{ fontWeight: 700 }}>No vendor bills found for this period</div>
-                    <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>Make sure orders are completed and invoiced for {MONTHS[draft.month - 1]} {draft.year}.</div>
-                  </div>
-                ) : (
-                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', color: '#1E40AF' }}>
-                      ℹ️ Each vendor is settled <strong>separately</strong>. Amounts shown are derived strictly from vendor bills (master department invoices are excluded to prevent double-counting).
-                    </div>
-
-                    {vendorsInDraft.map((v, i) => {
-                      const vp = vendorPayments[v.vendor_id] || { utr: '', mode: 'NEFT', bank_name: 'State Bank of India (SBI)', notes: '' };
-                      return (
-                        <div key={v.vendor_id} style={{ border: '1px solid #E2E8F0', borderRadius: '10px', overflow: 'hidden' }}>
-                          <div style={{ padding: '12px 16px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <span style={{ background: '#0D9488', color: 'white', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', flexShrink: 0 }}>
-                                {i + 1}
-                              </span>
-                              <div>
-                                <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.95rem' }}>🍽️ {v.vendor_name}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{v.bill_count} bill{v.bill_count !== 1 ? 's' : ''} in period</div>
-                              </div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Disbursement Amount</div>
-                              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#059669' }}>{fmtAmount(v.total_amount)}</div>
-                            </div>
-                          </div>
-
-                          <div style={{ padding: '14px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-                            <div>
-                              <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>Payment Mode</label>
-                              <select
-                                value={vp.mode}
-                                onChange={e => updateVendorPayment(v.vendor_id, 'mode', e.target.value)}
-                                style={inputStyle}
-                              >
-                                {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>Bank / Branch</label>
-                              <select
-                                value={vp.bank_name}
-                                onChange={e => updateVendorPayment(v.vendor_id, 'bank_name', e.target.value)}
-                                style={inputStyle}
-                              >
-                                {POPULAR_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>UTR / Reference No.</label>
-                              <input
-                                type="text"
-                                value={vp.utr}
-                                onChange={e => updateVendorPayment(v.vendor_id, 'utr', e.target.value)}
-                                placeholder="e.g. NEFT20260826001"
-                                style={inputStyle}
-                              />
-                            </div>
-                            <div>
-                              <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>Notes (optional)</label>
-                              <input
-                                type="text"
-                                value={vp.notes}
-                                onChange={e => updateVendorPayment(v.vendor_id, 'notes', e.target.value)}
-                                placeholder="e.g. Month end batch"
-                                style={inputStyle}
-                              />
-                            </div>
-                          </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                  {vendorsInDraft.map(v => {
+                    const vp = vendorPayments[v.vendor_id] || { utr: '', mode: 'NEFT', bank_name: 'State Bank of India (SBI)', notes: '' };
+                    return (
+                      <div key={v.vendor_id} style={{ border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px 14px', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>{v.vendor_name}</div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{v.bill_count} bills</div>
                         </div>
-                      );
-                    })}
-
-                    {/* Grand Total Bar */}
-                    <div style={{ background: '#F0FDFA', border: '2px solid #0D9488', borderRadius: '10px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                      <div>
-                        <div style={{ fontWeight: 800, color: '#0F766E', fontSize: '0.95rem' }}>💰 Consolidated Settlement Amount</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '2px' }}>
-                          {draft.total_bills} vendor bills across {vendorsInDraft.length} vendor(s)
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <input
+                            type="text"
+                            placeholder="UTR / Ref (optional)"
+                            value={vp.utr}
+                            onChange={e => updateVendorPayment(v.vendor_id, 'utr', e.target.value)}
+                            style={{ ...inputStyle, width: '150px', padding: '5px 8px', fontSize: '0.75rem' }}
+                          />
+                          <span style={{ fontWeight: 800, color: '#059669', fontSize: '0.9rem' }}>{fmtAmount(v.total_amount)}</span>
                         </div>
                       </div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0F766E' }}>{fmtAmount(grandDraftTotal)}</div>
-                    </div>
+                    );
+                  })}
+                </div>
 
-                    <button
-                      onClick={() => setConfirmOpen(true)}
-                      style={{ width: '100%', padding: '13px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '1rem' }}
-                    >
-                      ✅ Review & Finalize Settlement Record
-                    </button>
-                  </div>
-                )}
+                <button
+                  onClick={() => setConfirmOpen(true)}
+                  style={{ width: '100%', padding: '11px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '0.9rem' }}
+                >
+                  ✅ Confirm & Finalize Settlement
+                </button>
               </div>
             )}
+
+            {/* Reconciliation Ledger History */}
+            <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+                <h3 style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '0.92rem' }}>
+                  📋 Reconciliation Ledger Records
+                </h3>
+              </div>
+
+              {historyLoading ? (
+                <div style={{ padding: '36px', textAlign: 'center', color: '#94A3B8' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>⏳</div> Loading settlements...
+                </div>
+              ) : settlements.length === 0 ? (
+                <div style={{ padding: '36px', textAlign: 'center', color: '#94A3B8' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '6px' }}>💳</div>
+                  <div style={{ fontWeight: 700 }}>No monthly settlement records found</div>
+                </div>
+              ) : isMobileDevice ? (
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {settlements.map(s => {
+                    const ss = STATUS_STYLES[s.status] || STATUS_STYLES['DRAFT'];
+                    return (
+                      <div key={s.id} style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '14px', background: '#F8FAFC' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F766E' }}>{MONTHS[s.month - 1]} {s.year}</span>
+                          <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 700, background: ss.bg, color: ss.text, border: `1px solid ${ss.border}` }}>
+                            {ss.label}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748B', marginBottom: '8px' }}>
+                          Ref: {s.settlement_number} · {s.total_bills} bills
+                        </div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0F172A', marginBottom: '10px' }}>
+                          {fmtAmount(s.total_amount)}
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <Link href={`/dcr/settlements/${s.id}`} style={{ flex: 1, textAlign: 'center', padding: '7px', borderRadius: '6px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', textDecoration: 'none', fontWeight: 700, fontSize: '0.75rem' }}>
+                            View
+                          </Link>
+                          <button onClick={() => handleExport(s.id, 'pdf', s.settlement_number)} style={{ padding: '7px 10px', borderRadius: '6px', background: '#FEF2F2', color: '#991B1B', border: '1px solid #FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}>
+                            PDF
+                          </button>
+                          <button onClick={() => handleExport(s.id, 'excel', s.settlement_number)} style={{ padding: '7px 10px', borderRadius: '6px', background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}>
+                            Excel
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                    <thead>
+                      <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
+                        <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Settlement #</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Period</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>Total Amount</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#374151' }}>Status</th>
+                        <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#374151' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {settlements.map((s, idx) => {
+                        const ss = STATUS_STYLES[s.status] || STATUS_STYLES['DRAFT'];
+                        return (
+                          <tr key={s.id} style={{ borderBottom: '1px solid #F3F4F6', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                            <td style={{ padding: '10px 14px', fontWeight: 800, color: '#0F766E', fontFamily: 'monospace' }}>{s.settlement_number}</td>
+                            <td style={{ padding: '10px 14px', fontWeight: 700 }}>{MONTHS[s.month - 1]} {s.year}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: '#374151' }}>{s.total_bills}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>{fmtAmount(s.total_amount)}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                              <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, background: ss.bg, color: ss.text, border: `1px solid ${ss.border}` }}>
+                                {ss.label}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                <Link href={`/dcr/settlements/${s.id}`} style={{ padding: '4px 8px', borderRadius: '6px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', textDecoration: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
+                                  View
+                                </Link>
+                                <button onClick={() => handleExport(s.id, 'pdf', s.settlement_number)} style={{ padding: '4px 8px', borderRadius: '6px', background: '#FEF2F2', color: '#991B1B', border: '1px solid #FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.72rem' }}>
+                                  PDF
+                                </button>
+                                <button onClick={() => handleExport(s.id, 'excel', s.settlement_number)} style={{ padding: '4px 8px', borderRadius: '6px', background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0', cursor: 'pointer', fontWeight: 700, fontSize: '0.72rem' }}>
+                                  Excel
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* Confirmation Modal */}
         {confirmOpen && draft && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '28px', maxWidth: '560px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.35)', maxHeight: '90vh', overflowY: 'auto' }}>
-              <h2 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>✅ Confirm Settlement Finalization</h2>
-              <p style={{ margin: '0 0 16px', color: '#6B7280', fontSize: '0.85rem' }}>
-                You are finalizing settlement for <strong>{MONTHS[draft.month - 1]} {draft.year}</strong> ({draft.settlement_number}).
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', maxWidth: '500px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+              <h3 style={{ margin: '0 0 6px', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+                Confirm Final Settlement
+              </h3>
+              <p style={{ margin: '0 0 14px', color: '#64748B', fontSize: '0.82rem' }}>
+                Finalizing settlement for <strong>{MONTHS[draft.month - 1]} {draft.year}</strong> will lock these records.
               </p>
 
-              <div style={{ border: '1px solid #E2E8F0', borderRadius: '10px', overflow: 'hidden', marginBottom: '16px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-                  <thead>
-                    <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700 }}>Vendor</th>
-                      <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>Amount</th>
-                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700 }}>Mode</th>
-                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700 }}>Reference</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vendorsInDraft.map((v, i) => {
-                      const vp = vendorPayments[v.vendor_id] || { utr: '', mode: 'NEFT', bank_name: '', notes: '' };
-                      return (
-                        <tr key={v.vendor_id} style={{ borderTop: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                          <td style={{ padding: '8px 12px', fontWeight: 700 }}>🍽️ {v.vendor_name}</td>
-                          <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>{fmtAmount(v.total_amount)}</td>
-                          <td style={{ padding: '8px 12px' }}>{vp.mode}</td>
-                          <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontSize: '0.74rem', color: '#64748B' }}>{vp.utr || 'Auto-generated'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ borderTop: '2px solid #0D9488', background: '#F0FDFA' }}>
-                      <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0F766E' }}>TOTAL</td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 900, color: '#0F766E', fontSize: '1.05rem' }}>{fmtAmount(grandDraftTotal)}</td>
-                      <td colSpan={2} style={{ padding: '10px 12px', fontSize: '0.75rem', color: '#6B7280' }}>{draft.total_bills} bills</td>
-                    </tr>
-                  </tfoot>
-                </table>
+              <div style={{ background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, color: '#0F766E', fontSize: '0.85rem' }}>Total Settlement Amount:</span>
+                <span style={{ fontWeight: 900, color: '#0F766E', fontSize: '1.2rem' }}>{fmtAmount(grandDraftTotal)}</span>
               </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => setConfirmOpen(false)} disabled={finalizing} style={{ flex: 1, padding: '11px', borderRadius: '8px', background: '#F1F5F9', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#475569' }}>
-                  ← Back & Edit
+                <button onClick={() => setConfirmOpen(false)} disabled={finalizing} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#F1F5F9', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>
+                  Cancel
                 </button>
-                <button onClick={handleFinalize} disabled={finalizing} style={{ flex: 2, padding: '11px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: finalizing ? 'not-allowed' : 'pointer', fontWeight: 800, fontSize: '0.95rem' }}>
-                  {finalizing ? '⏳ Finalizing...' : '✅ Confirm & Close Month'}
+                <button onClick={handleFinalize} disabled={finalizing} style={{ flex: 2, padding: '10px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: finalizing ? 'not-allowed' : 'pointer', fontWeight: 800, fontSize: '0.85rem' }}>
+                  {finalizing ? '⏳ Finalizing...' : '✓ Confirm & Finalize'}
                 </button>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </AppShell>
   );

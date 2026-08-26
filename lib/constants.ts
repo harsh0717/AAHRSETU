@@ -32,16 +32,24 @@ export const PRINCIPAL_DEPT_MAP = {
 export const ROLES = {
   COORDINATOR:    'coordinator',
   PRINCIPAL:      'principal',
-  DCR:            'dcr',            // Legacy — being migrated to ADMINISTRATION
-  ADMINISTRATION: 'administration', // New role name for DCR
+  DCR:            'dcr',            // Legacy — aliased to ADMINISTRATION
+  ADMINISTRATION: 'administration', // Canonical role name for DCR
   VENDOR:         'vendor',
   ADMIN:          'admin',
 };
 
+export const ROLE_OPTIONS = [
+  { key: 'coordinator', label: 'Coordinator', icon: '👤' },
+  { key: 'principal', label: 'Principal', icon: '🎓' },
+  { key: 'administration', label: 'Administration', icon: '🏛️' },
+  { key: 'vendor', label: 'Canteen Vendor', icon: '🍽️' },
+  { key: 'admin', label: 'System Admin', icon: '⚙️' },
+];
+
 export const ROLE_LABELS: Record<string, string> = {
   coordinator:    'Coordinator',
   principal:      'Principal',
-  dcr:            'Administration',  // Legacy key — shown as Administration
+  dcr:            'Administration',
   administration: 'Administration',
   vendor:         'Canteen Vendor',
   admin:          'System Admin',

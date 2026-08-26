@@ -91,8 +91,14 @@ def check_role(required_roles: list[str]):
     Dependency factory: ensures the authenticated user holds one of the
     required roles, returning 403 (not 401) for insufficient permissions.
     """
+    expanded_roles = set(required_roles)
+    if "dcr" in expanded_roles:
+        expanded_roles.add("administration")
+    if "administration" in expanded_roles:
+        expanded_roles.add("dcr")
+
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in required_roles:
+        if current_user.role not in expanded_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Access denied. Required role(s): {', '.join(required_roles)}. "

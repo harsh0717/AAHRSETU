@@ -24,6 +24,14 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
 
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Lists
   const [orders, setOrders] = useState<MasterOrder[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -356,197 +364,324 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
             {/* TAB: APPROVAL QUEUE (PENDING AUDITS) */}
             {activeTab === 'queue' && (
               <div className="card" style={{ padding: '20px' }}>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title Description</th>
-                        <th>Department</th>
-                        <th>Prepared By</th>
-                        <th>Estimated Bill</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pendingQueue.map(o => (
-                        <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td>{o.department_label}</td>
-                          <td>{o.created_by_name}</td>
-                          <td style={{ fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                          <td><StatusBadge status={o.status} size="sm" /></td>
-                        </tr>
-                      ))}
-                      {pendingQueue.length === 0 && (
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {pendingQueue.map(o => (
+                      <div key={o.id} style={{ border: '1px solid #FDE68A', padding: '16px', borderRadius: '16px', background: '#FFFBEB', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#B45309' }}>{o.id}</span>
+                          <StatusBadge status={o.status} size="sm" />
+                        </div>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #FDE68A' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {pendingQueue.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>No orders currently awaiting audit.</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No orders currently awaiting audit.
-                          </td>
+                          <th>Order ID</th>
+                          <th>Title Description</th>
+                          <th>Department</th>
+                          <th>Prepared By</th>
+                          <th>Estimated Bill</th>
+                          <th>Status</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {pendingQueue.map(o => (
+                          <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                            <td style={{ fontWeight: 700 }}>{o.id}</td>
+                            <td style={{ fontWeight: 600 }}>{o.title}</td>
+                            <td>{o.department_label}</td>
+                            <td>{o.created_by_name}</td>
+                            <td style={{ fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                            <td><StatusBadge status={o.status} size="sm" /></td>
+                          </tr>
+                        ))}
+                        {pendingQueue.length === 0 && (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                              No orders currently awaiting audit.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
             {/* TAB: APPROVED ORDERS */}
             {activeTab === 'approved' && (
               <div className="card" style={{ padding: '20px' }}>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title Description</th>
-                        <th>Department</th>
-                        <th>Prepared By</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {approvedOrders.map(o => (
-                        <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td>{o.department_label}</td>
-                          <td>{o.created_by_name}</td>
-                          <td><StatusBadge status={o.status} size="sm" /></td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                        </tr>
-                      ))}
-                      {approvedOrders.length === 0 && (
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {approvedOrders.map(o => (
+                      <div key={o.id} style={{ border: '1px solid #A7F3D0', padding: '16px', borderRadius: '16px', background: '#ECFDF5', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#047857' }}>{o.id}</span>
+                          <StatusBadge status={o.status} size="sm" />
+                        </div>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #A7F3D0' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {approvedOrders.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>No audited and cleared orders.</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No audited and cleared orders.
-                          </td>
+                          <th>Order ID</th>
+                          <th>Title Description</th>
+                          <th>Department</th>
+                          <th>Prepared By</th>
+                          <th>Status</th>
+                          <th style={{ textAlign: 'right' }}>Amount</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {approvedOrders.map(o => (
+                          <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                            <td style={{ fontWeight: 700 }}>{o.id}</td>
+                            <td style={{ fontWeight: 600 }}>{o.title}</td>
+                            <td>{o.department_label}</td>
+                            <td>{o.created_by_name}</td>
+                            <td><StatusBadge status={o.status} size="sm" /></td>
+                            <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                          </tr>
+                        ))}
+                        {approvedOrders.length === 0 && (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                              No audited and cleared orders.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
             {/* TAB: REJECTED ORDERS */}
             {activeTab === 'rejected' && (
               <div className="card" style={{ padding: '20px' }}>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title Description</th>
-                        <th>Department</th>
-                        <th>Prepared By</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rejectedOrders.map(o => (
-                        <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td>{o.department_label}</td>
-                          <td>{o.created_by_name}</td>
-                          <td><StatusBadge status={o.status} size="sm" /></td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                        </tr>
-                      ))}
-                      {rejectedOrders.length === 0 && (
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {rejectedOrders.map(o => (
+                      <div key={o.id} style={{ border: '1px solid #FECACA', padding: '16px', borderRadius: '16px', background: '#FEF2F2', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#991B1B' }}>{o.id}</span>
+                          <StatusBadge status={o.status} size="sm" />
+                        </div>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #FECACA' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {rejectedOrders.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>No rejected budgets.</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No rejected budgets.
-                          </td>
+                          <th>Order ID</th>
+                          <th>Title Description</th>
+                          <th>Department</th>
+                          <th>Prepared By</th>
+                          <th>Status</th>
+                          <th style={{ textAlign: 'right' }}>Amount</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {rejectedOrders.map(o => (
+                          <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                            <td style={{ fontWeight: 700 }}>{o.id}</td>
+                            <td style={{ fontWeight: 600 }}>{o.title}</td>
+                            <td>{o.department_label}</td>
+                            <td>{o.created_by_name}</td>
+                            <td><StatusBadge status={o.status} size="sm" /></td>
+                            <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                          </tr>
+                        ))}
+                        {rejectedOrders.length === 0 && (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                              No rejected budgets.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
             {/* TAB: AUDIT HISTORY */}
             {activeTab === 'history' && (
               <div className="card" style={{ padding: '20px' }}>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title Description</th>
-                        <th>Department</th>
-                        <th>Prepared By</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {historyOrders.map(o => (
-                        <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td>{o.department_label}</td>
-                          <td>{o.created_by_name}</td>
-                          <td><StatusBadge status={o.status} size="sm" /></td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                        </tr>
-                      ))}
-                      {historyOrders.length === 0 && (
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {historyOrders.map(o => (
+                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <StatusBadge status={o.status} size="sm" />
+                        </div>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {historyOrders.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>No previous audit trails logged.</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No previous audit trails logged.
-                          </td>
+                          <th>Order ID</th>
+                          <th>Title Description</th>
+                          <th>Department</th>
+                          <th>Prepared By</th>
+                          <th>Status</th>
+                          <th style={{ textAlign: 'right' }}>Amount</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {historyOrders.map(o => (
+                          <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                            <td style={{ fontWeight: 700 }}>{o.id}</td>
+                            <td style={{ fontWeight: 600 }}>{o.title}</td>
+                            <td>{o.department_label}</td>
+                            <td>{o.created_by_name}</td>
+                            <td><StatusBadge status={o.status} size="sm" /></td>
+                            <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                          </tr>
+                        ))}
+                        {historyOrders.length === 0 && (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                              No previous audit trails logged.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
             {/* TAB: BILLS / INVOICES */}
             {activeTab === 'bills' && (
               <div className="card" style={{ padding: '20px' }}>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title Description</th>
-                        <th>Billing Date</th>
-                        <th style={{ textAlign: 'right' }}>Bill Amount</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ordersWithBills.map(o => (
-                        <tr key={o.id}>
-                          <td style={{ fontWeight: 700 }}>{o.id}</td>
-                          <td style={{ fontWeight: 600 }}>{o.title}</td>
-                          <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                          <td style={{ textAlign: 'center' }}>
-                            <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
-                              🧾 Print Bill
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                      {ordersWithBills.length === 0 && (
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {ordersWithBills.map(o => (
+                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: 'white' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                        </div>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: '#64748B' }}>
+                          Billing Date: {o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}
+                        </p>
+                        <Link
+                          href={`/bill/${o.id}`}
+                          style={{
+                            display: 'block',
+                            textAlign: 'center',
+                            padding: '10px',
+                            background: '#F0FDFA',
+                            color: '#0D9488',
+                            borderRadius: '10px',
+                            fontWeight: 800,
+                            fontSize: '0.85rem',
+                            textDecoration: 'none',
+                            border: '1px solid #99F6E4'
+                          }}
+                        >
+                          🧾 View & Print Bill
+                        </Link>
+                      </div>
+                    ))}
+                    {ordersWithBills.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>
+                        No invoice sheets found.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
                         <tr>
-                          <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No invoice sheets found.
-                          </td>
+                          <th>Order ID</th>
+                          <th>Title Description</th>
+                          <th>Billing Date</th>
+                          <th style={{ textAlign: 'right' }}>Bill Amount</th>
+                          <th style={{ textAlign: 'center' }}>Actions</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {ordersWithBills.map(o => (
+                          <tr key={o.id}>
+                            <td style={{ fontWeight: 700 }}>{o.id}</td>
+                            <td style={{ fontWeight: 600 }}>{o.title}</td>
+                            <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
+                            <td style={{ textAlign: 'center' }}>
+                              <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
+                                🧾 Print Bill
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                        {ordersWithBills.length === 0 && (
+                          <tr>
+                            <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                              No invoice sheets found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 

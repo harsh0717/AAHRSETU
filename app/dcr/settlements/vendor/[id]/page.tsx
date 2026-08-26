@@ -5,7 +5,7 @@
  * Full audit record of every invoice raised and every payment disbursed.
  */
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { getSession, UserProfile } from '@/lib/auth';
@@ -57,11 +57,12 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 };
 
-export default function VendorLedgerPage({ params }: { params: Promise<{ id: string }> }) {
+export default function VendorLedgerPage() {
   const { t } = useI18n();
   const router = useRouter();
+  const routeParams = useParams();
+  const vendorId = routeParams?.id as string;
   const [session, setSession] = useState<UserProfile | null>(null);
-  const [vendorId, setVendorId] = useState<string | null>(null);
 
   const [ledgerData, setLedgerData] = useState<VendorLedgerData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,10 +83,6 @@ export default function VendorLedgerPage({ params }: { params: Promise<{ id: str
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
   const [payNotes, setPayNotes] = useState('');
   const [recordingPayment, setRecordingPayment] = useState(false);
-
-  useEffect(() => {
-    params.then(p => setVendorId(p.id));
-  }, [params]);
 
   useEffect(() => {
     const s = getSession();

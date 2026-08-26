@@ -5,7 +5,7 @@
  * This is a permanent, immutable audit record once finalized.
  */
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { getSession, UserProfile } from '@/lib/auth';
@@ -66,18 +66,15 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; border: string; 
   'REOPENED':  { bg: '#FEF3C7', text: '#92400E', border: '#FDE68A', label: 'Reopened' },
 };
 
-export default function SettlementDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function SettlementDetailPage() {
   const { t } = useI18n();
   const router = useRouter();
+  const routeParams = useParams();
+  const settlementId = routeParams?.id as string;
   const [session, setSession] = useState<UserProfile | null>(null);
   const [settlement, setSettlement] = useState<Settlement | null>(null);
   const [loading, setLoading] = useState(true);
   const [exportLoading, setExportLoading] = useState<string | null>(null);
-  const [settlementId, setSettlementId] = useState<string | null>(null);
-
-  useEffect(() => {
-    params.then(p => setSettlementId(p.id));
-  }, [params]);
 
   useEffect(() => {
     if (!settlementId) return;

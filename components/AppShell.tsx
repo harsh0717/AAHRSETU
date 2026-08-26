@@ -464,29 +464,146 @@ export default function AppShell({ children, role }: AppShellProps) {
                 <AppIcon name="settings" size={18} /> <span>Settings & Languages</span>
               </Link>
 
-              {role !== 'admin' && (
-                <Link
-                  href={`/${role}/bills`}
-                  onClick={() => setMoreDrawerOpen(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '14px 16px',
-                    borderRadius: '12px',
-                    background: '#F8FAFC',
-                    color: '#334155',
-                    textDecoration: 'none',
-                    fontWeight: 700,
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
-                </Link>
+              {/* Role-Specific Secondary Menu Links */}
+              {role === 'coordinator' && (
+                <>
+                  <Link
+                    href="/coordinator/orders/pending"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="pending" size={18} /> <span>Pending Approvals</span>
+                  </Link>
+
+                  <Link
+                    href="/coordinator/orders/completed"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="completed" size={18} /> <span>Completed Orders</span>
+                  </Link>
+
+                  <Link
+                    href="/coordinator/orders/rejected"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="rejected" size={18} /> <span>Rejected Orders</span>
+                  </Link>
+
+                  <Link
+                    href="/coordinator/bills"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
+                  </Link>
+                </>
               )}
 
               {role === 'principal' && (
                 <>
+                  <Link
+                    href="/principal/approved"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="approved" size={18} /> <span>Approved Orders</span>
+                  </Link>
+
+                  <Link
+                    href="/principal/rejected"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="rejected" size={18} /> <span>Rejected Orders</span>
+                  </Link>
+
+                  <Link
+                    href="/principal/bills"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
+                  </Link>
+
                   <Link
                     href="/principal/history"
                     onClick={() => setMoreDrawerOpen(false)}
@@ -523,6 +640,242 @@ export default function AppShell({ children, role }: AppShellProps) {
                     }}
                   >
                     <AppIcon name="profile" size={18} /> <span>My Profile</span>
+                  </Link>
+                </>
+              )}
+
+              {(role === 'dcr' || role === 'administration') && (
+                <>
+                  <Link
+                    href="/dcr/approved"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="approved" size={18} /> <span>Approved Orders</span>
+                  </Link>
+
+                  <Link
+                    href="/dcr/rejected"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="rejected" size={18} /> <span>Rejected Orders</span>
+                  </Link>
+
+                  <Link
+                    href="/dcr/history"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="history" size={18} /> <span>Audit History</span>
+                  </Link>
+
+                  <Link
+                    href="/dcr/bills"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
+                  </Link>
+
+                  <Link
+                    href="/dcr/reports"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="reports" size={18} /> <span>Financial Reports</span>
+                  </Link>
+
+                  <Link
+                    href="/dcr/profile"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="profile" size={18} /> <span>My Profile</span>
+                  </Link>
+                </>
+              )}
+
+              {role === 'vendor' && (
+                <>
+                  <Link
+                    href="/vendor/orders/active"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="active" size={18} /> <span>Active Orders Pipeline</span>
+                  </Link>
+
+                  <Link
+                    href="/vendor/orders/completed"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="completed" size={18} /> <span>Completed Orders</span>
+                  </Link>
+
+                  <Link
+                    href="/vendor/modifications"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="modifications" size={18} /> <span>Order Modifications</span>
+                  </Link>
+
+                  <Link
+                    href="/vendor/availability"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="availability" size={18} /> <span>Kitchen Availability</span>
+                  </Link>
+
+                  <Link
+                    href="/vendor/revenue"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="revenue" size={18} /> <span>Revenue & Settlements</span>
+                  </Link>
+
+                  <Link
+                    href="/vendor/bills"
+                    onClick={() => setMoreDrawerOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: '#F8FAFC',
+                      color: '#334155',
+                      textDecoration: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <AppIcon name="bills" size={18} /> <span>Invoices & Bills</span>
                   </Link>
                 </>
               )}

@@ -394,7 +394,7 @@ export default function OrderDetailsPage() {
 
         {/* Details Tab */}
         {activeTab === 'details' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '20px', alignItems: 'start' }}>
             {/* Left - Vendor Split items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {(order.vendor_orders || []).map(vo => (

@@ -25,6 +25,14 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
 
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Lists
   const [orders, setOrders] = useState<MasterOrder[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
@@ -760,42 +768,67 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
             {activeTab === 'completed' && (
               <div className="card" style={{ padding: '20px' }}>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>✅ Settled Orders History</h3>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title</th>
-                        <th>Department</th>
-                        <th>Completed Date</th>
-                        <th style={{ textAlign: 'right' }}>Total Bill</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {completedOrders.map(o => {
-                        const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
-                        return (
-                          <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                            <td style={{ fontWeight: 700 }}>{o.id}</td>
-                            <td style={{ fontWeight: 600 }}>{o.title}</td>
-                            <td>{o.department_label}</td>
-                            <td style={{ fontSize: '0.8rem' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
-                              ₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {completedOrders.map(o => {
+                      const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                      return (
+                        <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669' }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</span>
+                          </div>
+                          <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
+                          <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Department: {o.department_label}</p>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                            <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</span>
+                            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#059669' }}>✓ Settled</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {completedOrders.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>No settled orders found.</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Title</th>
+                          <th>Department</th>
+                          <th>Completed Date</th>
+                          <th style={{ textAlign: 'right' }}>Total Bill</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {completedOrders.map(o => {
+                          const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                          return (
+                            <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                              <td style={{ fontWeight: 700 }}>{o.id}</td>
+                              <td style={{ fontWeight: 600 }}>{o.title}</td>
+                              <td>{o.department_label}</td>
+                              <td style={{ fontSize: '0.8rem' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
+                                ₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {completedOrders.length === 0 && (
+                          <tr>
+                            <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                              No settled orders found.
                             </td>
                           </tr>
-                        );
-                      })}
-                      {completedOrders.length === 0 && (
-                        <tr>
-                          <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No settled orders found.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1114,7 +1147,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
             {/* TAB: REVENUE */}
             {activeTab === 'revenue' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', alignItems: 'start' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px', alignItems: 'start' }}>
                   <div className="card" style={{ padding: '20px' }}>
                     <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💰</div>
                     <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10B981' }}>
@@ -1126,96 +1159,156 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
                   <div className="card" style={{ padding: '20px' }}>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>Order Settlement History</h3>
-                    <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    {isMobileDevice ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {completedOrders.slice(0, 5).map(o => {
+                          const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                          return (
+                            <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '12px 14px', borderRadius: '12px', background: '#F8FAFC' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>{o.title}</span>
+                                <span style={{ fontWeight: 800, color: '#10B981', fontSize: '0.9rem' }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</span>
+                              </div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
+                                #{o.id} · {new Date(o.updated_at).toLocaleDateString('en-IN')}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {completedOrders.length === 0 && (
+                          <div style={{ textAlign: 'center', padding: '16px', color: 'var(--gray-400)', fontSize: '0.8rem' }}>No orders settled yet.</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                        <table className="table">
+                          <thead>
+                            <tr>
+                              <th>Order ID</th>
+                              <th>Title</th>
+                              <th>Department</th>
+                              <th>Settle Date</th>
+                              <th style={{ textAlign: 'right' }}>Earning Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {completedOrders.map(o => {
+                              const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                              return (
+                                <tr key={o.id}>
+                                  <td style={{ fontWeight: 700 }}>{o.id}</td>
+                                  <td style={{ fontWeight: 600 }}>{o.title}</td>
+                                  <td>{o.department_label}</td>
+                                  <td style={{ fontSize: '0.8rem' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</td>
+                                  <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
+                                    ₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            {completedOrders.length === 0 && (
+                              <tr>
+                                <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                                  No orders settled yet.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: '20px' }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '16px' }}>🧾 Monthly Settlements & Accounts Ledger</h3>
+                  {isMobileDevice ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {settlements.map(s => {
+                        const due = s.due_amount;
+                        return (
+                          <div key={s.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: 'white' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>{s.month}</span>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '3px 8px',
+                                borderRadius: '9999px',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                background: s.status === 'Settled' ? '#ECFDF5' : (s.status === 'Partially Settled' ? '#EFF6FF' : '#FEF2F2'),
+                                color: s.status === 'Settled' ? '#047857' : (s.status === 'Partially Settled' ? '#2563EB' : '#B91C1C')
+                              }}>
+                                {s.status}
+                              </span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem', marginBottom: '8px' }}>
+                              <div>Billed: <strong>₹{s.total_amount.toFixed(2)}</strong></div>
+                              <div>Paid: <strong style={{ color: '#10B981' }}>₹{s.paid_amount.toFixed(2)}</strong></div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid #F1F5F9' }}>
+                              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Outstanding Dues:</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 900, color: due > 0 ? '#EF4444' : '#10B981' }}>₹{due.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {settlements.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '24px', color: '#94A3B8', fontSize: '0.85rem' }}>No monthly settlements recorded yet.</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
                       <table className="table">
                         <thead>
                           <tr>
-                            <th>Order ID</th>
-                            <th>Title</th>
-                            <th>Department</th>
-                            <th>Settle Date</th>
-                            <th style={{ textAlign: 'right' }}>Earning Amount</th>
+                            <th>Settlement Period</th>
+                            <th style={{ textAlign: 'right' }}>Total Billed Amount</th>
+                            <th style={{ textAlign: 'right' }}>Paid Amount</th>
+                            <th style={{ textAlign: 'right' }}>Dues Outstanding</th>
+                            <th style={{ textAlign: 'center' }}>Status</th>
+                            <th>Last Updated Date</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {completedOrders.map(o => {
-                            const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                          {settlements.map(s => {
+                            const due = s.due_amount;
                             return (
-                              <tr key={o.id}>
-                                <td style={{ fontWeight: 700 }}>{o.id}</td>
-                                <td style={{ fontWeight: 600 }}>{o.title}</td>
-                                <td>{o.department_label}</td>
-                                <td style={{ fontSize: '0.8rem' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</td>
-                                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-success)' }}>
-                                  ₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}
+                              <tr key={s.id}>
+                                <td style={{ fontWeight: 700 }}>{s.month}</td>
+                                <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{s.total_amount.toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{s.paid_amount.toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', fontWeight: 800, color: due > 0 ? '#EF4444' : '#10B981' }}>₹{due.toFixed(2)}</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '4px 10px',
+                                    borderRadius: '9999px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    background: s.status === 'Settled' ? '#ECFDF5' : (s.status === 'Partially Settled' ? '#EFF6FF' : '#FEF2F2'),
+                                    color: s.status === 'Settled' ? '#047857' : (s.status === 'Partially Settled' ? '#2563EB' : '#B91C1C')
+                                  }}>
+                                    {s.status}
+                                  </span>
                                 </td>
+                                <td style={{ fontSize: '0.78rem', color: '#64748B' }}>{new Date(s.updated_at).toLocaleString('en-IN')}</td>
                               </tr>
                             );
                           })}
-                          {completedOrders.length === 0 && (
+                          {settlements.length === 0 && (
                             <tr>
-                              <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                                No orders settled yet.
+                              <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>
+                                No monthly settlements recorded yet.
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
                     </div>
-                  </div>
-                </div>
-
-                <div className="card" style={{ padding: '20px' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '16px' }}>🧾 Monthly Settlements & Accounts Ledger</h3>
-                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflowX: 'auto' }}>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Settlement Period</th>
-                          <th style={{ textAlign: 'right' }}>Total Billed Amount</th>
-                          <th style={{ textAlign: 'right' }}>Paid Amount</th>
-                          <th style={{ textAlign: 'right' }}>Dues Outstanding</th>
-                          <th style={{ textAlign: 'center' }}>Status</th>
-                          <th>Last Updated Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {settlements.map(s => {
-                          const due = s.due_amount;
-                          return (
-                            <tr key={s.id}>
-                              <td style={{ fontWeight: 700 }}>{s.month}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{s.total_amount.toFixed(2)}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#10B981' }}>₹{s.paid_amount.toFixed(2)}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 800, color: due > 0 ? '#EF4444' : '#10B981' }}>₹{due.toFixed(2)}</td>
-                              <td style={{ textAlign: 'center' }}>
-                                <span style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '4px 10px',
-                                  borderRadius: '9999px',
-                                  fontSize: '0.72rem',
-                                  fontWeight: 700,
-                                  background: s.status === 'Settled' ? '#ECFDF5' : (s.status === 'Partially Settled' ? '#EFF6FF' : '#FEF2F2'),
-                                  color: s.status === 'Settled' ? '#047857' : (s.status === 'Partially Settled' ? '#2563EB' : '#B91C1C')
-                                }}>
-                                  {s.status}
-                                </span>
-                              </td>
-                              <td style={{ fontSize: '0.78rem', color: '#64748B' }}>{new Date(s.updated_at).toLocaleString('en-IN')}</td>
-                            </tr>
-                          );
-                        })}
-                        {settlements.length === 0 && (
-                          <tr>
-                            <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>
-                              No monthly settlements recorded yet.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1223,44 +1316,86 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
             {/* TAB: BILLS / INVOICES */}
             {activeTab === 'bills' && (
               <div className="card" style={{ padding: '20px' }}>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Title Description</th>
-                        <th>Billing Date</th>
-                        <th style={{ textAlign: 'right' }}>Your Subtotal</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ordersWithBills.map(o => {
-                        const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
-                        return (
-                          <tr key={o.id}>
-                            <td style={{ fontWeight: 700 }}>{o.id}</td>
-                            <td style={{ fontWeight: 600 }}>{o.title}</td>
-                            <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</td>
-                            <td style={{ textAlign: 'center' }}>
-                              <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
-                                🧾 Print Bill
-                              </Link>
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {ordersWithBills.map(o => {
+                      const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                      return (
+                        <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: 'white' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669' }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</span>
+                          </div>
+                          <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
+                          <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: '#64748B' }}>
+                            Billing Date: {o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}
+                          </p>
+                          <Link
+                            href={`/bill/${o.id}`}
+                            style={{
+                              display: 'block',
+                              textAlign: 'center',
+                              padding: '10px',
+                              background: '#EFF6FF',
+                              color: '#2563EB',
+                              borderRadius: '10px',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              textDecoration: 'none',
+                              border: '1px solid #BFDBFE'
+                            }}
+                          >
+                            🧾 View & Print Bill
+                          </Link>
+                        </div>
+                      );
+                    })}
+                    {ordersWithBills.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>
+                        No bills or invoices finalized.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Title Description</th>
+                          <th>Billing Date</th>
+                          <th style={{ textAlign: 'right' }}>Your Subtotal</th>
+                          <th style={{ textAlign: 'center' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ordersWithBills.map(o => {
+                          const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                          return (
+                            <tr key={o.id}>
+                              <td style={{ fontWeight: 700 }}>{o.id}</td>
+                              <td style={{ fontWeight: 600 }}>{o.title}</td>
+                              <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</td>
+                              <td style={{ textAlign: 'center' }}>
+                                <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
+                                  🧾 Print Bill
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {ordersWithBills.length === 0 && (
+                          <tr>
+                            <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
+                              No bills or invoices finalized.
                             </td>
                           </tr>
-                        );
-                      })}
-                      {ordersWithBills.length === 0 && (
-                        <tr>
-                          <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No bills or invoices finalized.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 

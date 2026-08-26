@@ -343,7 +343,10 @@ def generate_monthly_bills_pdf(month: int, year: int, bills: list, summary: dict
     doc.build(story)
     pdf_bytes = buffer.getvalue()
     buffer.close()
-    rdef generate_settlement_pdf(settlement: dict, dept_breakdown: list, vendor_breakdown: list) -> bytes:
+    return pdf_bytes
+
+
+def generate_settlement_pdf(settlement: dict, dept_breakdown: list, vendor_breakdown: list) -> bytes:
     """
     Generate professional, audit-grade monthly settlement PDF report
     with mathematical tally verification, complete banking UTRs, and institutional sign-off blocks.

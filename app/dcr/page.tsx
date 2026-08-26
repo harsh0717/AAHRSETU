@@ -227,19 +227,78 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
 
   return (
     <AppShell role={(session?.role as 'dcr' | 'administration') || 'dcr'} currentPath="/dcr">
-      <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         
-        {/* Title Section with Official Brand Logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+        {/* Enterprise Institutional Top Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          borderRadius: '20px',
+          padding: '24px 28px',
+          marginBottom: '20px',
+          color: 'white',
+          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-              {t(`dcr.tab_title_${activeTab}`, 'Administration Dashboard')}
-            </h1>
-            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-              {t(`dcr.tab_sub_${activeTab}`, 'Institutional financial position, pending settlements and audit overview.')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                INSTITUTIONAL ADMINISTRATION
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                TAN: BLRA00000A · FY 2026-27
+              </span>
             </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
+              🏛️ Administration & Financial Control Hub
+            </h1>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
+              Institutional financial position, department requisition approvals, canteen settlements, and real-time audit ledger.
+            </p>
           </div>
-          <BrandLogo size={52} />
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link
+              href="/dcr/reports"
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                textDecoration: 'none',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              📊 Financial Reports
+            </Link>
+            <Link
+              href="/dcr/settlements"
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: '#0D9488',
+                color: 'white',
+                border: 'none',
+                textDecoration: 'none',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              💳 Settlements Hub
+            </Link>
+          </div>
         </div>
 
         {/* Loading Spinner */}
@@ -255,7 +314,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
               <div>
                 {/* Month-End Reminder Alert Banner */}
                 {reminderState?.should_remind && (
-                  <div style={{ background: '#FFFBEB', border: '1px solid #F59E0B', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ background: '#FFFBEB', border: '1.5px solid #F59E0B', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <span style={{ fontSize: '1.8rem' }}>⏰</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 800, color: '#92400E', fontSize: '0.95rem', marginBottom: '2px' }}>
@@ -265,51 +324,91 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                         {reminderState.unsettled_bills_count} bill(s) are awaiting monthly settlement. Finalize the monthly settlement before month end.
                       </div>
                     </div>
-                    <Link href="/dcr/settlements" style={{ padding: '8px 18px', borderRadius: '8px', background: '#D97706', color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                    <Link href="/dcr/settlements" style={{ padding: '8px 18px', borderRadius: '8px', background: '#D97706', color: 'white', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                       Review Settlements →
                     </Link>
                   </div>
                 )}
 
                 {/* Real-time Institutional Financial Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
-                  {[
-                    {
-                      label: t('dcr.stats_pending', 'Pending Audits'),
-                      value: totalPending,
-                      sub: 'Requisitions in queue',
-                      color: '#D97706',
-                      icon: '⏳'
-                    },
-                    {
-                      label: 'Pending Settlement',
-                      value: financialSummary ? `₹${Number(financialSummary.pending_settlement_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—',
-                      sub: `${financialSummary?.pending_settlement_bills || 0} bills pending`,
-                      color: '#DC2626',
-                      icon: '💳'
-                    },
-                    {
-                      label: 'Settled This Year',
-                      value: financialSummary ? `₹${Number(financialSummary.settled_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—',
-                      sub: `${financialSummary?.settled_bills || 0} bills settled`,
-                      color: '#059669',
-                      icon: '✅'
-                    },
-                    {
-                      label: `${financialSummary?.current_month_name || 'Current Month'} Spend`,
-                      value: financialSummary ? `₹${Number(financialSummary.current_month_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : `₹${orders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0).toFixed(2)}`,
-                      sub: `${financialSummary?.current_month_bills || ordersWithBills.length} invoices generated`,
-                      color: '#2563EB',
-                      icon: '📊'
-                    }
-                  ].map((s, idx) => (
-                    <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${s.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{s.icon}</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gray-900)' }}>{s.value}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--gray-700)', fontWeight: 700, marginTop: '2px' }}>{s.label}</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--gray-400)', marginTop: '2px' }}>{s.sub}</div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                  gap: '16px',
+                  marginBottom: '24px',
+                  width: '100%'
+                }}>
+                  {/* Tile 1: Pending Audits */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '20px 24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
+                        AUDIT REVIEW QUEUE
+                      </span>
+                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {totalPending} REQUISITIONS
+                      </span>
                     </div>
-                  ))}
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
+                      {totalPending}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Orders awaiting administrative verification & clearance
+                    </div>
+                  </div>
+
+                  {/* Tile 2: Pending Settlements */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '20px 24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                        TOTAL PENDING DUES
+                      </span>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {financialSummary?.pending_settlement_bills || 0} BILLS DUE
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: Number(financialSummary?.pending_settlement_total || 0) > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.5px' }}>
+                      {financialSummary ? `₹${Number(financialSummary.pending_settlement_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹0.00'}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Total unsettled canteen payables awaiting clearance
+                    </div>
+                  </div>
+
+                  {/* Tile 3: Total Disbursed */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #10B981',
+                    padding: '20px 24px',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                        TOTAL DISBURSED (PAID)
+                      </span>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        CLEARED PAYMENTS
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
+                      {financialSummary ? `₹${Number(financialSummary.settled_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹0.00'}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Direct NEFT/RTGS/UPI cleared disbursements
+                    </div>
+                  </div>
                 </div>
 
                 {/* Quick actions & modules grid */}
@@ -687,34 +786,48 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
 
             {/* TAB: REPORTS */}
             {activeTab === 'reports' && (
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>📊 Department Audit Summary</h3>
-                <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Department Label</th>
-                        <th>Audited Requisitions Count</th>
-                        <th style={{ textAlign: 'right' }}>Total Audited Expenditure</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {deptAuditRows.map((row, idx) => (
-                        <tr key={idx}>
-                          <td style={{ fontWeight: 600 }}>{row.label}</td>
-                          <td>{row.count}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{row.total}</td>
-                        </tr>
-                      ))}
-                      {deptAuditRows.length === 0 && (
-                        <tr>
-                          <td colSpan={3} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                            No departmental audit reports available.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+              <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 4px', color: '#0F172A' }}>📊 Financial & Departmental Audit Reports</h3>
+                    <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748B' }}>Access comprehensive department ledgers, vendor aging, and certified CA settlement statements.</p>
+                  </div>
+                  <Link
+                    href="/dcr/reports"
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '10px',
+                      background: '#0D9488',
+                      color: 'white',
+                      textDecoration: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.88rem',
+                      boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    Open Full Financial Reports Suite →
+                  </Link>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px', marginTop: '20px' }}>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '1.2rem', marginBottom: '6px' }}>🏛️</div>
+                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem', marginBottom: '4px' }}>Department-Wise Budget Ledger</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Track spend share, requisition counts, and average order value across all college branches.</div>
+                  </div>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '1.2rem', marginBottom: '6px' }}>🍽️</div>
+                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem', marginBottom: '4px' }}>Canteen Disbursements & Aging</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Real-time 0-30 / 31-60 / 60+ days payable analysis and bank UTR transaction logs.</div>
+                  </div>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '1.2rem', marginBottom: '6px' }}>📑</div>
+                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem', marginBottom: '4px' }}>Statutory CA Downloads</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>1-Click certified PDF statements and multi-sheet Excel (.xlsx) workbooks for audits.</div>
+                  </div>
                 </div>
               </div>
             )}

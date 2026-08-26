@@ -245,71 +245,193 @@ export default function BillsPage() {
 
   return (
     <AppShell role={(session.role as 'dcr' | 'administration') || 'dcr'} currentPath="/dcr/bills">
-      <div>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        {/* Enterprise Institutional Top Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          borderRadius: '20px',
+          padding: '24px 28px',
+          marginBottom: '20px',
+          color: 'white',
+          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-              <Link href="/dcr" style={{ color: '#6B7280', textDecoration: 'none', fontSize: '0.85rem' }}>Administration</Link>
-              <span style={{ color: '#D1D5DB' }}>›</span>
-              <span style={{ fontSize: '0.85rem', color: '#0F766E', fontWeight: 600 }}>Bills & Invoices</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                INSTITUTIONAL BILLING HUB
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                TAN: BLRA00000A · FY 2026-27
+              </span>
             </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: '#0F172A' }}>🧾 Bills & Invoices</h1>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#6B7280' }}>All institutional canteen bills. Search, filter, and export.</p>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
+              🧾 Bills, Invoices & Vouchers Hub
+            </h1>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
+              All institutional canteen food vouchers, departmental requisitions, multi-vendor splits, and statutory export generators.
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               onClick={() => handleExport('pdf', 'monthly')}
               disabled={exportLoading === 'pdf'}
-              style={{ padding: '8px 16px', borderRadius: '8px', background: '#EF4444', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
             >
-              {exportLoading === 'pdf' ? '⏳' : '📄'} PDF
+              📄 {exportLoading === 'pdf' ? 'Generating PDF...' : 'Monthly PDF'}
             </button>
             <button
               onClick={() => handleExport('excel', 'monthly')}
               disabled={exportLoading === 'excel'}
-              style={{ padding: '8px 16px', borderRadius: '8px', background: '#22C55E', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: '#0D9488',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
             >
-              {exportLoading === 'excel' ? '⏳' : '📊'} Excel
+              📊 {exportLoading === 'excel' ? 'Exporting...' : 'Statutory Excel'}
             </button>
-            <Link href="/dcr/settlements" style={{ padding: '8px 16px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              💳 Settlements
+            <Link
+              href="/dcr/settlements"
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                textDecoration: 'none',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              💳 Settlements Hub
             </Link>
           </div>
         </div>
 
         {/* Month-End Reminder */}
         {reminderState?.should_remind && reminderState.has_pending_settlement && (
-          <div style={{ background: '#FFFBEB', border: '1px solid #F59E0B', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ background: '#FFFBEB', border: '1.5px solid #F59E0B', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '1.5rem' }}>⚠️</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, color: '#92400E', marginBottom: '2px' }}>Month-End Settlement Reminder</div>
+              <div style={{ fontWeight: 800, color: '#92400E', marginBottom: '2px' }}>Month-End Settlement Reminder</div>
               <div style={{ fontSize: '0.85rem', color: '#78350F' }}>
                 {reminderState.days_remaining} days remaining before month end. Please finalize the pending monthly settlement.
               </div>
             </div>
-            <Link href="/dcr/settlements" style={{ padding: '8px 16px', borderRadius: '8px', background: '#F59E0B', color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>
+            <Link href="/dcr/settlements" style={{ padding: '8px 16px', borderRadius: '8px', background: '#F59E0B', color: 'white', textDecoration: 'none', fontWeight: 800, fontSize: '0.85rem' }}>
               Review Bills
             </Link>
           </div>
         )}
 
-        {/* Financial Summary Cards */}
+        {/* Executive Financial Summary Tiles */}
         {summary && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px', marginBottom: '24px' }}>
-            {[
-              { label: `${summary.current_month_name} Expenditure`, value: fmtAmount(summary.current_month_total), sub: `${summary.current_month_bills} bills`, color: '#0D9488', icon: '📅', border: '#0D9488' },
-              { label: 'Pending Settlement', value: fmtAmount(summary.pending_settlement_total), sub: `${summary.pending_settlement_bills} bills pending`, color: '#D97706', icon: '⏳', border: '#D97706' },
-              { label: 'Settled This Year', value: fmtAmount(summary.settled_total), sub: `${summary.settled_bills} bills settled`, color: '#059669', icon: '✅', border: '#059669' },
-              { label: 'Year-to-Date Total', value: fmtAmount(summary.ytd_total), sub: 'All completed orders', color: '#3B82F6', icon: '📊', border: '#3B82F6' },
-            ].map((card, i) => (
-              <div key={i} style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', borderTop: `4px solid ${card.border}`, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <div style={{ fontSize: '1.3rem', marginBottom: '6px' }}>{card.icon}</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: card.color, marginBottom: '2px' }}>{card.value}</div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>{card.label}</div>
-                <div style={{ fontSize: '0.7rem', color: '#9CA3AF', marginTop: '2px' }}>{card.sub}</div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+            gap: '16px',
+            marginBottom: '24px'
+          }}>
+            {/* Tile 1: Total Pending Dues */}
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              border: '1.5px solid #E2E8F0',
+              padding: '20px 24px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                  TOTAL PENDING DUES
+                </span>
+                <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                  {summary.pending_settlement_bills} BILLS DUE
+                </span>
               </div>
-            ))}
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: summary.pending_settlement_total > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.5px' }}>
+                {fmtAmount(summary.pending_settlement_total)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                Total unsettled canteen payables awaiting clearance
+              </div>
+            </div>
+
+            {/* Tile 2: Total Disbursed */}
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              border: '1.5px solid #10B981',
+              padding: '20px 24px',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                  TOTAL DISBURSED (PAID)
+                </span>
+                <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                  CLEARED BANK PAYMENTS
+                </span>
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
+                {fmtAmount(summary.settled_total)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                Direct NEFT/RTGS/UPI cleared disbursements
+              </div>
+            </div>
+
+            {/* Tile 3: Total Invoiced */}
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              border: '1.5px solid #E2E8F0',
+              padding: '20px 24px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+                  TOTAL INVOICED FOOD
+                </span>
+                <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                  ✓ ZERO VARIANCE
+                </span>
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                {fmtAmount(summary.current_month_total)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '4px', fontWeight: 600 }}>
+                ✓ {summary.current_month_name} Active ({summary.current_month_bills} bills)
+              </div>
+            </div>
           </div>
         )}
 

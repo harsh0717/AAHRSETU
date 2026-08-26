@@ -37,6 +37,7 @@ def read_bills(
     invoice_number: Optional[str] = Query(None),
     department_id: Optional[str] = Query(None),
     vendor_id: Optional[str] = Query(None),
+    bill_type: Optional[str] = Query(None),  # 'vendor', 'master', or 'all'
     settlement_status: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
@@ -50,11 +51,16 @@ def read_bills(
     """
     Retrieve all bills accessible to the authenticated session with search and filtering.
     Protects multi-department data leakage.
+    - bill_type='vendor': Only vendor-payable bills (used for disbursements and settlements)
+    - bill_type='master': Only master order invoices (used for departmental auditing and expense receipts)
     """
     query = db.query(Bill)
 
     if current_user.role in ["admin", "dcr", "administration"]:
-        pass  # full institutional view
+        if bill_type == "vendor":
+            query = query.filter(Bill.vendor_id != None)
+        elif bill_type == "master":
+            query = query.filter(Bill.vendor_id == None)
     elif current_user.role == "principal":
         principal_depts = [d.id for d in current_user.managed_departments]
         query = query.filter(
@@ -145,7 +151,7 @@ def get_financial_summary(
 ) -> Any:
     """
     Get executive institutional financial summary.
-    Current month, previous month, YTD, and pending settlement totals.
+    Only sums vendor-payable bills (vendor_id is not None) to prevent double counting with master bills.
     """
     now = datetime.now(timezone.utc)
     cur_m = now.month
@@ -154,19 +160,25 @@ def get_financial_summary(
     prev_y = cur_y - 1 if cur_m == 1 else cur_y
 
     all_bills = db.query(Bill).all()
+    # Vendor payable bills only (Master bills are department receipts, not vendor disbursements)
+    payable_bills = [b for b in all_bills if b.vendor_id is not None]
 
-    cur_m_bills = [b for b in all_bills if b.generated_at and b.generated_at.month == cur_m and b.generated_at.year == cur_y]
-    prev_m_bills = [b for b in all_bills if b.generated_at and b.generated_at.month == prev_m and b.generated_at.year == prev_y]
-    ytd_bills = [b for b in all_bills if b.generated_at and b.generated_at.year == cur_y]
+    cur_m_bills = [b for b in payable_bills if b.generated_at and b.generated_at.month == cur_m and b.generated_at.year == cur_y]
+    prev_m_bills = [b for b in payable_bills if b.generated_at and b.generated_at.month == prev_m and b.generated_at.year == prev_y]
+    ytd_bills = [b for b in payable_bills if b.generated_at and b.generated_at.year == cur_y]
 
-    pending_bills = [b for b in all_bills if b.settlement_status != 'SETTLED']
-    settled_bills = [b for b in all_bills if b.settlement_status == 'SETTLED']
+    pending_bills = [b for b in payable_bills if b.settlement_status != 'SETTLED']
+    settled_bills = [b for b in payable_bills if b.settlement_status == 'SETTLED']
 
     cur_m_total = sum(float(b.amount or 0.0) for b in cur_m_bills)
     prev_m_total = sum(float(b.amount or 0.0) for b in prev_m_bills)
     ytd_total = sum(float(b.amount or 0.0) for b in ytd_bills)
     pending_total = sum(float(b.amount or 0.0) for b in pending_bills)
     settled_total = sum(float(b.amount or 0.0) for b in settled_bills)
+
+    # Master Invoices (for audit and department tally reference)
+    master_bills = [b for b in all_bills if b.vendor_id is None]
+    master_cur_m = [b for b in master_bills if b.generated_at and b.generated_at.month == cur_m and b.generated_at.year == cur_y]
 
     return {
         "current_month_total": cur_m_total,
@@ -181,6 +193,8 @@ def get_financial_summary(
         "settled_bills": len(settled_bills),
         "current_month_name": calendar.month_name[cur_m],
         "previous_month_name": calendar.month_name[prev_m],
+        "master_orders_count": len(master_cur_m),
+        "master_orders_total": sum(float(b.amount or 0.0) for b in master_cur_m)
     }
 
 
@@ -188,30 +202,41 @@ def get_financial_summary(
 def get_monthly_bills(
     month: int = Query(..., ge=1, le=12),
     year: int = Query(..., ge=2020),
+    bill_type: Optional[str] = Query('vendor'),  # 'vendor', 'master', or 'all'
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
 ) -> Any:
     """Get bills and aggregations for a specific month and year."""
-    bills = db.query(Bill).filter(
+    all_month_bills = db.query(Bill).filter(
         extract('month', Bill.generated_at) == month,
         extract('year', Bill.generated_at) == year
     ).order_by(Bill.generated_at.desc()).all()
 
-    total_amount = sum(float(b.amount or 0.0) for b in bills)
-    settled_amount = sum(float(b.amount or 0.0) for b in bills if b.settlement_status == 'SETTLED')
+    # Calculations strictly on vendor bills to prevent double counting
+    vendor_bills = [b for b in all_month_bills if b.vendor_id is not None]
+    total_amount = sum(float(b.amount or 0.0) for b in vendor_bills)
+    settled_amount = sum(float(b.amount or 0.0) for b in vendor_bills if b.settlement_status == 'SETTLED')
     pending_amount = total_amount - settled_amount
 
-    dept_ids = set(b.department_id for b in bills if b.department_id)
-    vendor_ids = set(b.vendor_id for b in bills if b.vendor_id)
+    dept_ids = set(b.department_id for b in vendor_bills if b.department_id)
+    vendor_ids = set(b.vendor_id for b in vendor_bills if b.vendor_id)
+
+    # Filter items based on requested bill_type
+    if bill_type == 'master':
+        filtered_bills = [b for b in all_month_bills if b.vendor_id is None]
+    elif bill_type == 'all':
+        filtered_bills = all_month_bills
+    else:  # default 'vendor'
+        filtered_bills = vendor_bills
 
     results = []
-    for b in bills:
+    for b in filtered_bills:
         results.append({
             "id": b.id,
             "invoice_number": b.invoice_number,
             "order_id": b.order_id,
             "vendor_id": b.vendor_id,
-            "vendor_name": b.vendor.name if b.vendor else None,
+            "vendor_name": b.vendor.name if b.vendor else "Master Department Invoice",
             "department_id": b.department_id,
             "department_label": b.department.label if b.department else (b.department.name if b.department else b.department_id),
             "amount": float(b.amount or 0.0),
@@ -224,7 +249,7 @@ def get_monthly_bills(
         "month": month,
         "year": year,
         "month_name": calendar.month_name[month],
-        "total_bills": len(bills),
+        "total_bills": len(vendor_bills),
         "total_amount": total_amount,
         "settled_amount": settled_amount,
         "pending_amount": pending_amount,
@@ -244,7 +269,8 @@ def export_monthly_bills_pdf(
     """Export monthly consolidated bills report as PDF."""
     bills = db.query(Bill).filter(
         extract('month', Bill.generated_at) == month,
-        extract('year', Bill.generated_at) == year
+        extract('year', Bill.generated_at) == year,
+        Bill.vendor_id != None
     ).order_by(Bill.generated_at.desc()).all()
 
     total_amount = sum(float(b.amount or 0.0) for b in bills)
@@ -264,7 +290,7 @@ def export_monthly_bills_pdf(
             'invoice_number': b.invoice_number,
             'order_id': b.order_id,
             'department_label': b.department.label if b.department else (b.department.name if b.department else b.department_id),
-            'vendor_name': b.vendor.name if b.vendor else None,
+            'vendor_name': b.vendor.name if b.vendor else "Canteen",
             'amount': float(b.amount or 0.0),
             'settlement_status': b.settlement_status or 'PENDING_SETTLEMENT',
         })
@@ -290,7 +316,8 @@ def export_monthly_bills_excel(
     """Export monthly bills spreadsheet with multi-sheet breakdowns."""
     bills = db.query(Bill).filter(
         extract('month', Bill.generated_at) == month,
-        extract('year', Bill.generated_at) == year
+        extract('year', Bill.generated_at) == year,
+        Bill.vendor_id != None
     ).order_by(Bill.generated_at.desc()).all()
 
     total_amount = sum(float(b.amount or 0.0) for b in bills)
@@ -315,7 +342,7 @@ def export_monthly_bills_excel(
             'invoice_number': b.invoice_number,
             'order_id': b.order_id,
             'department_label': b.department.label if b.department else (b.department.name if b.department else b.department_id),
-            'vendor_name': b.vendor.name if b.vendor else None,
+            'vendor_name': b.vendor.name if b.vendor else "Canteen",
             'order_created_at': b.generated_at.strftime("%Y-%m-%d") if b.generated_at else '',
             'generated_at': b.generated_at.strftime("%Y-%m-%d %H:%M") if b.generated_at else '',
             'amount': float(b.amount or 0.0),

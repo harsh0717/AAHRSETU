@@ -252,7 +252,7 @@ def generate_settlement_excel(settlement: dict, dept_breakdown: list, vendor_bre
                 b.get('invoice_number', ''),
                 b.get('order_id', ''),
                 b.get('department_label', '') or b.get('department_id', ''),
-                b.get('vendor_name', '') or 'Master Invoice',
+                b.get('vendor_name', '') or 'Canteen Vendor',
                 b.get('generated_at', ''),
                 float(b.get('amount', 0)),
                 b.get('settlement_status', '')

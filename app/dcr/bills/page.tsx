@@ -69,7 +69,8 @@ export default function BillsPage() {
   const [loading, setLoading] = useState(true);
   const [exportLoading, setExportLoading] = useState<string | null>(null);
 
-  // Filters
+  // Tab & Filters
+  const [billTypeTab, setBillTypeTab] = useState<'vendor' | 'master' | 'all'>('vendor');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [filterDept, setFilterDept] = useState<string>('');
@@ -122,6 +123,7 @@ export default function BillsPage() {
     if (resetPage) setPage(1);
     try {
       const params = new URLSearchParams();
+      if (billTypeTab) params.set('bill_type', billTypeTab);
       if (searchQuery) params.set('invoice_number', searchQuery);
       if (filterStatus) params.set('settlement_status', filterStatus);
       if (filterDept) params.set('department_id', filterDept);
@@ -156,7 +158,7 @@ export default function BillsPage() {
       clearTimeout(safetyTimer);
       setLoading(false);
     }
-  }, [searchQuery, filterStatus, filterDept, filterVendor, dateFrom, dateTo, filterMonth, filterYear, page]);
+  }, [billTypeTab, searchQuery, filterStatus, filterDept, filterVendor, dateFrom, dateTo, filterMonth, filterYear, page]);
 
   const checkReminder = useCallback(async () => {
     try {
@@ -311,6 +313,91 @@ export default function BillsPage() {
           </div>
         )}
 
+        {/* Segmented Bill Type Tabs (Vendor Payables vs Master Audit Invoices) */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          marginBottom: '16px',
+          background: '#F1F5F9',
+          padding: '6px',
+          borderRadius: '14px',
+          border: '1px solid #E2E8F0',
+          flexWrap: 'wrap'
+        }}>
+          <button
+            onClick={() => setBillTypeTab('vendor')}
+            style={{
+              flex: 1,
+              minWidth: '220px',
+              padding: '10px 16px',
+              borderRadius: '10px',
+              border: 'none',
+              background: billTypeTab === 'vendor' ? '#0D9488' : 'transparent',
+              color: billTypeTab === 'vendor' ? 'white' : '#475569',
+              fontWeight: 800,
+              fontSize: '0.86rem',
+              cursor: 'pointer',
+              boxShadow: billTypeTab === 'vendor' ? '0 2px 8px rgba(13, 148, 136, 0.25)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            🍽️ Canteen Vendor Bills (Payables & Settlements)
+          </button>
+          <button
+            onClick={() => setBillTypeTab('master')}
+            style={{
+              flex: 1,
+              minWidth: '220px',
+              padding: '10px 16px',
+              borderRadius: '10px',
+              border: 'none',
+              background: billTypeTab === 'master' ? '#1E293B' : 'transparent',
+              color: billTypeTab === 'master' ? 'white' : '#475569',
+              fontWeight: 800,
+              fontSize: '0.86rem',
+              cursor: 'pointer',
+              boxShadow: billTypeTab === 'master' ? '0 2px 8px rgba(30, 41, 59, 0.25)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            📑 Master Orders (Audit & Dept Receipts)
+          </button>
+          <button
+            onClick={() => setBillTypeTab('all')}
+            style={{
+              padding: '10px 16px',
+              borderRadius: '10px',
+              border: 'none',
+              background: billTypeTab === 'all' ? '#64748B' : 'transparent',
+              color: billTypeTab === 'all' ? 'white' : '#64748B',
+              fontWeight: 700,
+              fontSize: '0.84rem',
+              cursor: 'pointer'
+            }}
+          >
+            📋 All Records
+          </button>
+        </div>
+
+        {/* Tab Context Helper Note */}
+        {billTypeTab === 'vendor' ? (
+          <div style={{ background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: '10px', padding: '10px 16px', marginBottom: '16px', fontSize: '0.82rem', color: '#0F766E', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>ℹ️</span>
+            <span><strong>Vendor Payable View:</strong> Displays itemized split vouchers payable directly to campus canteens. These amounts match the vendor settlements with zero double-counting.</span>
+          </div>
+        ) : billTypeTab === 'master' ? (
+          <div style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '10px 16px', marginBottom: '16px', fontSize: '0.82rem', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>ℹ️</span>
+            <span><strong>Department Audit View:</strong> Displays single consolidated master invoices per requisition for departmental receipt generation and internal auditing.</span>
+          </div>
+        ) : null}
+
         {/* Filters */}
         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 20px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
@@ -408,7 +495,15 @@ export default function BillsPage() {
                           <td style={{ padding: '10px 12px', fontWeight: 700, color: '#0F766E', fontFamily: 'monospace' }}>{bill.invoice_number || bill.id}</td>
                           <td style={{ padding: '10px 12px', color: '#6B7280' }}>{bill.order_id}</td>
                           <td style={{ padding: '10px 12px' }}>{bill.department_label || bill.department_id || '—'}</td>
-                          <td style={{ padding: '10px 12px', color: '#6B7280' }}>{bill.vendor_name || 'Master Invoice'}</td>
+                          <td style={{ padding: '10px 12px' }}>
+                            {bill.vendor_name ? (
+                              <span style={{ fontWeight: 700, color: '#0F172A' }}>🍽️ {bill.vendor_name}</span>
+                            ) : (
+                              <span style={{ background: '#F1F5F9', color: '#475569', padding: '2px 8px', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 800 }}>
+                                📑 Dept Master Receipt
+                              </span>
+                            )}
+                          </td>
                           <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>{fmtAmount(bill.amount)}</td>
                           <td style={{ padding: '10px 12px', color: '#6B7280' }}>{fmtDate(bill.generated_at)}</td>
                           <td style={{ padding: '10px 12px' }}>

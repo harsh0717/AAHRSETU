@@ -124,7 +124,7 @@ def _get_settlement_breakdowns(db: Session, month: int, year: int):
         key=lambda x: x['vendor_name']
     )
 
-    return active_depts, active_vendors, all_bills
+    return active_depts, active_vendors, vendor_bills
 
 
 # ============================================================================

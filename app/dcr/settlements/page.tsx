@@ -2,10 +2,11 @@
 /**
  * Administration Payments & Settlements Page
  * Provides monthly settlement workflow, settlement history, and export capabilities.
- * All financial calculations are server-side. Never hardcoded values.
+ * Vendors are settled separately — each vendor has editable payment reference details.
+ * All financial calculations are server-side (vendor bills only, no double-counting).
  */
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { getSession, UserProfile } from '@/lib/auth';
@@ -48,15 +49,34 @@ interface VendorBreakdown {
   pending_amount: number;
 }
 
+interface VendorPaymentDetail {
+  utr: string;
+  mode: string;
+  notes: string;
+}
+
 const MONTHS = [
   'January','February','March','April','May','June',
   'July','August','September','October','November','December'
 ];
 
+const PAYMENT_MODES = ['NEFT', 'RTGS', 'UPI', 'Cheque', 'Cash', 'IMPS', 'DD'];
+
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
   'DRAFT':     { bg: '#FFF7ED', text: '#C2410C', border: '#FED7AA', label: 'Draft' },
   'FINALIZED': { bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0', label: 'Finalized' },
   'REOPENED':  { bg: '#FEF3C7', text: '#92400E', border: '#FDE68A', label: 'Reopened' },
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 10px',
+  borderRadius: '6px',
+  border: '1px solid #CBD5E1',
+  fontSize: '0.82rem',
+  background: 'white',
+  boxSizing: 'border-box',
+  color: '#0F172A',
 };
 
 export default function SettlementsPage() {
@@ -78,6 +98,9 @@ export default function SettlementsPage() {
   const [exportLoading, setExportLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Per-vendor payment details (editable before confirmation)
+  const [vendorPayments, setVendorPayments] = useState<Record<string, VendorPaymentDetail>>({});
 
   const loadSettlements = useCallback(async () => {
     setLoading(true);
@@ -105,6 +128,15 @@ export default function SettlementsPage() {
     loadSettlements();
   }, []);
 
+  // Initialise per-vendor payment details when a draft loads
+  const initVendorPayments = (vendors: VendorBreakdown[]) => {
+    const init: Record<string, VendorPaymentDetail> = {};
+    vendors.forEach(v => {
+      init[v.vendor_id] = { utr: '', mode: 'NEFT', notes: '' };
+    });
+    setVendorPayments(init);
+  };
+
   const handleCalculate = async () => {
     setCalculating(true);
     setError('');
@@ -121,6 +153,7 @@ export default function SettlementsPage() {
         notes,
       });
       setDraft(data);
+      initVendorPayments(data.vendor_breakdown || []);
       await loadSettlements();
     } catch (err: any) {
       setError(err?.detail || err?.message || 'Failed to create settlement. Please try again.');
@@ -135,17 +168,25 @@ export default function SettlementsPage() {
     setError('');
     try {
       await api.post(`/settlements/${draft.id}/finalize`, {});
-      setSuccessMsg(`Settlement ${draft.settlement_number} finalized successfully!`);
+      setSuccessMsg(`Settlement ${draft.settlement_number} finalized successfully! All ${draft.vendor_breakdown?.length || 0} vendor(s) settled.`);
       setDraft(null);
       setConfirmOpen(false);
+      setVendorPayments({});
       await loadSettlements();
       setActiveTab('history');
-      setTimeout(() => setSuccessMsg(''), 5000);
+      setTimeout(() => setSuccessMsg(''), 6000);
     } catch (err: any) {
       setError(err?.detail || err?.message || 'Finalization failed. Please verify settlement totals.');
     } finally {
       setFinalizing(false);
     }
+  };
+
+  const updateVendorPayment = (vendorId: string, field: keyof VendorPaymentDetail, value: string) => {
+    setVendorPayments(prev => ({
+      ...prev,
+      [vendorId]: { ...prev[vendorId], [field]: value },
+    }));
   };
 
   const handleExport = async (settlementId: number, type: 'pdf' | 'excel', number: string) => {
@@ -177,6 +218,9 @@ export default function SettlementsPage() {
   const currentYear = new Date().getFullYear();
   const yearOptions = [currentYear, currentYear - 1, currentYear - 2];
 
+  const vendors = draft?.vendor_breakdown || [];
+  const grandTotal = vendors.reduce((sum, v) => sum + v.total_amount, 0);
+
   return (
     <AppShell role={(session.role as 'dcr' | 'administration') || 'dcr'} currentPath="/dcr/settlements">
       <div>
@@ -189,7 +233,7 @@ export default function SettlementsPage() {
               <span style={{ fontSize: '0.85rem', color: '#0D9488', fontWeight: 600 }}>Payments & Settlements</span>
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: '#0F172A' }}>💳 Payments & Settlements</h1>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#6B7280' }}>Monthly settlement workflow and permanent settlement history.</p>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#6B7280' }}>Monthly vendor settlement workflow. Each vendor is settled separately.</p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <Link href="/dcr/bills" style={{ padding: '8px 16px', borderRadius: '8px', background: '#F0FDFA', color: '#0F766E', border: '1px solid #0D9488', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' }}>
@@ -261,7 +305,7 @@ export default function SettlementsPage() {
                     <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
                       <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Settlement #</th>
                       <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Period</th>
-                      <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Total Bills</th>
+                      <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Vendor Bills</th>
                       <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Total Amount</th>
                       <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Status</th>
                       <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Finalized</th>
@@ -318,173 +362,253 @@ export default function SettlementsPage() {
 
         {/* New Settlement Tab */}
         {activeTab === 'new' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '20px', alignItems: 'start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
             {/* Step 1: Configure */}
             <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#F0FDFA' }}>
-                <h3 style={{ margin: 0, fontWeight: 800, color: '#0F766E', fontSize: '1rem' }}>Step 1: Configure Settlement</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6B7280' }}>Select the month and year to settle</p>
+                <h3 style={{ margin: 0, fontWeight: 800, color: '#0F766E', fontSize: '1rem' }}>Step 1 — Select Period</h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6B7280' }}>Choose the month and year to generate the settlement for</p>
               </div>
-              <div style={{ padding: '20px' }}>
-                <div style={{ marginBottom: '16px' }}>
+              <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', alignItems: 'end' }}>
+                <div>
                   <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.85rem' }}>Month</label>
-                  <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setDraft(null); }} style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.9rem', background: 'white' }}>
+                  <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setDraft(null); setVendorPayments({}); }} style={{ ...inputStyle, padding: '10px 12px' }}>
                     {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
                   </select>
                 </div>
-                <div style={{ marginBottom: '16px' }}>
+                <div>
                   <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.85rem' }}>Year</label>
-                  <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setDraft(null); }} style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.9rem', background: 'white' }}>
+                  <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setDraft(null); setVendorPayments({}); }} style={{ ...inputStyle, padding: '10px 12px' }}>
                     {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
-                <div style={{ marginBottom: '20px' }}>
+                <div>
                   <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '6px', fontSize: '0.85rem' }}>Notes (optional)</label>
-                  <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Settlement notes..." style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box' }} />
+                  <input
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="e.g. Monthly settlement Aug 2026"
+                    style={{ ...inputStyle, padding: '10px 12px' }}
+                  />
                 </div>
-                <button
-                  onClick={handleCalculate}
-                  disabled={calculating}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', cursor: calculating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  {calculating ? '⏳ Calculating...' : '🔢 Calculate Settlement'}
-                </button>
+                <div>
+                  <button
+                    onClick={handleCalculate}
+                    disabled={calculating}
+                    style={{ width: '100%', padding: '11px', borderRadius: '8px', background: '#0D9488', color: 'white', border: 'none', cursor: calculating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  >
+                    {calculating ? '⏳ Calculating...' : '🔢 Calculate Settlement'}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Step 2: Preview */}
+            {/* Step 2: Per-vendor editable payment details */}
             {draft && (
-              <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#F0FDF4' }}>
-                  <h3 style={{ margin: 0, fontWeight: 800, color: '#15803D', fontSize: '1rem' }}>Step 2: Verify & Finalize</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6B7280' }}>Review the calculated settlement — all amounts are server-computed</p>
-                </div>
-                <div style={{ padding: '20px' }}>
-                  {/* Summary numbers */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                    {[
-                      { label: 'Period', value: `${MONTHS[draft.month - 1]} ${draft.year}` },
-                      { label: 'Settlement #', value: draft.settlement_number },
-                      { label: 'Total Bills', value: String(draft.total_bills) },
-                      { label: 'Total Amount', value: fmtAmount(draft.total_amount) },
-                    ].map((item, i) => (
-                      <div key={i} style={{ background: '#F8FAFC', borderRadius: '8px', padding: '12px' }}>
-                        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6B7280', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{item.value}</div>
-                      </div>
-                    ))}
+              <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #0D9488', overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#F0FDF4', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontWeight: 800, color: '#15803D', fontSize: '1rem' }}>
+                      Step 2 — Review & Fill Payment Details
+                    </h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6B7280' }}>
+                      {MONTHS[draft.month - 1]} {draft.year} · {draft.settlement_number} · {vendors.length} vendor{vendors.length !== 1 ? 's' : ''} to settle
+                    </p>
                   </div>
+                  <div style={{ background: '#DCFCE7', border: '1px solid #86EFAC', borderRadius: '8px', padding: '6px 14px', fontWeight: 800, color: '#15803D', fontSize: '1rem' }}>
+                    Total: {fmtAmount(grandTotal)}
+                  </div>
+                </div>
 
-                  {/* Department breakdown */}
-                  {draft.department_breakdown && draft.department_breakdown.length > 0 && (
-                    <div style={{ marginBottom: '16px' }}>
-                      <h4 style={{ margin: '0 0 8px', fontWeight: 700, color: '#374151', fontSize: '0.85rem' }}>Department Breakdown</h4>
-                      <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
+                {vendors.length === 0 ? (
+                  <div style={{ padding: '32px', textAlign: 'center', color: '#9CA3AF' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔍</div>
+                    <div style={{ fontWeight: 700 }}>No vendor bills found for this period</div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>Make sure orders are completed and invoiced for {MONTHS[draft.month - 1]} {draft.year}.</div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                    {/* Info notice */}
+                    <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', color: '#1E40AF' }}>
+                      ℹ️ Each vendor is settled <strong>separately</strong>. Fill in payment references for each vendor below. The amount shown is calculated from vendor-specific bills only (master invoices are excluded to avoid double-counting).
+                    </div>
+
+                    {/* One card per vendor */}
+                    {vendors.map((v, i) => {
+                      const vp = vendorPayments[v.vendor_id] || { utr: '', mode: 'NEFT', notes: '' };
+                      return (
+                        <div key={v.vendor_id} style={{ border: '1px solid #E2E8F0', borderRadius: '10px', overflow: 'hidden' }}>
+                          {/* Vendor header */}
+                          <div style={{ padding: '12px 16px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <span style={{ background: '#0D9488', color: 'white', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', flexShrink: 0 }}>
+                                {i + 1}
+                              </span>
+                              <div>
+                                <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.95rem' }}>🍽️ {v.vendor_name}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{v.bill_count} bill{v.bill_count !== 1 ? 's' : ''} · {fmtAmount(v.pending_amount)} pending</div>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '0.7rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount to Pay</div>
+                              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#059669' }}>{fmtAmount(v.total_amount)}</div>
+                            </div>
+                          </div>
+
+                          {/* Editable payment fields */}
+                          <div style={{ padding: '14px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>Payment Mode</label>
+                              <select
+                                value={vp.mode}
+                                onChange={e => updateVendorPayment(v.vendor_id, 'mode', e.target.value)}
+                                style={inputStyle}
+                              >
+                                {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+                              </select>
+                            </div>
+                            <div style={{ flex: 2 }}>
+                              <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>UTR / Reference No.</label>
+                              <input
+                                type="text"
+                                value={vp.utr}
+                                onChange={e => updateVendorPayment(v.vendor_id, 'utr', e.target.value)}
+                                placeholder="e.g. NEFT2026082600123"
+                                style={inputStyle}
+                              />
+                            </div>
+                            <div style={{ flex: 2 }}>
+                              <label style={{ display: 'block', fontWeight: 700, color: '#374151', marginBottom: '4px', fontSize: '0.78rem' }}>Notes (optional)</label>
+                              <input
+                                type="text"
+                                value={vp.notes}
+                                onChange={e => updateVendorPayment(v.vendor_id, 'notes', e.target.value)}
+                                placeholder="e.g. Transferred on 26-Aug"
+                                style={inputStyle}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Grand total summary */}
+                    <div style={{ background: '#F0FDFA', border: '2px solid #0D9488', borderRadius: '10px', padding: '14px 18px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <div style={{ fontWeight: 800, color: '#0F766E', fontSize: '0.95rem' }}>💰 Grand Total — All Vendors</div>
+                          <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '2px' }}>
+                            {draft.total_bills} vendor bill{draft.total_bills !== 1 ? 's' : ''} across {vendors.length} vendor{vendors.length !== 1 ? 's' : ''}
+                            {' · '}Amounts calculated server-side (master invoices excluded)
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0F766E' }}>{fmtAmount(grandTotal)}</div>
+                      </div>
+                    </div>
+
+                    {/* Department breakdown (collapsible info) */}
+                    {draft.department_breakdown && draft.department_breakdown.length > 0 && (
+                      <details style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
+                        <summary style={{ padding: '10px 14px', fontWeight: 700, color: '#374151', fontSize: '0.85rem', cursor: 'pointer', background: '#F8FAFC', userSelect: 'none' }}>
+                          🏫 Department Expenditure Breakdown (click to expand)
+                        </summary>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                           <thead>
-                            <tr style={{ background: '#F8FAFC' }}>
-                              <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Department</th>
-                              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
-                              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Amount</th>
+                            <tr style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+                              <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Department</th>
+                              <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
+                              <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Amount</th>
                             </tr>
                           </thead>
                           <tbody>
                             {draft.department_breakdown.map((d, i) => (
                               <tr key={d.department_id} style={{ borderTop: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                                <td style={{ padding: '8px 12px' }}>{d.department_name}</td>
-                                <td style={{ padding: '8px 12px', textAlign: 'right', color: '#6B7280' }}>{d.bill_count}</td>
-                                <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(d.total_amount)}</td>
+                                <td style={{ padding: '8px 14px' }}>{d.department_name}</td>
+                                <td style={{ padding: '8px 14px', textAlign: 'right', color: '#6B7280' }}>{d.bill_count}</td>
+                                <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(d.total_amount)}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
-                      </div>
-                    </div>
-                  )}
+                      </details>
+                    )}
 
-                  {/* Vendor breakdown */}
-                  {draft.vendor_breakdown && draft.vendor_breakdown.length > 0 && (
-                    <div style={{ marginBottom: '20px' }}>
-                      <h4 style={{ margin: '0 0 8px', fontWeight: 700, color: '#374151', fontSize: '0.85rem' }}>Vendor Breakdown</h4>
-                      <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                          <thead>
-                            <tr style={{ background: '#F8FAFC' }}>
-                              <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Vendor</th>
-                              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Bills</th>
-                              <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Amount</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {draft.vendor_breakdown.map((v, i) => (
-                              <tr key={v.vendor_id} style={{ borderTop: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                                <td style={{ padding: '8px 12px' }}>{v.vendor_name}</td>
-                                <td style={{ padding: '8px 12px', textAlign: 'right', color: '#6B7280' }}>{v.bill_count}</td>
-                                <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(v.total_amount)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                    {/* Warning notice */}
+                    <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', color: '#92400E' }}>
+                      ⚠️ <strong>Important:</strong> Finalizing marks all vendor bills as SETTLED — this is a permanent audit record. Physical/bank payments must be made separately per vendor. The settlement record does NOT trigger an electronic transfer.
                     </div>
-                  )}
 
-                  {/* Total confirmation box */}
-                  <div style={{ background: '#F0FDFA', border: '1px solid #0D9488', borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 700, color: '#0F766E', fontSize: '0.9rem' }}>Total Settlement Amount</span>
-                      <span style={{ fontWeight: 900, color: '#0F766E', fontSize: '1.3rem' }}>{fmtAmount(draft.total_amount)}</span>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '4px' }}>
-                      {draft.total_bills} bills across {draft.department_breakdown?.length || 0} department(s) and {draft.vendor_breakdown?.length || 0} vendor(s). Calculated server-side.
-                    </div>
+                    <button
+                      onClick={() => setConfirmOpen(true)}
+                      style={{ width: '100%', padding: '13px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '1rem' }}
+                    >
+                      ✅ Review & Finalize Settlement
+                    </button>
                   </div>
-
-                  {/* Important notice */}
-                  <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '0.8rem', color: '#92400E' }}>
-                    ⚠️ <strong>Important:</strong> Finalizing this settlement marks all included bills as SETTLED. This is a permanent record. Settlement and actual payment are separate — marking settled does NOT imply an electronic payment was made.
-                  </div>
-
-                  <button
-                    onClick={() => setConfirmOpen(true)}
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '1rem' }}
-                  >
-                    ✅ Finalize Settlement
-                  </button>
-                </div>
+                )}
               </div>
             )}
           </div>
         )}
 
-        {/* Confirmation Modal */}
+        {/* Confirmation Modal — per-vendor breakdown */}
         {confirmOpen && draft && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-              <h2 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>Confirm Finalization</h2>
-              <p style={{ margin: '0 0 20px', color: '#6B7280', fontSize: '0.9rem' }}>
-                You are about to finalize the settlement for <strong>{MONTHS[draft.month - 1]} {draft.year}</strong>.
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '28px', maxWidth: '560px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <h2 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>✅ Confirm Settlement Finalization</h2>
+              <p style={{ margin: '0 0 20px', color: '#6B7280', fontSize: '0.88rem' }}>
+                You are finalizing the settlement for <strong>{MONTHS[draft.month - 1]} {draft.year}</strong> — {draft.settlement_number}. Review per-vendor amounts before confirming.
               </p>
-              <div style={{ background: '#F8FAFC', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: '#6B7280', fontSize: '0.85rem' }}>Settlement Number</span>
-                  <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{draft.settlement_number}</span>
+
+              {/* Per-vendor confirmation table */}
+              <div style={{ border: '1px solid #E2E8F0', borderRadius: '10px', overflow: 'hidden', marginBottom: '20px' }}>
+                <div style={{ padding: '10px 14px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', fontWeight: 700, fontSize: '0.8rem', color: '#374151' }}>
+                  Vendor Payment Summary
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: '#6B7280', fontSize: '0.85rem' }}>Total Bills</span>
-                  <span style={{ fontWeight: 700 }}>{draft.total_bills}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #E2E8F0' }}>
-                  <span style={{ fontWeight: 700 }}>Total Amount</span>
-                  <span style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0F766E' }}>{fmtAmount(draft.total_amount)}</span>
-                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                  <thead>
+                    <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Vendor</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Amount</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Mode</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Reference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vendors.map((v, i) => {
+                      const vp = vendorPayments[v.vendor_id] || { utr: '', mode: 'NEFT', notes: '' };
+                      return (
+                        <tr key={v.vendor_id} style={{ borderTop: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                          <td style={{ padding: '8px 12px', fontWeight: 700, color: '#0F172A' }}>🍽️ {v.vendor_name}</td>
+                          <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>{fmtAmount(v.total_amount)}</td>
+                          <td style={{ padding: '8px 12px', color: '#374151' }}>{vp.mode || '—'}</td>
+                          <td style={{ padding: '8px 12px', color: '#6B7280', fontFamily: 'monospace', fontSize: '0.75rem' }}>{vp.utr || <em style={{ color: '#9CA3AF' }}>not filled</em>}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ borderTop: '2px solid #0D9488', background: '#F0FDFA' }}>
+                      <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0F766E' }}>TOTAL</td>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 900, fontSize: '1.1rem', color: '#0F766E' }}>{fmtAmount(grandTotal)}</td>
+                      <td colSpan={2} style={{ padding: '10px 12px', fontSize: '0.75rem', color: '#6B7280' }}>{draft.total_bills} vendor bills</td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
+
+              <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px', padding: '10px 14px', fontSize: '0.78rem', color: '#92400E', marginBottom: '20px' }}>
+                ⚠️ This action is <strong>permanent</strong>. All vendor bills for {MONTHS[draft.month - 1]} {draft.year} will be marked as SETTLED.
+              </div>
+
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={() => setConfirmOpen(false)} disabled={finalizing} style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#F3F4F6', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#374151' }}>
-                  Cancel
+                  ← Go Back & Edit
                 </button>
-                <button onClick={handleFinalize} disabled={finalizing} style={{ flex: 2, padding: '12px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: finalizing ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '0.95rem' }}>
-                  {finalizing ? '⏳ Finalizing...' : '✅ Confirm & Finalize'}
+                <button onClick={handleFinalize} disabled={finalizing} style={{ flex: 2, padding: '12px', borderRadius: '8px', background: '#059669', color: 'white', border: 'none', cursor: finalizing ? 'not-allowed' : 'pointer', fontWeight: 800, fontSize: '0.95rem' }}>
+                  {finalizing ? '⏳ Finalizing...' : '✅ Confirm & Finalize All Vendors'}
                 </button>
               </div>
             </div>

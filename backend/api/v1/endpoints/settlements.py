@@ -24,16 +24,20 @@ router = APIRouter()
 def _get_settlement_breakdowns(db: Session, month: int, year: int):
     """
     Compute department and vendor breakdowns for bills in a specific month and year.
-    Uses master bills and vendor bills properly.
+    Only uses vendor-specific bills (vendor_id IS NOT NULL) to avoid double-counting:
+    - Master bills (vendor_id=None) are consolidated department receipts, NOT vendor payments.
+    - Vendor bills (vendor_id set) represent actual amounts to be paid per vendor.
     """
-    # Bills query for the month/year
-    bills_q = db.query(Bill).filter(
+    # All bills for the month (used for the bill register display)
+    all_bills = db.query(Bill).filter(
         extract('month', Bill.generated_at) == month,
         extract('year', Bill.generated_at) == year
-    )
-    all_bills = bills_q.all()
+    ).all()
 
-    # Department breakdown (using Master bills / all bills associated with department)
+    # Only vendor-specific bills for financial calculations (exclude master/consolidated bills)
+    vendor_bills = [b for b in all_bills if b.vendor_id is not None]
+
+    # Department breakdown — derived from vendor bills only to avoid double-counting
     depts = db.query(Department).all()
     dept_map = {d.id: d for d in depts}
     dept_stats = {}
@@ -62,7 +66,7 @@ def _get_settlement_breakdowns(db: Session, month: int, year: int):
             'pending_amount': 0.0,
         }
 
-    for b in all_bills:
+    for b in vendor_bills:
         amt = float(b.amount or 0.0)
         is_settled = (b.settlement_status == 'SETTLED')
 
@@ -82,9 +86,12 @@ def _get_settlement_breakdowns(db: Session, month: int, year: int):
             else:
                 vendor_stats[b.vendor_id]['pending_amount'] += amt
 
-    # Filter out empty entries
+    # Filter out empty entries and sort vendors by name for consistent display
     active_depts = [v for v in dept_stats.values() if v['bill_count'] > 0 or v['total_amount'] > 0]
-    active_vendors = [v for v in vendor_stats.values() if v['bill_count'] > 0 or v['total_amount'] > 0]
+    active_vendors = sorted(
+        [v for v in vendor_stats.values() if v['bill_count'] > 0 or v['total_amount'] > 0],
+        key=lambda x: x['vendor_name']
+    )
 
     return active_depts, active_vendors, all_bills
 
@@ -145,9 +152,11 @@ def create_draft_settlement(
         raise HTTPException(status_code=400, detail=f"Settlement for {calendar.month_name[month]} {year} is already finalized.")
 
     dept_breakdown, vendor_breakdown, bills = _get_settlement_breakdowns(db, month, year)
-    total_bills = len(bills)
-    total_amount = sum(float(b.amount or 0.0) for b in bills)
-    settled_amount = sum(float(b.amount or 0.0) for b in bills if b.settlement_status == 'SETTLED')
+    # Only count vendor-specific bills (master bills excluded) to avoid double-counting
+    vendor_bills_only = [b for b in bills if b.vendor_id is not None]
+    total_bills = len(vendor_bills_only)
+    total_amount = sum(float(b.amount or 0.0) for b in vendor_bills_only)
+    settled_amount = sum(float(b.amount or 0.0) for b in vendor_bills_only if b.settlement_status == 'SETTLED')
     pending_amount = total_amount - settled_amount
 
     settlement_num = f"SET-{year:04d}-{month:02d}"
@@ -303,15 +312,17 @@ def finalize_settlement(
     if settlement.status == "FINALIZED":
         return {"message": "Settlement is already finalized", "settlement_number": settlement.settlement_number}
 
-    # Fetch bills for this month/year
+    # Fetch all bills for this month/year
     bills = db.query(Bill).filter(
         extract('month', Bill.generated_at) == settlement.month,
         extract('year', Bill.generated_at) == settlement.year
     ).all()
 
-    total_amount = sum(float(b.amount or 0.0) for b in bills)
+    # Only vendor-specific bills count toward the settlement total
+    vendor_bills = [b for b in bills if b.vendor_id is not None]
+    total_amount = sum(float(b.amount or 0.0) for b in vendor_bills)
 
-    # Update bills
+    # Mark all bills (including master) as SETTLED for audit trail
     for b in bills:
         b.settlement_status = "SETTLED"
         b.settlement_id = settlement.id
@@ -319,7 +330,7 @@ def finalize_settlement(
     now = datetime.now(timezone.utc)
     settlement.status = "FINALIZED"
     settlement.finalized_at = now
-    settlement.total_bills = len(bills)
+    settlement.total_bills = len(vendor_bills)
     settlement.total_amount = total_amount
     settlement.settled_amount = total_amount
     settlement.pending_amount = 0.0

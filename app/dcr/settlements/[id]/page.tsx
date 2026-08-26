@@ -316,13 +316,27 @@ export default function SettlementDetailPage({ params }: { params: Promise<{ id:
         {/* Bill Register */}
         {settlement.bills && settlement.bills.length > 0 && (
           <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
-              <h3 style={{ margin: 0, fontWeight: 800, color: '#374151', fontSize: '0.95rem' }}>📋 Bill Register ({settlement.bills.length} bills)</h3>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <h3 style={{ margin: 0, fontWeight: 800, color: '#374151', fontSize: '0.95rem' }}>
+                📋 Bill Register ({settlement.bills.length} bills total)
+              </h3>
+              <div style={{ display: 'flex', gap: '8px', fontSize: '0.75rem', fontWeight: 600 }}>
+                <span style={{ background: '#F0FDFA', border: '1px solid #0D9488', borderRadius: '6px', padding: '3px 8px', color: '#0F766E' }}>
+                  🍽️ Vendor Bill = counted in settlement
+                </span>
+                <span style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', padding: '3px 8px', color: '#6B7280' }}>
+                  📄 Master Invoice = audit record only
+                </span>
+              </div>
+            </div>
+            <div style={{ padding: '10px 20px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE', fontSize: '0.78rem', color: '#1E40AF' }}>
+              ℹ️ <strong>Note:</strong> Master invoices are consolidated department receipts and are <strong>excluded from settlement amounts</strong> to avoid double-counting. Only vendor-specific bills are used to calculate the settlement total.
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #E2E8F0', background: '#F8FAFC' }}>
+                    <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Type</th>
                     <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Invoice #</th>
                     <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Order ID</th>
                     <th style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Department</th>
@@ -332,25 +346,37 @@ export default function SettlementDetailPage({ params }: { params: Promise<{ id:
                   </tr>
                 </thead>
                 <tbody>
-                  {settlement.bills.map((bill, i) => (
-                    <tr key={bill.id} style={{ borderBottom: '1px solid #F3F4F6', background: i % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                      <td style={{ padding: '8px 14px', fontFamily: 'monospace', fontWeight: 700, color: '#0F766E' }}>{bill.invoice_number || bill.id}</td>
-                      <td style={{ padding: '8px 14px', color: '#6B7280' }}>{bill.order_id}</td>
-                      <td style={{ padding: '8px 14px' }}>{bill.department_label || '—'}</td>
-                      <td style={{ padding: '8px 14px', color: '#6B7280' }}>{bill.vendor_name || 'Master Invoice'}</td>
-                      <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700 }}>{fmtAmount(bill.amount)}</td>
-                      <td style={{ padding: '8px 14px' }}>
-                        <span style={{ padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700, background: bill.settlement_status === 'SETTLED' ? '#F0FDF4' : '#FFF7ED', color: bill.settlement_status === 'SETTLED' ? '#15803D' : '#C2410C', border: `1px solid ${bill.settlement_status === 'SETTLED' ? '#BBF7D0' : '#FED7AA'}` }}>
-                          {bill.settlement_status?.replace('_', ' ')}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {settlement.bills.map((bill, i) => {
+                    const isMaster = !bill.vendor_name || bill.vendor_name === 'Master Invoice';
+                    return (
+                      <tr key={bill.id} style={{ borderBottom: '1px solid #F3F4F6', background: isMaster ? '#F8FAFC' : (i % 2 === 0 ? 'white' : '#FAFFFE'), opacity: isMaster ? 0.75 : 1 }}>
+                        <td style={{ padding: '8px 14px' }}>
+                          {isMaster
+                            ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#F1F5F9', color: '#64748B', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '2px 6px' }}>MASTER</span>
+                            : <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#F0FDFA', color: '#0F766E', border: '1px solid #0D9488', borderRadius: '4px', padding: '2px 6px' }}>VENDOR</span>
+                          }
+                        </td>
+                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', fontWeight: 700, color: isMaster ? '#94A3B8' : '#0F766E' }}>{bill.invoice_number || bill.id}</td>
+                        <td style={{ padding: '8px 14px', color: '#6B7280' }}>{bill.order_id}</td>
+                        <td style={{ padding: '8px 14px' }}>{bill.department_label || '—'}</td>
+                        <td style={{ padding: '8px 14px', color: isMaster ? '#9CA3AF' : '#374151', fontStyle: isMaster ? 'italic' : 'normal' }}>
+                          {isMaster ? 'Master Invoice (not settled separately)' : bill.vendor_name}
+                        </td>
+                        <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: isMaster ? '#9CA3AF' : '#0F172A' }}>{fmtAmount(bill.amount)}</td>
+                        <td style={{ padding: '8px 14px' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700, background: bill.settlement_status === 'SETTLED' ? '#F0FDF4' : '#FFF7ED', color: bill.settlement_status === 'SETTLED' ? '#15803D' : '#C2410C', border: `1px solid ${bill.settlement_status === 'SETTLED' ? '#BBF7D0' : '#FED7AA'}` }}>
+                            {bill.settlement_status?.replace('_', ' ')}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         )}
+
       </div>
     </AppShell>
   );

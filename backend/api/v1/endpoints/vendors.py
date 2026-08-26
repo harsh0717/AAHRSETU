@@ -7,9 +7,14 @@ from backend.api import deps
 from backend.core.database import get_db
 from backend.models.user import User
 from backend.models.vendor import Vendor, VendorMenuItem, VendorMonthlySettlement
-from backend.repositories.vendor import VendorRepository
-from backend.schemas.vendor import VendorResponse, VendorMenuItemResponse, VendorMenuItemCreate, VendorStatusUpdate, MenuItemAvailabilityUpdate
-from backend.schemas.settlement import SettlementResponse, SettlementUpdate
+from backend.schemas.vendor import (
+    VendorResponse,
+    VendorMenuItemResponse,
+    VendorMenuItemCreate,
+    VendorStatusUpdate,
+    VendorUpdatePayload,
+    MenuItemAvailabilityUpdate,
+)
 from datetime import datetime
 
 
@@ -448,6 +453,101 @@ def toggle_vendor_active_status(
         new_value=str(new_active_status)
     )
     
+@router.put("/{vendor_id}", response_model=VendorResponse)
+@router.patch("/{vendor_id}", response_model=VendorResponse)
+async def update_vendor_profile(
+    vendor_id: str,
+    payload: VendorUpdatePayload,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Update vendor profile details including canteen name, proprietor name, phone, email, status, and image.
+    Allowed roles: admin, dcr, administration, or the vendor user linked to this vendor_id.
+    """
+    if current_user.role not in ["admin", "dcr", "administration"] and current_user.vendor_id != vendor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to update this vendor profile."
+        )
+
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendor not found."
+        )
+
+    # 1. Update basic fields if supplied
+    if payload.name is not None and payload.name.strip():
+        vendor.name = payload.name.strip()
+
+    if payload.owner_name is not None and payload.owner_name.strip():
+        vendor.owner_name = payload.owner_name.strip()
+        # Also update linked user's name
+        users = db.query(User).filter(User.vendor_id == vendor.id).all()
+        for u in users:
+            u.name = vendor.owner_name
+
+    if payload.phone is not None and payload.phone.strip():
+        vendor.phone = payload.phone.strip()
+
+    if payload.email is not None and payload.email.strip():
+        new_email = str(payload.email).strip().lower()
+        if new_email != vendor.email:
+            existing_user = db.query(User).filter(User.email == new_email, User.vendor_id != vendor.id).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Another user account is already registered with this email address."
+                )
+            vendor.email = new_email
+            # Update linked user account email
+            users = db.query(User).filter(User.vendor_id == vendor.id).all()
+            for u in users:
+                u.email = new_email
+
+    if payload.status is not None and payload.status.strip():
+        valid_statuses = ["open", "closed", "temporarily_unavailable"]
+        new_status = payload.status.strip().lower()
+        if new_status in valid_statuses:
+            vendor.status = new_status
+
+    if payload.image_url is not None:
+        vendor.image_url = payload.image_url.strip() or None
+
+    if payload.active is not None:
+        vendor.active = payload.active
+
+    db.add(vendor)
+    db.commit()
+    db.refresh(vendor)
+
+    # Audit log
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Vendor Profile Updated",
+        old_value=vendor_id,
+        new_value=f"Name: {vendor.name}, Owner: {vendor.owner_name}, Phone: {vendor.phone}, Status: {vendor.status}"
+    )
+
+    # Broadcast WebSocket event
+    try:
+        from backend.services.notification import manager
+        await manager.broadcast({
+            "type": "VENDOR_UPDATED",
+            "vendor_id": vendor.id,
+            "name": vendor.name,
+            "owner_name": vendor.owner_name,
+            "status": vendor.status
+        })
+    except Exception:
+        pass
+
     return vendor
 
 

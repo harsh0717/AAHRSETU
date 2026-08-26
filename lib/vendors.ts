@@ -285,6 +285,58 @@ export async function updateVendorStatus(vendorId: string, status: string): Prom
   };
 }
 
+export async function updateVendorProfile(vendorId: string, data: Partial<Vendor>): Promise<Vendor> {
+  let updatedVendor: Vendor | null = null;
+  try {
+    const res = await api.put<Vendor>(`/vendors/${vendorId}`, data);
+    if (res) updatedVendor = res;
+  } catch (err) {
+    console.warn(`[VENDORS] API vendor profile update failed for ${vendorId}, updating locally:`, err);
+  }
+
+  const vendors = getLocalVendors();
+  const idx = vendors.findIndex(v => v.id === vendorId);
+  const current = idx >= 0 ? vendors[idx] : {
+    id: vendorId,
+    name: data.name || 'Canteen Vendor',
+    owner_name: data.owner_name || 'Proprietor',
+    email: data.email || `${vendorId}@aharsetu.edu.in`,
+    phone: data.phone || '',
+    status: data.status || 'open',
+    revenue: 0.0
+  };
+
+  const finalVendor: Vendor = updatedVendor || {
+    ...current,
+    ...data,
+  };
+
+  if (idx >= 0) {
+    vendors[idx] = finalVendor;
+  } else {
+    vendors.push(finalVendor);
+  }
+  saveLocalVendors(vendors);
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('aharsetu_vendor_updated', { detail: { vendorId, vendor: finalVendor } }));
+    window.dispatchEvent(new CustomEvent('aharsetu_vendors_changed', { detail: { vendorId, vendor: finalVendor } }));
+  }
+
+  return finalVendor;
+}
+
+export async function deleteSettlement(settlementId: number): Promise<void> {
+  try {
+    await api.delete(`/settlements/${settlementId}`);
+  } catch (err) {
+    console.warn(`[SETTLEMENTS] API settlement delete failed for #${settlementId}:`, err);
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('aharsetu_settlement_deleted', { detail: { settlementId } }));
+  }
+}
+
 export async function getVendorMenu(vendorId: string): Promise<MenuItem[]> {
   // Always prefer API — backend is source of truth for menu state
   try {

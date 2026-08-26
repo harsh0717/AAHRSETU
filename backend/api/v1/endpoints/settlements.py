@@ -812,6 +812,90 @@ def finalize_settlement(
     }
 
 
+@router.delete("/{settlement_id}")
+def delete_settlement(
+    settlement_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(['admin', 'dcr', 'administration']))
+) -> Any:
+    """
+    Delete / Reopen a settlement.
+    Reverts all reconciled bills back to PENDING_SETTLEMENT, deletes auto-created payment records,
+    resets monthly vendor settlements, and removes the settlement record.
+    """
+    settlement = db.query(Settlement).filter(Settlement.id == settlement_id).first()
+    if not settlement:
+        raise HTTPException(status_code=404, detail="Settlement not found")
+
+    settlement_number = settlement.settlement_number
+    s_month = settlement.month
+    s_year = settlement.year
+
+    # 1. Revert bills back to PENDING_SETTLEMENT
+    bills = db.query(Bill).filter(
+        (Bill.settlement_id == settlement.id) | 
+        (
+            (extract('month', Bill.generated_at) == s_month) &
+            (extract('year', Bill.generated_at) == s_year) &
+            (Bill.settlement_status == 'SETTLED')
+        )
+    ).all()
+    for b in bills:
+        b.settlement_status = "PENDING_SETTLEMENT"
+        b.settlement_id = None
+        db.add(b)
+
+    # 2. Clean up auto-generated payment records
+    payments = db.query(Payment).filter(Payment.settlement_id == settlement.id).all()
+    for p in payments:
+        db.delete(p)
+
+    # 3. Reset vendor monthly settlement tracker
+    month_str = f"{s_year:04d}-{s_month:02d}"
+    vms_list = db.query(VendorMonthlySettlement).filter(VendorMonthlySettlement.month == month_str).all()
+    for vms in vms_list:
+        vms.paid_amount = 0.0
+        vms.due_amount = vms.total_amount
+        vms.status = "Pending"
+        db.add(vms)
+
+    # 4. Delete the settlement record
+    db.delete(settlement)
+    db.commit()
+
+    # 5. Audit log
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department=current_user.department_id or "General",
+        action="Settlement Deleted / Reopened",
+        old_value=f"Settlement #{settlement_number}",
+        new_value=f"Reverted {len(bills)} bills to PENDING_SETTLEMENT"
+    )
+
+    # 6. Broadcast notification
+    try:
+        from backend.services.notification import manager
+        import asyncio
+        asyncio.create_task(manager.broadcast({
+            "type": "SETTLEMENT_DELETED",
+            "settlement_id": settlement_id,
+            "settlement_number": settlement_number,
+            "month": s_month,
+            "year": s_year
+        }))
+    except Exception:
+        pass
+
+    return {
+        "message": f"Settlement {settlement_number} has been deleted and {len(bills)} bills have been reopened.",
+        "settlement_id": settlement_id,
+        "reopened_bills_count": len(bills)
+    }
+
+
 @router.get("/{settlement_id}/export/pdf")
 def export_settlement_pdf(
     settlement_id: int,

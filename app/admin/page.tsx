@@ -8,7 +8,7 @@ import VendorStatusBadge from '@/components/VendorStatusBadge';
 import UserManager from '@/components/UserManager';
 import { getSession, UserProfile, updateSessionLanguage, getDepartments, addDepartment, toggleDepartmentStatus, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, resetAllData, completeOrder, MasterOrder } from '@/lib/store';
-import { getVendors, updateVendorStatus, Vendor, deleteVendor, getMonthlySettlements, updateMonthlySettlement, VendorMonthlySettlement } from '@/lib/vendors';
+import { getVendors, updateVendorStatus, updateVendorProfile, Vendor, deleteVendor, getMonthlySettlements, updateMonthlySettlement, VendorMonthlySettlement } from '@/lib/vendors';
 import { ROLE_COLORS, VENDOR_STATUS_LABELS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
@@ -100,6 +100,13 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   // Vendor Edit modal
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [editStatus, setEditStatus] = useState('closed');
+  const [showEditVendorModal, setShowEditVendorModal] = useState(false);
+  const [editVendorObj, setEditVendorObj] = useState<Vendor | null>(null);
+  const [editCanteenName, setEditCanteenName] = useState('');
+  const [editOwnerName, setEditOwnerName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editOpStatus, setEditOpStatus] = useState('open');
 
   // Department Modal State
   const [showDeptModal, setShowDeptModal] = useState(false);
@@ -473,6 +480,25 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       loadDashboardData();
     } catch (err) {
       alert('Error updating status.');
+    }
+  }
+
+  async function handleSaveVendorDetails(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editVendorObj) return;
+    try {
+      await updateVendorProfile(editVendorObj.id, {
+        name: editCanteenName.trim(),
+        owner_name: editOwnerName.trim(),
+        phone: editPhone.trim(),
+        email: editEmail.trim(),
+        status: editOpStatus
+      });
+      setShowEditVendorModal(false);
+      setEditVendorObj(null);
+      loadDashboardData();
+    } catch (err: any) {
+      alert('Failed to update vendor: ' + (err?.detail || err?.message || 'Error'));
     }
   }
 
@@ -932,6 +958,22 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                              <UiverseButton
+                                variant="outline"
+                                size="sm"
+                                style={{ height: '30px', padding: '4px 8px', fontSize: '0.75rem' }}
+                                onClick={() => {
+                                  setEditVendorObj(v);
+                                  setEditCanteenName(v.name || '');
+                                  setEditOwnerName(v.owner_name || '');
+                                  setEditPhone(v.phone || '');
+                                  setEditEmail(v.email || '');
+                                  setEditOpStatus(v.status || 'open');
+                                  setShowEditVendorModal(true);
+                                }}
+                              >
+                                ✏️ Edit
+                              </UiverseButton>
                               <UiverseButton
                                 variant="outline"
                                 size="sm"
@@ -1963,6 +2005,86 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 <UiverseButton variant="secondary" onClick={() => setSelectedVendor(null)}>Cancel</UiverseButton>
                 <UiverseButton variant="primary" onClick={handleUpdateVendorStatus}>Update Status</UiverseButton>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Edit Vendor Profile & Canteen Name */}
+        {showEditVendorModal && editVendorObj && (
+          <div className={styles.modalOverlay} onClick={e => e.target === e.currentTarget && setShowEditVendorModal(false)}>
+            <div className={styles.modalContent} style={{ maxWidth: '480px' }}>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>
+                  <AppIcon name="vendors" size={20} color="#8B5CF6" />
+                  <span>Edit Canteen Vendor: {editVendorObj.id}</span>
+                </h3>
+                <button className={styles.modalCloseBtn} onClick={() => setShowEditVendorModal(false)}>✕</button>
+              </div>
+              <form onSubmit={handleSaveVendorDetails}>
+                <div className={styles.modalBody} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Canteen / Business Name *</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={editCanteenName}
+                      onChange={e => setEditCanteenName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Proprietor / Owner Name *</label>
+                    <input
+                      type="text"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={editOwnerName}
+                      onChange={e => setEditOwnerName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Phone Number</label>
+                      <input
+                        type="text"
+                        className={styles.filterSelect}
+                        style={{ width: '100%', background: '#FFFFFF' }}
+                        value={editPhone}
+                        onChange={e => setEditPhone(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Operational Status</label>
+                      <select
+                        className={styles.filterSelect}
+                        style={{ width: '100%', background: '#FFFFFF' }}
+                        value={editOpStatus}
+                        onChange={e => setEditOpStatus(e.target.value)}
+                      >
+                        <option value="open">🟢 Open</option>
+                        <option value="closed">🔴 Closed</option>
+                        <option value="temporarily_unavailable">🟠 Unavailable</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Email Address</label>
+                    <input
+                      type="email"
+                      className={styles.filterSelect}
+                      style={{ width: '100%', background: '#FFFFFF' }}
+                      value={editEmail}
+                      onChange={e => setEditEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className={styles.modalFooter}>
+                  <UiverseButton variant="secondary" onClick={() => setShowEditVendorModal(false)}>Cancel</UiverseButton>
+                  <UiverseButton type="submit" variant="primary">Save Changes</UiverseButton>
+                </div>
+              </form>
             </div>
           </div>
         )}

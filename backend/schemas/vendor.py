@@ -52,6 +52,17 @@ class VendorStatusUpdate(BaseModel):
     status: str
 
 
+class VendorUpdatePayload(BaseModel):
+    name: Optional[str] = None
+    owner_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    status: Optional[str] = None
+    image_url: Optional[str] = None
+    active: Optional[bool] = None
+
+
 class MenuItemAvailabilityUpdate(BaseModel):
     available: bool
+
 

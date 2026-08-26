@@ -21,8 +21,12 @@ class Payment(Base):
     initiated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     completed_at = Column(DateTime, nullable=True)
     failed_at = Column(DateTime, nullable=True)
-    failure_reason = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    bank_name = Column(String(100), nullable=True)
+    payment_date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     
     # Relationships
     settlement = relationship("Settlement")
     vendor = relationship("Vendor")
+    created_by = relationship("User", foreign_keys=[created_by_id])

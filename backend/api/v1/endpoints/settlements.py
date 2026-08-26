@@ -78,7 +78,24 @@ def _get_settlement_breakdowns(db: Session, month: int, year: int):
             'total_amount': 0.0,
             'settled_amount': 0.0,
             'pending_amount': 0.0,
+            'mode': 'NEFT',
+            'bank_name': 'State Bank of India',
+            'utr': f"SET-{year:04d}-{month:02d}-{v_id.upper()}"
         }
+
+    # Fetch any recorded payments for this period to enrich UTR and bank details
+    payments = db.query(Payment).filter(
+        extract('month', Payment.payment_date) == month,
+        extract('year', Payment.payment_date) == year
+    ).all()
+    for p in payments:
+        if p.vendor_id and p.vendor_id in vendor_stats:
+            if p.payment_method:
+                vendor_stats[p.vendor_id]['mode'] = p.payment_method
+            if p.bank_name or p.gateway:
+                vendor_stats[p.vendor_id]['bank_name'] = p.bank_name or p.gateway
+            if p.payment_reference:
+                vendor_stats[p.vendor_id]['utr'] = p.payment_reference
 
     for b in vendor_bills:
         amt = float(b.amount or 0.0)

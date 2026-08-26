@@ -170,6 +170,8 @@ def get_outstanding_settlements(
             'phone': v.phone,
             'email': v.email,
             'total_billed': 0.0,
+            'settled_billed': 0.0,
+            'pending_billed': 0.0,
             'total_paid': 0.0,
             'outstanding': 0.0,
             'settled_bills_count': 0,
@@ -195,8 +197,10 @@ def get_outstanding_settlements(
         
         if b.settlement_status == 'SETTLED':
             vendor_stats[v_id]['settled_bills_count'] += 1
+            vendor_stats[v_id]['settled_billed'] += amt
         else:
             vendor_stats[v_id]['pending_bills_count'] += 1
+            vendor_stats[v_id]['pending_billed'] += amt
             # Calculate aging in days
             bill_date = b.generated_at
             if bill_date:
@@ -229,13 +233,16 @@ def get_outstanding_settlements(
                 vendor_stats[p.vendor_id]['last_payment_amount'] = p_amt
                 vendor_stats[p.vendor_id]['last_payment_ref'] = p.payment_reference or p.gateway_transaction_id
 
-    # Resolve outstanding balance per vendor
+    # Resolve outstanding balance per vendor (strictly bounded between 0 and total_billed)
     for v_id, data in vendor_stats.items():
-        if data['total_paid'] > 0:
-            data['outstanding'] = max(0.0, data['total_billed'] - data['total_paid'])
-        else:
-            data['outstanding'] = data['aging_0_30'] + data['aging_31_60'] + data['aging_over_60']
-            data['total_paid'] = max(0.0, data['total_billed'] - data['outstanding'])
+        total_billed = data['total_billed']
+        settled_billed = data['settled_billed']
+        recorded_paid = data['total_paid']
+
+        # Effective paid amount cannot exceed total billed for current invoices
+        effective_paid = min(total_billed, max(settled_billed, recorded_paid))
+        data['total_paid'] = effective_paid
+        data['outstanding'] = max(0.0, total_billed - effective_paid)
             
     active_vendors = [v for v in vendor_stats.values() if v['total_billed'] > 0 or v['outstanding'] > 0 or v['total_paid'] > 0]
     active_vendors.sort(key=lambda x: x['outstanding'], reverse=True)
@@ -756,24 +763,40 @@ def finalize_settlement(
         b_name = v_details.get('bank_name') or "Institution Bank Transfer"
         p_notes = v_details.get('notes') or f"Settlement {settlement.settlement_number}"
 
-        pmt = Payment(
-            payment_reference=utr,
-            settlement_id=settlement.id,
-            vendor_id=v_id,
-            amount=v_amount,
-            currency="INR",
-            payment_method=mode,
-            gateway=b_name,
-            gateway_transaction_id=utr,
-            status="SUCCESS",
-            initiated_at=now,
-            completed_at=now,
-            bank_name=b_name,
-            payment_date=now,
-            notes=p_notes,
-            created_by_id=current_user.id
-        )
-        db.add(pmt)
+        existing_pmt = db.query(Payment).filter(
+            Payment.settlement_id == settlement.id,
+            Payment.vendor_id == v_id
+        ).first()
+
+        if existing_pmt:
+            existing_pmt.amount = v_amount
+            existing_pmt.payment_reference = utr
+            existing_pmt.payment_method = mode
+            existing_pmt.bank_name = b_name
+            existing_pmt.status = "SUCCESS"
+            existing_pmt.completed_at = now
+            existing_pmt.payment_date = now
+            existing_pmt.notes = p_notes
+            db.add(existing_pmt)
+        else:
+            pmt = Payment(
+                payment_reference=utr,
+                settlement_id=settlement.id,
+                vendor_id=v_id,
+                amount=v_amount,
+                currency="INR",
+                payment_method=mode,
+                gateway=b_name,
+                gateway_transaction_id=utr,
+                status="SUCCESS",
+                initiated_at=now,
+                completed_at=now,
+                bank_name=b_name,
+                payment_date=now,
+                notes=p_notes,
+                created_by_id=current_user.id
+            )
+            db.add(pmt)
 
         # Update vendor monthly settlement tracker
         month_str = f"{settlement.year:04d}-{settlement.month:02d}"

@@ -15,6 +15,7 @@ from backend.schemas.vendor import (
     VendorUpdatePayload,
     MenuItemAvailabilityUpdate,
 )
+from backend.schemas.settlement import SettlementResponse, SettlementUpdate
 from datetime import datetime
 
 

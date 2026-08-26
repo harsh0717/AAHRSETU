@@ -295,25 +295,77 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
   return (
     <AppShell role="principal" currentPath="/principal">
-      <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         
-        {/* Title Section with Official Brand Logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+        {/* Enterprise Institutional Top Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          borderRadius: '20px',
+          padding: '24px 28px',
+          marginBottom: '20px',
+          color: 'white',
+          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-              {t(`principal.tab_title_${activeTab}`, 'Principal Dashboard')}
-            </h1>
-            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-              {t(`principal.tab_sub_${activeTab}`, 'Institutional order approvals, Principal requisitions and budget oversight.')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                EXECUTIVE AUTHORIZATION
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                {session?.department_id ? `Department: ${session.department_id}` : 'Academic Oversight'} · FY 2026-27
+              </span>
             </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
+              🎓 Principal Executive Approval & Oversight Hub
+            </h1>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
+              Review department food requisitions, authorize hospitality expenditures, and oversee institutional catering pipelines.
+            </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <BrandLogo size={52} />
-            {activeTab === 'dashboard' && (
-              <button onClick={() => setActiveTab('create')} className="btn btn-primary">
-                ➕ Create Requisition
-              </button>
-            )}
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setActiveTab('create')}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: '#0D9488',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              ➕ Create Requisition
+            </button>
+            <button
+              onClick={() => setActiveTab('queue')}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              📋 Review Queue ({totalPending})
+            </button>
           </div>
         </div>
 
@@ -328,19 +380,85 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
             {/* TAB: DASHBOARD OVERVIEW */}
             {activeTab === 'dashboard' && (
               <div>
-                {/* Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
-                  {[
-                    { label: t('principal.stats_pending', 'Pending Approvals'), value: totalPending, color: '#818CF8', icon: '⏳' },
-                    { label: t('principal.stats_my_orders', 'My Requisitions'), value: totalMyOrders, color: '#3B82F6', icon: '📝' },
-                    { label: t('principal.stats_approved', 'Approved Orders'), value: totalApproved, color: '#10B981', icon: '✅' },
-                  ].map((s, idx) => (
-                    <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${s.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{s.icon}</div>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gray-900)' }}>{s.value}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', fontWeight: 600 }}>{s.label}</div>
+                {/* Executive 3-Tile KPI Summary Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                  gap: '16px',
+                  marginBottom: '24px',
+                  width: '100%'
+                }}>
+                  {/* Tile 1: Pending Approvals */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '20px 24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
+                        PENDING APPROVALS
+                      </span>
+                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {totalPending} AWAITING
+                      </span>
                     </div>
-                  ))}
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
+                      {totalPending}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Requisitions awaiting your executive signature
+                    </div>
+                  </div>
+
+                  {/* Tile 2: Approved Orders */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #10B981',
+                    padding: '20px 24px',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                        APPROVED ORDERS
+                      </span>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        CLEARED BY PRINCIPAL
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
+                      {totalApproved}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Requisitions approved & forwarded to Administration/Kitchen
+                    </div>
+                  </div>
+
+                  {/* Tile 3: My Requisitions */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '20px 24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+                        MY REQUISITIONS
+                      </span>
+                      <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        PRINCIPAL DRAFTED
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                      {totalMyOrders}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Direct orders initiated by Principal office
+                    </div>
+                  </div>
                 </div>
 
                 {/* Quick actions & recent notifications */}

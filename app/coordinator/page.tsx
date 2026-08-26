@@ -332,19 +332,78 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
   return (
     <AppShell role="coordinator" currentPath="/coordinator">
-      <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         
-        {/* Header Section with Official Brand Logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+        {/* Enterprise Institutional Top Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          borderRadius: '20px',
+          padding: '24px 28px',
+          marginBottom: '20px',
+          color: 'white',
+          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-              {t(`coord.tab_title_${activeTab}`, t('coord.dashboard_title', 'Coordinator Dashboard'))}
-            </h1>
-            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-              {t(`coord.tab_sub_${activeTab}`, t('coord.dashboard_sub', 'Institutional order requisition, approvals tracking and billing pipeline.'))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                DEPARTMENT REQUISITIONS
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                {session?.department_id ? `Department: ${session.department_id}` : 'Academic Department'} · FY 2026-27
+              </span>
             </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
+              🍽️ Department Coordinator Orders Hub
+            </h1>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
+              Draft official canteen food requisitions, monitor Principal approval milestones, and track invoice statuses.
+            </p>
           </div>
-          <BrandLogo size={52} />
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setActiveTab('create')}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: '#0D9488',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              ➕ Create Requisition
+            </button>
+            <button
+              onClick={() => setActiveTab('orders')}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              📋 My Orders ({totalMyOrders})
+            </button>
+          </div>
         </div>
 
         {/* Loading Spinner */}
@@ -358,20 +417,85 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
             {/* TAB: DASHBOARD OVERVIEW */}
             {activeTab === 'dashboard' && (
               <div>
-                {/* Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px', marginBottom: '24px', width: '100%' }}>
-                  {[
-                    { label: t('coord.stats_total', 'Total Requisitions'), value: totalMyOrders, color: '#0284C7', icon: '📦' },
-                    { label: t('coord.stats_pending', 'Pending Approvals'), value: totalPending, color: '#EAB308', icon: '⏳' },
-                    { label: t('coord.stats_completed', 'Completed Orders'), value: totalCompleted, color: '#10B981', icon: '✅' },
-                    { label: t('coord.stats_rejected', 'Rejected Requests'), value: totalRejected, color: '#EF4444', icon: '❌' },
-                  ].map((stat, idx) => (
-                    <div key={idx} className="card" style={{ padding: '16px 20px', borderTop: `4px solid ${stat.color}`, background: 'white', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{stat.icon}</div>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gray-900)', lineHeight: '1.2' }}>{stat.value}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', fontWeight: 600, marginTop: '2px' }}>{stat.label}</div>
+                {/* Executive 3-Tile KPI Summary Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                  gap: '16px',
+                  marginBottom: '24px',
+                  width: '100%'
+                }}>
+                  {/* Tile 1: Pending Approvals */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '20px 24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
+                        PENDING APPROVALS
+                      </span>
+                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        IN REVIEW PIPELINE
+                      </span>
                     </div>
-                  ))}
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
+                      {totalPending}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Requisitions awaiting Principal or Admin sign-off
+                    </div>
+                  </div>
+
+                  {/* Tile 2: Completed Orders */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #10B981',
+                    padding: '20px 24px',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                        COMPLETED REQUISITIONS
+                      </span>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        FULFILLED & SERVED
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
+                      {totalCompleted}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Successfully delivered campus orders
+                    </div>
+                  </div>
+
+                  {/* Tile 3: Total Department Volume */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '20px 24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+                        TOTAL DEPARTMENT ORDERS
+                      </span>
+                      <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {totalRejected} REJECTED
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                      {totalMyOrders}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Lifetime orders recorded for this department
+                    </div>
+                  </div>
                 </div>
 
                 {/* Quick actions & recent items */}

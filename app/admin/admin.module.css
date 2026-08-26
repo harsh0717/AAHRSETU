@@ -31,13 +31,14 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 22px 28px;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFD 100%);
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
   border-radius: 20px;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
   position: relative;
   overflow: hidden;
+  color: white;
 }
 
 .heroHeader::before {
@@ -47,15 +48,15 @@
   left: 0;
   width: 5px;
   height: 100%;
-  background: linear-gradient(180deg, #2563EB 0%, #3B82F6 100%);
+  background: linear-gradient(180deg, #0D9488 0%, #14B8A6 100%);
 }
 
 .heroLeft h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #0F172A;
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: #F8FAFC;
   margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.5px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -63,7 +64,7 @@
 
 .heroLeft p {
   font-size: 0.85rem;
-  color: #64748B;
+  color: #94A3B8;
   margin: 0;
   display: flex;
   align-items: center;
@@ -76,11 +77,11 @@
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  background: #F1F5F9;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   font-size: 0.74rem;
   font-weight: 700;
-  color: #475569;
+  color: #E2E8F0;
 }
 
 .heroRight {

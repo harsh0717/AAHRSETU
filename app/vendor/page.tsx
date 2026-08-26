@@ -465,19 +465,78 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
   return (
     <AppShell role="vendor" currentPath="/vendor">
-      <div style={{ '--role-accent': colors.accent } as React.CSSProperties}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         
-        {/* Header Section with Official Brand Logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+        {/* Enterprise Institutional Top Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          borderRadius: '20px',
+          padding: '24px 28px',
+          marginBottom: '20px',
+          color: 'white',
+          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900)' }}>
-              {vendorDetails?.name || 'Canteen Vendor Portal'} — {t(`vendor.tab_title_${activeTab}`, 'Dashboard')}
-            </h1>
-            <div style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
-              {t(`vendor.tab_sub_${activeTab}`, 'Manage canteen menu availability, incoming orders, and revenue settlement.')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                CANTEEN OPERATIONS ENGINE
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                {vendorDetails?.name || 'Authorized Canteen'} · FY 2026-27
+              </span>
             </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
+              🍳 {vendorDetails?.name || 'Canteen Vendor'} Kitchen & Order Hub
+            </h1>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
+              Real-time kitchen order processing, instant pricing confirmations, menu catalog control, and settlement passbook.
+            </p>
           </div>
-          <BrandLogo size={52} />
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => handleToggleStatus(vendorDetails?.status === 'open' ? 'closed' : 'open')}
+              style={{
+                padding: '9px 18px',
+                borderRadius: '10px',
+                background: vendorDetails?.status === 'open' ? '#DC2626' : '#16A34A',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                boxShadow: vendorDetails?.status === 'open' ? '0 4px 12px rgba(220, 38, 38, 0.3)' : '0 4px 12px rgba(22, 163, 74, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              {vendorDetails?.status === 'open' ? '🔒 Close Canteen' : '🔓 Open Canteen'}
+            </button>
+            <button
+              onClick={() => setActiveTab('incoming')}
+              style={{
+                padding: '9px 16px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              📥 Incoming Orders ({pendingPricingCount})
+            </button>
+          </div>
         </div>
 
         {/* Loading Spinner */}
@@ -492,72 +551,93 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
             {activeTab === 'dashboard' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
-                {/* FRIENDLY CANTEEN STATUS BANNER */}
-                <div className="card" style={{
-                  padding: '24px',
-                  borderRadius: '16px',
-                  background: vendorDetails?.status === 'open' 
-                    ? 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' 
-                    : 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
-                  border: `1px solid ${vendorDetails?.status === 'open' ? '#A7F3D0' : '#FECACA'}`,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                {/* Executive 3-Tile KPI Summary Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                  gap: '16px',
+                  marginBottom: '10px',
+                  width: '100%'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.8rem' }}>{vendorDetails?.status === 'open' ? '🟢' : '🔴'}</span>
-                        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                          {vendorDetails?.name || 'Canteen'} is {vendorDetails?.status === 'open' ? 'OPEN for Orders' : 'CLOSED'}
-                        </h2>
-                      </div>
-                      <p style={{ margin: '6px 0 0 0', fontSize: '0.88rem', color: '#475569' }}>
-                        {vendorDetails?.status === 'open'
-                          ? 'Coordinators can place canteen orders. New orders will appear on your screen instantly.'
-                          : 'Canteen is currently closed. Open canteen to start receiving orders.'}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => handleToggleStatus(vendorDetails?.status === 'open' ? 'closed' : 'open')}
-                      style={{
-                        background: vendorDetails?.status === 'open' ? '#DC2626' : '#16A34A',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '12px',
-                        padding: '10px 20px',
-                        fontSize: '0.9rem',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      {vendorDetails?.status === 'open' ? '🔒 Close Canteen' : '🔓 Open Canteen'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* FRIENDLY STATS CARDS */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  {[
-                    { label: 'New Orders Waiting', value: pendingPricingCount, color: '#F59E0B', icon: '📥', action: () => setActiveTab('incoming') },
-                    { label: 'Kitchen In-Progress', value: activeOrdersCount, color: '#2563EB', icon: '👨‍🍳', action: () => setActiveTab('incoming') },
-                    { label: 'Orders Completed Today', value: completedOrdersCount, color: '#10B981', icon: '✅', action: () => setActiveTab('incoming') },
-                    { label: 'Today\'s Earnings', value: `₹${totalEarnings.toFixed(0)}`, color: '#059669', icon: '💰', action: () => {} }
-                  ].map((s, idx) => (
-                    <div key={idx} onClick={s.action} style={{
+                  {/* Tile 1: Incoming Waiting Orders */}
+                  <div
+                    onClick={() => setActiveTab('incoming')}
+                    style={{
                       background: 'white',
-                      border: '1px solid #E2E8F0',
                       borderRadius: '16px',
-                      padding: '20px',
-                      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)',
-                      cursor: 'pointer',
-                      borderTop: `4px solid ${s.color}`
-                    }}>
-                      <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>{s.icon}</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0F172A' }}>{s.value}</div>
-                      <div style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600, marginTop: '2px' }}>{s.label}</div>
+                      border: '1.5px solid #E2E8F0',
+                      padding: '20px 24px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
+                        NEW ORDERS WAITING
+                      </span>
+                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {pendingPricingCount} PENDING PRICING
+                      </span>
                     </div>
-                  ))}
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: pendingPricingCount > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
+                      {pendingPricingCount}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Orders awaiting canteen price confirmation
+                    </div>
+                  </div>
+
+                  {/* Tile 2: Kitchen In-Progress */}
+                  <div
+                    onClick={() => setActiveTab('incoming')}
+                    style={{
+                      background: 'white',
+                      borderRadius: '16px',
+                      border: '1.5px solid #10B981',
+                      padding: '20px 24px',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                        ACTIVE KITCHEN ORDERS
+                      </span>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        COOKING & DISPATCH
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
+                      {activeOrdersCount}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Orders currently being prepared in the kitchen
+                    </div>
+                  </div>
+
+                  {/* Tile 3: Today's Revenue */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '20px 24px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+                        TOTAL COMPLETED REVENUE
+                      </span>
+                      <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {completedOrdersCount} ORDERS TODAY
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                      ₹{totalEarnings.toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                      Direct fulfilled kitchen volume for this vendor
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

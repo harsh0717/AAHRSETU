@@ -598,8 +598,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
         {/* 1. Hero Welcome Header */}
         <div className={styles.heroHeader}>
           <div className={styles.heroLeft}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                CAMPUS ENTERPRISE ERP
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                TAN: BLRA00000A · FY 2026-27
+              </span>
+            </div>
             <h1>
-              <AppIcon name={currentTabInfo.icon} size={24} color="#2563EB" />
+              <AppIcon name={currentTabInfo.icon} size={24} color="#14B8A6" />
               <span>{currentTabInfo.title}</span>
             </h1>
             <p>

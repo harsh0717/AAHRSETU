@@ -338,11 +338,14 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className={styles.formHeader}>
-            <h3 className={styles.formTitle}>
+          <div className={styles.formHeader} style={{ textAlign: 'left', marginBottom: '24px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#0D9488', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.5px', marginBottom: '10px' }}>
+              AHARSETU ENTERPRISE AUTHENTICATION
+            </div>
+            <h3 className={styles.formTitle} style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px', margin: '0 0 6px' }}>
               {formatBrandText(t('login.welcome_title', 'Welcome to AharSetu'), lang)}
             </h3>
-            <p className={styles.formSub}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
+            <p className={styles.formSub} style={{ fontSize: '0.85rem', color: '#64748B', margin: 0 }}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
           </div>
 
           {error && (

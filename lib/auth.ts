@@ -24,11 +24,11 @@ export interface UserProfile {
 
 const DEMO_USERS: UserProfile[] = [
   { id: 1, name: 'Rajesh Gupta', email: 'admin@aharsetu.edu.in', role: 'admin', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
-  { id: 2, name: 'S. Patil', email: 'dcr@aharsetu.edu.in', role: 'dcr', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 2, name: 'Neha Mam', email: 'dcr@aharsetu.edu.in', role: 'dcr', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   
   // Principals
-  { id: 3, name: 'Dr. Arvind Mehta', email: 'principal.dd@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: ['diploma', 'degree'], created_at: new Date().toISOString() },
-  { id: 4, name: 'Dr. Rekha Sharma', email: 'principal.pharma@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'hi', active: true, principal_depts: ['pharmacy'], created_at: new Date().toISOString() },
+  { id: 3, name: 'Pranav Sir', email: 'principal.dd@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: ['diploma', 'degree'], created_at: new Date().toISOString() },
+  { id: 4, name: 'Sachin Sir', email: 'principal.pharma@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'hi', active: true, principal_depts: ['pharmacy'], created_at: new Date().toISOString() },
   { id: 5, name: 'Dr. Sarita Rao', email: 'principal.nursing@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: ['nursing'], created_at: new Date().toISOString() },
   { id: 6, name: 'Dr. J. P. Vyas', email: 'principal.physio@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'gu', active: true, principal_depts: ['physiotherapy'], created_at: new Date().toISOString() },
   { id: 7, name: 'Dr. B. K. Bansal', email: 'principal.bsc@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: ['bsc'], created_at: new Date().toISOString() },
@@ -142,26 +142,53 @@ export function saveCustomUser(user: UserProfile) {
 
     notifyUsersChanged();
     window.dispatchEvent(new CustomEvent('aharsetu_profile_changed', { detail: user }));
+    window.dispatchEvent(new CustomEvent('aharsetu_user_changed', { detail: user }));
   } catch (e) {}
 }
 
 export async function getUsers(): Promise<UserProfile[]> {
+  let baseUsers: UserProfile[] = [];
   try {
     const res = await api.get<UserProfile[]>('/users');
     if (res && Array.isArray(res) && res.length > 0) {
-      // Backend is authoritative source of truth. Update local cache for offline use.
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(res));
-        } catch {}
-      }
-      return res;
+      baseUsers = res;
     }
   } catch (err) {
     // Serve local users directory when offline
   }
 
-  return getSavedUsers();
+  if (baseUsers.length === 0) {
+    return getSavedUsers();
+  }
+
+  try {
+    const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(CUSTOM_USERS_KEY) : null;
+    const custom: UserProfile[] = raw ? JSON.parse(raw) : [];
+
+    const userMap = new Map<string, UserProfile>();
+    baseUsers.forEach(u => {
+      if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
+        userMap.set(u.email.toLowerCase(), u);
+      }
+    });
+
+    if (Array.isArray(custom)) {
+      custom.forEach(u => {
+        if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
+          const existing = userMap.get(u.email.toLowerCase());
+          userMap.set(u.email.toLowerCase(), {
+            ...(existing || {}),
+            ...u,
+          });
+        }
+      });
+    }
+
+    return Array.from(userMap.values());
+  } catch (e) {
+    return baseUsers;
+  }
 }
 
 export async function createUser(userData: any): Promise<UserProfile> {

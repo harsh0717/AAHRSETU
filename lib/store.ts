@@ -96,9 +96,7 @@ if (typeof window !== 'undefined') {
         'aharsetu_fresh_start_2026_08_25_v7',
         'aharsetu_fresh_start_2026_08_25_v8',
         'aharsetu_offline_session',
-        // Purge stale local user/vendor/menu caches so latest server data syncs cleanly
-        'aharsetu_custom_users',
-        'aharsetu_deleted_user_ids',
+        // Purge stale local caches so latest server data syncs cleanly
         'aharsetu_vendors_v1',
         'aharsetu_vendors_v2',
         'aharsetu_vendors_v3',

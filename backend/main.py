@@ -45,6 +45,9 @@ try:
             db.execute(text("ALTER TABLE bills ADD COLUMN IF NOT EXISTS settlement_id INTEGER;"))
             db.execute(text("UPDATE users SET role='administration' WHERE role='dcr';"))
             db.execute(text("UPDATE approval_history SET role='administration' WHERE role='dcr';"))
+            db.execute(text("UPDATE users SET name='Neha Mam' WHERE email='dcr@aharsetu.edu.in';"))
+            db.execute(text("UPDATE users SET name='Pranav Sir' WHERE email='principal.dd@aharsetu.edu.in';"))
+            db.execute(text("UPDATE users SET name='Sachin Sir' WHERE email='principal.pharma@aharsetu.edu.in';"))
             db.commit()
             # Performance indexes — idempotent, safe to re-run
             perf_indexes = [

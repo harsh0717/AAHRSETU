@@ -91,11 +91,11 @@ def seed_all_database(db: Session):
         # Admin
         User(name="Rajesh Gupta", email="admin@aharsetu.edu.in", password_hash=pw, role="admin", preferred_language="en"),
         # DCR
-        User(name="S. Patil", email="dcr@aharsetu.edu.in", password_hash=dcr_pw, role="dcr", preferred_language="en"),
+        User(name="Neha Mam", email="dcr@aharsetu.edu.in", password_hash=dcr_pw, role="dcr", preferred_language="en"),
         
         # Principals
-        User(name="Dr. Arvind Mehta", email="principal.dd@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="en"),
-        User(name="Dr. Rekha Sharma", email="principal.pharma@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="hi"),
+        User(name="Pranav Sir", email="principal.dd@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="en"),
+        User(name="Sachin Sir", email="principal.pharma@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="hi"),
         User(name="Dr. Sarita Rao", email="principal.nursing@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="en"),
         User(name="Dr. J. P. Vyas", email="principal.physio@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="gu"),
         User(name="Dr. B. K. Bansal", email="principal.bsc@aharsetu.edu.in", password_hash=p_pw, role="principal", preferred_language="en"),

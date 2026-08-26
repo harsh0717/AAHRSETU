@@ -47,7 +47,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'principal_dd',
-    name: 'Dr. Arvind Mehta',
+    name: 'Pranav Sir',
     role: 'principal',
     label: 'Principal',
     subLabel: 'Diploma & Degree',
@@ -59,7 +59,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'principal_pharma',
-    name: 'Dr. Rekha Sharma',
+    name: 'Sachin Sir',
     role: 'principal',
     label: 'Principal',
     subLabel: 'Pharmacy College',
@@ -71,7 +71,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'dcr_auditor',
-    name: 'S. Patil',
+    name: 'Neha Mam',
     role: 'dcr',
     label: 'DCR Auditor',
     subLabel: 'Accounts Clearance',

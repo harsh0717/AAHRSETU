@@ -32,29 +32,52 @@ const LOCAL_VENDORS_KEY = 'aharsetu_vendors_v3';
 const LOCAL_MENUS_KEY = 'aharsetu_menus_v3';
 
 const FALLBACK_VENDORS: Vendor[] = [
-  { id: 'v1', name: 'Sharma Canteen', owner_name: 'M. Khan', email: 'vendor1@aharsetu.edu.in', phone: '+91 9911223344', status: 'open', revenue: 0.0 },
-  { id: 'v2', name: 'Fresh Bites', owner_name: 'R. Patel', email: 'vendor2@aharsetu.edu.in', phone: '+91 9922334455', status: 'open', revenue: 0.0 },
-  { id: 'v3', name: 'Hot Meals', owner_name: 'S. Shah', email: 'vendor3@aharsetu.edu.in', phone: '+91 9933445566', status: 'closed', revenue: 0.0 },
-  { id: 'v4', name: 'Quick Snacks', owner_name: 'P. Mehta', email: 'vendor4@aharsetu.edu.in', phone: '+91 9944556677', status: 'temporarily_unavailable', revenue: 0.0 },
+  { id: 'v1', name: 'Sharma Canteen', owner_name: 'Gadhvi Bhai', email: 'vendor1@aharsetu.edu.in', phone: '+91 9911223344', status: 'open', revenue: 0.0 },
+  { id: 'v2', name: 'Fresh Bites', owner_name: 'Mitesh Bhai', email: 'vendor2@aharsetu.edu.in', phone: '+91 9922334455', status: 'open', revenue: 0.0 },
+  { id: 'v3', name: 'Hot Meals', owner_name: 'Bhargav Bhai', email: 'vendor3@aharsetu.edu.in', phone: '+91 9933445566', status: 'open', revenue: 0.0 },
+  { id: 'v4', name: 'Quick Snacks', owner_name: 'P. Mehta', email: 'vendor4@aharsetu.edu.in', phone: '+91 9944556677', status: 'open', revenue: 0.0 },
 ];
 
 const FALLBACK_MENUS: Record<string, MenuItem[]> = {
   v1: [
-    { id: 'v1m1', vendor_id: 'v1', name: 'Tea', price: 10.0, unit: 'per cup', available: true, active: true, category: 'Beverages', description: 'Freshly brewed masala tea with local spices' },
-    { id: 'v1m2', vendor_id: 'v1', name: 'Samosa', price: 15.0, unit: 'per piece', available: true, active: true, category: 'Snacks', description: 'Crispy triangular pastry stuffed with spiced potatoes' },
-    { id: 'v1m3', vendor_id: 'v1', name: 'Kachori', price: 18.0, unit: 'per piece', available: true, active: true, category: 'Snacks', description: 'Flaky deep-fried snack with lentils and local spices' },
-    { id: 'v1m4', vendor_id: 'v1', name: 'Coffee', price: 15.0, unit: 'per cup', available: true, active: true, category: 'Beverages', description: 'Hot filter coffee prepared with fresh milk' },
+    { id: 'v1m1', vendor_id: 'v1', name: 'Tea (Masala Chai)', price: 10.0, unit: 'per cup', available: true, active: true, category: 'Beverages', description: 'Freshly brewed masala tea with ginger, cardamom, and aromatic spices' },
+    { id: 'v1m2', vendor_id: 'v1', name: 'Samosa (2 pcs)', price: 20.0, unit: 'per plate', available: true, active: true, category: 'Snacks', description: 'Crispy golden triangular pastry filled with spicy potato and peas filling' },
+    { id: 'v1m3', vendor_id: 'v1', name: 'Kachori with Chutney', price: 20.0, unit: 'per piece', available: true, active: true, category: 'Snacks', description: 'Flaky deep-fried snack stuffed with spiced lentils and served with tamarind chutney' },
+    { id: 'v1m4', vendor_id: 'v1', name: 'Filter Coffee', price: 20.0, unit: 'per cup', available: true, active: true, category: 'Beverages', description: 'South Indian style hot filter coffee prepared with fresh frothed milk' },
+    { id: 'v1m5', vendor_id: 'v1', name: 'Bread Pakoda', price: 25.0, unit: 'per piece', available: true, active: true, category: 'Snacks', description: 'Spiced potato sandwich battered in seasoned besan and deep fried to perfection' },
+    { id: 'v1m6', vendor_id: 'v1', name: 'Bun Maska', price: 25.0, unit: 'per plate', available: true, active: true, category: 'Snacks', description: 'Soft warm bun slathered with rich salted butter, perfect with hot chai' },
+    { id: 'v1m7', vendor_id: 'v1', name: 'Poha Jalebi Combo', price: 45.0, unit: 'per plate', available: true, active: true, category: 'Breakfast', description: 'Indori style spiced flattened rice served with two crispy hot jalebis' },
+    { id: 'v1m8', vendor_id: 'v1', name: 'Mineral Water (1L)', price: 20.0, unit: 'per bottle', available: true, active: true, category: 'Beverages', description: 'Chilled packaged drinking water bottle' },
   ],
   v2: [
-    { id: 'v2m1', vendor_id: 'v2', name: 'Veg Lunch', price: 80.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Standard north Indian meal with roti, sabzi, dal and rice' },
-    { id: 'v2m2', vendor_id: 'v2', name: 'Idli Sambhar', price: 40.0, unit: 'per plate', available: true, active: true, category: 'Breakfast', description: 'Soft steamed rice cakes served with sambhar and coconut chutney' },
-    { id: 'v2m3', vendor_id: 'v2', name: 'Fruit Bowl', price: 50.0, unit: 'per bowl', available: true, active: true, category: 'Snacks', description: 'Fresh seasonal cut fruits' },
+    { id: 'v2m1', vendor_id: 'v2', name: 'Executive Veg Thali', price: 90.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Complete meal with 4 phulkas, paneer sabzi, seasonal veg, dal tadka, jeera rice, salad & gulab jamun' },
+    { id: 'v2m2', vendor_id: 'v2', name: 'Idli Sambhar (2 pcs)', price: 40.0, unit: 'per plate', available: true, active: true, category: 'Breakfast', description: 'Steamed soft rice cakes served with hot vegetable sambhar and coconut chutney' },
+    { id: 'v2m3', vendor_id: 'v2', name: 'Masala Dosa', price: 60.0, unit: 'per plate', available: true, active: true, category: 'Breakfast', description: 'Crispy golden fermented crepe stuffed with spiced potato mash, served with sambhar and chutneys' },
+    { id: 'v2m4', vendor_id: 'v2', name: 'Medu Vada (2 pcs)', price: 45.0, unit: 'per plate', available: true, active: true, category: 'Breakfast', description: 'Crispy golden lentil fritters served piping hot with sambhar and chutney' },
+    { id: 'v2m5', vendor_id: 'v2', name: 'Fresh Fruit Bowl', price: 50.0, unit: 'per bowl', available: true, active: true, category: 'Snacks', description: 'Assortment of freshly cut seasonal fruits with chaat masala' },
+    { id: 'v2m6', vendor_id: 'v2', name: 'Special Sweet Lassi', price: 35.0, unit: 'per glass', available: true, active: true, category: 'Beverages', description: 'Thick churned creamy yogurt drink garnished with pistachios and cardamom' },
+    { id: 'v2m7', vendor_id: 'v2', name: 'Fresh Lime Soda', price: 25.0, unit: 'per glass', available: true, active: true, category: 'Beverages', description: 'Refreshing fizzy beverage with freshly squeezed lemon juice and mint' },
+    { id: 'v2m8', vendor_id: 'v2', name: 'Veg Hakka Noodles', price: 70.0, unit: 'per plate', available: true, active: true, category: 'Chinese', description: 'Wok-tossed noodles with shredded cabbage, carrots, bell peppers and soy sauce' },
   ],
   v3: [
-    { id: 'v3m1', vendor_id: 'v3', name: 'Thali', price: 100.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Premium authentic thali with ghee roti, two sabzis, dal, rice, sweet and papad' }
+    { id: 'v3m1', vendor_id: 'v3', name: 'Deluxe North Indian Thali', price: 110.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Paneer butter masala, dal makhani, 4 butter rotis, peas pulao, raita, papad & sweet' },
+    { id: 'v3m2', vendor_id: 'v3', name: 'Authentic Dal Baati Churma', price: 130.0, unit: 'per serving', available: true, active: true, category: 'Meals', description: 'Traditional baked wheat dough balls dipped in pure desi ghee, served with panchmel dal & sweet churma' },
+    { id: 'v3m3', vendor_id: 'v3', name: 'Rajma Chawal Combo', price: 75.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Slow-cooked Kashmiri red kidney beans curry served with aromatic basmati rice and onion salad' },
+    { id: 'v3m4', vendor_id: 'v3', name: 'Chole Bhature (2 pcs)', price: 80.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Spiced Punjabi chickpea curry served with two fluffy deep-fried bhaturas and pickle' },
+    { id: 'v3m5', vendor_id: 'v3', name: 'Veg Biryani with Raita', price: 85.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Fragrant long-grain basmati rice cooked with fresh garden vegetables and whole spices' },
+    { id: 'v3m6', vendor_id: 'v3', name: 'Paneer Paratha (2 pcs)', price: 70.0, unit: 'per plate', available: true, active: true, category: 'Meals', description: 'Whole wheat flatbread stuffed with spiced cottage cheese, served with curd and butter' },
+    { id: 'v3m7', vendor_id: 'v3', name: 'Pav Bhaji', price: 65.0, unit: 'per plate', available: true, active: true, category: 'Snacks', description: 'Spiced mashed vegetable curry served with two butter-toasted pav buns and lemon wedges' },
+    { id: 'v3m8', vendor_id: 'v3', name: 'Gulab Jamun (2 pcs)', price: 30.0, unit: 'per plate', available: true, active: true, category: 'Desserts', description: 'Soft milk-solid dumplings soaked in warm rose and cardamom scented sugar syrup' },
   ],
   v4: [
-    { id: 'v4m1', vendor_id: 'v4', name: 'Sandwich', price: 35.0, unit: 'per piece', available: true, active: true, category: 'Snacks', description: 'Grilled vegetable sandwich with mint chutney' }
+    { id: 'v4m1', vendor_id: 'v4', name: 'Grilled Cheese Veg Sandwich', price: 50.0, unit: 'per piece', available: true, active: true, category: 'Snacks', description: 'Double layered sandwich with cucumber, tomato, potato, capsicum and melted cheddar cheese' },
+    { id: 'v4m2', vendor_id: 'v4', name: 'Veg Burger with Fries', price: 65.0, unit: 'per plate', available: true, active: true, category: 'Fast Food', description: 'Crisp vegetable patty in a sesame bun with lettuce, tomatoes and mayonnaise, served with potato fries' },
+    { id: 'v4m3', vendor_id: 'v4', name: 'Paneer Kathi Roll', price: 60.0, unit: 'per piece', available: true, active: true, category: 'Snacks', description: 'Flaky paratha wrap stuffed with marinated tandoori paneer, sliced onions and mint sauce' },
+    { id: 'v4m4', vendor_id: 'v4', name: 'French Fries (Large)', price: 45.0, unit: 'per serving', available: true, active: true, category: 'Fast Food', description: 'Crispy golden salted potato fingers served with tomato ketchup' },
+    { id: 'v4m5', vendor_id: 'v4', name: 'Cold Coffee with Ice Cream', price: 50.0, unit: 'per glass', available: true, active: true, category: 'Beverages', description: 'Rich blended cold coffee topped with a generous scoop of vanilla ice cream' },
+    { id: 'v4m6', vendor_id: 'v4', name: 'Assorted Soft Drink (Can)', price: 35.0, unit: 'per can', available: true, active: true, category: 'Beverages', description: 'Chilled 300ml canned beverage' },
+    { id: 'v4m7', vendor_id: 'v4', name: 'Masala Maggi', price: 35.0, unit: 'per bowl', available: true, active: true, category: 'Snacks', description: 'Classic 2-minute noodles tossed with butter, peas, onions, and special spices' },
+    { id: 'v4m8', vendor_id: 'v4', name: 'Veg Cheese Pizza (7-inch)', price: 99.0, unit: 'per piece', available: true, active: true, category: 'Fast Food', description: 'Fresh thin crust pizza loaded with mozzarella cheese, capsicum, corn and onions' },
   ]
 };
 
@@ -97,16 +120,41 @@ export function getMenuItemName(menuItemId: string | null | undefined, fallbackN
     return fallbackName;
   }
 
-  if (cleanId.includes('v1m1')) return 'Tea';
-  if (cleanId.includes('v1m2')) return 'Samosa';
-  if (cleanId.includes('v1m3')) return 'Kachori';
-  if (cleanId.includes('v1m4')) return 'Coffee';
-  if (cleanId.includes('v1m5')) return 'Cold Drink / Juice';
-  if (cleanId.includes('v2m1')) return 'Veg Lunch';
-  if (cleanId.includes('v2m2')) return 'Idli Sambhar';
-  if (cleanId.includes('v2m3')) return 'Fruit Bowl';
-  if (cleanId.includes('v3m1')) return 'Special Thali';
-  if (cleanId.includes('v4m1')) return 'Grilled Sandwich';
+  if (cleanId.includes('v1m1')) return 'Tea (Masala Chai)';
+  if (cleanId.includes('v1m2')) return 'Samosa (2 pcs)';
+  if (cleanId.includes('v1m3')) return 'Kachori with Chutney';
+  if (cleanId.includes('v1m4')) return 'Filter Coffee';
+  if (cleanId.includes('v1m5')) return 'Bread Pakoda';
+  if (cleanId.includes('v1m6')) return 'Bun Maska';
+  if (cleanId.includes('v1m7')) return 'Poha Jalebi Combo';
+  if (cleanId.includes('v1m8')) return 'Mineral Water (1L)';
+
+  if (cleanId.includes('v2m1')) return 'Executive Veg Thali';
+  if (cleanId.includes('v2m2')) return 'Idli Sambhar (2 pcs)';
+  if (cleanId.includes('v2m3')) return 'Masala Dosa';
+  if (cleanId.includes('v2m4')) return 'Medu Vada (2 pcs)';
+  if (cleanId.includes('v2m5')) return 'Fresh Fruit Bowl';
+  if (cleanId.includes('v2m6')) return 'Special Sweet Lassi';
+  if (cleanId.includes('v2m7')) return 'Fresh Lime Soda';
+  if (cleanId.includes('v2m8')) return 'Veg Hakka Noodles';
+
+  if (cleanId.includes('v3m1')) return 'Deluxe North Indian Thali';
+  if (cleanId.includes('v3m2')) return 'Authentic Dal Baati Churma';
+  if (cleanId.includes('v3m3')) return 'Rajma Chawal Combo';
+  if (cleanId.includes('v3m4')) return 'Chole Bhature (2 pcs)';
+  if (cleanId.includes('v3m5')) return 'Veg Biryani with Raita';
+  if (cleanId.includes('v3m6')) return 'Paneer Paratha (2 pcs)';
+  if (cleanId.includes('v3m7')) return 'Pav Bhaji';
+  if (cleanId.includes('v3m8')) return 'Gulab Jamun (2 pcs)';
+
+  if (cleanId.includes('v4m1')) return 'Grilled Cheese Veg Sandwich';
+  if (cleanId.includes('v4m2')) return 'Veg Burger with Fries';
+  if (cleanId.includes('v4m3')) return 'Paneer Kathi Roll';
+  if (cleanId.includes('v4m4')) return 'French Fries (Large)';
+  if (cleanId.includes('v4m5')) return 'Cold Coffee with Ice Cream';
+  if (cleanId.includes('v4m6')) return 'Assorted Soft Drink (Can)';
+  if (cleanId.includes('v4m7')) return 'Masala Maggi';
+  if (cleanId.includes('v4m8')) return 'Veg Cheese Pizza (7-inch)';
 
   if (/^[a-z][0-9][a-z][0-9]+/i.test(cleanId) || /^v\d+m\d+/i.test(cleanId)) {
     return 'Special Canteen Refreshment';

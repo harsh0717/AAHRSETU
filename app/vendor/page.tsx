@@ -1016,7 +1016,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     }}
                   />
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingTop: '4px' }}>
-                    {['All', 'Beverages', 'Snacks', 'Meals', 'Breakfast', 'Desserts'].map(cat => (
+                    {['All', 'Beverages', 'Snacks', 'Meals', 'Breakfast', 'Fast Food', 'Chinese', 'Desserts'].map(cat => (
                       <button
                         key={cat}
                         onClick={() => setMenuCategoryFilter(cat)}

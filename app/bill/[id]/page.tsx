@@ -519,50 +519,52 @@ export default function BillPage() {
           </div>
 
           {/* Items Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '24px' }}>
-            <thead>
-              <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Sr.</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Description</th>
-                {!selectedVO && (
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Vendor</th>
-                )}
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Qty</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Unit Price</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 ? (
-                <tr>
-                  <td colSpan={selectedVO ? 5 : 6} style={{ padding: '32px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
-                    No line items available for this invoice.
-                  </td>
+          <div style={{ overflowX: 'auto', width: '100%', marginBottom: '24px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
+              <thead>
+                <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Sr.</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Description</th>
+                  {!selectedVO && (
+                    <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Vendor</th>
+                  )}
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Qty</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Unit Price</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Total</th>
                 </tr>
-              ) : items.map((item, idx) => {
-                const price = Number(item?.price ?? 0);
-                const qty = Number(item?.quantity ?? 0);
-                const name = getMenuItemName(item?.menu_item_id, item?.name) || 'Item';
-                const unit = item?.unit || '';
-                return (
-                  <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9', fontSize: '0.8rem' }}>
-                    <td style={{ padding: '10px 12px', color: '#64748B' }}>{idx + 1}</td>
-                    <td style={{ padding: '10px 12px', fontWeight: 700, color: '#1E293B' }}>{name}</td>
-                    {!selectedVO && (
-                      <td style={{ padding: '10px 12px', color: '#475569' }}>{item?.vendorName || 'N/A'}</td>
-                    )}
-                    <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>
-                      {qty}{unit ? ` (${unit})` : ''}
-                    </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right' }}>₹{price.toFixed(2)}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>
-                      ₹{(price * qty).toFixed(2)}
+              </thead>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={selectedVO ? 5 : 6} style={{ padding: '32px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
+                      No line items available for this invoice.
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ) : items.map((item, idx) => {
+                  const price = Number(item?.price ?? 0);
+                  const qty = Number(item?.quantity ?? 0);
+                  const name = getMenuItemName(item?.menu_item_id, item?.name) || 'Item';
+                  const unit = item?.unit || '';
+                  return (
+                    <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9', fontSize: '0.8rem' }}>
+                      <td style={{ padding: '10px 12px', color: '#64748B' }}>{idx + 1}</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#1E293B' }}>{name}</td>
+                      {!selectedVO && (
+                        <td style={{ padding: '10px 12px', color: '#475569' }}>{item?.vendorName || 'N/A'}</td>
+                      )}
+                      <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>
+                        {qty}{unit ? ` (${unit})` : ''}
+                      </td>
+                      <td style={{ padding: '10px 12px', textAlign: 'right' }}>₹{price.toFixed(2)}</td>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>
+                        ₹{(price * qty).toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {/* Grand Total */}
           <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px dashed #E2E8F0', paddingTop: '16px', marginBottom: '24px' }}>

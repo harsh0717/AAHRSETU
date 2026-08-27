@@ -23,7 +23,7 @@ interface PersonaItem {
 const DEMO_PERSONAS: PersonaItem[] = [
   {
     id: 'coord_diploma',
-    name: 'Priya Sharma',
+    name: 'Nandini Mam',
     role: 'coordinator',
     label: 'Coordinator',
     subLabel: 'Diploma Dept',
@@ -35,7 +35,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'coord_degree',
-    name: 'Ravi Kumar',
+    name: 'Piyush Sir',
     role: 'coordinator',
     label: 'Coordinator',
     subLabel: 'Degree Dept',
@@ -82,7 +82,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'vendor_sharma',
-    name: 'Sharma Canteen',
+    name: 'Gadhvi Bhai',
     role: 'vendor',
     label: 'Canteen v1',
     subLabel: 'Tea & Snacks',
@@ -94,7 +94,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'vendor_fresh',
-    name: 'Fresh Bites',
+    name: 'Mitesh Bhai',
     role: 'vendor',
     label: 'Canteen v2',
     subLabel: 'Fast Food & Bowls',
@@ -106,7 +106,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'vendor_hot',
-    name: 'Hot Meals',
+    name: 'Bhargav Bhai',
     role: 'vendor',
     label: 'Canteen v3',
     subLabel: 'Meals & Thalis',
@@ -118,7 +118,7 @@ const DEMO_PERSONAS: PersonaItem[] = [
   },
   {
     id: 'vendor_quick',
-    name: 'Quick Snacks',
+    name: 'Quick Snacks Manager',
     role: 'vendor',
     label: 'Canteen v4',
     subLabel: 'Sandwiches & Fast Food',
@@ -129,8 +129,8 @@ const DEMO_PERSONAS: PersonaItem[] = [
     badgeBg: '#EDE9FE',
   },
   {
-    id: 'admin_rajesh',
-    name: 'Rajesh Gupta',
+    id: 'admin_vin',
+    name: 'Vin Sir',
     role: 'admin',
     label: 'System Admin',
     subLabel: 'Institutional IT',
@@ -261,6 +261,7 @@ export default function RoleSwitcherBar() {
 
   return (
     <div
+      className="roleSwitcherBarContainer"
       style={{
         position: 'fixed',
         bottom: '20px',
@@ -277,6 +278,7 @@ export default function RoleSwitcherBar() {
       {/* Expanded Dock */}
       {isOpen && (
         <div
+          className="roleSwitcherExpandedDock"
           style={{
             background: 'rgba(15, 23, 42, 0.94)',
             backdropFilter: 'blur(20px)',
@@ -461,6 +463,18 @@ export default function RoleSwitcherBar() {
         @keyframes pulseDot {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.4); opacity: 0.6; }
+        }
+        @media (max-width: 768px) {
+          .roleSwitcherBarContainer {
+            bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+            max-width: 94vw !important;
+          }
+          .roleSwitcherExpandedDock {
+            max-height: 72vh !important;
+            overflow-y: auto !important;
+            max-width: 92vw !important;
+            padding: 10px 12px !important;
+          }
         }
       `}</style>
     </div>

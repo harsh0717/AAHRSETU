@@ -23,7 +23,7 @@ export interface UserProfile {
 }
 
 const DEMO_USERS: UserProfile[] = [
-  { id: 1, name: 'Rajesh Gupta', email: 'admin@aharsetu.edu.in', role: 'admin', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 1, name: 'Vin Sir', email: 'admin@aharsetu.edu.in', role: 'admin', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 2, name: 'Neha Mam', email: 'dcr@aharsetu.edu.in', role: 'dcr', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   
   // Principals
@@ -34,17 +34,17 @@ const DEMO_USERS: UserProfile[] = [
   { id: 7, name: 'Dr. B. K. Bansal', email: 'principal.bsc@aharsetu.edu.in', role: 'principal', department_id: null, vendor_id: null, preferred_language: 'en', active: true, principal_depts: ['bsc'], created_at: new Date().toISOString() },
   
   // Coordinators
-  { id: 8, name: 'Priya Sharma', email: 'coord.diploma@aharsetu.edu.in', role: 'coordinator', department_id: 'diploma', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
-  { id: 9, name: 'Ravi Kumar', email: 'coord.degree@aharsetu.edu.in', role: 'coordinator', department_id: 'degree', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 8, name: 'Nandini Mam', email: 'coord.diploma@aharsetu.edu.in', role: 'coordinator', department_id: 'diploma', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 9, name: 'Piyush Sir', email: 'coord.degree@aharsetu.edu.in', role: 'coordinator', department_id: 'degree', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 10, name: 'Anita Desai', email: 'coord.pharmacy@aharsetu.edu.in', role: 'coordinator', department_id: 'pharmacy', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 11, name: 'Kavita Patel', email: 'coord.nursing@aharsetu.edu.in', role: 'coordinator', department_id: 'nursing', vendor_id: null, preferred_language: 'gu', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 12, name: 'Sanjay Shah', email: 'coord.physio@aharsetu.edu.in', role: 'coordinator', department_id: 'physiotherapy', vendor_id: null, preferred_language: 'gu', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 13, name: 'Amit Verma', email: 'coord.bsc@aharsetu.edu.in', role: 'coordinator', department_id: 'bsc', vendor_id: null, preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
   
   // Vendors
-  { id: 14, name: 'Sharma Canteen Manager', email: 'vendor1@aharsetu.edu.in', role: 'vendor', department_id: null, vendor_id: 'v1', preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
-  { id: 15, name: 'Fresh Bites Manager', email: 'vendor2@aharsetu.edu.in', role: 'vendor', department_id: null, vendor_id: 'v2', preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
-  { id: 16, name: 'Hot Meals Manager', email: 'vendor3@aharsetu.edu.in', role: 'vendor', department_id: null, vendor_id: 'v3', preferred_language: 'hi', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 14, name: 'Gadhvi Bhai', email: 'vendor1@aharsetu.edu.in', role: 'vendor', department_id: null, vendor_id: 'v1', preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 15, name: 'Mitesh Bhai', email: 'vendor2@aharsetu.edu.in', role: 'vendor', department_id: null, vendor_id: 'v2', preferred_language: 'en', active: true, principal_depts: [], created_at: new Date().toISOString() },
+  { id: 16, name: 'Bhargav Bhai', email: 'vendor3@aharsetu.edu.in', role: 'vendor', department_id: null, vendor_id: 'v3', preferred_language: 'hi', active: true, principal_depts: [], created_at: new Date().toISOString() },
   { id: 17, name: 'Quick Snacks Manager', email: 'vendor4@aharsetu.edu.in', role: 'vendor', department_id: null, vendor_id: 'v4', preferred_language: 'gu', active: true, principal_depts: [], created_at: new Date().toISOString() },
 ];
 

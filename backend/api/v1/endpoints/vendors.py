@@ -7,6 +7,7 @@ from backend.api import deps
 from backend.core.database import get_db
 from backend.models.user import User
 from backend.models.vendor import Vendor, VendorMenuItem, VendorMonthlySettlement
+from backend.repositories.vendor import VendorRepository
 from backend.schemas.vendor import (
     VendorResponse,
     VendorMenuItemResponse,

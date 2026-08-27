@@ -144,6 +144,8 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     }, 10000);
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('aharsetu_vendor_updated', handleOrderChanged);
+    window.addEventListener('aharsetu_vendors_changed', handleOrderChanged);
     window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
     window.addEventListener('aharsetu_session_changed', handleProfileChanged);
     window.addEventListener('storage', handleStorageChange);
@@ -151,6 +153,8 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('aharsetu_vendor_updated', handleOrderChanged);
+      window.removeEventListener('aharsetu_vendors_changed', handleOrderChanged);
       window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
       window.removeEventListener('aharsetu_session_changed', handleProfileChanged);
       window.removeEventListener('storage', handleStorageChange);

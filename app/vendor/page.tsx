@@ -4,7 +4,7 @@ import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, initializeApplication, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, setVendorPrices, requestVendorModification, rejectVendorOrder, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
-import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, saveCustomFoodImage, MenuItem, Vendor, getVendorMonthlySettlements, VendorMonthlySettlement, getMenuItemName } from '@/lib/vendors';
+import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, updateVendorProfile, saveCustomFoodImage, MenuItem, Vendor, getVendorMonthlySettlements, VendorMonthlySettlement, getMenuItemName } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
@@ -69,6 +69,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
   // Profile Edit State
   const [profileName, setProfileName] = useState('');
+  const [canteenName, setCanteenName] = useState('');
   const [profileMobile, setProfileMobile] = useState('');
   const [profileMobileError, setProfileMobileError] = useState('');
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
@@ -98,6 +99,9 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
       setMenu(mList);
       setNotifications(nList);
       setVendorDetails(vDetails);
+      if (vDetails?.name) {
+        setCanteenName(vDetails.name);
+      }
       setSettlements(sList);
     } catch (err) {
       console.warn('Error loading vendor data:', err);
@@ -145,6 +149,12 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
     // WebSocket-driven sync
     const handleOrderChanged = () => { if (vendorId) loadData(vendorId, true); };
+    const handleVendorChanged = (e?: any) => {
+      if (e?.detail?.vendor_id === vendorId && e?.detail?.name) {
+        setCanteenName(e.detail.name);
+      }
+      if (vendorId) loadData(vendorId, true);
+    };
     const handleProfileChanged = (e?: any) => {
       const fresh = (e?.detail && typeof e.detail === 'object' && e.detail.name) ? e.detail : getSession();
       if (fresh) {
@@ -156,7 +166,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
     // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
-      if (vendorId && (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_settlements_v4')) {
+      if (vendorId && (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_settlements_v4' || e.key === 'aharsetu_vendors_v4' || e.key === 'aharsetu_vendors_v3')) {
         loadData(vendorId, true);
       }
     };
@@ -167,6 +177,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     }, 10000);
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('aharsetu_vendor_updated', handleVendorChanged);
+    window.addEventListener('aharsetu_vendors_changed', handleVendorChanged);
     window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
     window.addEventListener('aharsetu_session_changed', handleProfileChanged);
     window.addEventListener('storage', handleStorageChange);
@@ -174,6 +186,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('aharsetu_vendor_updated', handleVendorChanged);
+      window.removeEventListener('aharsetu_vendors_changed', handleVendorChanged);
       window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
       window.removeEventListener('aharsetu_session_changed', handleProfileChanged);
       window.removeEventListener('storage', handleStorageChange);
@@ -447,6 +461,10 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
       }
       setProfileMobileError('');
     }
+    if (!canteenName.trim()) {
+      setProfileMessage('Canteen establishment name cannot be empty.');
+      return;
+    }
     setSaving(true);
     setProfileMessage('');
     try {
@@ -455,10 +473,31 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
         setProfileAvatarFile(null);
       }
       const mobileDigits = profileMobile.replace(/\D/g, '') || null;
+
+      // 1. Update personal manager profile
       const updated = await updateUserProfile({ name: profileName.trim(), mobile_number: mobileDigits });
       setSession(updated);
-      setProfileMessage('Profile updated successfully!');
-      setTimeout(() => setProfileMessage(''), 4000);
+
+      // 2. Authoritative update to Canteen establishment profile (name, owner, phone)
+      if (session.vendor_id) {
+        const updatedVendor = await updateVendorProfile(session.vendor_id, {
+          name: canteenName.trim(),
+          owner_name: profileName.trim(),
+          phone: mobileDigits || undefined
+        });
+        if (updatedVendor) {
+          setVendorDetails(updatedVendor);
+          setCanteenName(updatedVendor.name);
+        }
+      }
+
+      // 3. Silent refresh to ensure all local stores & states are synced
+      if (session.vendor_id) {
+        await loadData(session.vendor_id, true);
+      }
+
+      setProfileMessage('✓ Profile & Canteen name updated successfully across the campus system!');
+      setTimeout(() => setProfileMessage(''), 5000);
     } catch (err: any) {
       setProfileMessage(err.message || 'Failed to update profile.');
     } finally {
@@ -1587,7 +1626,24 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       <p style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: '5px' }}>JPEG, PNG or WEBP • Max 5MB</p>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Full Name</label>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                        Canteen / Establishment Name <span style={{ color: '#2563EB', fontWeight: 700 }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={canteenName}
+                        onChange={e => setCanteenName(e.target.value)}
+                        required
+                        placeholder="e.g. Sharma Canteen / Fresh Bites"
+                        style={{ fontWeight: 600 }}
+                      />
+                      <p style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
+                        🏛️ This name is updated permanently across the entire campus system (coordinators, requisitions, bills, settlements, and PDF invoices).
+                      </p>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Proprietor / Manager Name <span style={{ color: '#2563EB', fontWeight: 700 }}>*</span></label>
                       <input type="text" className="form-input" value={profileName} onChange={e => setProfileName(e.target.value)} required placeholder="Your full name" />
                     </div>
                     <div>
@@ -1599,12 +1655,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Email Address</label>
                       <input type="email" className="form-input" value={session.email} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
                     </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Canteen Name</label>
-                      <input type="text" className="form-input" value={vendorDetails?.name || 'Main Campus Canteen'} disabled style={{ background: 'var(--gray-100)', color: 'var(--gray-500)' }} />
-                    </div>
-                    <button type="submit" disabled={saving} className="btn btn-primary" style={{ alignSelf: 'flex-start', minWidth: '140px' }}>
-                      {saving ? '⏳ Saving...' : '✓ Save Profile'}
+                    <button type="submit" disabled={saving} className="btn btn-primary" style={{ alignSelf: 'flex-start', minWidth: '160px' }}>
+                      {saving ? '⏳ Saving...' : '✓ Save Canteen & Profile'}
                     </button>
                     {profileMessage && <div style={{ fontSize: '0.82rem', fontWeight: 600, color: profileMessage.includes('success') ? '#10B981' : '#EF4444' }}>{profileMessage}</div>}
                   </form>
@@ -1625,16 +1677,42 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
             {/* TAB: SETTINGS */}
             {activeTab === 'settings' && (
-              <div className="card" style={{ padding: '20px', maxWidth: '500px' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '14px' }}>⚙️ Dashboard Settings</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Preferred Language / भाषा पसंद</label>
-                    <select className="form-input" value={preferredLang} onChange={e => handleLanguageChange(e.target.value)}>
-                      <option value="en">English (English)</option>
-                      <option value="hi">हिन्दी (Hindi)</option>
-                      <option value="gu">ગુજરાતી (Gujarati)</option>
-                    </select>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '560px' }}>
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🏪</span> Canteen Establishment Settings
+                  </h3>
+                  <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700 }}>CURRENT CANTEEN NAME</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0F172A', marginTop: '2px' }}>
+                      {vendorDetails?.name || 'Authorized Canteen'}
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: '#64748B', marginTop: '4px' }}>
+                      Vendor ID: <strong>{vendorDetails?.id || session.vendor_id}</strong> · Status: <span style={{ textTransform: 'capitalize', fontWeight: 700, color: vendorDetails?.status === 'open' ? '#16A34A' : '#DC2626' }}>{vendorDetails?.status || 'open'}</span>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => setActiveTab('profile')}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    ✏️ Edit Canteen Name & Profile →
+                  </button>
+                </div>
+
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>⚙️</span> Dashboard Preferences
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>Preferred Language / भाषा पसंद</label>
+                      <select className="form-input" value={preferredLang} onChange={e => handleLanguageChange(e.target.value)}>
+                        <option value="en">English (English)</option>
+                        <option value="hi">हिन्दी (Hindi)</option>
+                        <option value="gu">ગુજરાતી (Gujarati)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

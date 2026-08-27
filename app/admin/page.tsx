@@ -416,6 +416,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
     window.addEventListener('aharsetu_user_changed', handleUserChanged);
+    window.addEventListener('aharsetu_vendor_updated', handleUserChanged);
+    window.addEventListener('aharsetu_vendors_changed', handleUserChanged);
+    window.addEventListener('aharsetu_vendor_status_changed', handleUserChanged);
     window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
     window.addEventListener('aharsetu_session_changed', handleProfileChanged);
     window.addEventListener('storage', handleStorageChange);
@@ -424,6 +427,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
       window.removeEventListener('aharsetu_user_changed', handleUserChanged);
+      window.removeEventListener('aharsetu_vendor_updated', handleUserChanged);
+      window.removeEventListener('aharsetu_vendors_changed', handleUserChanged);
+      window.removeEventListener('aharsetu_vendor_status_changed', handleUserChanged);
       window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
       window.removeEventListener('aharsetu_session_changed', handleProfileChanged);
       window.removeEventListener('storage', handleStorageChange);

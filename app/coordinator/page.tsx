@@ -162,6 +162,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
+      window.addEventListener('aharsetu_vendor_updated', handleStatusChange);
+      window.addEventListener('aharsetu_vendors_changed', handleStatusChange);
       window.addEventListener('aharsetu_menu_updated', handleStatusChange);
       window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
       window.addEventListener('aharsetu_session_changed', handleProfileChanged);
@@ -172,6 +174,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       clearInterval(syncInterval);
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
+        window.removeEventListener('aharsetu_vendor_updated', handleStatusChange);
+        window.removeEventListener('aharsetu_vendors_changed', handleStatusChange);
         window.removeEventListener('aharsetu_menu_updated', handleStatusChange);
         window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
         window.removeEventListener('aharsetu_session_changed', handleProfileChanged);

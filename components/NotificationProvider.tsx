@@ -204,7 +204,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const payload = JSON.parse(event.data);
         console.log('[WS CLIENT] Message payload:', payload);
 
-        if (payload.type === 'VENDOR_STATUS_UPDATED') {
+        if (payload.type === 'VENDOR_STATUS_UPDATED' || payload.type === 'VENDOR_UPDATED') {
           if (typeof window !== 'undefined') {
             if (payload.vendor_id && payload.status) {
               const key = `aharsetu_vendor_status_${payload.vendor_id}`;
@@ -213,7 +213,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 localStorage.setItem(key, payload.status);
               }
             }
+            try {
+              const { getVendors } = await import('@/lib/vendors');
+              getVendors().catch(() => {});
+            } catch {}
             window.dispatchEvent(new CustomEvent('aharsetu_vendor_status_changed', { detail: payload }));
+            window.dispatchEvent(new CustomEvent('aharsetu_vendor_updated', { detail: payload }));
+            window.dispatchEvent(new CustomEvent('aharsetu_vendors_changed', { detail: payload }));
           }
         } else if (payload.type === 'USER_DELETED' || payload.type === 'USER_CREATED' || payload.type === 'USER_UPDATED') {
           if (typeof window !== 'undefined') {

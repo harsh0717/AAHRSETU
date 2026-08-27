@@ -127,9 +127,40 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 12px;
   min-width: 0;
+}
+
+.heroHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.legalTopLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #E2E8F0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.legalTopLink:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  transform: translateY(-1px);
 }
 
 .heroLogoGlassWrapper {
@@ -457,9 +488,72 @@
 .heroFooter {
   position: relative;
   z-index: 2;
-  font-size: 0.72rem;
-  color: #64748B;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.heroFooterText {
+  font-size: 0.74rem;
+  color: #94A3B8;
   font-weight: 500;
+}
+
+.heroFooterLinks {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footerLink {
+  color: #34D399;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footerLink:hover {
+  color: #6EE7B7;
+  text-decoration: underline;
+}
+
+.footerDot {
+  color: #64748B;
+  font-size: 0.8rem;
+}
+
+.formLegalRow {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 0.76rem;
+  color: #64748B;
+  text-align: center;
+}
+
+.formLegalLink {
+  color: #2563EB;
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.15s ease;
+}
+
+.formLegalLink:hover {
+  color: #1D4ED8;
+  text-decoration: underline;
 }
 
 

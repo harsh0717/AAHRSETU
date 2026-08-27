@@ -203,72 +203,33 @@ export default function LoginPage() {
         <div className={styles.heroRing1} aria-hidden="true" />
         <div className={styles.heroRing2} aria-hidden="true" />
 
-        {/* Vector Culinary Doodle Layer */}
-        <svg className={styles.culinaryDoodleLayer} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.4" />
-            </linearGradient>
-          </defs>
-
-          {/* Doodle 1: Steaming Hot Chai Glass */}
-          <g className={`${styles.doodleIcon} ${styles.doodleFloat1}`} style={{ transform: 'translate(30px, 50px)' }}>
-            <path d="M10 25 L14 60 A 8 8 0 0 0 22 68 L38 68 A 8 8 0 0 0 46 60 L50 25 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <line x1="8" y1="25" x2="52" y2="25" stroke="url(#emeraldGrad)" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M22 18 Q 24 10, 20 5" stroke="url(#emeraldGrad)" strokeWidth="1.8" strokeLinecap="round" />
-            <path d="M30 18 Q 32 8, 28 3" stroke="url(#emeraldGrad)" strokeWidth="1.8" strokeLinecap="round" />
-            <path d="M38 18 Q 40 11, 36 6" stroke="url(#emeraldGrad)" strokeWidth="1.8" strokeLinecap="round" />
-          </g>
-
-          {/* Doodle 2: Crisp Samosa Triangle */}
-          <g className={`${styles.doodleIcon} ${styles.doodleFloat2}`} style={{ transform: 'translate(310px, 40px)' }}>
-            <path d="M30 10 L55 52 Q 30 58 5 52 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M28 25 Q 32 35 24 45" stroke="url(#emeraldGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-            <circle cx="36" cy="40" r="1.5" fill="#10B981" opacity="0.6" />
-          </g>
-
-          {/* Doodle 3: Chef Toque */}
-          <g className={`${styles.doodleIcon} ${styles.doodleFloat3}`} style={{ transform: 'translate(330px, 180px)' }}>
-            <path d="M12 44 L48 44 L46 54 L14 54 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M14 44 C 8 36, 10 24, 20 22 C 20 12, 32 10, 38 18 C 46 12, 52 24, 46 44" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinecap="round" />
-          </g>
-
-          {/* Doodle 4: Serving Cloche */}
-          <g className={`${styles.doodleIcon} ${styles.doodleFloat1}`} style={{ transform: 'translate(20px, 260px)' }}>
-            <path d="M8 42 C 8 20, 52 20, 52 42 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinejoin="round" />
-            <line x1="4" y1="44" x2="56" y2="44" stroke="url(#emeraldGrad)" strokeWidth="2.5" strokeLinecap="round" />
-            <circle cx="30" cy="17" r="3" stroke="url(#emeraldGrad)" strokeWidth="2" />
-          </g>
-
-          {/* Doodle 5: Traditional Indian Thali */}
-          <g className={`${styles.doodleIcon} ${styles.doodleFloat2}`} style={{ transform: 'translate(180px, 440px)' }}>
-            <circle cx="35" cy="35" r="30" stroke="url(#emeraldGrad)" strokeWidth="2" />
-            <circle cx="22" cy="22" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
-            <circle cx="48" cy="22" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
-            <circle cx="24" cy="46" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
-            <circle cx="46" cy="46" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
-          </g>
-        </svg>
-
-        {/* ── Brand Logo Header & Language Selector ── */}
+        {/* ── Brand Logo Header & Quick Navigation ── */}
         <div className={styles.heroHeader}>
           <div className={styles.heroLogoGlassWrapper}>
             <BrandLogo size={52} />
           </div>
           
-          <div className={styles.langRow}>
-            {LANGUAGES.map((l) => (
-              <button
-                key={l.code}
-                type="button"
-                aria-label={`Select ${l.label} language`}
-                onClick={() => setLang(l.code as LangCode)}
-                className={`${styles.langBtn} ${lang === l.code ? styles.langActive : ''}`}
-              >
-                {l.label}
-              </button>
-            ))}
+          <div className={styles.heroHeaderRight}>
+            <Link href="/privacy" className={styles.legalTopLink} title="View Privacy Policy">
+              <span>🔒</span> Privacy Policy
+            </Link>
+            <Link href="/terms" className={styles.legalTopLink} title="View Terms of Service">
+              <span>⚖️</span> Terms
+            </Link>
+
+            <div className={styles.langRow}>
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  aria-label={`Select ${l.label} language`}
+                  onClick={() => setLang(l.code as LangCode)}
+                  className={`${styles.langBtn} ${lang === l.code ? styles.langActive : ''}`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -368,11 +329,17 @@ export default function LoginPage() {
 
         {/* ── Footer Copyright & Legal ── */}
         <div className={styles.heroFooter}>
-          <div>© 2026 {formatBrandText('AharSetu', lang)}. Institutional Campus Hospitality Network.</div>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
-            <Link href="/privacy" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>Privacy Policy</Link>
-            <span style={{ color: '#64748B' }}>·</span>
-            <Link href="/terms" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>Terms of Service</Link>
+          <div className={styles.heroFooterText}>
+            © 2026 {formatBrandText('AharSetu', lang)} · Institutional Protocol
+          </div>
+          <div className={styles.heroFooterLinks}>
+            <Link href="/privacy" className={styles.footerLink}>
+              <span>🔒</span> Privacy Policy
+            </Link>
+            <span className={styles.footerDot}>·</span>
+            <Link href="/terms" className={styles.footerLink}>
+              <span>📜</span> Terms of Service
+            </Link>
           </div>
         </div>
       </section>
@@ -570,10 +537,11 @@ export default function LoginPage() {
           </div>
 
           {/* Form Footer Legal Links */}
-          <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'center', gap: '12px', fontSize: '0.74rem', color: '#64748B' }}>
-            <Link href="/privacy" style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
-            <span>·</span>
-            <Link href="/terms" style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Terms of Service</Link>
+          <div className={styles.formLegalRow}>
+            <span>Institutional Compliance:</span>
+            <Link href="/privacy" className={styles.formLegalLink}>Privacy Policy</Link>
+            <span>•</span>
+            <Link href="/terms" className={styles.formLegalLink}>Terms of Service</Link>
           </div>
 
         </div>

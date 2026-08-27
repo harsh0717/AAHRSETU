@@ -52,15 +52,28 @@ def get_departments(
     return user_repo.get_departments()
 
 
+@router.get("/public-directory", response_model=List[UserResponse])
+def get_public_user_directory(
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Public directory of active real users for quick test switcher and institutional directory.
+    No authentication required.
+    """
+    user_repo = UserRepository(db)
+    users = user_repo.get_multi(skip=0, limit=100)
+    return [_user_to_response(u) for u in users if u.active]
+
+
 @router.get("", response_model=List[UserResponse])
 def read_users(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
-    current_user: User = Depends(deps.check_role(["admin"]))
+    current_user: User = Depends(deps.get_current_user)
 ) -> Any:
     """
-    Retrieve all registered users (Admin-only).
+    Retrieve registered users from database.
     """
     user_repo = UserRepository(db)
     users = user_repo.get_multi(skip=skip, limit=limit)

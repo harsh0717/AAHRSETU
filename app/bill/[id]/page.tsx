@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getSession, getSavedUsers, UserProfile } from '@/lib/auth';
+import { getSession, getUsers, getSavedUsers, initializeApplication, UserProfile } from '@/lib/auth';
 import { getOrderById, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
 import { getMenuItemName } from '@/lib/vendors';
 import { COLLEGE_INFO } from '@/lib/constants';
@@ -63,6 +63,15 @@ export default function BillPage() {
     }
     setSession(s);
     setSavedUsers(getSavedUsers());
+
+    initializeApplication().then(fresh => {
+      if (fresh) setSession(fresh);
+    }).catch(() => {});
+
+    getUsers().then(users => {
+      if (users && users.length > 0) setSavedUsers(users);
+    }).catch(() => {});
+
     loadOrder();
 
     // Cross-device sync: poll every 10 seconds silently
@@ -72,13 +81,17 @@ export default function BillPage() {
 
     const handleOrderChanged = () => {
       loadOrderRef.current?.(true);
-      setSavedUsers(getSavedUsers());
+      getUsers().then(users => {
+        if (users && users.length > 0) setSavedUsers(users);
+      }).catch(() => setSavedUsers(getSavedUsers()));
     };
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_custom_users') {
         loadOrderRef.current?.(true);
-        setSavedUsers(getSavedUsers());
+        getUsers().then(users => {
+          if (users && users.length > 0) setSavedUsers(users);
+        }).catch(() => setSavedUsers(getSavedUsers()));
       }
     };
 

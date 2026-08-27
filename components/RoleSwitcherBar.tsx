@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getSession, getSavedUsers, login, UserProfile } from '@/lib/auth';
+import { getSession, getUsers, getSavedUsers, login, UserProfile } from '@/lib/auth';
 import { isDemoSwitcherEnabled } from '@/lib/systemSettings';
 import AppIcon from './ui/AppIcon';
 
@@ -156,6 +156,10 @@ export default function RoleSwitcherBar() {
     setCurrentSession(s);
     setSavedUsers(getSavedUsers());
     setSwitcherEnabled(isDemoSwitcherEnabled());
+
+    getUsers().then(users => {
+      if (users && users.length > 0) setSavedUsers(users);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -294,10 +298,10 @@ export default function RoleSwitcherBar() {
               <span style={{ fontSize: '1rem' }}>🎯</span>
               <div>
                 <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '0.02em' }}>
-                  Board Presentation — Live Role Switcher
+                  Quick Test Switcher — Real Account Roles
                 </span>
                 <span style={{ marginLeft: '8px', fontSize: '0.68rem', color: '#94A3B8' }}>
-                  (1-click persona simulation)
+                  (1-click role simulation)
                 </span>
               </div>
             </div>
@@ -426,7 +430,7 @@ export default function RoleSwitcherBar() {
         }}
       >
         <span style={{ fontSize: '0.9rem' }}>🎯</span>
-        <span style={{ color: '#F1F5F9' }}>Demo Switcher:</span>
+        <span style={{ color: '#F1F5F9' }}>Quick Test Switcher:</span>
         <span
           style={{
             background: 'rgba(37, 99, 235, 0.3)',

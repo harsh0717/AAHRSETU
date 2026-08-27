@@ -72,40 +72,21 @@ function notifyUsersChanged() {
   } catch {}
 }
 
+let inMemoryUsersCache: UserProfile[] = [];
+
 export function getSavedUsers(): UserProfile[] {
+  if (inMemoryUsersCache.length > 0) {
+    return inMemoryUsersCache;
+  }
   if (typeof window === 'undefined') return DEMO_USERS;
   try {
-    const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
     const raw = localStorage.getItem(CUSTOM_USERS_KEY);
     const custom: UserProfile[] = raw ? JSON.parse(raw) : [];
-
-    // Map by email so custom accounts override demo accounts
-    const userMap = new Map<string, UserProfile>();
-
-    // Add demo users first (unless deleted)
-    DEMO_USERS.forEach(u => {
-      if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-        userMap.set(u.email.toLowerCase(), { ...u });
-      }
-    });
-
-    // Merge custom users (unless deleted)
-    if (Array.isArray(custom)) {
-      custom.forEach(u => {
-        if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-          const existing = userMap.get(u.email.toLowerCase());
-          userMap.set(u.email.toLowerCase(), {
-            ...(existing || {}),
-            ...u,
-          });
-        }
-      });
+    if (Array.isArray(custom) && custom.length > 0) {
+      return custom;
     }
-
-    return Array.from(userMap.values());
-  } catch (e) {
-    return DEMO_USERS;
-  }
+  } catch (e) {}
+  return DEMO_USERS;
 }
 
 export function saveCustomUser(user: UserProfile) {
@@ -123,6 +104,13 @@ export function saveCustomUser(user: UserProfile) {
     if (idx >= 0) custom[idx] = { ...custom[idx], ...user };
     else custom.unshift(user);
     localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(custom));
+
+    // Update in-memory cache
+    if (inMemoryUsersCache.length > 0) {
+      const memIdx = inMemoryUsersCache.findIndex(u => String(u.id) === String(user.id) || u.email.toLowerCase() === user.email.toLowerCase());
+      if (memIdx >= 0) inMemoryUsersCache[memIdx] = { ...inMemoryUsersCache[memIdx], ...user };
+      else inMemoryUsersCache.unshift(user);
+    }
 
     // Update active session if it matches this user
     try {
@@ -147,48 +135,35 @@ export function saveCustomUser(user: UserProfile) {
 }
 
 export async function getUsers(): Promise<UserProfile[]> {
-  let baseUsers: UserProfile[] = [];
   try {
+    // 1. Try authenticated users endpoint
     const res = await api.get<UserProfile[]>('/users');
     if (res && Array.isArray(res) && res.length > 0) {
-      baseUsers = res;
+      inMemoryUsersCache = res;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(res));
+      }
+      return res;
     }
   } catch (err) {
-    // Serve local users directory when offline
-  }
-
-  if (baseUsers.length === 0) {
-    return getSavedUsers();
+    // Fall back to public directory
   }
 
   try {
-    const deletedIds = new Set(getDeletedUserIds().map(id => String(id).toLowerCase()));
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(CUSTOM_USERS_KEY) : null;
-    const custom: UserProfile[] = raw ? JSON.parse(raw) : [];
-
-    const userMap = new Map<string, UserProfile>();
-    baseUsers.forEach(u => {
-      if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-        userMap.set(u.email.toLowerCase(), u);
+    // 2. Try unauthenticated public directory endpoint (for login / test switcher)
+    const pubRes = await api.get<UserProfile[]>('/users/public-directory');
+    if (pubRes && Array.isArray(pubRes) && pubRes.length > 0) {
+      inMemoryUsersCache = pubRes;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(CUSTOM_USERS_KEY, JSON.stringify(pubRes));
       }
-    });
-
-    if (Array.isArray(custom)) {
-      custom.forEach(u => {
-        if (!deletedIds.has(String(u.id).toLowerCase()) && !deletedIds.has(u.email.toLowerCase())) {
-          const existing = userMap.get(u.email.toLowerCase());
-          userMap.set(u.email.toLowerCase(), {
-            ...(existing || {}),
-            ...u,
-          });
-        }
-      });
+      return pubRes;
     }
-
-    return Array.from(userMap.values());
-  } catch (e) {
-    return baseUsers;
+  } catch (err) {
+    // Fall back to local storage cache
   }
+
+  return getSavedUsers();
 }
 
 export async function createUser(userData: any): Promise<UserProfile> {
@@ -291,18 +266,25 @@ const DEFAULT_DEPARTMENTS = [
 ];
 
 export async function getDepartments(): Promise<any[]> {
+  try {
+    const res = await api.get<any[]>('/users/departments');
+    if (res && Array.isArray(res) && res.length > 0) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('aharsetu_departments_v3', JSON.stringify(res));
+      }
+      return res;
+    }
+  } catch (e) {}
+
   if (typeof window === 'undefined') return DEFAULT_DEPARTMENTS;
   try {
     const raw = localStorage.getItem('aharsetu_departments_v3');
-    if (!raw) {
-      localStorage.setItem('aharsetu_departments_v3', JSON.stringify(DEFAULT_DEPARTMENTS));
-      return DEFAULT_DEPARTMENTS;
+    if (raw) {
+      const depts = JSON.parse(raw);
+      if (Array.isArray(depts) && depts.length > 0) return depts;
     }
-    const depts = JSON.parse(raw);
-    return Array.isArray(depts) && depts.length > 0 ? depts : DEFAULT_DEPARTMENTS;
-  } catch {
-    return DEFAULT_DEPARTMENTS;
-  }
+  } catch {}
+  return DEFAULT_DEPARTMENTS;
 }
 
 export async function addDepartment(dept: { name: string; code: string; description?: string; active?: boolean }): Promise<any> {

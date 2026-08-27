@@ -6,7 +6,7 @@ import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import VendorStatusBadge from '@/components/VendorStatusBadge';
 import UserManager from '@/components/UserManager';
-import { getSession, UserProfile, updateSessionLanguage, getDepartments, addDepartment, toggleDepartmentStatus, updateUserProfile, uploadAvatar } from '@/lib/auth';
+import { getSession, initializeApplication, UserProfile, updateSessionLanguage, getDepartments, addDepartment, toggleDepartmentStatus, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, resetAllData, completeOrder, MasterOrder } from '@/lib/store';
 import { getVendors, updateVendorStatus, updateVendorProfile, Vendor, deleteVendor, getMonthlySettlements, updateMonthlySettlement, VendorMonthlySettlement } from '@/lib/vendors';
 import { ROLE_COLORS, VENDOR_STATUS_LABELS } from '@/lib/constants';
@@ -378,6 +378,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
 
+    // Fetch fresh user profile from DB
+    initializeApplication().then((fresh) => {
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+        setPreferredLang(fresh.preferred_language || 'en');
+      }
+    }).catch(() => {});
+
     // Auto-wipe demo data once on client load if legacy keys exist
     if (typeof window !== 'undefined' && !localStorage.getItem('aharsetu_fresh_zero_v3')) {
       resetAllData().then(() => {
@@ -390,6 +400,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
     const handleOrderChanged = () => { loadDashboardData(true); };
     const handleUserChanged = () => { loadDashboardData(true); };
+    const handleProfileChanged = (e?: any) => {
+      const fresh = (e?.detail && typeof e.detail === 'object' && e.detail.name) ? e.detail : getSession();
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+      }
+    };
 
     const handleStorageChange = (e: StorageEvent) => {
       if (
@@ -423,12 +441,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
     window.addEventListener('aharsetu_user_changed', handleUserChanged);
+    window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
+    window.addEventListener('aharsetu_session_changed', handleProfileChanged);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
       window.removeEventListener('aharsetu_user_changed', handleUserChanged);
+      window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
+      window.removeEventListener('aharsetu_session_changed', handleProfileChanged);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [router, initialTab]);

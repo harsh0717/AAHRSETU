@@ -5,7 +5,7 @@ import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import AvatarImage from '@/components/AvatarImage';
-import { getSession, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
+import { getSession, initializeApplication, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, createMasterOrder, MasterOrder } from '@/lib/store';
 import { getAvailableMenuByVendor, MenuItem } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
@@ -119,10 +119,30 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     setProfileName(s.name);
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
+
+    // Fetch fresh user profile from DB
+    initializeApplication().then((fresh) => {
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+        setPreferredLang(fresh.preferred_language || 'en');
+      }
+    }).catch(() => {});
+
     loadData();
 
     const handleStatusChange = () => {
       getAvailableMenuByVendor().then(mList => setMenuByVendor(mList)).catch(() => {});
+    };
+
+    const handleProfileChanged = (e?: any) => {
+      const fresh = (e?.detail && typeof e.detail === 'object' && e.detail.name) ? e.detail : getSession();
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+      }
     };
 
     // Cross-tab real-time sync (same browser)
@@ -143,6 +163,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     if (typeof window !== 'undefined') {
       window.addEventListener('aharsetu_vendor_status_changed', handleStatusChange);
       window.addEventListener('aharsetu_menu_updated', handleStatusChange);
+      window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
+      window.addEventListener('aharsetu_session_changed', handleProfileChanged);
       window.addEventListener('storage', handleStorageChange);
       window.addEventListener('aharsetu_order_changed', handleOrderChanged);
     }
@@ -151,6 +173,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
       if (typeof window !== 'undefined') {
         window.removeEventListener('aharsetu_vendor_status_changed', handleStatusChange);
         window.removeEventListener('aharsetu_menu_updated', handleStatusChange);
+        window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
+        window.removeEventListener('aharsetu_session_changed', handleProfileChanged);
         window.removeEventListener('storage', handleStorageChange);
         window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
       }

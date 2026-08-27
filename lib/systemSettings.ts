@@ -38,6 +38,23 @@ export function updateSystemSettings(partial: Partial<SystemSettings>): SystemSe
   return updated;
 }
 
+import { api } from '@/lib/api';
+
+export async function fetchPublicSettings(): Promise<SystemSettings> {
+  try {
+    const res = await api.get<{ demo_accounts_enabled: boolean }>('/settings/public');
+    if (res && typeof res.demo_accounts_enabled === 'boolean') {
+      return updateSystemSettings({
+        demo_accounts_enabled: res.demo_accounts_enabled,
+        demo_switcher_enabled: res.demo_accounts_enabled,
+      });
+    }
+  } catch (err) {
+    // Return local cache on network error
+  }
+  return getSystemSettings();
+}
+
 export function isDemoSwitcherEnabled(): boolean {
   return getSystemSettings().demo_switcher_enabled;
 }

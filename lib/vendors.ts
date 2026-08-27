@@ -516,6 +516,7 @@ export async function getMonthlySettlements(): Promise<VendorMonthlySettlement[]
   try {
     const res = await api.get<VendorMonthlySettlement[]>('/vendors/settlements');
     if (res && Array.isArray(res)) {
+      saveLocalSettlements(res);
       return res;
     }
   } catch (err) {
@@ -527,11 +528,20 @@ export async function getMonthlySettlements(): Promise<VendorMonthlySettlement[]
 export async function getVendorMonthlySettlements(vendorId: string): Promise<VendorMonthlySettlement[]> {
   try {
     const res = await api.get<VendorMonthlySettlement[]>('/vendors/my-settlements');
-    if (res && Array.isArray(res)) {
+    if (res && Array.isArray(res) && res.length > 0) {
+      saveLocalSettlements(res);
       return res;
     }
   } catch (err) {
-    console.warn('[SETTLEMENTS] API fetch failed, serving local fallback');
+    // If /my-settlements is restricted (e.g. non-vendor admin testing), try /vendors/settlements
+    try {
+      const all = await api.get<VendorMonthlySettlement[]>('/vendors/settlements');
+      if (all && Array.isArray(all)) {
+        const filtered = all.filter(s => s.vendor_id === vendorId);
+        saveLocalSettlements(all);
+        return filtered;
+      }
+    } catch {}
   }
   return getLocalSettlements().filter(s => s.vendor_id === vendorId);
 }
@@ -549,7 +559,14 @@ export async function updateMonthlySettlement(
       paid_amount: paidAmount,
       total_amount: totalAmount,
     });
-    if (res) return res;
+    if (res) {
+      const list = getLocalSettlements();
+      const idx = list.findIndex(s => s.vendor_id === vendorId && s.month === month);
+      if (idx >= 0) list[idx] = res;
+      else list.unshift(res);
+      saveLocalSettlements(list);
+      return res;
+    }
   } catch (err) {
     console.warn('[SETTLEMENTS] API update failed, saving locally');
   }
@@ -587,4 +604,5 @@ export async function updateMonthlySettlement(
   saveLocalSettlements(list);
   return target;
 }
+
 

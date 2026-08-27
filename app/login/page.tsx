@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { login, getSession, getSavedUsers, UserProfile } from '@/lib/auth';
+import { login, getSession, getUsers, getSavedUsers, UserProfile } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
@@ -10,7 +10,7 @@ import BrandLogo from '@/components/BrandLogo';
 import UiverseButton from '@/components/ui/UiverseButton';
 import AppIcon from '@/components/ui/AppIcon';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
-import { isDemoAccountsEnabled } from '@/lib/systemSettings';
+import { isDemoAccountsEnabled, fetchPublicSettings } from '@/lib/systemSettings';
 import styles from './login.module.css';
 
 const ROLES_LIST = [
@@ -21,7 +21,7 @@ const ROLES_LIST = [
   { id: 'admin', label: 'System Admin', icon: 'admin', desc: 'Configure users & system baseline' },
 ];
 
-const DEMO_ACCOUNTS = [
+const QUICK_TEST_ACCOUNTS = [
   { label: 'System Admin', email: 'admin@aharsetu.edu.in', password: 'Admin@123', role: 'admin', department_id: null, icon: 'admin' },
   { label: 'Administration', email: 'dcr@aharsetu.edu.in', password: 'DCR@123', role: 'dcr', department_id: null, icon: 'dcr' },
   { label: 'Principal (DD)', email: 'principal.dd@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'diploma', icon: 'principal' },
@@ -119,6 +119,12 @@ export default function LoginPage() {
     setDemoAccountsEnabled(isDemoAccountsEnabled());
     setSavedUsers(getSavedUsers());
 
+    // Fetch authoritative settings & real users directly from database
+    fetchPublicSettings().then(s => setDemoAccountsEnabled(s.demo_accounts_enabled)).catch(() => {});
+    getUsers().then(users => {
+      if (users && users.length > 0) setSavedUsers(users);
+    }).catch(() => {});
+
     const handleSettingsChange = (e: any) => {
       if (e.detail && typeof e.detail.demo_accounts_enabled === 'boolean') {
         setDemoAccountsEnabled(e.detail.demo_accounts_enabled);
@@ -128,7 +134,9 @@ export default function LoginPage() {
     };
 
     const handleUsersChange = () => {
-      setSavedUsers(getSavedUsers());
+      getUsers().then(users => {
+        if (users && users.length > 0) setSavedUsers(users);
+      }).catch(() => setSavedUsers(getSavedUsers()));
     };
 
     if (typeof window !== 'undefined') {
@@ -473,7 +481,7 @@ export default function LoginPage() {
             </UiverseButton>
           </form>
 
-          {/* Quick-Access Demo Accounts Selector */}
+          {/* Quick Test Switcher */}
           {demoAccountsEnabled && (
             <div className={styles.demoSection}>
               <button
@@ -481,12 +489,12 @@ export default function LoginPage() {
                 onClick={() => setShowDemo(!showDemo)}
                 className={styles.demoTrigger}
               >
-                {showDemo ? t('login.demo_btn_close', '✕ Close Demo Board') : t('login.demo_btn_open', '🔑 Quick Access Demo Accounts')}
+                {showDemo ? '✕ Close Test Switcher' : '🔑 Quick Test Switcher'}
               </button>
 
               {showDemo && (
                 <div className={styles.demoGrid}>
-                  {DEMO_ACCOUNTS.map((acc, idx) => {
+                  {QUICK_TEST_ACCOUNTS.map((acc, idx) => {
                     const matchedUser = savedUsers.find(u => u.email.toLowerCase() === acc.email.toLowerCase());
                     const displayName = matchedUser?.name || acc.label;
 

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
-import { getSession, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
+import { getSession, initializeApplication, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, setVendorPrices, requestVendorModification, rejectVendorOrder, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
 import { getVendorMenu, upsertVendorMenuItem, deleteVendorMenuItem, updateVendorStatus, getVendorById, saveCustomFoodImage, MenuItem, Vendor, getVendorMonthlySettlements, VendorMonthlySettlement, getMenuItemName } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
@@ -128,16 +128,35 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     setProfileName(s.name);
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
+
+    // Fetch fresh user profile from DB
+    initializeApplication().then((fresh) => {
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+        setPreferredLang(fresh.preferred_language || 'en');
+      }
+    }).catch(() => {});
+
     loadData(s.vendor_id);
 
     const vendorId = s.vendor_id;
 
     // WebSocket-driven sync
     const handleOrderChanged = () => { if (vendorId) loadData(vendorId, true); };
+    const handleProfileChanged = (e?: any) => {
+      const fresh = (e?.detail && typeof e.detail === 'object' && e.detail.name) ? e.detail : getSession();
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+      }
+    };
 
     // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
-      if (vendorId && (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7')) {
+      if (vendorId && (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_settlements_v4')) {
         loadData(vendorId, true);
       }
     };
@@ -148,11 +167,15 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     }, 10000);
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
+    window.addEventListener('aharsetu_session_changed', handleProfileChanged);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
+      window.removeEventListener('aharsetu_session_changed', handleProfileChanged);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);

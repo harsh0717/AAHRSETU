@@ -590,65 +590,110 @@ def delete_vendor(
 
 
 def sync_monthly_settlements(db: Session):
+    """
+    Synchronize VendorMonthlySettlement records from the authoritative database tables (Bill, Payment, VendorOrder).
+    Ensures real-time cross-device settlement consistency without relying on local storage.
+    """
     from backend.models.order import VendorOrder
+    from backend.models.bill import Bill
+    from backend.models.payment import Payment
     from collections import defaultdict
     
     vendors = db.query(Vendor).all()
-    current_month = datetime.now().strftime("%B %Y")
+    now = datetime.now(timezone.utc)
+    current_month_str = f"{now.year:04d}-{now.month:02d}"
     
-    completed_orders = db.query(VendorOrder).filter(VendorOrder.status == "Completed").all()
-    orders_by_vendor_month = defaultdict(float)
+    # 1. Tally billed amounts from Bills
+    bills = db.query(Bill).all()
+    billed_by_vendor_month = defaultdict(float)
     
+    for b in bills:
+        if b.vendor_id and b.amount:
+            dt = b.generated_at or now
+            m_str = f"{dt.year:04d}-{dt.month:02d}"
+            billed_by_vendor_month[(b.vendor_id, m_str)] += float(b.amount)
+            
+    # 2. Also tally completed vendor orders if bills not yet generated
+    completed_orders = db.query(VendorOrder).filter(VendorOrder.status.in_(["Completed", "Vendor Confirmed"])).all()
     for vo in completed_orders:
-        month_str = vo.updated_at.strftime("%B %Y")
-        orders_by_vendor_month[(vo.vendor_id, month_str)] += vo.bill_amount
-        
-    for vendor in vendors:
-        months_to_check = set([current_month])
-        for (v_id, m_str) in orders_by_vendor_month.keys():
-            if v_id == vendor.id:
-                months_to_check.add(m_str)
+        if vo.vendor_id and vo.bill_amount:
+            dt = vo.updated_at or now
+            m_str = f"{dt.year:04d}-{dt.month:02d}"
+            # If no bill exists for this order/vendor in the tally, account for it
+            if billed_by_vendor_month[(vo.vendor_id, m_str)] == 0:
+                billed_by_vendor_month[(vo.vendor_id, m_str)] += float(vo.bill_amount)
                 
-        for month in months_to_check:
+    # 3. Tally payments from Payment table
+    payments = db.query(Payment).filter(Payment.status == "SUCCESS").all()
+    paid_by_vendor_month = defaultdict(float)
+    for p in payments:
+        if p.vendor_id and p.amount:
+            dt = p.payment_date or p.initiated_at or now
+            m_str = f"{dt.year:04d}-{dt.month:02d}"
+            paid_by_vendor_month[(p.vendor_id, m_str)] += float(p.amount)
+            
+    # 4. Upsert VendorMonthlySettlement records for each vendor
+    for vendor in vendors:
+        all_months = set([current_month_str])
+        for (v_id, m_str) in billed_by_vendor_month.keys():
+            if v_id == vendor.id:
+                all_months.add(m_str)
+        for (v_id, m_str) in paid_by_vendor_month.keys():
+            if v_id == vendor.id:
+                all_months.add(m_str)
+                
+        for month in all_months:
             s = db.query(VendorMonthlySettlement).filter(
                 VendorMonthlySettlement.vendor_id == vendor.id,
                 VendorMonthlySettlement.month == month
             ).first()
             
-            calculated_total = orders_by_vendor_month[(vendor.id, month)]
+            calc_total = billed_by_vendor_month[(vendor.id, month)]
+            calc_paid = paid_by_vendor_month[(vendor.id, month)]
             
             if not s:
+                actual_paid = calc_paid
+                actual_total = calc_total
+                due = max(0.0, actual_total - actual_paid)
+                status_str = "Settled" if due <= 0.0 and actual_total > 0 else ("Partially Settled" if actual_paid > 0 else "Pending")
+                if actual_total == 0 and actual_paid == 0:
+                    status_str = "Settled"
+                    
                 s = VendorMonthlySettlement(
                     vendor_id=vendor.id,
                     month=month,
-                    total_amount=calculated_total,
-                    paid_amount=0.0,
-                    due_amount=calculated_total,
-                    status="Pending"
+                    total_amount=actual_total,
+                    paid_amount=actual_paid,
+                    due_amount=due,
+                    status=status_str
                 )
                 db.add(s)
             else:
-                if s.total_amount != calculated_total:
-                    s.total_amount = calculated_total
-                    s.due_amount = max(0.0, calculated_total - s.paid_amount)
-                    if s.due_amount <= 0.0:
-                        s.status = "Settled"
-                    elif s.paid_amount > 0.0:
-                        s.status = "Partially Settled"
-                    else:
-                        s.status = "Pending"
-                    db.add(s)
+                # Keep the higher of recorded paid vs payment table
+                actual_paid = max(float(s.paid_amount or 0.0), calc_paid)
+                actual_total = max(float(s.total_amount or 0.0), calc_total)
+                due = max(0.0, actual_total - actual_paid)
+                status_str = "Settled" if due <= 0.0 and actual_total > 0 else ("Partially Settled" if actual_paid > 0 else "Pending")
+                if actual_total == 0 and actual_paid == 0:
+                    status_str = "Settled"
+                    
+                s.total_amount = actual_total
+                s.paid_amount = actual_paid
+                s.due_amount = due
+                s.status = status_str
+                db.add(s)
+                
     db.commit()
 
 
 @router.get("/settlements", response_model=List[SettlementResponse])
 def get_monthly_settlements(
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(["admin"]))
+    current_user: User = Depends(deps.check_role(["admin", "dcr", "administration"]))
 ) -> Any:
     """
-    Retrieve all monthly settlements for canteens (Admin-only).
-    Auto-syncs records against completed order billing amounts first.
+    Retrieve all monthly settlements for canteens (Admin and DCR/Administration).
+    Auto-syncs records against database bills, orders, and payments first.
     """
     sync_monthly_settlements(db)
     settlements = db.query(VendorMonthlySettlement).order_by(VendorMonthlySettlement.month.desc()).all()
@@ -665,10 +710,11 @@ def get_monthly_settlements(
 def update_monthly_settlement(
     payload: SettlementUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(["admin"]))
+    current_user: User = Depends(deps.check_role(["admin", "dcr", "administration"]))
 ) -> Any:
     """
-    Update or record monthly settlement payment and outstanding dues (Admin-only).
+    Update or record monthly settlement payment and outstanding dues (Admin/DCR).
+    Saves directly to persistent database.
     """
     s = db.query(VendorMonthlySettlement).filter(
         VendorMonthlySettlement.vendor_id == payload.vendor_id,
@@ -699,6 +745,17 @@ def update_monthly_settlement(
     db.commit()
     db.refresh(s)
     
+    # Audit log
+    from backend.repositories.audit import AuditRepository
+    audit_repo = AuditRepository(db)
+    audit_repo.log_action(
+        user_id=current_user.id,
+        role=current_user.role,
+        department="Settlements",
+        action="Vendor Settlement Updated",
+        new_value=f"Vendor: {payload.vendor_id}, Month: {payload.month}, Total: {payload.total_amount}, Paid: {payload.paid_amount}"
+    )
+    
     vendor = db.query(Vendor).filter(Vendor.id == s.vendor_id).first()
     r = SettlementResponse.model_validate(s)
     r.vendor_name = vendor.name if vendor else "Unknown Vendor"
@@ -708,24 +765,25 @@ def update_monthly_settlement(
 @router.get("/my-settlements", response_model=List[SettlementResponse])
 def get_my_monthly_settlements(
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_role(["vendor"]))
+    current_user: User = Depends(deps.check_role(["vendor", "admin", "dcr", "administration"]))
 ) -> Any:
     """
-    Retrieve monthly settlements history for the currently logged-in vendor.
+    Retrieve monthly settlements history from database for the currently logged-in vendor.
     """
-    if not current_user.vendor_id:
+    if not current_user.vendor_id and current_user.role == "vendor":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account is not linked to any vendor profile."
         )
     
+    target_vendor_id = current_user.vendor_id or "v1"
     sync_monthly_settlements(db)
     settlements = db.query(VendorMonthlySettlement).filter(
-        VendorMonthlySettlement.vendor_id == current_user.vendor_id
+        VendorMonthlySettlement.vendor_id == target_vendor_id
     ).order_by(VendorMonthlySettlement.month.desc()).all()
     
     response = []
-    vendor = db.query(Vendor).filter(Vendor.id == current_user.vendor_id).first()
+    vendor = db.query(Vendor).filter(Vendor.id == target_vendor_id).first()
     vendor_name = vendor.name if vendor else "My Canteen"
     for s in settlements:
         r = SettlementResponse.model_validate(s)

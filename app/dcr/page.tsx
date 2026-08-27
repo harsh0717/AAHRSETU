@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
-import { getSession, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
+import { getSession, initializeApplication, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, MasterOrder } from '@/lib/store';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
@@ -97,10 +97,29 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     setProfileName(s.name);
     setProfileMobile(s.mobile_number || '');
     setPreferredLang(s.preferred_language || 'en');
+
+    // Fetch fresh user profile from DB
+    initializeApplication().then((fresh) => {
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+        setPreferredLang(fresh.preferred_language || 'en');
+      }
+    }).catch(() => {});
+
     loadData();
 
     // WebSocket-driven sync
     const handleOrderChanged = () => { loadData(true); };
+    const handleProfileChanged = (e?: any) => {
+      const fresh = (e?.detail && typeof e.detail === 'object' && e.detail.name) ? e.detail : getSession();
+      if (fresh) {
+        setSession(fresh);
+        setProfileName(fresh.name);
+        setProfileMobile(fresh.mobile_number || '');
+      }
+    };
 
     // Cross-tab real-time sync (same browser)
     const handleStorageChange = (e: StorageEvent) => {
@@ -115,11 +134,15 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     }, 10000);
 
     window.addEventListener('aharsetu_order_changed', handleOrderChanged);
+    window.addEventListener('aharsetu_profile_changed', handleProfileChanged);
+    window.addEventListener('aharsetu_session_changed', handleProfileChanged);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('aharsetu_order_changed', handleOrderChanged);
+      window.removeEventListener('aharsetu_profile_changed', handleProfileChanged);
+      window.removeEventListener('aharsetu_session_changed', handleProfileChanged);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);

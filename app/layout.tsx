@@ -4,7 +4,6 @@ import BootGate from '@/components/BootGate';
 import type { Metadata, Viewport } from 'next';
 import { NotificationProvider } from '@/components/NotificationProvider';
 import ToastContainer from '@/components/ToastContainer';
-import RoleSwitcherBar from '@/components/RoleSwitcherBar';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -79,7 +78,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 {children}
               </main>
               <ToastContainer />
-              <RoleSwitcherBar />
             </BootGate>
           </NotificationProvider>
         </I18nProvider>

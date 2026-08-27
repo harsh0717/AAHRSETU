@@ -2,15 +2,13 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { login, getSession, getUsers, getSavedUsers, UserProfile } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { login, getSession, UserProfile } from '@/lib/auth';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 import UiverseButton from '@/components/ui/UiverseButton';
 import AppIcon from '@/components/ui/AppIcon';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
-import { isDemoAccountsEnabled, fetchPublicSettings } from '@/lib/systemSettings';
 import styles from './login.module.css';
 
 const ROLES_LIST = [
@@ -19,17 +17,6 @@ const ROLES_LIST = [
   { id: 'dcr', label: 'Administration', icon: 'dcr', desc: 'Audit budgets & settle accounts' },
   { id: 'vendor', label: 'Canteen Vendor', icon: 'vendor', desc: 'Update prices & settle kitchen orders' },
   { id: 'admin', label: 'System Admin', icon: 'admin', desc: 'Configure users & system baseline' },
-];
-
-const QUICK_TEST_ACCOUNTS = [
-  { label: 'System Admin', email: 'admin@aharsetu.edu.in', password: 'Admin@123', role: 'admin', department_id: null, icon: 'admin' },
-  { label: 'Administration', email: 'dcr@aharsetu.edu.in', password: 'DCR@123', role: 'dcr', department_id: null, icon: 'dcr' },
-  { label: 'Principal (DD)', email: 'principal.dd@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'diploma', icon: 'principal' },
-  { label: 'Principal (Pharma)', email: 'principal.pharma@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'pharmacy', icon: 'principal' },
-  { label: 'Coordinator (Diploma)', email: 'coord.diploma@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'diploma', icon: 'coordinator' },
-  { label: 'Coordinator (Degree)', email: 'coord.degree@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'degree', icon: 'coordinator' },
-  { label: 'Sharma Canteen', email: 'vendor1@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: 'vendor' },
-  { label: 'Fresh Bites Canteen', email: 'vendor2@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: 'vendor' },
 ];
 
 function formatBrandText(text: string, currentLang: string = 'en') {
@@ -111,51 +98,6 @@ export default function LoginPage() {
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
-  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(() => typeof window !== 'undefined' ? isDemoAccountsEnabled() : true);
-  const [savedUsers, setSavedUsers] = useState<UserProfile[]>([]);
-
-  useEffect(() => {
-    setDemoAccountsEnabled(isDemoAccountsEnabled());
-    setSavedUsers(getSavedUsers());
-
-    // Fetch authoritative settings & real users directly from database
-    fetchPublicSettings().then(s => setDemoAccountsEnabled(s.demo_accounts_enabled)).catch(() => {});
-    getUsers().then(users => {
-      if (users && users.length > 0) setSavedUsers(users);
-    }).catch(() => {});
-
-    const handleSettingsChange = (e: any) => {
-      if (e.detail && typeof e.detail.demo_accounts_enabled === 'boolean') {
-        setDemoAccountsEnabled(e.detail.demo_accounts_enabled);
-      } else {
-        setDemoAccountsEnabled(isDemoAccountsEnabled());
-      }
-    };
-
-    const handleUsersChange = () => {
-      getUsers().then(users => {
-        if (users && users.length > 0) setSavedUsers(users);
-      }).catch(() => setSavedUsers(getSavedUsers()));
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('aharsetu_settings_changed', handleSettingsChange);
-      window.addEventListener('aharsetu_user_changed', handleUsersChange);
-      window.addEventListener('aharsetu_profile_changed', handleUsersChange);
-      window.addEventListener('storage', handleSettingsChange);
-      window.addEventListener('storage', handleUsersChange);
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('aharsetu_settings_changed', handleSettingsChange);
-        window.removeEventListener('aharsetu_user_changed', handleUsersChange);
-        window.removeEventListener('aharsetu_profile_changed', handleUsersChange);
-        window.removeEventListener('storage', handleSettingsChange);
-        window.removeEventListener('storage', handleUsersChange);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -170,8 +112,6 @@ export default function LoginPage() {
         }
       }
     }
-  }, [router]);
-
   const deptRequired = ['coordinator', 'principal'].includes(role);
 
   let activeStep = 1;
@@ -227,15 +167,6 @@ export default function LoginPage() {
     } else {
       router.push('/' + result.user?.role);
     }
-  }
-
-  function fillDemo(account: any) {
-    setRole(account.role);
-    setDepartmentId(account.department_id || '');
-    setEmail(account.email);
-    setPassword(account.password);
-    setShowDemo(false);
-    setError('');
   }
 
   return (
@@ -480,44 +411,6 @@ export default function LoginPage() {
               {loading ? t('login.verifying_btn', 'Verifying Identity...') : t('login.secure_btn', 'Secure Log In')}
             </UiverseButton>
           </form>
-
-          {/* Quick Test Switcher */}
-          {demoAccountsEnabled && (
-            <div className={styles.demoSection}>
-              <button
-                type="button"
-                onClick={() => setShowDemo(!showDemo)}
-                className={styles.demoTrigger}
-              >
-                {showDemo ? '✕ Close Test Switcher' : '🔑 Quick Test Switcher'}
-              </button>
-
-              {showDemo && (
-                <div className={styles.demoGrid}>
-                  {QUICK_TEST_ACCOUNTS.map((acc, idx) => {
-                    const matchedUser = savedUsers.find(u => u.email.toLowerCase() === acc.email.toLowerCase());
-                    const displayName = matchedUser?.name || acc.label;
-
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() => fillDemo(acc)}
-                        className={styles.demoCard}
-                      >
-                        <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
-                          <AppIcon name={acc.icon as any} size={20} color="#2563EB" />
-                        </span>
-                        <div className={styles.demoMeta}>
-                          <h5>{displayName}</h5>
-                          <p>{acc.email}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
 
         </div>
       </section>

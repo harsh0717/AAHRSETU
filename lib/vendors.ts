@@ -168,7 +168,9 @@ function getLocalVendors(): Vendor[] {
   try {
     const raw = localStorage.getItem(LOCAL_VENDORS_KEY);
     if (!raw) {
-      localStorage.setItem(LOCAL_VENDORS_KEY, JSON.stringify(FALLBACK_VENDORS));
+      // Return in-memory fallback but do NOT write it to localStorage.
+      // Writing here would overwrite data that the API is about to deliver,
+      // creating a race where stale hardcoded names persist until next hard reload.
       return FALLBACK_VENDORS;
     }
     return JSON.parse(raw);
@@ -191,9 +193,7 @@ function getLocalMenu(vendorId: string): MenuItem[] {
   try {
     const raw = localStorage.getItem(`${LOCAL_MENUS_KEY}_${vendorId}`);
     if (!raw) {
-      const fallback = FALLBACK_MENUS[vendorId] || [];
-      localStorage.setItem(`${LOCAL_MENUS_KEY}_${vendorId}`, JSON.stringify(fallback));
-      return fallback;
+      return FALLBACK_MENUS[vendorId] || [];
     }
     return JSON.parse(raw);
   } catch {
@@ -338,8 +338,15 @@ export async function updateVendorProfile(vendorId: string, data: Partial<Vendor
   try {
     const res = await api.put<Vendor>(`/vendors/${vendorId}`, data);
     if (res) updatedVendor = res;
-  } catch (err) {
-    console.warn(`[VENDORS] API vendor profile update failed for ${vendorId}, updating locally:`, err);
+  } catch (err: any) {
+    // Auth failures, permission errors, and validation rejections mean the backend
+    // rejected the change — re-throw so the caller can surface the error to the user.
+    // Only genuine network/connectivity failures (503, no status) fall through to
+    // the localStorage-only fallback path below.
+    if (err?.status === 401 || err?.status === 403 || err?.status === 404 || err?.status === 422) {
+      throw err;
+    }
+    console.warn(`[VENDORS] API vendor profile update failed for ${vendorId} (backend unreachable), updating locally:`, err);
   }
 
   const vendors = getLocalVendors();

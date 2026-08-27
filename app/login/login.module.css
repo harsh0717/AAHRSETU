@@ -6,7 +6,7 @@
   overflow-x: hidden;
 }
 
-/* Left Hero Section - 3D Culinary & Dashboard Theme */
+/* Left Hero Section - Navy Blue & Emerald Green Theme */
 .hero {
   width: 46%;
   display: flex;
@@ -15,21 +15,21 @@
   padding: 44px 48px;
   position: relative;
   overflow: hidden;
-  color: #1C1917;
-  background: linear-gradient(155deg, #FBF8F3 0%, #F5EDE4 45%, #EFE3D5 100%);
-  border-right: 1px solid rgba(217, 119, 6, 0.18);
+  color: #F8FAFC;
+  background: linear-gradient(155deg, #0F172A 0%, #0C1E36 40%, #06281E 85%, #041B14 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   perspective: 1200px;
 }
 
-/* Subtle ambient 3D backdrop lighting */
+/* Subtle ambient backdrop lighting with Green and Navy */
 .heroGlowTop {
   position: absolute;
   top: -120px;
   left: -80px;
-  width: 440px;
-  height: 440px;
+  width: 450px;
+  height: 450px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.24) 0%, rgba(245, 158, 11, 0) 70%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%);
   animation: blobPulse 10s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -39,10 +39,10 @@
   position: absolute;
   bottom: -100px;
   right: -80px;
-  width: 400px;
-  height: 400px;
+  width: 420px;
+  height: 420px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(234, 88, 12, 0.2) 0%, rgba(234, 88, 12, 0) 70%);
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(37, 99, 235, 0) 70%);
   animation: blobPulse 12s ease-in-out infinite alternate-reverse;
   pointer-events: none;
   z-index: 0;
@@ -60,10 +60,10 @@
 
 .doodleIcon {
   position: absolute;
-  stroke: #D97706;
-  color: #D97706;
+  stroke: #10B981;
+  color: #10B981;
   fill: none;
-  opacity: 0.14;
+  opacity: 0.15;
   transition: opacity 0.3s ease;
   will-change: transform;
 }
@@ -82,7 +82,7 @@
   width: 540px;
   height: 540px;
   border-radius: 50%;
-  border: 1.5px solid rgba(217, 119, 6, 0.09);
+  border: 1.5px solid rgba(16, 185, 129, 0.08);
   pointer-events: none;
 }
 
@@ -94,7 +94,7 @@
   width: 740px;
   height: 740px;
   border-radius: 50%;
-  border: 1.5px dashed rgba(245, 158, 11, 0.08);
+  border: 1.5px dashed rgba(59, 130, 246, 0.08);
   animation: ringRotate 45s linear infinite;
   pointer-events: none;
 }
@@ -102,8 +102,8 @@
 /* Keyframe animations */
 @keyframes floatSlow {
   0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(3deg); }
-  100% { transform: translateY(6px) rotate(-3deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+  100% { transform: translateY(6px) rotate(-2deg); }
 }
 
 @keyframes floatRotate {
@@ -112,28 +112,13 @@
 }
 
 @keyframes blobPulse {
-  0% { transform: scale(1); opacity: 0.8; }
+  0% { transform: scale(1); opacity: 0.7; }
   100% { transform: scale(1.15); opacity: 1; }
 }
 
 @keyframes ringRotate {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-@keyframes steamRise {
-  0% { opacity: 0; transform: translateY(0) scaleX(1); }
-  50% { opacity: 0.85; transform: translateY(-8px) scaleX(1.15); }
-  100% { opacity: 0; transform: translateY(-16px) scaleX(0.9); }
-}
-
-.steamLine {
-  display: inline-block;
-  width: 2px;
-  height: 9px;
-  background: linear-gradient(180deg, rgba(234, 88, 12, 0.7) 0%, rgba(234, 88, 12, 0) 100%);
-  border-radius: 2px;
-  animation: steamRise 2s ease-in-out infinite;
 }
 
 .heroHeader {
@@ -152,32 +137,32 @@
   align-items: center;
   justify-content: center;
   padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: 16px;
-  border: 1px solid rgba(217, 119, 6, 0.2);
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.08), inset 0 1px 1px #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .heroLogoGlassWrapper:hover {
-  border-color: rgba(234, 88, 12, 0.35);
-  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.14);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Language Switcher Styling */
 .langRow {
   display: flex;
   gap: 3px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(217, 119, 6, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 3px;
   border-radius: 20px;
-  box-shadow: 0 2px 10px rgba(217, 119, 6, 0.07), inset 0 1px 1px #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   flex-shrink: 0;
 }
 
@@ -186,7 +171,7 @@
   border-radius: 14px;
   border: none;
   background: transparent;
-  color: #78716C;
+  color: #94A3B8;
   font-size: 0.74rem;
   font-weight: 700;
   cursor: pointer;
@@ -194,14 +179,14 @@
 }
 
 .langBtn:hover {
-  color: #1C1917;
-  background: rgba(234, 88, 12, 0.08);
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .langActive {
-  background: #EA580C;
+  background: #16A34A;
   color: #FFFFFF !important;
-  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.35);
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.4);
 }
 
 .heroContent {
@@ -216,26 +201,26 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(16, 185, 129, 0.14);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(217, 119, 6, 0.25);
-  color: #9A3412;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34D399;
   font-size: 0.76rem;
   font-weight: 800;
   border-radius: 20px;
   margin-bottom: 16px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  box-shadow: 0 3px 12px rgba(217, 119, 6, 0.08), inset 0 1px 1px #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .heroBadgeDot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #16A34A;
-  box-shadow: 0 0 8px #16A34A;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
 }
 
 .heroTitle {
@@ -244,13 +229,13 @@
   line-height: 1.12;
   letter-spacing: -0.03em;
   margin: 0 0 12px;
-  color: #1C1917;
+  color: #F8FAFC;
 }
 
 .heroTitle span {
   display: inline-block;
-  color: #EA580C;
-  background: linear-gradient(135deg, #F59E0B 0%, #EA580C 50%, #DC2626 100%);
+  color: #34D399;
+  background: linear-gradient(135deg, #34D399 0%, #60A5FA 50%, #FB923C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -258,38 +243,35 @@
 
 .heroSub {
   font-size: 0.96rem;
-  color: #57534E;
+  color: #94A3B8;
   font-weight: 500;
   line-height: 1.55;
   margin: 0 0 20px;
   max-width: 440px;
 }
 
-/* ── 3D Centerpiece Showcase Card System ────────────────────── */
+/* ── 3D Centerpiece Showcase Card System (Contained & Clean) ─ */
 .showcaseWrapper {
   position: relative;
-  margin: 24px 0 18px;
+  margin: 22px 0 18px;
   z-index: 2;
-  transform-style: preserve-3d;
 }
 
 .mainShowcaseCard {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
   border-radius: 22px;
   padding: 20px 22px;
-  box-shadow: 0 25px 50px -12px rgba(180, 83, 9, 0.18), 0 12px 24px -8px rgba(0, 0, 0, 0.08), inset 0 2px 1px #FFFFFF, inset 0 -2px 4px rgba(180, 83, 9, 0.05);
-  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg);
-  transform-style: preserve-3d;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .mainShowcaseCard:hover {
-  transform: perspective(1000px) translateY(-6px) rotateX(0deg) rotateY(0deg) scale(1.01);
-  border-color: rgba(234, 88, 12, 0.4);
-  box-shadow: 0 32px 64px -14px rgba(180, 83, 9, 0.24), 0 16px 30px -8px rgba(0, 0, 0, 0.1), inset 0 2px 1px #FFFFFF;
+  transform: translateY(-4px);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 32px 64px -14px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 
 .showcaseTopRow {
@@ -297,37 +279,34 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
-  transform: translateZ(15px);
 }
 
 .showcaseSpecialTag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-  border: 1px solid rgba(234, 88, 12, 0.3);
-  color: #C2410C;
+  background: rgba(234, 88, 12, 0.16);
+  border: 1px solid rgba(234, 88, 12, 0.35);
+  color: #FB923C;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.1), inset 0 1px 0 #FFFFFF;
 }
 
 .showcaseRatingTag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 0.72rem;
   font-weight: 800;
-  color: #B45309;
-  background: #FEF3C7;
-  border: 1px solid rgba(217, 119, 6, 0.2);
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   padding: 3px 9px;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.08), inset 0 1px 0 #FFFFFF;
 }
 
 .showcaseDishBody {
@@ -335,13 +314,12 @@
   align-items: flex-start;
   gap: 14px;
   margin-bottom: 14px;
-  transform: translateZ(25px);
 }
 
 .showcaseDishIcon {
   font-size: 2.3rem;
-  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-  border: 1.5px solid rgba(234, 88, 12, 0.25);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1.5px solid rgba(16, 185, 129, 0.25);
   width: 56px;
   height: 56px;
   display: flex;
@@ -349,7 +327,7 @@
   justify-content: center;
   border-radius: 16px;
   flex-shrink: 0;
-  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.16), inset 0 2px 0 #FFFFFF;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .showcaseDishInfo {
@@ -360,7 +338,7 @@
 .showcaseDishTitle {
   font-size: 1.02rem;
   font-weight: 800;
-  color: #1C1917;
+  color: #F8FAFC;
   margin: 0 0 4px;
   line-height: 1.25;
 }
@@ -375,18 +353,17 @@
 .dishItemChip {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #44403C;
-  background: #FFFFFF;
-  border: 1px solid rgba(217, 119, 6, 0.2);
+  color: #E2E8F0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 3px 8px;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04), inset 0 1px 0 #FFFFFF;
   transition: all 0.15s ease;
 }
 
 .dishItemChip:hover {
-  border-color: #EA580C;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #34D399;
 }
 
 .showcaseFooterRow {
@@ -394,14 +371,13 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 12px;
-  border-top: 1px solid rgba(217, 119, 6, 0.14);
-  transform: translateZ(15px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .showcasePrice {
   font-size: 1.15rem;
   font-weight: 900;
-  color: #EA580C;
+  color: #FB923C;
   display: flex;
   align-items: baseline;
   gap: 4px;
@@ -410,52 +386,17 @@
 .showcaseVendorName {
   font-size: 0.76rem;
   font-weight: 700;
-  color: #78716C;
+  color: #34D399;
   display: flex;
   align-items: center;
   gap: 4px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 3px 8px;
+  border-radius: 8px;
 }
 
-/* 3D Floating micro-badges */
-.floatingBadgeTopRight {
-  position: absolute;
-  top: -14px;
-  right: -10px;
-  background: #FFFFFF;
-  border: 1.5px solid #16A34A;
-  border-radius: 14px;
-  padding: 6px 12px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #15803D;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 14px 28px rgba(22, 163, 74, 0.24), 0 4px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 #FFFFFF;
-  animation: floatSlow 6s ease-in-out infinite alternate;
-  z-index: 4;
-}
-
-.floatingBadgeBottomLeft {
-  position: absolute;
-  bottom: -14px;
-  left: -10px;
-  background: #FFFFFF;
-  border: 1.5px solid rgba(234, 88, 12, 0.35);
-  border-radius: 14px;
-  padding: 6px 12px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #C2410C;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 14px 28px rgba(234, 88, 12, 0.22), 0 4px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 #FFFFFF;
-  animation: floatSlow 7s ease-in-out infinite alternate-reverse;
-  z-index: 4;
-}
-
-/* 3D Feature Grid */
+/* 3D Feature Grid in Navy & Green Theme */
 .bentoChipsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -464,30 +405,30 @@
 }
 
 .bentoChip {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 6px 18px rgba(180, 83, 9, 0.08), 0 2px 4px rgba(0, 0, 0, 0.03), inset 0 1px 0 #FFFFFF;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .bentoChip:hover {
-  background: #FFFFFF;
-  border-color: rgba(234, 88, 12, 0.35);
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 24px rgba(180, 83, 9, 0.14), inset 0 1px 0 #FFFFFF;
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(16, 185, 129, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
 }
 
 .bentoChipIcon {
-  font-size: 1.25rem;
-  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-  border: 1px solid rgba(234, 88, 12, 0.2);
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   width: 34px;
   height: 34px;
   display: flex;
@@ -495,21 +436,20 @@
   justify-content: center;
   border-radius: 10px;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.1);
 }
 
 .bentoChipText h5 {
   font-size: 0.78rem;
   font-weight: 800;
-  color: #1C1917;
+  color: #F8FAFC;
   margin: 0;
   line-height: 1.2;
 }
 
 .bentoChipText p {
   font-size: 0.66rem;
-  font-weight: 600;
-  color: #78716C;
+  font-weight: 500;
+  color: #94A3B8;
   margin: 2px 0 0;
   line-height: 1.2;
 }
@@ -518,9 +458,10 @@
   position: relative;
   z-index: 2;
   font-size: 0.72rem;
-  color: #A8A29E;
+  color: #64748B;
   font-weight: 500;
 }
+
 
 
 

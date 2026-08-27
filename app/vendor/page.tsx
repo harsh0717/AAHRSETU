@@ -553,7 +553,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
               </span>
             </div>
             <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
-              🍳 {vendorDetails?.name || 'Canteen Vendor'} Kitchen & Order Hub
+              🍱 {vendorDetails?.name || 'Canteen Vendor'} Kitchen & Order Hub
             </h1>
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
               Real-time kitchen order processing, instant pricing confirmations, menu catalog control, and settlement passbook.

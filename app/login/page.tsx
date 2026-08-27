@@ -195,7 +195,7 @@ export default function LoginPage() {
     <div className={styles.page}>
       
       <section className={styles.hero}>
-        {/* Subtle ambient backdrop glows */}
+        {/* Subtle ambient backdrop glows with Emerald Green and Navy Blue */}
         <div className={styles.heroGlowTop} aria-hidden="true" />
         <div className={styles.heroGlowBottom} aria-hidden="true" />
 
@@ -206,48 +206,48 @@ export default function LoginPage() {
         {/* Vector Culinary Doodle Layer */}
         <svg className={styles.culinaryDoodleLayer} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
-            <linearGradient id="warmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#EA580C" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#D97706" stopOpacity="0.4" />
+            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.4" />
             </linearGradient>
           </defs>
 
           {/* Doodle 1: Steaming Hot Chai Glass */}
           <g className={`${styles.doodleIcon} ${styles.doodleFloat1}`} style={{ transform: 'translate(30px, 50px)' }}>
-            <path d="M10 25 L14 60 A 8 8 0 0 0 22 68 L38 68 A 8 8 0 0 0 46 60 L50 25 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <line x1="8" y1="25" x2="52" y2="25" stroke="url(#warmGrad)" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M22 18 Q 24 10, 20 5" stroke="url(#warmGrad)" strokeWidth="1.8" strokeLinecap="round" />
-            <path d="M30 18 Q 32 8, 28 3" stroke="url(#warmGrad)" strokeWidth="1.8" strokeLinecap="round" />
-            <path d="M38 18 Q 40 11, 36 6" stroke="url(#warmGrad)" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M10 25 L14 60 A 8 8 0 0 0 22 68 L38 68 A 8 8 0 0 0 46 60 L50 25 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <line x1="8" y1="25" x2="52" y2="25" stroke="url(#emeraldGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M22 18 Q 24 10, 20 5" stroke="url(#emeraldGrad)" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M30 18 Q 32 8, 28 3" stroke="url(#emeraldGrad)" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M38 18 Q 40 11, 36 6" stroke="url(#emeraldGrad)" strokeWidth="1.8" strokeLinecap="round" />
           </g>
 
           {/* Doodle 2: Crisp Samosa Triangle */}
           <g className={`${styles.doodleIcon} ${styles.doodleFloat2}`} style={{ transform: 'translate(310px, 40px)' }}>
-            <path d="M30 10 L55 52 Q 30 58 5 52 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M28 25 Q 32 35 24 45" stroke="url(#warmGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-            <circle cx="36" cy="40" r="1.5" fill="#EA580C" opacity="0.6" />
+            <path d="M30 10 L55 52 Q 30 58 5 52 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M28 25 Q 32 35 24 45" stroke="url(#emeraldGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+            <circle cx="36" cy="40" r="1.5" fill="#10B981" opacity="0.6" />
           </g>
 
           {/* Doodle 3: Chef Toque */}
           <g className={`${styles.doodleIcon} ${styles.doodleFloat3}`} style={{ transform: 'translate(330px, 180px)' }}>
-            <path d="M12 44 L48 44 L46 54 L14 54 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M14 44 C 8 36, 10 24, 20 22 C 20 12, 32 10, 38 18 C 46 12, 52 24, 46 44" stroke="url(#warmGrad)" strokeWidth="2" strokeLinecap="round" />
+            <path d="M12 44 L48 44 L46 54 L14 54 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M14 44 C 8 36, 10 24, 20 22 C 20 12, 32 10, 38 18 C 46 12, 52 24, 46 44" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinecap="round" />
           </g>
 
           {/* Doodle 4: Serving Cloche */}
           <g className={`${styles.doodleIcon} ${styles.doodleFloat1}`} style={{ transform: 'translate(20px, 260px)' }}>
-            <path d="M8 42 C 8 20, 52 20, 52 42 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinejoin="round" />
-            <line x1="4" y1="44" x2="56" y2="44" stroke="url(#warmGrad)" strokeWidth="2.5" strokeLinecap="round" />
-            <circle cx="30" cy="17" r="3" stroke="url(#warmGrad)" strokeWidth="2" />
+            <path d="M8 42 C 8 20, 52 20, 52 42 Z" stroke="url(#emeraldGrad)" strokeWidth="2" strokeLinejoin="round" />
+            <line x1="4" y1="44" x2="56" y2="44" stroke="url(#emeraldGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="30" cy="17" r="3" stroke="url(#emeraldGrad)" strokeWidth="2" />
           </g>
 
           {/* Doodle 5: Traditional Indian Thali */}
           <g className={`${styles.doodleIcon} ${styles.doodleFloat2}`} style={{ transform: 'translate(180px, 440px)' }}>
-            <circle cx="35" cy="35" r="30" stroke="url(#warmGrad)" strokeWidth="2" />
-            <circle cx="22" cy="22" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
-            <circle cx="48" cy="22" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
-            <circle cx="24" cy="46" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
-            <circle cx="46" cy="46" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
+            <circle cx="35" cy="35" r="30" stroke="url(#emeraldGrad)" strokeWidth="2" />
+            <circle cx="22" cy="22" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
+            <circle cx="48" cy="22" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
+            <circle cx="24" cy="46" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
+            <circle cx="46" cy="46" r="7" stroke="url(#emeraldGrad)" strokeWidth="1.5" />
           </g>
         </svg>
 
@@ -277,7 +277,7 @@ export default function LoginPage() {
           <div style={{ display: 'inline-flex', alignItems: 'center' }}>
             <span className={styles.heroBadge}>
               <span className={styles.heroBadgeDot} />
-              {t('login.hero_badge', 'Campus Hospitality & Dining Protocol')}
+              {t('login.hero_badge', '100% Pure Veg · Institutional Dining')}
             </span>
           </div>
 
@@ -287,25 +287,18 @@ export default function LoginPage() {
           </h2>
 
           <p className={styles.heroSub}>
-            {t('login.hero_sub', 'Connecting Academic Departments, Principals, DCR Office & Campus Canteens in One Live Digital Ecosystem.')}
+            {t('login.hero_sub', 'Connecting Academic Departments, Principals, Administration & Campus Canteens in One Live Digital Ecosystem.')}
           </p>
 
-          {/* ── Centerpiece 3D Showcase Card ── */}
+          {/* ── Centerpiece 3D Showcase Card (Clean, Sharp & Contained) ── */}
           <div className={styles.showcaseWrapper}>
-            {/* Floating 3D Status Badge (Top Right) */}
-            <div className={styles.floatingBadgeTopRight}>
-              <span style={{ fontSize: '0.85rem' }}>✓</span>
-              <span>Requisition Cleared · DCR Approved</span>
-            </div>
-
-            {/* Main Interactive 3D Card */}
             <div className={styles.mainShowcaseCard}>
               <div className={styles.showcaseTopRow}>
                 <span className={styles.showcaseSpecialTag}>
-                  <span>🌟</span> TODAY'S CAMPUS SPECIAL
+                  <span>🌟</span> TODAY'S EXECUTIVE SPECIAL
                 </span>
                 <span className={styles.showcaseRatingTag}>
-                  <span>⭐</span> 4.9 · Verified Quality
+                  <span>✓</span> Requisition Approved
                 </span>
               </div>
 
@@ -314,34 +307,26 @@ export default function LoginPage() {
                   🍱
                 </div>
                 <div className={styles.showcaseDishInfo}>
-                  <h4 className={styles.showcaseDishTitle}>Executive Campus Thali (Full Meal)</h4>
+                  <h4 className={styles.showcaseDishTitle}>Executive Pure-Veg Campus Thali</h4>
                   <div className={styles.showcaseDishPills}>
                     <span className={styles.dishItemChip}>4 Butter Phulkas</span>
                     <span className={styles.dishItemChip}>Paneer Makhani</span>
                     <span className={styles.dishItemChip}>Dal Tadka</span>
                     <span className={styles.dishItemChip}>Jeera Rice</span>
                     <span className={styles.dishItemChip}>Gulab Jamun</span>
-                    <span className={styles.dishItemChip}>Chaas</span>
+                    <span className={styles.dishItemChip}>Masala Chaas</span>
                   </div>
                 </div>
               </div>
 
               <div className={styles.showcaseFooterRow}>
                 <div className={styles.showcasePrice}>
-                  ₹90 <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#78716C' }}>/ plate</span>
+                  ₹90 <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#94A3B8' }}>/ plate</span>
                 </div>
                 <div className={styles.showcaseVendorName}>
-                  <span>🏪</span> Authorized Campus Kitchen
+                  <span>🌿</span> 100% Pure Veg · Authorized Canteen
                 </div>
               </div>
-            </div>
-
-            {/* Floating 3D Refreshment Badge (Bottom Left) */}
-            <div className={styles.floatingBadgeBottomLeft}>
-              <span style={{ fontSize: '0.92rem' }}>☕</span>
-              <span>
-                Fresh Masala Chai & Samosa · <strong>₹25</strong>
-              </span>
             </div>
           </div>
 
@@ -372,10 +357,10 @@ export default function LoginPage() {
             </div>
 
             <div className={styles.bentoChip}>
-              <div className={styles.bentoChipIcon}>📊</div>
+              <div className={styles.bentoChipIcon}>🌿</div>
               <div className={styles.bentoChipText}>
-                <h5>Monthly Ledgers</h5>
-                <p>Transparent audit settlements</p>
+                <h5>100% Pure Veg Verified</h5>
+                <p>Strictly vegetarian campus food</p>
               </div>
             </div>
           </div>

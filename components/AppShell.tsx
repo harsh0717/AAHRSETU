@@ -240,6 +240,12 @@ export default function AppShell({ children, role }: AppShellProps) {
             </div>
             <span>{t('auth.logout')}</span>
           </button>
+
+          <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.72rem', color: '#94A3B8' }}>
+            <Link href="/privacy" style={{ color: '#94A3B8', textDecoration: 'none' }}>Privacy Policy</Link>
+            <span>·</span>
+            <Link href="/terms" style={{ color: '#94A3B8', textDecoration: 'none' }}>Terms of Service</Link>
+          </div>
         </div>
       </aside>
 
@@ -1041,6 +1047,12 @@ export default function AppShell({ children, role }: AppShellProps) {
               >
                 <AppIcon name="logout" size={18} color="#DC2626" /> <span>Sign Out of Session</span>
               </button>
+
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '16px', paddingBottom: '8px', fontSize: '0.76rem', color: '#64748B' }}>
+                <Link href="/privacy" onClick={() => setMoreDrawerOpen(false)} style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+                <span>·</span>
+                <Link href="/terms" onClick={() => setMoreDrawerOpen(false)} style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Terms of Service</Link>
+              </div>
             </div>
           </div>
         </>

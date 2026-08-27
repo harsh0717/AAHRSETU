@@ -366,9 +366,14 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* ── Footer Copyright ── */}
+        {/* ── Footer Copyright & Legal ── */}
         <div className={styles.heroFooter}>
-          © 2026 {formatBrandText('AharSetu', lang)}. Institutional Campus Hospitality Network.
+          <div>© 2026 {formatBrandText('AharSetu', lang)}. Institutional Campus Hospitality Network.</div>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+            <Link href="/privacy" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>Privacy Policy</Link>
+            <span style={{ color: '#64748B' }}>·</span>
+            <Link href="/terms" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>Terms of Service</Link>
+          </div>
         </div>
       </section>
 
@@ -562,6 +567,13 @@ export default function LoginPage() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Form Footer Legal Links */}
+          <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'center', gap: '12px', fontSize: '0.74rem', color: '#64748B' }}>
+            <Link href="/privacy" style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+            <span>·</span>
+            <Link href="/terms" style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Terms of Service</Link>
           </div>
 
         </div>

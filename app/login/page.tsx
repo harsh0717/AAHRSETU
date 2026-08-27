@@ -19,6 +19,17 @@ const ROLES_LIST = [
   { id: 'admin', label: 'System Admin', icon: 'admin', desc: 'Configure users & system baseline' },
 ];
 
+const QUICK_TEST_ACCOUNTS = [
+  { label: 'System Admin', name: 'Vin Sir', email: 'admin@aharsetu.edu.in', password: 'Admin@123', role: 'admin', department_id: null, icon: 'admin' },
+  { label: 'Administration', name: 'Neha Mam', email: 'dcr@aharsetu.edu.in', password: 'DCR@123', role: 'dcr', department_id: null, icon: 'dcr' },
+  { label: 'Principal (DD)', name: 'Pranav Sir', email: 'principal.dd@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'diploma', icon: 'principal' },
+  { label: 'Principal (Pharma)', name: 'Sachin Sir', email: 'principal.pharma@aharsetu.edu.in', password: 'Principal@123', role: 'principal', department_id: 'pharmacy', icon: 'principal' },
+  { label: 'Coordinator (Diploma)', name: 'Nandini Mam', email: 'coord.diploma@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'diploma', icon: 'coordinator' },
+  { label: 'Coordinator (Degree)', name: 'Piyush Sir', email: 'coord.degree@aharsetu.edu.in', password: 'Coord@123', role: 'coordinator', department_id: 'degree', icon: 'coordinator' },
+  { label: 'Sharma Canteen', name: 'Gadhvi Bhai', email: 'vendor1@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: 'vendor' },
+  { label: 'Fresh Bites Canteen', name: 'Mitesh Bhai', email: 'vendor2@aharsetu.edu.in', password: 'Vendor@123', role: 'vendor', department_id: null, icon: 'vendor' },
+];
+
 function formatBrandText(text: string, currentLang: string = 'en') {
   if (!text) return null;
 
@@ -98,6 +109,16 @@ export default function LoginPage() {
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+
+  function fillDemo(account: any) {
+    setRole(account.role === 'administration' ? 'dcr' : account.role);
+    setDepartmentId(account.department_id || '');
+    setEmail(account.email);
+    setPassword(account.password);
+    setShowDemo(false);
+    setError('');
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -413,6 +434,37 @@ export default function LoginPage() {
               {loading ? t('login.verifying_btn', 'Verifying Identity...') : t('login.secure_btn', 'Secure Log In')}
             </UiverseButton>
           </form>
+
+          {/* Quick Demo / Test Switcher on Login Page */}
+          <div className={styles.demoSection}>
+            <button
+              type="button"
+              onClick={() => setShowDemo(!showDemo)}
+              className={styles.demoTrigger}
+            >
+              <span>{showDemo ? '✕ Close Test Switcher' : '🔑 Quick Test Switcher (Demo Accounts)'}</span>
+            </button>
+
+            {showDemo && (
+              <div className={styles.demoGrid}>
+                {QUICK_TEST_ACCOUNTS.map((acc, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => fillDemo(acc)}
+                    className={styles.demoCard}
+                  >
+                    <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
+                      <AppIcon name={acc.icon as any} size={20} color="#2563EB" />
+                    </span>
+                    <div className={styles.demoMeta}>
+                      <h5>{acc.name || acc.label}</h5>
+                      <p>{acc.email}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
         </div>
       </section>

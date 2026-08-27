@@ -290,22 +290,22 @@ export default function LoginPage() {
             {t('login.hero_sub', 'Connecting Academic Departments, Principals, DCR Office & Campus Canteens in One Live Digital Ecosystem.')}
           </p>
 
-          {/* ── Centerpiece Creative 3D Bento Showcase Card ── */}
+          {/* ── Centerpiece 3D Showcase Card ── */}
           <div className={styles.showcaseWrapper}>
-            {/* Floating Live Status Badge (Top Right) */}
+            {/* Floating 3D Status Badge (Top Right) */}
             <div className={styles.floatingBadgeTopRight}>
               <span style={{ fontSize: '0.85rem' }}>✓</span>
               <span>Requisition Cleared · DCR Approved</span>
             </div>
 
-            {/* Main Interactive Showcase Card */}
+            {/* Main Interactive 3D Card */}
             <div className={styles.mainShowcaseCard}>
               <div className={styles.showcaseTopRow}>
                 <span className={styles.showcaseSpecialTag}>
                   <span>🌟</span> TODAY'S CAMPUS SPECIAL
                 </span>
                 <span className={styles.showcaseRatingTag}>
-                  <span>⭐</span> 4.9 (480+ Orders)
+                  <span>⭐</span> 4.9 · Verified Quality
                 </span>
               </div>
 
@@ -317,7 +317,7 @@ export default function LoginPage() {
                   <h4 className={styles.showcaseDishTitle}>Executive Campus Thali (Full Meal)</h4>
                   <div className={styles.showcaseDishPills}>
                     <span className={styles.dishItemChip}>4 Butter Phulkas</span>
-                    <span className={styles.dishItemChip}>Paneer Sabzi</span>
+                    <span className={styles.dishItemChip}>Paneer Makhani</span>
                     <span className={styles.dishItemChip}>Dal Tadka</span>
                     <span className={styles.dishItemChip}>Jeera Rice</span>
                     <span className={styles.dishItemChip}>Gulab Jamun</span>
@@ -331,12 +331,12 @@ export default function LoginPage() {
                   ₹90 <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#78716C' }}>/ plate</span>
                 </div>
                 <div className={styles.showcaseVendorName}>
-                  <span>🏪</span> Sharma Canteen (Campus Unit #1)
+                  <span>🏪</span> Authorized Campus Kitchen
                 </div>
               </div>
             </div>
 
-            {/* Floating Refreshment Badge (Bottom Left) */}
+            {/* Floating 3D Refreshment Badge (Bottom Left) */}
             <div className={styles.floatingBadgeBottomLeft}>
               <span style={{ fontSize: '0.92rem' }}>☕</span>
               <span>
@@ -345,37 +345,37 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* ── 4 Bento Feature Highlights Grid ── */}
+          {/* ── 4 Scalable 3D Platform Feature Cards ── */}
           <div className={styles.bentoChipsGrid}>
             <div className={styles.bentoChip}>
-              <div className={styles.bentoChipIcon}>🍽️</div>
+              <div className={styles.bentoChipIcon}>🏢</div>
               <div className={styles.bentoChipText}>
-                <h5>4 Campus Kitchens</h5>
-                <p>Live menu & pricing</p>
+                <h5>Multi-Kitchen Network</h5>
+                <p>Live menus across all canteens</p>
               </div>
             </div>
 
             <div className={styles.bentoChip}>
               <div className={styles.bentoChipIcon}>⚡</div>
               <div className={styles.bentoChipText}>
-                <h5>1-Click Approval</h5>
-                <p>Principal & DCR sync</p>
+                <h5>1-Click Approvals</h5>
+                <p>Principal & DCR compliance</p>
               </div>
             </div>
 
             <div className={styles.bentoChip}>
               <div className={styles.bentoChipIcon}>🧾</div>
               <div className={styles.bentoChipText}>
-                <h5>Zero Paperwork</h5>
-                <p>Automated GST bills</p>
+                <h5>Paperless GST Billing</h5>
+                <p>Automated digital invoices</p>
               </div>
             </div>
 
             <div className={styles.bentoChip}>
               <div className={styles.bentoChipIcon}>📊</div>
               <div className={styles.bentoChipText}>
-                <h5>Monthly Settle</h5>
-                <p>Transparent ledgers</p>
+                <h5>Monthly Ledgers</h5>
+                <p>Transparent audit settlements</p>
               </div>
             </div>
           </div>

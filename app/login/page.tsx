@@ -112,6 +112,8 @@ export default function LoginPage() {
         }
       }
     }
+  }, [router]);
+
   const deptRequired = ['coordinator', 'principal'].includes(role);
 
   let activeStep = 1;

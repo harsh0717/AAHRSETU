@@ -270,15 +270,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     if (!silent) setLoading(true);
     const safetyTimer = !silent ? setTimeout(() => setLoading(false), 2500) : null;
     try {
-      const [oList, vList, sysStats, nList, deptList, usersList, sList, config] = await Promise.all([
+      const [oList, vList, sysStats, nList, deptList, usersList, sList] = await Promise.all([
         getOrders().catch(() => []),
         getVendors().catch(() => []),
         api.get<any>('/reports/system-stats').catch(() => ({ total_orders: 0, completed_orders: 0, total_revenue: 0, active_vendors: 0 })),
         getNotifications().catch(() => []),
         getDepartments().catch(() => []),
         api.get<any[]>('/users').catch(() => []),
-        getMonthlySettlements().catch(() => []),
-        api.get<{ demo_accounts_enabled: boolean }>('/settings/public').catch(() => ({ demo_accounts_enabled: true }))
+        getMonthlySettlements().catch(() => [])
       ]);
       setOrders(oList);
       setVendors(vList);
@@ -299,7 +298,6 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       setCoordinators(usersList.filter((u: any) => u.role === 'coordinator'));
       setPrincipals(usersList.filter((u: any) => u.role === 'principal'));
       setSettlements(sList);
-      setDemoAccountsEnabled(config?.demo_accounts_enabled ?? true);
     } catch (err) {
       console.warn('Error loading admin dashboard data:', err);
     } finally {
@@ -1584,9 +1582,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   <div>
                     <div className={styles.sectionTitle}>
                       <AppIcon name="settings" size={20} color="#64748B" />
-                      <span>Platform & Demonstration Configuration</span>
+                      <span>System Settings & Administrative Controls</span>
                     </div>
-                    <div className={styles.sectionSubtitle}>Configure demo modes, switcher visibility, and administrative controls</div>
+                    <div className={styles.sectionSubtitle}>Manage emergency controls and institutional preferences</div>
                   </div>
                 </div>
 

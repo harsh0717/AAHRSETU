@@ -5,12 +5,15 @@ import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, initializeApplication, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
-import { getOrders, MasterOrder } from '@/lib/store';
+import { getOrders, MasterOrder, dcrReview } from '@/lib/store';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
+import { showToast } from '@/components/Toast';
+import UiverseButton from '@/components/ui/UiverseButton';
+import AppIcon from '@/components/ui/AppIcon';
 
 import { api } from '@/lib/api';
 
@@ -37,6 +40,13 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // DCR Audit & Approval Modal State
+  const [selectedAuditOrder, setSelectedAuditOrder] = useState<MasterOrder | null>(null);
+  const [auditRemarks, setAuditRemarks] = useState('');
+  const [auditRejectMode, setAuditRejectMode] = useState(false);
+  const [auditRejectReason, setAuditRejectReason] = useState('');
+  const [auditActioning, setAuditActioning] = useState(false);
 
   // Financial summary & reminder
   const [financialSummary, setFinancialSummary] = useState<any>(null);
@@ -220,12 +230,56 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
     setNotifications(nList);
   }
 
+  async function handleAuditApprove(order: MasterOrder, remarks: string = '') {
+    setAuditActioning(true);
+    try {
+      await dcrReview(order.id, 'approve', remarks);
+      showToast(`Requisition #${order.id} cleared DCR audit & forwarded to canteens!`, 'success');
+      setSelectedAuditOrder(null);
+      setAuditRemarks('');
+      setAuditRejectMode(false);
+      setAuditRejectReason('');
+      await loadData(true);
+    } catch (e: any) {
+      showToast(e.message || 'Error approving requisition', 'error');
+    } finally {
+      setAuditActioning(false);
+    }
+  }
+
+  async function handleAuditReject(order: MasterOrder, reason: string) {
+    if (!reason.trim()) {
+      showToast('Please provide a reason for rejecting this requisition.', 'warning');
+      return;
+    }
+    setAuditActioning(true);
+    try {
+      await dcrReview(order.id, 'reject', reason.trim());
+      showToast(`Requisition #${order.id} rejected during DCR audit.`, 'warning');
+      setSelectedAuditOrder(null);
+      setAuditRemarks('');
+      setAuditRejectMode(false);
+      setAuditRejectReason('');
+      await loadData(true);
+    } catch (e: any) {
+      showToast(e.message || 'Error rejecting requisition', 'error');
+    } finally {
+      setAuditActioning(false);
+    }
+  }
+
   if (!session) return null;
 
   // DCR pending orders (Principal Approved / DCR Reviewing)
   const pendingQueue = orders.filter(o => ['Principal Approved', 'DCR Reviewing'].includes(o.status));
-  const approvedOrders = orders.filter(o => o.history.some(h => h.role === 'dcr' && h.action === 'DCR Approved & Forwarded'));
-  const rejectedOrders = orders.filter(o => o.history.some(h => h.role === 'dcr' && h.action === 'DCR Rejected'));
+  const approvedOrders = orders.filter(o =>
+    ['Vendor Processing', 'Active', 'Bill Generated', 'Completed'].includes(o.status) ||
+    o.history.some(h => (h.role === 'dcr' || h.role === 'administration') && h.action.includes('Approved'))
+  );
+  const rejectedOrders = orders.filter(o =>
+    o.status === 'DCR Rejected' ||
+    o.history.some(h => (h.role === 'dcr' || h.role === 'administration') && h.action.includes('Rejected'))
+  );
   const historyOrders = orders.filter(o => !['Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Approved', 'DCR Reviewing'].includes(o.status));
   const ordersWithBills = orders.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
 
@@ -485,55 +539,137 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
 
             {/* TAB: APPROVAL QUEUE (PENDING AUDITS) */}
             {activeTab === 'queue' && (
-              <div className="card" style={{ padding: '20px' }}>
+              <div className="card" style={{ padding: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>🏛️</span> DCR Financial Audit & Approval Queue
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748B' }}>
+                      Review department budget requisitions, verify item allocations, and grant administrative clearance.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ padding: '4px 12px', background: totalPending > 0 ? '#FEF3C7' : '#DCFCE7', color: totalPending > 0 ? '#92400E' : '#15803D', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 800 }}>
+                      {totalPending} Requisition{totalPending === 1 ? '' : 's'} Pending
+                    </span>
+                  </div>
+                </div>
+
                 {isMobileDevice ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     {pendingQueue.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #FDE68A', padding: '16px', borderRadius: '16px', background: '#FFFBEB', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                      <div
+                        key={o.id}
+                        style={{
+                          border: '1.5px solid #FDE68A',
+                          padding: '16px',
+                          borderRadius: '16px',
+                          background: '#FFFBEB',
+                          boxShadow: '0 2px 8px rgba(217, 119, 6, 0.06)'
+                        }}
+                      >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#B45309' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#B45309' }}>#{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #FDE68A' }}>
-                          <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: '#1E293B' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '0.8rem', color: '#64748B' }}>
+                          <strong>Dept:</strong> {o.department_label} · <strong>Prepared By:</strong> {o.created_by_name}
+                        </p>
+                        {o.purpose && (
+                          <p style={{ margin: '0 0 10px 0', fontSize: '0.75rem', color: '#475569', fontStyle: 'italic' }}>
+                            Purpose: "{o.purpose}"
+                          </p>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: '1px solid #FDE68A', borderBottom: '1px solid #FDE68A', marginBottom: '12px' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <UiverseButton
+                            variant="success"
+                            size="sm"
+                            style={{ flex: 1 }}
+                            onClick={() => {
+                              setSelectedAuditOrder(o);
+                              setAuditRejectMode(false);
+                            }}
+                          >
+                            <span>✅ Audit & Approve</span>
+                          </UiverseButton>
+                          <UiverseButton
+                            variant="glass"
+                            size="sm"
+                            style={{ color: '#0284C7' }}
+                            onClick={() => router.push(`/order/${o.id}`)}
+                          >
+                            <span>🔍 Details</span>
+                          </UiverseButton>
                         </div>
                       </div>
                     ))}
                     {pendingQueue.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>No orders currently awaiting audit.</div>
+                      <div style={{ textAlign: 'center', padding: '36px', color: 'var(--gray-400)', fontSize: '0.9rem', background: '#F8FAFC', borderRadius: '14px', border: '1px dashed #CBD5E1' }}>
+                        🎉 No requisitions currently awaiting DCR financial audit.
+                      </div>
                     )}
                   </div>
                 ) : (
-                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflow: 'hidden' }}>
                     <table className="table">
                       <thead>
-                        <tr>
-                          <th>Order ID</th>
-                          <th>Title Description</th>
-                          <th>Department</th>
-                          <th>Prepared By</th>
-                          <th>Estimated Bill</th>
-                          <th>Status</th>
+                        <tr style={{ background: '#F8FAFC' }}>
+                          <th style={{ padding: '12px 14px' }}>Order ID</th>
+                          <th style={{ padding: '12px 14px' }}>Title Description</th>
+                          <th style={{ padding: '12px 14px' }}>Department</th>
+                          <th style={{ padding: '12px 14px' }}>Prepared By</th>
+                          <th style={{ padding: '12px 14px' }}>Estimated Bill</th>
+                          <th style={{ padding: '12px 14px' }}>Status</th>
+                          <th style={{ padding: '12px 14px', textAlign: 'center', minWidth: '180px' }}>Audit Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {pendingQueue.map(o => (
-                          <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
-                            <td style={{ fontWeight: 700 }}>{o.id}</td>
-                            <td style={{ fontWeight: 600 }}>{o.title}</td>
-                            <td>{o.department_label}</td>
-                            <td>{o.created_by_name}</td>
-                            <td style={{ fontWeight: 700 }}>₹{o.total_bill_amount}</td>
-                            <td><StatusBadge status={o.status} size="sm" /></td>
+                          <tr key={o.id} style={{ transition: 'background 0.15s' }}>
+                            <td style={{ fontWeight: 800, color: '#B45309', padding: '12px 14px' }}>#{o.id}</td>
+                            <td style={{ fontWeight: 700, color: '#0F172A', padding: '12px 14px' }}>
+                              <div>{o.title}</div>
+                              {o.purpose && <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 500 }}>{o.purpose}</div>}
+                            </td>
+                            <td style={{ padding: '12px 14px' }}>{o.department_label}</td>
+                            <td style={{ padding: '12px 14px' }}>{o.created_by_name}</td>
+                            <td style={{ fontWeight: 800, color: '#0F172A', padding: '12px 14px' }}>₹{o.total_bill_amount.toFixed(2)}</td>
+                            <td style={{ padding: '12px 14px' }}><StatusBadge status={o.status} size="sm" /></td>
+                            <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                              <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                                <UiverseButton
+                                  variant="success"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedAuditOrder(o);
+                                    setAuditRejectMode(false);
+                                  }}
+                                >
+                                  <span>✅ Audit & Approve</span>
+                                </UiverseButton>
+                                <UiverseButton
+                                  variant="glass"
+                                  size="sm"
+                                  style={{ color: '#0284C7' }}
+                                  onClick={() => router.push(`/order/${o.id}`)}
+                                >
+                                  <span>🔍 View</span>
+                                </UiverseButton>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                         {pendingQueue.length === 0 && (
                           <tr>
-                            <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
-                              No orders currently awaiting audit.
+                            <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--gray-400)', fontSize: '0.9rem' }}>
+                              🎉 No requisitions currently awaiting DCR financial audit.
                             </td>
                           </tr>
                         )}
@@ -992,6 +1128,235 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Interactive DCR Audit & Approval Modal */}
+        {selectedAuditOrder && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.65)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              zIndex: 9990,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px'
+            }}
+            onClick={() => {
+              if (!auditActioning) {
+                setSelectedAuditOrder(null);
+                setAuditRejectMode(false);
+              }
+            }}
+          >
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '20px',
+                maxWidth: '600px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                border: '1px solid #E2E8F0',
+                padding: '24px',
+                position: 'relative'
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FEF3C7', color: '#92400E', padding: '3px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800, marginBottom: '6px' }}>
+                    🏛️ DCR ADMINISTRATIVE AUDIT
+                  </div>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0F172A' }}>
+                    {selectedAuditOrder.title}
+                  </h3>
+                  <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>
+                    Requisition ID: <strong>#{selectedAuditOrder.id}</strong> · Dept: <strong>{selectedAuditOrder.department_label}</strong>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAuditOrder(null);
+                    setAuditRejectMode(false);
+                  }}
+                  disabled={auditActioning}
+                  style={{
+                    background: '#F1F5F9',
+                    border: 'none',
+                    color: '#64748B',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1rem'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Requisition Meta Details */}
+              <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '16px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', fontSize: '0.82rem' }}>
+                  <div>
+                    <span style={{ color: '#64748B', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>PREPARED BY</span>
+                    <span style={{ fontWeight: 800, color: '#0F172A' }}>{selectedAuditOrder.created_by_name}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748B', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>SUBMISSION DATE</span>
+                    <span style={{ fontWeight: 800, color: '#0F172A' }}>{new Date(selectedAuditOrder.created_at).toLocaleDateString('en-IN')}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748B', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>ESTIMATED TOTAL</span>
+                    <span style={{ fontWeight: 900, color: '#059669', fontSize: '1.05rem' }}>₹{selectedAuditOrder.total_bill_amount.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {selectedAuditOrder.purpose && (
+                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #E2E8F0', fontSize: '0.78rem', color: '#475569' }}>
+                    <strong>Official Purpose:</strong> {selectedAuditOrder.purpose}
+                  </div>
+                )}
+              </div>
+
+              {/* Itemized Vendor Breakdown Summary */}
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#334155', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>📋</span> Itemized Canteen Allocation
+                </h4>
+                <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', overflow: 'hidden' }}>
+                  {(selectedAuditOrder.vendor_orders || []).map((vo, vIdx) => (
+                    <div key={vo.id || vIdx} style={{ borderBottom: vIdx < (selectedAuditOrder.vendor_orders?.length || 1) - 1 ? '1px solid #E2E8F0' : 'none' }}>
+                      <div style={{ padding: '8px 12px', background: '#F1F5F9', fontWeight: 700, fontSize: '0.78rem', color: '#475569', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>🏪 {vo.vendor_name}</span>
+                        <span>₹{(vo.bill_amount || vo.items?.reduce((s, it) => s + (it.price || 0) * (it.quantity || 1), 0) || 0).toFixed(2)}</span>
+                      </div>
+                      <div style={{ padding: '8px 12px' }}>
+                        {(vo.items || []).map((it, itIdx) => (
+                          <div key={itIdx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#334155', padding: '4px 0' }}>
+                            <span>{it.name} × {it.quantity} {it.unit ? `(${it.unit})` : ''}</span>
+                            <span style={{ fontWeight: 600 }}>₹{(it.price * it.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Verification Form */}
+              {!auditRejectMode ? (
+                <div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                      Audit Verification Remarks (Optional)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Budget verified under institutional quarterly account allocation"
+                      value={auditRemarks}
+                      onChange={e => setAuditRemarks(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: '1.5px solid #CBD5E1',
+                        fontSize: '0.85rem',
+                        resize: 'vertical',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <UiverseButton
+                        variant="success"
+                        size="md"
+                        isLoading={auditActioning}
+                        disabled={auditActioning}
+                        onClick={() => handleAuditApprove(selectedAuditOrder, auditRemarks)}
+                        leftIcon={<span>✅</span>}
+                      >
+                        Approve & Forward to Canteens
+                      </UiverseButton>
+                      <UiverseButton
+                        variant="glass"
+                        size="md"
+                        disabled={auditActioning}
+                        style={{ color: '#EF4444' }}
+                        onClick={() => setAuditRejectMode(true)}
+                        leftIcon={<span>❌</span>}
+                      >
+                        Reject...
+                      </UiverseButton>
+                    </div>
+
+                    <Link
+                      href={`/order/${selectedAuditOrder.id}`}
+                      style={{ fontSize: '0.82rem', color: '#2563EB', fontWeight: 700, textDecoration: 'none' }}
+                    >
+                      Open Full Details Page →
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: '#FEF2F2', padding: '16px', borderRadius: '14px', border: '1px solid #FECACA' }}>
+                  <div style={{ fontWeight: 800, color: '#991B1B', fontSize: '0.9rem', marginBottom: '6px' }}>
+                    ⚠️ Reject Requisition #{selectedAuditOrder.id}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#B91C1C', marginBottom: '10px' }}>
+                    Please state the audit compliance reason. This explanation will be recorded and forwarded to the department coordinator.
+                  </div>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g. Incomplete vendor quotation / Budget limit exceeded"
+                    value={auditRejectReason}
+                    onChange={e => setAuditRejectReason(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      border: '1.5px solid #FCA5A5',
+                      fontSize: '0.85rem',
+                      resize: 'vertical',
+                      marginBottom: '12px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <UiverseButton
+                      variant="danger"
+                      size="sm"
+                      isLoading={auditActioning}
+                      disabled={!auditRejectReason.trim() || auditActioning}
+                      onClick={() => handleAuditReject(selectedAuditOrder, auditRejectReason)}
+                    >
+                      Confirm Rejection
+                    </UiverseButton>
+                    <UiverseButton
+                      variant="glass"
+                      size="sm"
+                      disabled={auditActioning}
+                      onClick={() => setAuditRejectMode(false)}
+                    >
+                      Back to Approval
+                    </UiverseButton>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

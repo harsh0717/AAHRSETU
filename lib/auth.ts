@@ -150,7 +150,7 @@ export async function getUsers(): Promise<UserProfile[]> {
   }
 
   try {
-    // 2. Try unauthenticated public directory endpoint (for login / test switcher)
+    // 2. Try unauthenticated public directory endpoint (for login / directory lookup)
     const pubRes = await api.get<UserProfile[]>('/users/public-directory');
     if (pubRes && Array.isArray(pubRes) && pubRes.length > 0) {
       inMemoryUsersCache = pubRes;

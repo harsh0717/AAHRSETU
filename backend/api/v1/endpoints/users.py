@@ -57,7 +57,7 @@ def get_public_user_directory(
     db: Session = Depends(get_db)
 ) -> Any:
     """
-    Public directory of active real users for quick test switcher and institutional directory.
+    Public directory of active real users for institutional directory lookup.
     No authentication required.
     """
     user_repo = UserRepository(db)

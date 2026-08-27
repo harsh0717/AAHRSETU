@@ -168,9 +168,15 @@ export default function OrderDetailsPage() {
     setActioning(true);
     try {
       await dcrReview(order.id, action, remarks);
+      showToast(
+        action === 'approve'
+          ? 'Requisition cleared DCR audit & dispatched to canteens'
+          : 'Requisition rejected during DCR audit',
+        action === 'approve' ? 'success' : 'warning'
+      );
       await loadOrder();
     } catch (e: any) {
-      alert(e.message || 'Error executing review');
+      showToast(e.message || 'Error executing review', 'error');
     } finally {
       setActioning(false);
     }
@@ -202,7 +208,14 @@ export default function OrderDetailsPage() {
   }
 
   const role = session.role;
-  const roleColorsMap: Record<string, string> = { coordinator: '#3B82F6', principal: '#6366F1', dcr: '#0EA5E9', vendor: '#10B981', admin: '#8B5CF6' };
+  const roleColorsMap: Record<string, string> = {
+    coordinator: '#3B82F6',
+    principal: '#6366F1',
+    dcr: '#0EA5E9',
+    administration: '#0EA5E9',
+    vendor: '#10B981',
+    admin: '#8B5CF6'
+  };
   const roleColor = roleColorsMap[role] || '#3B82F6';
 
   const calculateTotal = (ord: MasterOrder): number => {
@@ -230,7 +243,7 @@ export default function OrderDetailsPage() {
   const showCoordSubmit = role === 'coordinator' && order.status === 'Created';
   const showCoordResubmit = role === 'coordinator' && ['Principal Rejected', 'DCR Rejected'].includes(order.status);
   const showPrincipalReview = role === 'principal' && ['Sent for Approval', 'Principal Reviewing'].includes(order.status);
-  const showDCRReview = role === 'dcr' && ['Principal Approved', 'DCR Reviewing'].includes(order.status);
+  const showDCRReview = (role === 'dcr' || role === 'administration') && ['Principal Approved', 'DCR Reviewing'].includes(order.status);
   const showAdminComplete = role === 'admin' && order.status === 'Bill Generated';
 
   // Find modifications awaiting coordinator resolution

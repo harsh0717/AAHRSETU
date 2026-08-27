@@ -24,79 +24,52 @@
 /* Subtle ambient backdrop lighting with Green and Navy */
 .heroGlowTop {
   position: absolute;
-  top: -120px;
-  left: -80px;
-  width: 450px;
-  height: 450px;
+  top: -40px;
+  left: -40px;
+  width: 360px;
+  height: 360px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%);
-  animation: blobPulse 10s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0) 70%);
   pointer-events: none;
   z-index: 0;
 }
 
 .heroGlowBottom {
   position: absolute;
-  bottom: -100px;
-  right: -80px;
-  width: 420px;
-  height: 420px;
+  bottom: -40px;
+  right: -40px;
+  width: 360px;
+  height: 360px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(37, 99, 235, 0) 70%);
-  animation: blobPulse 12s ease-in-out infinite alternate-reverse;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0) 70%);
   pointer-events: none;
   z-index: 0;
 }
 
-/* Vector Culinary Doodle Layer */
-.culinaryDoodleLayer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.doodleIcon {
-  position: absolute;
-  stroke: #10B981;
-  color: #10B981;
-  fill: none;
-  opacity: 0.15;
-  transition: opacity 0.3s ease;
-  will-change: transform;
-}
-
-.doodleFloat1 { animation: floatSlow 8s ease-in-out infinite alternate; }
-.doodleFloat2 { animation: floatSlow 10s ease-in-out infinite alternate-reverse; }
-.doodleFloat3 { animation: floatSlow 12s ease-in-out infinite alternate; }
-.doodleFloat4 { animation: floatRotate 24s linear infinite; }
-
-/* Decorative rings */
+/* Decorative rings — contained within hero bounds */
 .heroRing1 {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 540px;
-  height: 540px;
+  bottom: -80px;
+  right: -80px;
+  width: 320px;
+  height: 320px;
   border-radius: 50%;
-  border: 1.5px solid rgba(16, 185, 129, 0.08);
+  border: 1.5px solid rgba(16, 185, 129, 0.1);
   pointer-events: none;
+  z-index: 0;
 }
 
 .heroRing2 {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 740px;
-  height: 740px;
+  bottom: -120px;
+  right: -120px;
+  width: 480px;
+  height: 480px;
   border-radius: 50%;
-  border: 1.5px dashed rgba(59, 130, 246, 0.08);
+  border: 1.5px dashed rgba(59, 130, 246, 0.1);
   animation: ringRotate 45s linear infinite;
   pointer-events: none;
+  z-index: 0;
 }
 
 /* Keyframe animations */
@@ -117,8 +90,8 @@
 }
 
 @keyframes ringRotate {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .heroHeader {

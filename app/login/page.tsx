@@ -199,10 +199,62 @@ export default function LoginPage() {
         <div className={styles.heroGlowTop} aria-hidden="true" />
         <div className={styles.heroGlowBottom} aria-hidden="true" />
 
+        {/* Decorative rotating background geometry */}
+        <div className={styles.heroRing1} aria-hidden="true" />
+        <div className={styles.heroRing2} aria-hidden="true" />
+
+        {/* Vector Culinary Doodle Layer */}
+        <svg className={styles.culinaryDoodleLayer} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="warmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#EA580C" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#D97706" stopOpacity="0.4" />
+            </linearGradient>
+          </defs>
+
+          {/* Doodle 1: Steaming Hot Chai Glass */}
+          <g className={`${styles.doodleIcon} ${styles.doodleFloat1}`} style={{ transform: 'translate(30px, 50px)' }}>
+            <path d="M10 25 L14 60 A 8 8 0 0 0 22 68 L38 68 A 8 8 0 0 0 46 60 L50 25 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <line x1="8" y1="25" x2="52" y2="25" stroke="url(#warmGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M22 18 Q 24 10, 20 5" stroke="url(#warmGrad)" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M30 18 Q 32 8, 28 3" stroke="url(#warmGrad)" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M38 18 Q 40 11, 36 6" stroke="url(#warmGrad)" strokeWidth="1.8" strokeLinecap="round" />
+          </g>
+
+          {/* Doodle 2: Crisp Samosa Triangle */}
+          <g className={`${styles.doodleIcon} ${styles.doodleFloat2}`} style={{ transform: 'translate(310px, 40px)' }}>
+            <path d="M30 10 L55 52 Q 30 58 5 52 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M28 25 Q 32 35 24 45" stroke="url(#warmGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+            <circle cx="36" cy="40" r="1.5" fill="#EA580C" opacity="0.6" />
+          </g>
+
+          {/* Doodle 3: Chef Toque */}
+          <g className={`${styles.doodleIcon} ${styles.doodleFloat3}`} style={{ transform: 'translate(330px, 180px)' }}>
+            <path d="M12 44 L48 44 L46 54 L14 54 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M14 44 C 8 36, 10 24, 20 22 C 20 12, 32 10, 38 18 C 46 12, 52 24, 46 44" stroke="url(#warmGrad)" strokeWidth="2" strokeLinecap="round" />
+          </g>
+
+          {/* Doodle 4: Serving Cloche */}
+          <g className={`${styles.doodleIcon} ${styles.doodleFloat1}`} style={{ transform: 'translate(20px, 260px)' }}>
+            <path d="M8 42 C 8 20, 52 20, 52 42 Z" stroke="url(#warmGrad)" strokeWidth="2" strokeLinejoin="round" />
+            <line x1="4" y1="44" x2="56" y2="44" stroke="url(#warmGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="30" cy="17" r="3" stroke="url(#warmGrad)" strokeWidth="2" />
+          </g>
+
+          {/* Doodle 5: Traditional Indian Thali */}
+          <g className={`${styles.doodleIcon} ${styles.doodleFloat2}`} style={{ transform: 'translate(180px, 440px)' }}>
+            <circle cx="35" cy="35" r="30" stroke="url(#warmGrad)" strokeWidth="2" />
+            <circle cx="22" cy="22" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
+            <circle cx="48" cy="22" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
+            <circle cx="24" cy="46" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
+            <circle cx="46" cy="46" r="7" stroke="url(#warmGrad)" strokeWidth="1.5" />
+          </g>
+        </svg>
+
         {/* ── Brand Logo Header & Language Selector ── */}
         <div className={styles.heroHeader}>
           <div className={styles.heroLogoGlassWrapper}>
-            <BrandLogo size={46} />
+            <BrandLogo size={52} />
           </div>
           
           <div className={styles.langRow}>
@@ -230,98 +282,101 @@ export default function LoginPage() {
           </div>
 
           <h2 className={styles.heroTitle}>
-            {t('login.hero_title', 'Campus Catering.')}<br />
-            <span>{t('login.hero_title_span', 'Digitized & Simplified.')}</span>
+            {t('login.hero_title', 'Good Food.')}<br />
+            <span>{t('login.hero_title_span', 'Better Campus.')}</span>
           </h2>
 
           <p className={styles.heroSub}>
-            {t('login.hero_sub', 'A transparent digital requisition network connecting Department Coordinators, Principals, DCR Audit, and Campus Canteens.')}
+            {t('login.hero_sub', 'Connecting Academic Departments, Principals, DCR Office & Campus Canteens in One Live Digital Ecosystem.')}
           </p>
 
-          {/* ── Dashboard-Consistent Live Requisition Pipeline Card ── */}
-          <div className={styles.pipelineCard}>
-            <div className={styles.pipelineHeader}>
-              <div className={styles.pipelineHeaderLeft}>
-                <AppIcon name="receipt" size={16} color="#EA580C" />
-                <span>Requisition Lifecycle</span>
-              </div>
-              <span className={styles.pipelineHeaderRight}>
-                🟢 Real-Time Protocol
-              </span>
+          {/* ── Centerpiece Creative 3D Bento Showcase Card ── */}
+          <div className={styles.showcaseWrapper}>
+            {/* Floating Live Status Badge (Top Right) */}
+            <div className={styles.floatingBadgeTopRight}>
+              <span style={{ fontSize: '0.85rem' }}>✓</span>
+              <span>Requisition Cleared · DCR Approved</span>
             </div>
 
-            <div className={styles.pipelineSteps}>
-              {/* Stage 1: Coordinator */}
-              <div className={styles.pipelineStepItem}>
-                <div className={styles.pipelineStepLeft}>
-                  <div className={styles.pipelineStepIcon} style={{ background: '#EFF6FF', color: '#2563EB' }}>
-                    <AppIcon name="create" size={15} color="#2563EB" />
-                  </div>
-                  <div className={styles.pipelineStepText}>
-                    <h6>1. Department Draft</h6>
-                    <p>Coordinator initiates meal requisition</p>
-                  </div>
-                </div>
-                <span className={`${styles.pipelineStepBadge} ${styles.badgeSent}`}>Sent</span>
+            {/* Main Interactive Showcase Card */}
+            <div className={styles.mainShowcaseCard}>
+              <div className={styles.showcaseTopRow}>
+                <span className={styles.showcaseSpecialTag}>
+                  <span>🌟</span> TODAY'S CAMPUS SPECIAL
+                </span>
+                <span className={styles.showcaseRatingTag}>
+                  <span>⭐</span> 4.9 (480+ Orders)
+                </span>
               </div>
 
-              {/* Stage 2: Principal */}
-              <div className={styles.pipelineStepItem}>
-                <div className={styles.pipelineStepLeft}>
-                  <div className={styles.pipelineStepIcon} style={{ background: '#F0FDF4', color: '#16A34A' }}>
-                    <AppIcon name="approved" size={15} color="#16A34A" />
-                  </div>
-                  <div className={styles.pipelineStepText}>
-                    <h6>2. Principal Verification</h6>
-                    <p>Budget & purpose authorization</p>
+              <div className={styles.showcaseDishBody}>
+                <div className={styles.showcaseDishIcon}>
+                  🍱
+                </div>
+                <div className={styles.showcaseDishInfo}>
+                  <h4 className={styles.showcaseDishTitle}>Executive Campus Thali (Full Meal)</h4>
+                  <div className={styles.showcaseDishPills}>
+                    <span className={styles.dishItemChip}>4 Butter Phulkas</span>
+                    <span className={styles.dishItemChip}>Paneer Sabzi</span>
+                    <span className={styles.dishItemChip}>Dal Tadka</span>
+                    <span className={styles.dishItemChip}>Jeera Rice</span>
+                    <span className={styles.dishItemChip}>Gulab Jamun</span>
+                    <span className={styles.dishItemChip}>Chaas</span>
                   </div>
                 </div>
-                <span className={`${styles.pipelineStepBadge} ${styles.badgeApproved}`}>Approved</span>
               </div>
 
-              {/* Stage 3: Canteen Vendor */}
-              <div className={styles.pipelineStepItem}>
-                <div className={styles.pipelineStepLeft}>
-                  <div className={styles.pipelineStepIcon} style={{ background: '#FFF7ED', color: '#EA580C' }}>
-                    <AppIcon name="vendor" size={15} color="#EA580C" />
-                  </div>
-                  <div className={styles.pipelineStepText}>
-                    <h6>3. Kitchen Fulfillment</h6>
-                    <p>Vendor processes & logs order items</p>
-                  </div>
+              <div className={styles.showcaseFooterRow}>
+                <div className={styles.showcasePrice}>
+                  ₹90 <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#78716C' }}>/ plate</span>
                 </div>
-                <span className={`${styles.pipelineStepBadge} ${styles.badgeActive}`}>Active</span>
+                <div className={styles.showcaseVendorName}>
+                  <span>🏪</span> Sharma Canteen (Campus Unit #1)
+                </div>
               </div>
+            </div>
 
-              {/* Stage 4: DCR Audit */}
-              <div className={styles.pipelineStepItem}>
-                <div className={styles.pipelineStepLeft}>
-                  <div className={styles.pipelineStepIcon} style={{ background: '#FAF5FF', color: '#7E22CE' }}>
-                    <AppIcon name="settlements" size={15} color="#7E22CE" />
-                  </div>
-                  <div className={styles.pipelineStepText}>
-                    <h6>4. DCR Account Settle</h6>
-                    <p>Audit clearance & automated GST bill</p>
-                  </div>
-                </div>
-                <span className={`${styles.pipelineStepBadge} ${styles.badgeSettled}`}>Settled</span>
-              </div>
+            {/* Floating Refreshment Badge (Bottom Left) */}
+            <div className={styles.floatingBadgeBottomLeft}>
+              <span style={{ fontSize: '0.92rem' }}>☕</span>
+              <span>
+                Fresh Masala Chai & Samosa · <strong>₹25</strong>
+              </span>
             </div>
           </div>
 
-          {/* ── 3 Minimal Stats Grid ── */}
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.statValue}>4 Units</div>
-              <div className={styles.statLabel}>Campus Canteens</div>
+          {/* ── 4 Bento Feature Highlights Grid ── */}
+          <div className={styles.bentoChipsGrid}>
+            <div className={styles.bentoChip}>
+              <div className={styles.bentoChipIcon}>🍽️</div>
+              <div className={styles.bentoChipText}>
+                <h5>4 Campus Kitchens</h5>
+                <p>Live menu & pricing</p>
+              </div>
             </div>
-            <div className={styles.statCard}>
-              <div className={styles.statValue} style={{ color: '#16A34A' }}>&lt; 15 min</div>
-              <div className={styles.statLabel}>Approval Speed</div>
+
+            <div className={styles.bentoChip}>
+              <div className={styles.bentoChipIcon}>⚡</div>
+              <div className={styles.bentoChipText}>
+                <h5>1-Click Approval</h5>
+                <p>Principal & DCR sync</p>
+              </div>
             </div>
-            <div className={styles.statCard}>
-              <div className={styles.statValue} style={{ color: '#2563EB' }}>100%</div>
-              <div className={styles.statLabel}>Paperless Audit</div>
+
+            <div className={styles.bentoChip}>
+              <div className={styles.bentoChipIcon}>🧾</div>
+              <div className={styles.bentoChipText}>
+                <h5>Zero Paperwork</h5>
+                <p>Automated GST bills</p>
+              </div>
+            </div>
+
+            <div className={styles.bentoChip}>
+              <div className={styles.bentoChipIcon}>📊</div>
+              <div className={styles.bentoChipText}>
+                <h5>Monthly Settle</h5>
+                <p>Transparent ledgers</p>
+              </div>
             </div>
           </div>
         </div>

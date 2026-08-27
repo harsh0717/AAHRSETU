@@ -1,5 +1,7 @@
 // ── AharSetu Centralized System Settings Manager ─────────────────────────────
 
+import { api } from '@/lib/api';
+
 export interface SystemSettings {
   demo_switcher_enabled: boolean;
   demo_accounts_enabled: boolean;
@@ -38,15 +40,33 @@ export function updateSystemSettings(partial: Partial<SystemSettings>): SystemSe
   return updated;
 }
 
-import { api } from '@/lib/api';
+export async function saveSystemSettings(partial: Partial<SystemSettings>): Promise<SystemSettings> {
+  const updated = updateSystemSettings(partial);
+  try {
+    const res = await api.put<{ demo_accounts_enabled: boolean; demo_switcher_enabled: boolean }>('/settings', {
+      ...(typeof partial.demo_accounts_enabled === 'boolean' ? { demo_accounts_enabled: partial.demo_accounts_enabled } : {}),
+      ...(typeof partial.demo_switcher_enabled === 'boolean' ? { demo_switcher_enabled: partial.demo_switcher_enabled } : {}),
+    });
+    if (res) {
+      return updateSystemSettings({
+        demo_accounts_enabled: res.demo_accounts_enabled,
+        demo_switcher_enabled: res.demo_switcher_enabled,
+      });
+    }
+  } catch (err) {
+    console.warn("[SYSTEM_SETTINGS] Backend settings sync failed:", err);
+  }
+  return updated;
+}
 
 export async function fetchPublicSettings(): Promise<SystemSettings> {
   try {
-    const res = await api.get<{ demo_accounts_enabled: boolean }>('/settings/public');
+    const res = await api.get<{ demo_accounts_enabled: boolean; demo_switcher_enabled?: boolean }>('/settings/public');
     if (res && typeof res.demo_accounts_enabled === 'boolean') {
+      const swEnabled = typeof res.demo_switcher_enabled === 'boolean' ? res.demo_switcher_enabled : res.demo_accounts_enabled;
       return updateSystemSettings({
         demo_accounts_enabled: res.demo_accounts_enabled,
-        demo_switcher_enabled: res.demo_accounts_enabled,
+        demo_switcher_enabled: swEnabled,
       });
     }
   } catch (err) {

@@ -149,13 +149,17 @@ export default function RoleSwitcherBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
-  const [switcherEnabled, setSwitcherEnabled] = useState(true);
+  const [switcherEnabled, setSwitcherEnabled] = useState(() => typeof window !== 'undefined' ? isDemoSwitcherEnabled() : true);
 
   const refreshSession = useCallback(() => {
     const s = getSession();
     setCurrentSession(s);
     setSavedUsers(getSavedUsers());
     setSwitcherEnabled(isDemoSwitcherEnabled());
+
+    fetchPublicSettings().then(pub => {
+      setSwitcherEnabled(pub.demo_switcher_enabled);
+    }).catch(() => {});
 
     getUsers().then(users => {
       if (users && users.length > 0) setSavedUsers(users);

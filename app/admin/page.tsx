@@ -18,7 +18,7 @@ import UiverseToggle from '@/components/ui/UiverseToggle';
 import UiverseButton from '@/components/ui/UiverseButton';
 import UiverseBadge from '@/components/ui/UiverseBadge';
 import AppIcon, { getIconTheme } from '@/components/ui/AppIcon';
-import { getSystemSettings, updateSystemSettings } from '@/lib/systemSettings';
+import { getSystemSettings, updateSystemSettings, saveSystemSettings, fetchPublicSettings } from '@/lib/systemSettings';
 import { api } from '@/lib/api';
 import styles from './admin.module.css';
 
@@ -138,19 +138,25 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     const s = getSystemSettings();
     setDemoSwitcherEnabled(s.demo_switcher_enabled);
     setDemoAccountsEnabled(s.demo_accounts_enabled);
+    fetchPublicSettings().then(pub => {
+      setDemoSwitcherEnabled(pub.demo_switcher_enabled);
+      setDemoAccountsEnabled(pub.demo_accounts_enabled);
+    }).catch(() => {});
   }, []);
 
-  function handleToggleDemoSwitcher(enabled: boolean) {
-    const updated = updateSystemSettings({ demo_switcher_enabled: enabled });
+  async function handleToggleDemoSwitcher(enabled: boolean) {
+    setDemoSwitcherEnabled(enabled);
+    const updated = await saveSystemSettings({ demo_switcher_enabled: enabled });
     setDemoSwitcherEnabled(updated.demo_switcher_enabled);
-    setSettingsMessage(enabled ? 'Live Role Switcher bar enabled.' : 'Live Role Switcher bar disabled.');
+    setSettingsMessage(enabled ? 'Quick Test Switcher floating dock enabled.' : 'Quick Test Switcher floating dock disabled.');
     setTimeout(() => setSettingsMessage(''), 4000);
   }
 
-  function handleToggleDemoAccounts(enabled: boolean) {
-    const updated = updateSystemSettings({ demo_accounts_enabled: enabled });
+  async function handleToggleDemoAccounts(enabled: boolean) {
+    setDemoAccountsEnabled(enabled);
+    const updated = await saveSystemSettings({ demo_accounts_enabled: enabled });
     setDemoAccountsEnabled(updated.demo_accounts_enabled);
-    setSettingsMessage(enabled ? 'Login demo accounts enabled.' : 'Login demo accounts disabled.');
+    setSettingsMessage(enabled ? 'Login Quick Test Switcher enabled.' : 'Login Quick Test Switcher disabled.');
     setTimeout(() => setSettingsMessage(''), 4000);
   }
 
@@ -1622,8 +1628,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '640px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                     <div>
-                      <div style={{ fontWeight: 800, color: '#0F172A' }}>Live Role Switcher Bar</div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Display floating bottom bar to switch roles instantaneously during evaluation</div>
+                      <div style={{ fontWeight: 800, color: '#0F172A' }}>Live Quick Test Switcher Dock</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Display floating bottom dock to switch accounts instantaneously across all dashboard pages</div>
                     </div>
                     <UiverseToggle
                       checked={demoSwitcherEnabled}
@@ -1633,8 +1639,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                     <div>
-                      <div style={{ fontWeight: 800, color: '#0F172A' }}>Login Screen Demo Accounts Board</div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Show 1-click login accounts selector on the authentication screen</div>
+                      <div style={{ fontWeight: 800, color: '#0F172A' }}>Login Screen Quick Test Switcher</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Show 1-click quick test cards on the login screen</div>
                     </div>
                     <UiverseToggle
                       checked={demoAccountsEnabled}

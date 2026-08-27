@@ -112,7 +112,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
-  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true);
+  const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(() => typeof window !== 'undefined' ? isDemoAccountsEnabled() : true);
   const [savedUsers, setSavedUsers] = useState<UserProfile[]>([]);
 
   useEffect(() => {

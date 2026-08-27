@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { login, getSession, UserProfile } from '@/lib/auth';
 import { useI18n, LangCode } from '@/lib/i18n';
@@ -196,17 +195,28 @@ export default function LoginPage() {
     <div className={styles.page}>
       
       <section className={styles.hero}>
-        <Image
-          src="/images/campus_dining_hero_v3.webp"
-          alt="Campus Food Platform"
-          fill
-          priority
-          fetchPriority="high"
-          quality={80}
-          sizes="(max-width: 992px) 1px, 45vw"
-          className={styles.heroBgImage}
-        />
-        <div className={styles.heroOverlay} />
+        {/* ── Food Illustration Panel (replaces photo) ── */}
+        <div className={styles.heroFoodBg} aria-hidden="true">
+          {/* Ambient glow blobs */}
+          <div className={styles.heroBlob1} />
+          <div className={styles.heroBlob2} />
+          <div className={styles.heroBlob3} />
+          {/* Floating food icons */}
+          <span className={styles.foodFloat} style={{ top: '8%',  left: '10%', fontSize: '3.2rem', animationDelay: '0s',   animationDuration: '6s'  }}>🍛</span>
+          <span className={styles.foodFloat} style={{ top: '14%', right: '12%', fontSize: '2.6rem', animationDelay: '1.2s', animationDuration: '7s'  }}>🫓</span>
+          <span className={styles.foodFloat} style={{ top: '30%', left: '5%',   fontSize: '2.2rem', animationDelay: '2s',   animationDuration: '8s'  }}>☕</span>
+          <span className={styles.foodFloat} style={{ top: '42%', right: '8%',  fontSize: '3rem',   animationDelay: '0.6s', animationDuration: '6.5s'}}>🥗</span>
+          <span className={styles.foodFloat} style={{ top: '58%', left: '14%',  fontSize: '2.4rem', animationDelay: '3s',   animationDuration: '9s'  }}>🍜</span>
+          <span className={styles.foodFloat} style={{ top: '68%', right: '16%', fontSize: '2rem',   animationDelay: '1.8s', animationDuration: '7.5s'}}>🫖</span>
+          <span className={styles.foodFloat} style={{ top: '78%', left: '8%',   fontSize: '2.6rem', animationDelay: '0.4s', animationDuration: '6.8s'}}>🍱</span>
+          <span className={styles.foodFloat} style={{ top: '86%', right: '10%', fontSize: '2.2rem', animationDelay: '2.4s', animationDuration: '8.2s'}}>🧆</span>
+          <span className={styles.foodFloat} style={{ top: '22%', left: '42%',  fontSize: '1.8rem', animationDelay: '1s',   animationDuration: '10s' }}>🌶️</span>
+          <span className={styles.foodFloat} style={{ top: '52%', left: '36%',  fontSize: '2rem',   animationDelay: '3.5s', animationDuration: '7.2s'}}>🥘</span>
+          {/* Decorative rings */}
+          <div className={styles.heroRing1} />
+          <div className={styles.heroRing2} />
+          <div className={styles.heroRing3} />
+        </div>
 
         <div className={styles.heroHeader}>
           <div className={styles.heroLogoGlassWrapper}>
@@ -245,23 +255,23 @@ export default function LoginPage() {
               { icon: '🍵', tag: 'MORNING REFRESHMENT', title: 'Masala Tea & Samosa', price: '₹25', vendor: 'Sharma Canteen' },
             ].map((f, idx) => (
               <div key={idx} className={styles.featureCard} style={{
-                background: 'rgba(255, 255, 255, 0.12)',
+                background: 'rgba(255, 255, 255, 0.6)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
+                border: '1px solid rgba(234, 88, 12, 0.18)',
                 borderRadius: '16px',
                 padding: '14px 18px',
-                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)',
+                boxShadow: '0 3px 14px rgba(234, 88, 12, 0.08)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'nowrap', width: '100%' }}>
-                  <div style={{ fontSize: '2rem', background: 'rgba(255, 255, 255, 0.2)', padding: '8px', borderRadius: '12px', flexShrink: 0 }}>{f.icon}</div>
+                  <div style={{ fontSize: '2rem', background: 'rgba(234, 88, 12, 0.1)', padding: '8px', borderRadius: '12px', flexShrink: 0 }}>{f.icon}</div>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#F59E0B', letterSpacing: '0.05em' }}>{f.tag}</div>
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.title}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>🏪 {f.vendor}</div>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#B45309', letterSpacing: '0.05em' }}>{f.tag}</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1C1917', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#78716C' }}>🏪 {f.vendor}</div>
                   </div>
                 </div>
               </div>

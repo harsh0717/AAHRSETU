@@ -15,25 +15,117 @@
   padding: 48px;
   position: relative;
   overflow: hidden;
-  color: white;
+  color: #1C1917;
+  background: linear-gradient(145deg, #FFF7ED 0%, #FFFBF5 35%, #FEF3C7 65%, #FFF7ED 100%);
 }
 
-.heroBgImage {
+/* ── Food illustration background ─────────────────────────── */
+.heroFoodBg {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  pointer-events: none;
   z-index: 0;
 }
 
-.heroOverlay {
+/* Ambient glow blobs */
+.heroBlob1 {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(10, 15, 29, 0.72) 0%, rgba(10, 15, 29, 0.52) 45%, rgba(10, 15, 29, 0.88) 100%);
-  z-index: 1;
-  pointer-events: none;
+  top: -80px;
+  left: -80px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.22) 0%, rgba(251, 146, 60, 0) 70%);
+  animation: blobPulse 8s ease-in-out infinite alternate;
 }
+
+.heroBlob2 {
+  position: absolute;
+  bottom: -60px;
+  right: -60px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.18) 0%, rgba(234, 88, 12, 0) 70%);
+  animation: blobPulse 10s ease-in-out infinite alternate-reverse;
+}
+
+.heroBlob3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(253, 224, 71, 0.15) 0%, rgba(253, 224, 71, 0) 70%);
+  animation: blobPulse 12s ease-in-out infinite alternate;
+}
+
+/* Decorative rings */
+.heroRing1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(234, 88, 12, 0.1);
+}
+
+.heroRing2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 640px;
+  height: 640px;
+  border-radius: 50%;
+  border: 1px solid rgba(251, 146, 60, 0.08);
+}
+
+.heroRing3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(234, 88, 12, 0.12);
+  animation: ringRotate 30s linear infinite;
+}
+
+/* Floating food icons */
+.foodFloat {
+  position: absolute;
+  user-select: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+  animation: floatBob linear infinite;
+  will-change: transform;
+  opacity: 0.75;
+}
+
+@keyframes floatBob {
+  0%   { transform: translateY(0px)   rotate(-4deg); }
+  25%  { transform: translateY(-10px) rotate(2deg);  }
+  50%  { transform: translateY(-18px) rotate(-2deg); }
+  75%  { transform: translateY(-8px)  rotate(3deg);  }
+  100% { transform: translateY(0px)   rotate(-4deg); }
+}
+
+@keyframes blobPulse {
+  0%   { transform: scale(1);    opacity: 1;   }
+  100% { transform: scale(1.18); opacity: 0.7; }
+}
+
+@keyframes ringRotate {
+  from { transform: translate(-50%, -50%) rotate(0deg);   }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ── (removed) photo overlay ─────────────────────────── */
 
 .heroHeader {
   position: relative;
@@ -51,21 +143,21 @@
   align-items: center;
   justify-content: center;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px) saturate(200%);
   -webkit-backdrop-filter: blur(20px) saturate(200%);
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(234, 88, 12, 0.2);
+  box-shadow: 0 4px 20px rgba(234, 88, 12, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .heroLogoGlassWrapper:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.9);
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.65);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  border-color: rgba(234, 88, 12, 0.35);
+  box-shadow: 0 8px 28px rgba(234, 88, 12, 0.18), inset 0 1px 1px rgba(255, 255, 255, 1);
 }
 
 .heroLogo {
@@ -84,12 +176,12 @@
 .langRow {
   display: flex;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 4px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(234, 88, 12, 0.18);
   flex-shrink: 0;
 }
 
@@ -98,7 +190,7 @@
   border-radius: 14px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(87, 42, 12, 0.7);
   font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
@@ -106,9 +198,9 @@
 }
 
 .langActive {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  background: rgba(234, 88, 12, 0.12);
+  color: #C2410C;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.15);
 }
 
 .heroContent {
@@ -120,19 +212,18 @@
 .heroBadge {
   display: inline-flex;
   padding: 7px 16px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(234, 88, 12, 0.1);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #FFFFFF;
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  color: #9A3412;
   font-size: 0.8rem;
   font-weight: 800;
   border-radius: 20px;
   margin-bottom: 20px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 2px 12px rgba(234, 88, 12, 0.12);
 }
 
 .heroTitle {
@@ -141,27 +232,24 @@
   line-height: 1.12;
   letter-spacing: -0.03em;
   margin: 0 0 16px;
-  color: #FFFFFF;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.9);
+  color: #1C1917;
 }
 
 .heroTitle span {
   display: inline-block;
-  color: #FB923C;
-  background: linear-gradient(135deg, #FDE047 0%, #FB923C 50%, #EA580C 100%);
+  background: linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #DC2626 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.95));
+  background-clip: text;
 }
 
 .heroSub {
   font-size: 1.1rem;
-  color: #F1F5F9;
+  color: #57534E;
   font-weight: 600;
   line-height: 1.6;
   margin: 0 0 36px;
   max-width: 440px;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
 }
 
 .featuresGrid {
@@ -174,25 +262,28 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(234, 88, 12, 0.15);
   padding: 16px;
   border-radius: 16px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: all 0.3s;
   overflow: hidden;
   min-width: 0;
+  box-shadow: 0 2px 12px rgba(234, 88, 12, 0.06);
 }
 
 .featureCard:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(234, 88, 12, 0.28);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.1);
 }
 
 .featureIcon {
   font-size: 1.4rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(234, 88, 12, 0.08);
   width: 40px;
   height: 40px;
   display: flex;
@@ -206,12 +297,12 @@
   font-size: 0.85rem;
   font-weight: 700;
   margin: 0 0 4px;
-  color: white;
+  color: #1C1917;
 }
 
 .featureText p {
   font-size: 0.78rem;
-  color: #8E8EA0;
+  color: #78716C;
   margin: 0;
   line-height: 1.4;
 }
@@ -220,7 +311,7 @@
   position: relative;
   z-index: 2;
   font-size: 0.72rem;
-  color: #5F5F76;
+  color: #A8A29E;
 }
 
 /* Right Form Section */

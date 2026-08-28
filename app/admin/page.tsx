@@ -571,18 +571,18 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   ];
 
   const TAB_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
-    dashboard: { title: 'Executive Admin Dashboard', subtitle: 'Global telemetry, active requisitions, budget utilization, and server baseline.', icon: 'dashboard' },
-    users: { title: 'User Accounts Directory', subtitle: 'Manage coordinators, department principals, auditors, and permissions.', icon: 'users' },
-    departments: { title: 'Academic Departments', subtitle: 'Configure institutional departments, official codes, and active statuses.', icon: 'departments' },
-    vendors: { title: 'Campus Canteen Vendors', subtitle: 'Manage food vendor profiles, live operating statuses, and kitchen settlements.', icon: 'vendors' },
-    orders: { title: 'Master Requisitions Pipeline', subtitle: 'Live institutional orders stream across all departments and campus canteens.', icon: 'orders' },
-    bills: { title: 'Bills & Monthly Settlements', subtitle: 'Reconcile vendor invoices, audit disbursements, and record settlements.', icon: 'bills' },
-    reports: { title: 'Institutional Audit Reports', subtitle: 'Comprehensive financial breakdowns by department, vendor, and timeframe.', icon: 'reports' },
-    analytics: { title: 'Financial & Volume Analytics', subtitle: 'Data visualizations of campus dining expenditures and trends.', icon: 'analytics' },
-    audit: { title: 'Security & Activity Audit Logs', subtitle: 'Chronological activity stream of all authentication and approval events.', icon: 'audit' },
-    health: { title: 'Operational Diagnostics', subtitle: 'Real-time telemetry of PostgreSQL database, WebSocket gateway, and latency.', icon: 'health' },
-    settings: { title: 'System Configuration', subtitle: 'Global platform preferences, language localization, and data integrity safeguards.', icon: 'settings' },
-    profile: { title: 'Administrator Profile', subtitle: 'Manage administrative credentials, contact details, and avatar.', icon: 'profile' },
+    dashboard: { title: t('admin.tab_title_dashboard', 'Executive Admin Dashboard'), subtitle: t('admin.hub_desc', 'Global telemetry, active requisitions, budget utilization, and server baseline.'), icon: 'dashboard' },
+    users: { title: t('admin.tab_title_users', 'User Accounts Directory'), subtitle: 'Manage coordinators, department principals, auditors, and permissions.', icon: 'users' },
+    departments: { title: t('admin.tab_title_departments', 'Academic Departments'), subtitle: 'Configure institutional departments, official codes, and active statuses.', icon: 'departments' },
+    vendors: { title: t('admin.tab_title_vendors', 'Campus Canteen Vendors'), subtitle: 'Manage food vendor profiles, live operating statuses, and kitchen settlements.', icon: 'vendors' },
+    orders: { title: t('admin.tab_title_orders', 'Master Requisitions Pipeline'), subtitle: 'Live institutional orders stream across all departments and campus canteens.', icon: 'orders' },
+    bills: { title: t('admin.tab_title_bills', 'Bills & Monthly Settlements'), subtitle: 'Reconcile vendor invoices, audit disbursements, and record settlements.', icon: 'bills' },
+    reports: { title: t('admin.tab_title_reports', 'Institutional Audit Reports'), subtitle: 'Comprehensive financial breakdowns by department, vendor, and timeframe.', icon: 'reports' },
+    analytics: { title: t('admin.tab_title_analytics', 'Financial & Volume Analytics'), subtitle: 'Data visualizations of campus dining expenditures and trends.', icon: 'analytics' },
+    audit: { title: t('admin.tab_title_audit', 'Security & Activity Audit Logs'), subtitle: 'Chronological activity stream of all authentication and approval events.', icon: 'audit' },
+    health: { title: t('admin.tab_title_health', 'Operational Diagnostics'), subtitle: 'Real-time telemetry of PostgreSQL database, WebSocket gateway, and latency.', icon: 'health' },
+    settings: { title: t('admin.tab_title_settings', 'System Configuration'), subtitle: 'Global platform preferences, language localization, and data integrity safeguards.', icon: 'settings' },
+    profile: { title: t('admin.tab_title_profile', 'Administrator Profile'), subtitle: 'Manage administrative credentials, contact details, and avatar.', icon: 'profile' },
   };
 
   const currentTabInfo = TAB_TITLES[activeTab] || TAB_TITLES.dashboard;
@@ -596,7 +596,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
           <div className={styles.heroLeft}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-                CAMPUS ENTERPRISE ERP
+                {t('admin.hub_badge', 'CAMPUS ENTERPRISE ERP')}
               </span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
                 TAN: BLRA00000A · FY 2026-27
@@ -609,14 +609,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
             <p>
               <span>{todayStr}</span>
               <span>•</span>
-              <span className={styles.heroDateBadge}>⚡ Institutional Hub</span>
-              {session && <span>• Welcome back, <strong>{session.name}</strong></span>}
+              <span className={styles.heroDateBadge}>⚡ {t('common.actions', 'Institutional Hub')}</span>
+              {session && <span>• {t('auth.welcome', 'Welcome back')}, <strong>{session.name}</strong></span>}
             </p>
           </div>
 
           <div className={styles.heroRight}>
             <UiverseBadge variant="pulse">
-              All Systems Operational
+              {t('common.availability', 'All Systems Operational')}
             </UiverseBadge>
 
             <UiverseButton
@@ -635,7 +635,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
         {loading && activeTab === 'dashboard' ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--gray-500, #64748B)' }}>
             <div style={{ fontSize: '2rem', marginBottom: '12px', animation: 'spin 1s infinite linear' }}>🔄</div>
-            <div style={{ fontWeight: 700 }}>Synchronizing institutional metrics...</div>
+            <div style={{ fontWeight: 700 }}>{t('common.loading', 'Synchronizing institutional metrics...')}</div>
           </div>
         ) : (
           <div>
@@ -646,57 +646,57 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 <div className={styles.statsGrid}>
                   <div className={styles.statCard} style={{ borderTop: '4px solid #10B981' }}>
                     <div className={styles.statCardHeader}>
-                      <span className={styles.statLabel}>Consolidated Billing</span>
+                      <span className={styles.statLabel}>{t('dcr.settlements_tile', 'Consolidated Billing')}</span>
                       <div className={styles.statIconWrap} style={{ background: 'rgba(16, 185, 129, 0.12)' }}>
                         <AppIcon name="bills" size={22} color="#10B981" />
                       </div>
                     </div>
                     <div className={styles.statValue}>₹{Number(stats.total_revenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
                     <div className={styles.statSub}>
-                      <span className={styles.statBadgePositive}>↑ Real-time Audit</span>
-                      <span>Total Requisitions</span>
+                      <span className={styles.statBadgePositive}>↑ {t('dcr.pending_tile', 'Real-time Audit')}</span>
+                      <span>{t('admin.orders_tile', 'Total Requisitions')}</span>
                     </div>
                   </div>
 
                   <div className={styles.statCard} style={{ borderTop: '4px solid #3B82F6' }}>
                     <div className={styles.statCardHeader}>
-                      <span className={styles.statLabel}>Total Orders Created</span>
+                      <span className={styles.statLabel}>{t('admin.orders_tile', 'Total Orders Created')}</span>
                       <div className={styles.statIconWrap} style={{ background: 'rgba(59, 130, 246, 0.12)' }}>
                         <AppIcon name="orders" size={22} color="#3B82F6" />
                       </div>
                     </div>
                     <div className={styles.statValue}>{stats.total_orders || 0}</div>
                     <div className={styles.statSub}>
-                      <span>Settled: <strong>{stats.completed_orders || 0}</strong></span>
+                      <span>{t('principal.approved_tile', 'Settled')}: <strong>{stats.completed_orders || 0}</strong></span>
                       <span style={{ color: '#2563EB', fontWeight: 700 }}>{stats.total_orders > 0 ? Math.round(((stats.completed_orders || 0) / stats.total_orders) * 100) : 100}% Settle Rate</span>
                     </div>
                   </div>
 
                   <div className={styles.statCard} style={{ borderTop: '4px solid #8B5CF6' }}>
                     <div className={styles.statCardHeader}>
-                      <span className={styles.statLabel}>Active Food Vendors</span>
+                      <span className={styles.statLabel}>{t('admin.vendors_tile', 'Active Food Vendors')}</span>
                       <div className={styles.statIconWrap} style={{ background: 'rgba(139, 92, 246, 0.12)' }}>
                         <AppIcon name="vendors" size={22} color="#8B5CF6" />
                       </div>
                     </div>
                     <div className={styles.statValue}>{stats.active_vendors || vendors.length}</div>
                     <div className={styles.statSub}>
-                      <span>Campus Canteens</span>
-                      <button onClick={() => setActiveTab('vendors')} style={{ background: 'none', border: 'none', color: '#7C3AED', fontWeight: 800, cursor: 'pointer', padding: 0 }}>Manage →</button>
+                      <span>{t('nav.vendors', 'Campus Canteens')}</span>
+                      <button onClick={() => setActiveTab('vendors')} style={{ background: 'none', border: 'none', color: '#7C3AED', fontWeight: 800, cursor: 'pointer', padding: 0 }}>{t('common.edit', 'Manage')} →</button>
                     </div>
                   </div>
 
                   <div className={styles.statCard} style={{ borderTop: '4px solid #F59E0B' }}>
                     <div className={styles.statCardHeader}>
-                      <span className={styles.statLabel}>Academic Departments</span>
+                      <span className={styles.statLabel}>{t('nav.departments', 'Academic Departments')}</span>
                       <div className={styles.statIconWrap} style={{ background: 'rgba(245, 158, 11, 0.12)' }}>
                         <AppIcon name="departments" size={22} color="#F59E0B" />
                       </div>
                     </div>
                     <div className={styles.statValue}>{departments.length || 4}</div>
                     <div className={styles.statSub}>
-                      <span>Coordinators: <strong>{coordinators.length}</strong></span>
-                      <span>Principals: <strong>{principals.length}</strong></span>
+                      <span>{t('common.coordinator', 'Coordinators')}: <strong>{coordinators.length}</strong></span>
+                      <span>{t('common.principal', 'Principals')}: <strong>{principals.length}</strong></span>
                     </div>
                   </div>
                 </div>

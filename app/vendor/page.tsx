@@ -546,17 +546,17 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-                CANTEEN OPERATIONS ENGINE
+                {t('vendor.hub_badge', 'CANTEEN OPERATIONS ENGINE')}
               </span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                {vendorDetails?.name || 'Authorized Canteen'} · FY 2026-27
+                {vendorDetails?.name || t('common.vendor', 'Authorized Canteen')} · FY 2026-27
               </span>
             </div>
             <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
-              🍱 {vendorDetails?.name || 'Canteen Vendor'} Kitchen & Order Hub
+              🍱 {vendorDetails?.name || t('common.vendor', 'Canteen Vendor')} {t('vendor.hub_title', 'Kitchen & Order Hub')}
             </h1>
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
-              Real-time kitchen order processing, instant pricing confirmations, menu catalog control, and settlement passbook.
+              {t('vendor.hub_desc', 'Real-time kitchen order processing, instant pricing confirmations, menu catalog control, and settlement passbook.')}
             </p>
           </div>
 
@@ -578,7 +578,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                 gap: '6px'
               }}
             >
-              {vendorDetails?.status === 'open' ? '🔒 Close Canteen' : '🔓 Open Canteen'}
+              {vendorDetails?.status === 'open' ? `🔒 ${t('common.close', 'Close')} ${t('common.vendor', 'Canteen')}` : `🔓 ${t('common.availability', 'Open')} ${t('common.vendor', 'Canteen')}`}
             </button>
             <button
               onClick={() => setActiveTab('incoming')}
@@ -596,7 +596,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                 gap: '6px'
               }}
             >
-              📥 Incoming Orders ({pendingPricingCount})
+              📥 {t('vendor.incoming_tile', 'Incoming Orders')} ({pendingPricingCount})
             </button>
           </div>
         </div>
@@ -635,17 +635,17 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
-                        NEW ORDERS WAITING
+                        {t('vendor.incoming_tile', 'NEW ORDERS WAITING')}
                       </span>
                       <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {pendingPricingCount} PENDING PRICING
+                        {pendingPricingCount} {t('common.status', 'PENDING')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: pendingPricingCount > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {pendingPricingCount}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Orders awaiting canteen price confirmation
+                      {t('vendor.incoming_tile_sub', 'Orders awaiting canteen price confirmation')}
                     </div>
                   </div>
 
@@ -663,17 +663,17 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
-                        ACTIVE KITCHEN ORDERS
+                        {t('vendor.active_tile', 'ACTIVE KITCHEN ORDERS')}
                       </span>
                       <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        COOKING & DISPATCH
+                        {t('common.status', 'IN PREPARATION')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {activeOrdersCount}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Orders currently being prepared in the kitchen
+                      {t('vendor.active_tile_sub', 'Orders currently being prepared in the kitchen')}
                     </div>
                   </div>
 
@@ -1556,7 +1556,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                   {notifications.map(n => {
                     const loc = localizeNotificationMessage(n, lang);
                     return (
-                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? '#FAFAFA' : 'var(--sidebar-bg)', border: '1px solid var(--sidebar-border)', borderRadius: '10px' }}>
+                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? 'var(--surface-0)' : 'rgba(37, 99, 235, 0.08)', border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <span style={{ fontSize: '1.2rem' }}>🔔</span>
                         <div>

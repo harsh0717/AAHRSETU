@@ -338,17 +338,17 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-                EXECUTIVE AUTHORIZATION
+                {t('principal.approval_badge', 'EXECUTIVE AUTHORIZATION')}
               </span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                {session?.department_id ? `Department: ${session.department_id}` : 'Academic Oversight'} · FY 2026-27
+                {session?.department_id ? `${t('common.department', 'Department')}: ${session.department_id}` : t('common.principal', 'Academic Oversight')} · FY 2026-27
               </span>
             </div>
             <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
-              🎓 Principal Executive Approval & Oversight Hub
+              🎓 {t('principal.orders_hub_title', 'Principal Approvals & Department Oversight Hub')}
             </h1>
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
-              Review department food requisitions, authorize hospitality expenditures, and oversee institutional catering pipelines.
+              {t('principal.orders_hub_desc', 'Review department catering requisitions, audit budget allocations, and approve vendor kitchen orders.')}
             </p>
           </div>
 
@@ -370,7 +370,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 gap: '6px'
               }}
             >
-              ➕ Create Requisition
+              ➕ {t('orders.create', 'Create Requisition')}
             </button>
             <button
               onClick={() => setActiveTab('queue')}
@@ -388,7 +388,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 gap: '6px'
               }}
             >
-              📋 Review Queue ({totalPending})
+              📋 {t('principal.review_queue_btn', 'Review Queue')} ({totalPending})
             </button>
           </div>
         </div>
@@ -422,17 +422,17 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
-                        PENDING APPROVALS
+                        {t('principal.pending_tile', 'PENDING PRINCIPAL APPROVAL')}
                       </span>
                       <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {totalPending} AWAITING
+                        {totalPending} {t('principal.awaiting_review', 'AWAITING')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {totalPending}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Requisitions awaiting your executive signature
+                      {t('principal.pending_tile_sub', 'Requisitions requiring immediate sanction')}
                     </div>
                   </div>
 
@@ -446,17 +446,17 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
-                        APPROVED ORDERS
+                        {t('principal.approved_tile', 'APPROVED & DISPATCHED')}
                       </span>
                       <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        CLEARED BY PRINCIPAL
+                        {t('principal.active_pipeline', 'ACTIVE PIPELINE')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {totalApproved}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Requisitions approved & forwarded to Administration/Kitchen
+                      {t('principal.approved_tile_sub', 'Orders approved for kitchen fulfillment')}
                     </div>
                   </div>
 
@@ -470,17 +470,17 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
-                        MY REQUISITIONS
+                        {t('principal.total_tile', 'TOTAL REQUISITIONS AUDITED')}
                       </span>
                       <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        PRINCIPAL DRAFTED
+                        {t('nav.my_orders', 'MY ORDERS')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
                       {totalMyOrders}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Direct orders initiated by Principal office
+                      {t('principal.total_tile_sub', 'Lifetime requisitions reviewed across departments')}
                     </div>
                   </div>
                 </div>
@@ -1449,7 +1449,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                   {notifications.map(n => {
                     const loc = localizeNotificationMessage(n, lang);
                     return (
-                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? '#FAFAFA' : 'var(--sidebar-bg)', border: '1px solid var(--sidebar-border)', borderRadius: '10px' }}>
+                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? 'var(--surface-0)' : 'rgba(37, 99, 235, 0.08)', border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <span style={{ fontSize: '1.2rem' }}>🔔</span>
                         <div>

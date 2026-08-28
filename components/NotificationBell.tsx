@@ -97,8 +97,8 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
             background: 'var(--color-danger, #EF4444)',
             color: 'white', fontSize: '0.65rem', fontWeight: 800,
             borderRadius: '10px', padding: '1px 6px',
-            border: '2px solid white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            border: '2px solid var(--surface-0)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
           }}>
             {unread}
           </span>
@@ -109,11 +109,12 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
         <div style={{
           position: 'absolute', top: '44px', right: 0,
           background: 'var(--surface-0)', border: '1px solid var(--gray-200)',
-          borderRadius: '12px', width: '320px',
+          borderRadius: '14px', width: '320px',
           minWidth: '320px', maxWidth: 'none',
-          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05)',
+          boxShadow: 'var(--shadow-xl, 0 10px 25px -5px rgba(0,0,0,0.2))',
           overflow: 'hidden',
-          animation: 'slide-down 0.2s ease-out'
+          animation: 'slide-down 0.2s ease-out',
+          zIndex: 1000
         }}>
           {/* Header */}
           <div style={{
@@ -121,7 +122,7 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
             borderBottom: '1px solid var(--gray-200)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
           }}>
-            <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--gray-800)' }}>
+            <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--gray-900)' }}>
               Notifications
             </span>
             {unread > 0 && (
@@ -129,7 +130,7 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
                 onClick={handleMarkAll}
                 style={{
                   background: 'none', border: 'none', color: 'var(--primary, #2563EB)',
-                  fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600, padding: 0
+                  fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700, padding: 0
                 }}
               >
                 Mark all read
@@ -160,8 +161,8 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
                     }
                   }}
                   style={{
-                    padding: '12px 16px', borderBottom: '1px solid var(--gray-100)',
-                    background: n.read ? 'white' : '#F0F9FF',
+                    padding: '12px 16px', borderBottom: '1px solid var(--gray-200)',
+                    background: n.read ? 'var(--surface-0)' : 'rgba(37, 99, 235, 0.08)',
                     cursor: 'pointer',
                     display: 'flex', gap: '10px',
                     transition: 'background 0.15s'
@@ -175,16 +176,16 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
                     <div style={{
                       fontSize: '0.8rem',
                       fontWeight: n.read ? 500 : 700,
-                      color: n.read ? 'var(--gray-600)' : 'var(--gray-900)',
+                      color: n.read ? 'var(--gray-700)' : 'var(--gray-900)',
                       lineHeight: '1.3'
                     }}>
                       {n.message}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--gray-400)' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--gray-500)' }}>
                         {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span style={{ fontSize: '0.72rem', color: '#2563EB', fontWeight: 700 }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--primary, #2563EB)', fontWeight: 700 }}>
                         {n.action_label || 'View Details →'}
                       </span>
                     </div>
@@ -200,10 +201,10 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
       {toastMessage && (
         <div style={{
           position: 'fixed', top: '24px', right: '24px', zIndex: 9999,
-          background: '#0F172A', color: '#F8FAFC', padding: '14px 20px',
+          background: 'var(--surface-0, #0F172A)', color: 'var(--gray-900, #F8FAFC)', padding: '14px 20px',
           borderRadius: '14px', boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
           display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.85rem',
-          fontWeight: 600, borderLeft: '6px solid #2563EB', animation: 'slideIn 0.3s ease-out'
+          fontWeight: 600, borderLeft: '6px solid #2563EB', border: '1px solid var(--gray-200)', animation: 'slideIn 0.3s ease-out'
         }}>
           <span style={{ fontSize: '1.2rem' }}>🔔</span>
           <div>{toastMessage}</div>
@@ -212,6 +213,9 @@ export default function NotificationBell({ userId, role }: NotificationBellProps
 
       {/* Styled animation tags */}
       <style>{`
+        .notif-item:hover {
+          background: var(--surface-2) !important;
+        }
         @keyframes pulse-ring {
           0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
           70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }

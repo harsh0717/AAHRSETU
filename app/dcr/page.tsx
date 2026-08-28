@@ -327,17 +327,17 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-                INSTITUTIONAL ADMINISTRATION
+                {t('dcr.hub_badge', 'INSTITUTIONAL ADMINISTRATION')}
               </span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
                 TAN: BLRA00000A · FY 2026-27
               </span>
             </div>
             <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
-              🏛️ Administration & Financial Control Hub
+              🏛️ {t('dcr.hub_title', 'Administration & Financial Control Hub')}
             </h1>
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
-              Institutional financial position, department requisition approvals, canteen settlements, and real-time audit ledger.
+              {t('dcr.hub_desc', 'Institutional financial position, department requisition approvals, canteen settlements, and real-time audit ledger.')}
             </p>
           </div>
 
@@ -358,7 +358,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 gap: '6px'
               }}
             >
-              📊 Financial Reports
+              📊 {t('nav.financial_reports', 'Financial Reports')}
             </Link>
             <Link
               href="/dcr/settlements"
@@ -377,7 +377,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 gap: '6px'
               }}
             >
-              💳 Settlements Hub
+              💳 {t('nav.settlements', 'Settlements Hub')}
             </Link>
           </div>
         </div>
@@ -429,17 +429,17 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
-                        AUDIT REVIEW QUEUE
+                        {t('dcr.pending_tile', 'AUDIT REVIEW QUEUE')}
                       </span>
                       <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {totalPending} REQUISITIONS
+                        {totalPending} {t('common.items', 'REQUISITIONS')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {totalPending}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Orders awaiting administrative verification & clearance
+                      {t('dcr.pending_tile_sub', 'Orders awaiting administrative verification & clearance')}
                     </div>
                   </div>
 
@@ -453,17 +453,17 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
-                        TOTAL PENDING DUES
+                        {t('dcr.settlements_tile', 'TOTAL PENDING DUES')}
                       </span>
                       <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {financialSummary?.pending_settlement_bills || 0} BILLS DUE
+                        {financialSummary?.pending_settlement_bills || 0} {t('bills.title', 'BILLS DUE')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: Number(financialSummary?.pending_settlement_total || 0) > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.5px' }}>
                       {financialSummary ? `₹${Number(financialSummary.pending_settlement_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹0.00'}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Total unsettled canteen payables awaiting clearance
+                      {t('dcr.settlements_tile_sub', 'Total unsettled canteen payables awaiting clearance')}
                     </div>
                   </div>
 
@@ -1010,7 +1010,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   {notifications.map(n => {
                     const loc = localizeNotificationMessage(n, lang);
                     return (
-                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? '#FAFAFA' : 'var(--sidebar-bg)', border: '1px solid var(--sidebar-border)', borderRadius: '10px' }}>
+                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? 'var(--surface-0)' : 'rgba(37, 99, 235, 0.08)', border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <span style={{ fontSize: '1.2rem' }}>🔔</span>
                         <div>

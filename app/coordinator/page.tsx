@@ -379,17 +379,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-                DEPARTMENT REQUISITIONS
+                {t('coord.dept_requisitions', 'DEPARTMENT REQUISITIONS')}
               </span>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                {session?.department_id ? `Department: ${session.department_id}` : 'Academic Department'} · FY 2026-27
+                {session?.department_id ? `${t('common.department', 'Department')}: ${session.department_id}` : t('common.department', 'Academic Department')} · FY 2026-27
               </span>
             </div>
             <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
-              🍽️ Department Coordinator Orders Hub
+              🍽️ {t('coord.orders_hub_title', 'Department Coordinator Orders Hub')}
             </h1>
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
-              Draft official canteen food requisitions, monitor Principal approval milestones, and track invoice statuses.
+              {t('coord.orders_hub_desc', 'Draft official canteen food requisitions, monitor Principal approval milestones, and track invoice statuses.')}
             </p>
           </div>
 
@@ -411,7 +411,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                 gap: '6px'
               }}
             >
-              ➕ Create Requisition
+              ➕ {t('coord.create_requisition', 'Create Requisition')}
             </button>
             <button
               onClick={() => setActiveTab('orders')}
@@ -429,7 +429,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                 gap: '6px'
               }}
             >
-              📋 My Orders ({totalMyOrders})
+              📋 {t('coord.my_orders_btn', 'My Orders')} ({totalMyOrders})
             </button>
           </div>
         </div>
@@ -463,17 +463,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
-                        PENDING APPROVALS
+                        {t('coord.pending_approvals', 'PENDING APPROVALS')}
                       </span>
                       <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        IN REVIEW PIPELINE
+                        {t('coord.in_review_pipeline', 'IN REVIEW PIPELINE')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {totalPending}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Requisitions awaiting Principal or Admin sign-off
+                      {t('coord.pending_sub', 'Requisitions awaiting Principal or Admin sign-off')}
                     </div>
                   </div>
 
@@ -487,17 +487,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
-                        COMPLETED REQUISITIONS
+                        {t('coord.completed_requisitions', 'COMPLETED REQUISITIONS')}
                       </span>
                       <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        FULFILLED & SERVED
+                        {t('coord.fulfilled_served', 'FULFILLED & SERVED')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {totalCompleted}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Successfully delivered campus orders
+                      {t('coord.completed_sub', 'Successfully delivered campus orders')}
                     </div>
                   </div>
 
@@ -511,17 +511,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
-                        TOTAL DEPARTMENT ORDERS
+                        {t('coord.total_dept_orders', 'TOTAL DEPARTMENT ORDERS')}
                       </span>
                       <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {totalRejected} REJECTED
+                        {totalRejected} {t('common.rejected', 'REJECTED')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
                       {totalMyOrders}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Lifetime orders recorded for this department
+                      {t('coord.total_orders_sub', 'Lifetime orders recorded for this department')}
                     </div>
                   </div>
                 </div>
@@ -529,15 +529,15 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                 {/* Quick actions & recent items */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
                   <div className="card" style={{ padding: '20px' }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🚀 Quick Requisitions</h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>Need catering for an official event or guest meeting? Open a new requisition instantly.</p>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🚀 {t('coord.quick_req_title', 'Quick Requisitions')}</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '16px' }}>{t('coord.quick_req_desc', 'Need catering for an official event or guest meeting? Open a new requisition instantly.')}</p>
                     <button className="btn btn-primary" onClick={() => setActiveTab('create')}>
-                      ➕ Create New Requisition
+                      ➕ {t('coord.create_new_btn', 'Create New Requisition')}
                     </button>
                   </div>
 
                   <div className="card" style={{ padding: '20px' }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🔔 Recent Notifications</h3>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '12px' }}>🔔 {t('coord.recent_notifs_title', 'Recent Notifications')}</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {notifications.slice(0, 3).map(n => (
                         <div key={n.id} style={{ display: 'flex', gap: '8px', fontSize: '0.8rem', borderBottom: '1px solid var(--gray-100)', paddingBottom: '6px' }}>
@@ -545,9 +545,9 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                           <span style={{ color: n.read ? 'var(--gray-600)' : 'var(--gray-900)', fontWeight: n.read ? 500 : 700 }}>{n.message}</span>
                         </div>
                       ))}
-                      {notifications.length === 0 && <div style={{ fontSize: '0.8rem', color: 'var(--gray-400)' }}>No notifications.</div>}
+                      {notifications.length === 0 && <div style={{ fontSize: '0.8rem', color: 'var(--gray-400)' }}>{t('coord.no_notifs', 'No notifications.')}</div>}
                       <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start', padding: 0 }} onClick={() => setActiveTab('notifications')}>
-                        View all notifications
+                        {t('coord.view_all_notifs', 'View all notifications')}
                       </button>
                     </div>
                   </div>
@@ -1251,7 +1251,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                   {notifications.map(n => {
                     const loc = localizeNotificationMessage(n, lang);
                     return (
-                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? '#FAFAFA' : 'var(--sidebar-bg)', border: '1px solid var(--sidebar-border)', borderRadius: '10px' }}>
+                    <div key={n.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: n.read ? 'var(--surface-0)' : 'rgba(37, 99, 235, 0.08)', border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <span style={{ fontSize: '1.2rem' }}>🔔</span>
                         <div>

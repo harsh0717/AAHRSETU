@@ -582,7 +582,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: white;
+  background: var(--surface-0);
   border: 2px solid var(--gray-300);
   display: flex;
   align-items: center;
@@ -669,8 +669,8 @@
   gap: 10px;
   padding: 14px;
   border-radius: 14px;
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: var(--surface-0);
+  border: 1.5px solid var(--gray-200);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
@@ -679,14 +679,15 @@
 
 .roleCard:hover {
   border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.06);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
 .roleSelected {
-  border-color: var(--primary);
-  background: #EEF2FF;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+  border-color: var(--primary) !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18) !important;
 }
 
 .roleSelectedIcon {
@@ -696,38 +697,41 @@
   font-size: 0.7rem;
   background: var(--primary);
   color: white;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .roleIcon {
   font-size: 1.8rem;
-  background: var(--gray-50);
+  background: var(--surface-2);
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .roleSelected .roleIcon {
-  background: white;
+  background: var(--primary);
+  color: white;
 }
 
 .roleName {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--gray-700);
+  color: var(--gray-800);
 }
 
 .roleSelected .roleName {
-  color: var(--primary);
+  color: var(--primary) !important;
+  font-weight: 800;
 }
 
 /* Department chips layout options */
@@ -740,12 +744,12 @@
 
 .deptChip {
   padding: 10px 12px;
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: var(--surface-0);
+  border: 1.5px solid var(--gray-200);
   border-radius: 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--gray-700);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gray-800);
   text-align: center;
   cursor: pointer;
   transition: all 0.15s;
@@ -753,14 +757,15 @@
 
 .deptChip:hover {
   border-color: var(--primary);
-  background: var(--gray-50);
+  background: var(--surface-2);
+  color: var(--gray-900);
 }
 
 .deptSelected {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.15);
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25) !important;
 }
 
 /* Input boxes with modern styles */
@@ -797,19 +802,19 @@
   height: 44px;
   padding: 0 14px 0 40px;
   border-radius: 12px;
-  border: 1px solid var(--gray-200);
+  border: 1.5px solid var(--gray-200);
   font-size: 0.88rem;
   font-weight: 500;
   color: var(--gray-900);
   transition: all 0.2s;
-  background: white;
+  background: var(--surface-0);
   box-sizing: border-box;
   outline: none;
 }
 
 .input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .togglePassBtn {

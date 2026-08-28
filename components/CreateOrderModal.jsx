@@ -142,10 +142,10 @@ export default function CreateOrderModal({ session, onCreated, onClose }) {
               ) : (
                 vendors.map(vendor => (
                   <div key={vendor.id} style={{ marginBottom: '16px', border: '1.5px solid var(--gray-200)', borderRadius: '12px', overflow: 'hidden' }}>
-                    <div style={{ padding: '10px 16px', background: '#F8FAFC', borderBottom: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ padding: '10px 16px', background: 'var(--surface-1)', borderBottom: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '1.1rem' }}>🍽️</span>
                       <strong style={{ fontSize: '0.9rem' }}>{vendor.name}</strong>
-                      <span style={{ fontSize: '0.75rem', color: '#059669', background: '#DCFCE7', padding: '1px 8px', borderRadius: '10px', fontWeight: 700 }}>Open</span>
+                      <span style={{ fontSize: '0.75rem', color: '#059669', background: 'rgba(16,185,129,0.15)', padding: '1px 8px', borderRadius: '10px', fontWeight: 700 }}>Open</span>
                     </div>
                     <div style={{ padding: '8px 0' }}>
                       {vendor.menu.map(item => {
@@ -154,7 +154,7 @@ export default function CreateOrderModal({ session, onCreated, onClose }) {
                           <div key={item.id} style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                             padding: '8px 16px',
-                            background: qty > 0 ? '#EFF6FF' : 'transparent',
+                            background: qty > 0 ? 'rgba(37, 99, 235, 0.12)' : 'transparent',
                             transition: 'background 0.15s',
                           }}>
                             <div>
@@ -168,7 +168,7 @@ export default function CreateOrderModal({ session, onCreated, onClose }) {
                                 −
                               </button>
                               <input type="number" min={0} value={qty} onChange={e => setQty(item, e.target.value)}
-                                style={{ width: '44px', textAlign: 'center', border: '1px solid var(--gray-200)', borderRadius: '6px', padding: '3px', fontSize: '0.875rem', fontWeight: 700 }} />
+                                style={{ width: '44px', textAlign: 'center', border: '1px solid var(--gray-200)', borderRadius: '6px', padding: '3px', fontSize: '0.875rem', fontWeight: 700, background: 'var(--surface-0)', color: 'var(--gray-900)' }} />
                               <button onClick={() => setQty(item, qty + 1)}
                                 style={{ width: '28px', height: '28px', borderRadius: '50%', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>
                                 +
@@ -182,7 +182,7 @@ export default function CreateOrderModal({ session, onCreated, onClose }) {
                 ))
               )}
               {selectedItems.length > 0 && (
-                <div style={{ padding: '10px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '8px', fontSize: '0.875rem', color: '#1D4ED8', fontWeight: 600 }}>
+                <div style={{ padding: '10px 14px', background: 'rgba(37, 99, 235, 0.12)', border: '1px solid var(--primary)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--primary)', fontWeight: 600 }}>
                   ✅ {selectedItems.length} item type(s) · {totalItems} {t('orders.total_items')} selected
                 </div>
               )}
@@ -203,7 +203,7 @@ export default function CreateOrderModal({ session, onCreated, onClose }) {
                 const vendorItems = selectedItems.filter(i => i.vendorId === vendor.id);
                 return (
                   <div key={vendor.id} style={{ marginBottom: '12px', border: '1px solid var(--gray-200)', borderRadius: '10px', overflow: 'hidden' }}>
-                    <div style={{ padding: '8px 14px', background: '#F8FAFC', fontWeight: 700, fontSize: '0.8125rem', color: 'var(--gray-700)' }}>
+                    <div style={{ padding: '8px 14px', background: 'var(--surface-1)', fontWeight: 700, fontSize: '0.8125rem', color: 'var(--gray-700)' }}>
                       🍽️ {vendor.name}
                     </div>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>

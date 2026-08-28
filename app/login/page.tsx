@@ -407,7 +407,7 @@ export default function LoginPage() {
                   >
                     {role === r.id && <span className={styles.roleSelectedIcon}>✓</span>}
                     <div className={styles.roleIcon} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <AppIcon name={r.icon as any} size={26} color={role === r.id ? '#2563EB' : '#64748B'} />
+                      <AppIcon name={r.icon as any} size={26} color={role === r.id ? '#FFFFFF' : 'var(--gray-500, #94A3B8)'} />
                     </div>
                     <div className={styles.roleName}>{t(`role.${r.id}`, r.label)}</div>
                   </div>

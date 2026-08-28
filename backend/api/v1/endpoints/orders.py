@@ -33,14 +33,12 @@ def read_orders(
     role = current_user.role
     
     if role == "coordinator":
-        orders = order_repo.get_by_coordinator(current_user.id)
+        orders = order_repo.get_by_coordinator(current_user.id, current_user.department_id)
     elif role == "principal":
         dept_ids = [d.id for d in current_user.managed_departments]
-        import logging
-        logger = logging.getLogger("aharsetu-api")
-        logger.info(f"[DEBUG READ_ORDERS] Principal user: {current_user.email}, managed depts: {dept_ids}")
-        orders = order_repo.get_by_departments(dept_ids)
-        logger.info(f"[DEBUG READ_ORDERS] Retrieved {len(orders)} orders: {[o.id for o in orders]}")
+        if current_user.department_id and current_user.department_id not in dept_ids:
+            dept_ids.append(current_user.department_id)
+        orders = order_repo.get_by_departments(dept_ids, principal_id=current_user.id)
     elif role == "vendor":
         orders = order_repo.get_by_vendor(current_user.vendor_id)
     else:
@@ -960,10 +958,32 @@ async def complete_order(
 @router.post("/clear-all", status_code=status.HTTP_200_OK)
 @router.post("/system/reset", status_code=status.HTTP_200_OK)
 def reset_database(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.check_role(["admin"]))
 ) -> Dict[str, str]:
     """
-    Clear all database orders, bills, and transaction tables and reset to fresh state.
+    Controlled admin-only reset: Clear transactional order/bill/settlement data while preserving
+    users, vendors, menu items, departments, and system configuration.
     """
-    seed_all_database(db)
+    from backend.models import (
+        Payment, Bill, Settlement, VendorOrderItem,
+        VendorOrderModification, VendorOrder, ApprovalHistory, MasterOrder,
+        VendorMonthlySettlement, Notification
+    )
+    db.query(Payment).delete()
+    db.query(Bill).delete()
+    db.query(Settlement).delete()
+    db.query(VendorOrderItem).delete()
+    db.query(VendorOrderModification).delete()
+    db.query(VendorOrder).delete()
+    db.query(ApprovalHistory).delete()
+    db.query(MasterOrder).delete()
+    db.query(VendorMonthlySettlement).delete()
+    db.query(Notification).delete()
+    
+    # Zero out vendor revenue
+    from backend.models.vendor import Vendor
+    db.query(Vendor).update({"revenue": 0.0})
+    db.commit()
+
     return {"message": "All orders, bills, and transactions successfully cleared from database."}

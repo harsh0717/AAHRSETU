@@ -65,64 +65,6 @@ const LOCAL_ORDERS_KEY = 'aharsetu_orders_v5';
 
 const FALLBACK_ORDERS: MasterOrder[] = [];
 
-// Automatic one-time client purge of records to guarantee a clean fresh start & sync
-if (typeof window !== 'undefined') {
-  try {
-    const FRESH_KEY = 'aharsetu_fresh_start_2026_08_25_v9';
-    if (!localStorage.getItem(FRESH_KEY)) {
-      const keysToRemove = [
-        'aharsetu_orders_v1',
-        'aharsetu_orders_v2',
-        'aharsetu_orders_v3',
-        'aharsetu_orders_v4',
-        'aharsetu_orders_v5',
-        'aharsetu_bills',
-        'aharsetu_bills_v1',
-        'aharsetu_settlements',
-        'aharsetu_settlements_v1',
-        'aharsetu_settlements_v2',
-        'aharsetu_settlements_v4',
-        'aharsetu_notifications_v1',
-        'aharsetu_notifications_v2',
-        'aharsetu_notifications_v3',
-        'aharsetu_notifications_v3.7',
-        'aharsetu_notifications_v4',
-        'aharsetu_audit_logs_v1',
-        'aharsetu_audit_logs_v2',
-        'aharsetu_audit_logs_v3',
-        'aharsetu_custom_orders',
-        'aharsetu_fresh_v2',
-        'aharsetu_fresh_start_2026_08_25_v6',
-        'aharsetu_fresh_start_2026_08_25_v7',
-        'aharsetu_fresh_start_2026_08_25_v8',
-        'aharsetu_offline_session',
-        // Purge stale local caches so latest server data syncs cleanly
-        'aharsetu_vendors_v1',
-        'aharsetu_vendors_v2',
-        'aharsetu_vendors_v3',
-        'aharsetu_menus_v1',
-        'aharsetu_menus_v2',
-        'aharsetu_menus_v3',
-        'aharsetu_menus_v3_v1',
-        'aharsetu_menus_v3_v2',
-        'aharsetu_menus_v3_v3',
-        'aharsetu_menus_v3_v4',
-      ];
-      keysToRemove.forEach(k => localStorage.removeItem(k));
-      // Also clear stale access tokens that may be offline-session tokens
-      const staleToken = localStorage.getItem('aharsetu_access_token');
-      if (staleToken && (staleToken.startsWith('mock-token-') || staleToken.startsWith('offline-session-'))) {
-        localStorage.removeItem('aharsetu_access_token');
-        localStorage.removeItem('aharsetu_refresh_token');
-        sessionStorage.removeItem('aharsetu_access_token');
-        sessionStorage.removeItem('aharsetu_refresh_token');
-      }
-      localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
-      localStorage.setItem(FRESH_KEY, 'true');
-    }
-  } catch {}
-}
-
 
 function sanitizeOrderItems(orders: MasterOrder[]): MasterOrder[] {
   return orders.map(o => {
@@ -388,7 +330,6 @@ export async function createMasterOrder(orderData: {
       department_id: orderData.department_id || deptId
     });
     if (res) {
-      // Auto-submit: advance status from 'Created' → 'Sent for Approval' (or 'Principal Approved' for principals)
       let finalOrder = res;
       try {
         const submitted = await api.post<MasterOrder>(`/orders/${res.id}/submit`);
@@ -408,21 +349,11 @@ export async function createMasterOrder(orderData: {
       }
       return finalOrder;
     }
-  } catch (err) {
-    // Backend offline, fallback creation
+    throw new Error('No response from backend');
+  } catch (err: any) {
+    console.error('[STORE] Database order creation failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to create requisition in database');
   }
-
-  // Offline fallback: create locally and mark as submitted
-  newOrder.status = isPrincipal ? 'Principal Approved' : 'Sent for Approval';
-  const localList = getLocalOrders();
-  localList.unshift(newOrder);
-  saveLocalOrders(localList);
-  if (isPrincipal) {
-    pushNotification(`New requisition ${newOrder.id} created by Principal requiring DCR audit.`, 'dcr', newOrder.id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
-  } else {
-    pushNotification(`New requisition ${newOrder.id} submitted for approval.`, 'principal', newOrder.id, { type: 'ORDER_SUBMITTED_FOR_PRINCIPAL' });
-  }
-  return newOrder;
 }
 
 export async function updateMasterOrder(
@@ -617,6 +548,12 @@ export async function principalReview(
       { remarks }
     );
     if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
+
       if (action === 'approve') {
         pushNotification(`Requisition ${id} was approved by Principal.`, 'coordinator', id, { type: 'PRINCIPAL_APPROVED' });
         pushNotification(`New requisition ${id} requires DCR budget audit.`, 'dcr', id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
@@ -625,34 +562,11 @@ export async function principalReview(
       }
       return res;
     }
-  } catch (err) {
-    console.warn('[STORE] Backend offline, processing principal review locally');
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[STORE] Principal review failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to submit principal review');
   }
-
-  const localList = getLocalOrders();
-  const target = localList.find(o => o.id === id);
-  if (target) {
-    target.status = action === 'approve' ? 'Principal Approved' : 'Principal Rejected';
-    target.updated_at = new Date().toISOString();
-    target.history.push({
-      action: action === 'approve' ? 'Principal Approved' : 'Principal Rejected',
-      role: 'principal',
-      user_name: 'Dr. Arvind Mehta',
-      remarks: remarks || 'Reviewed by Principal',
-      timestamp: new Date().toISOString(),
-      master_order_id: id
-    });
-    saveLocalOrders(localList);
-
-    if (action === 'approve') {
-      pushNotification(`Requisition ${id} was approved by Principal.`, 'coordinator', id, { type: 'PRINCIPAL_APPROVED' });
-      pushNotification(`New requisition ${id} requires DCR budget audit.`, 'dcr', id, { type: 'ORDER_SUBMITTED_FOR_DCR' });
-    } else {
-      pushNotification(`Requisition ${id} was rejected by Principal. Remarks: ${remarks || 'None'}`, 'coordinator', id, { type: 'PRINCIPAL_REJECTED' });
-    }
-    return target;
-  }
-  throw new Error('Order not found');
 }
 
 export async function dcrReview(
@@ -666,6 +580,12 @@ export async function dcrReview(
       { remarks }
     );
     if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
+
       if (action === 'approve') {
         pushNotification(`Requisition ${id} cleared DCR audit and dispatched to vendor.`, 'coordinator', id, { type: 'DCR_APPROVED' });
         pushNotification(`New kitchen order ${id} available for canteen processing.`, 'vendor', id, { type: 'VENDOR_ORDER_ASSIGNED' });
@@ -674,34 +594,11 @@ export async function dcrReview(
       }
       return res;
     }
-  } catch (err) {
-    console.warn('[STORE] Backend offline, processing DCR review locally');
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[STORE] DCR review failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to submit DCR review');
   }
-
-  const localList = getLocalOrders();
-  const target = localList.find(o => o.id === id);
-  if (target) {
-    target.status = action === 'approve' ? 'Vendor Processing' : 'DCR Rejected';
-    target.updated_at = new Date().toISOString();
-    target.history.push({
-      action: action === 'approve' ? 'DCR Approved & Forwarded' : 'DCR Rejected',
-      role: 'dcr',
-      user_name: 'S. Patil',
-      remarks: remarks || 'Budget reviewed by DCR',
-      timestamp: new Date().toISOString(),
-      master_order_id: id
-    });
-    saveLocalOrders(localList);
-
-    if (action === 'approve') {
-      pushNotification(`Requisition ${id} cleared DCR audit and dispatched to vendor.`, 'coordinator', id, { type: 'DCR_APPROVED' });
-      pushNotification(`New kitchen order ${id} available for canteen processing.`, 'vendor', id, { type: 'VENDOR_ORDER_ASSIGNED' });
-    } else {
-      pushNotification(`Requisition ${id} was rejected during DCR audit. Remarks: ${remarks || 'None'}`, 'coordinator', id, { type: 'DCR_REJECTED' });
-    }
-    return target;
-  }
-  throw new Error('Order not found');
 }
 
 export async function setVendorPrices(
@@ -714,62 +611,19 @@ export async function setVendorPrices(
       prices
     );
     if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
       pushNotification(`Canteen vendor confirmed pricing for order ${res.id}.`, 'coordinator', res.id, { type: 'VENDOR_CONFIRMED' });
       return res;
     }
-  } catch (err) {
-    console.warn('[STORE] Backend offline, confirming pricing locally');
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[STORE] Confirm pricing failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to confirm vendor pricing');
   }
-
-  const localList = getLocalOrders();
-  let updatedMaster: MasterOrder | null = null;
-  for (const o of localList) {
-    const vo = o.vendor_orders.find(v => v.id === vendorOrderId);
-    if (vo) {
-      vo.status = 'Vendor Confirmed';
-      vo.invoice_number = `INV-${o.id}-${vo.vendor_id.toUpperCase()}`;
-      let total = 0;
-      vo.items.forEach(it => {
-        if (prices[it.name] !== undefined) it.price = prices[it.name];
-        else if (it.menu_item_id && prices[it.menu_item_id] !== undefined) it.price = prices[it.menu_item_id];
-        total += it.price * it.quantity;
-      });
-      vo.bill_amount = total;
-
-      // Master order is ONLY completed when ALL active non-rejected vendors have confirmed
-      const activeVOs = o.vendor_orders.filter(v => v.status !== 'Vendor Rejected');
-      const allActiveConfirmed = activeVOs.length > 0 && activeVOs.every(v => v.status === 'Vendor Confirmed');
-
-      if (allActiveConfirmed) {
-        o.status = 'Completed';
-        o.bill_generated_at = new Date().toISOString();
-        const confirmedVOs = o.vendor_orders.filter(v => v.status === 'Vendor Confirmed');
-        o.total_bill_amount = confirmedVOs.reduce((sum, v) => sum + v.bill_amount, 0);
-        pushNotification(`Requisition ${o.id} automatically completed after all vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'coordinator', o.id);
-        pushNotification(`Order ${o.id} completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'principal', o.id);
-        pushNotification(`Order ${o.id} completed after vendor confirmations. Invoice ${vo.invoice_number} generated.`, 'dcr', o.id);
-      } else {
-        o.status = 'Vendor Processing';
-        pushNotification(`Vendor ${vo.vendor_name} confirmed sub-order ${vo.id}. Awaiting remaining canteen confirmations.`, 'coordinator', o.id);
-      }
-
-      o.history.push({
-        action: allActiveConfirmed ? 'Order Automatically Completed' : 'Vendor Confirmed Sub-Order',
-        role: 'vendor',
-        user_name: vo.vendor_name || 'Vendor',
-        remarks: `Invoice ${vo.invoice_number} generated. Subtotal ₹${total}`,
-        timestamp: new Date().toISOString(),
-        master_order_id: o.id
-      });
-      updatedMaster = o;
-      break;
-    }
-  }
-  if (updatedMaster) {
-    saveLocalOrders(localList);
-    return updatedMaster;
-  }
-  throw new Error('Vendor order not found');
 }
 
 export async function rejectVendorOrder(
@@ -785,55 +639,16 @@ export async function rejectVendorOrder(
       const localList = getLocalOrders();
       const idx = localList.findIndex(o => o.id === res.id);
       if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
       saveLocalOrders(localList);
       pushNotification(`Vendor rejected sub-order in requisition ${res.id}. Reason: ${reason}`, 'coordinator', res.id, { type: 'VENDOR_REJECTED' });
       return res;
     }
-  } catch (err) {
-    console.warn('[STORE] Backend offline, rejecting vendor order locally');
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[STORE] Reject vendor order failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to reject vendor order');
   }
-
-  const localList = getLocalOrders();
-  let updatedMaster: MasterOrder | null = null;
-  for (const o of localList) {
-    const vo = o.vendor_orders.find(v => v.id === vendorOrderId);
-    if (vo) {
-      vo.status = 'Vendor Rejected';
-      vo.bill_amount = 0;
-
-      const activeVOs = o.vendor_orders.filter(v => v.status !== 'Vendor Rejected');
-      const confirmedVOs = o.vendor_orders.filter(v => v.status === 'Vendor Confirmed');
-
-      if (activeVOs.length === 0) {
-        o.status = 'Vendor Rejected';
-        pushNotification(`Requisition ${o.id} was rejected by all canteen vendors. Reason: ${reason}`, 'coordinator', o.id);
-      } else if (confirmedVOs.length > 0 && activeVOs.every(v => v.status === 'Vendor Confirmed')) {
-        o.status = 'Completed';
-        o.bill_generated_at = new Date().toISOString();
-        o.total_bill_amount = confirmedVOs.reduce((sum, v) => sum + v.bill_amount, 0);
-        pushNotification(`Requisition ${o.id} completed with ${confirmedVOs.length} confirmed canteen bill(s). Sub-order ${vo.id} rejected by ${vo.vendor_name}.`, 'coordinator', o.id);
-      } else {
-        o.status = 'Vendor Processing';
-        pushNotification(`Vendor ${vo.vendor_name || 'Canteen'} rejected sub-order ${vo.id}. Reason: ${reason}`, 'coordinator', o.id);
-      }
-
-      o.history.push({
-        action: 'Vendor Rejected Sub-Order',
-        role: 'vendor',
-        user_name: vo.vendor_name || 'Vendor',
-        remarks: `Sub-order rejected. Reason: ${reason}`,
-        timestamp: new Date().toISOString(),
-        master_order_id: o.id
-      });
-      updatedMaster = o;
-      break;
-    }
-  }
-  if (updatedMaster) {
-    saveLocalOrders(localList);
-    return updatedMaster;
-  }
-  throw new Error('Vendor order not found');
 }
 
 export async function requestVendorModification(
@@ -846,69 +661,37 @@ export async function requestVendorModification(
       `/orders/vendor-order/${vendorOrderId}/request-modification`,
       { reason, type }
     );
-    if (res) return res;
-  } catch (err) {
-    console.warn('[STORE] Backend offline, requesting modification locally');
-  }
-
-  const localList = getLocalOrders();
-  let updatedMaster: MasterOrder | null = null;
-  for (const o of localList) {
-    const vo = o.vendor_orders.find(v => v.id === vendorOrderId);
-    if (vo) {
-      o.status = 'Vendor Clarification Required';
-      vo.modification = {
-        id: Date.now(),
-        vendor_order_id: vendorOrderId,
-        reason,
-        type,
-        requested_at: new Date().toISOString(),
-        status: 'Pending'
-      };
-      o.history.push({
-        action: 'Vendor Clarification Requested',
-        role: 'vendor',
-        user_name: vo.vendor_name || 'Vendor',
-        remarks: `Requested ${type} modification: ${reason}`,
-        timestamp: new Date().toISOString(),
-        master_order_id: o.id
-      });
-      updatedMaster = o;
-      break;
+    if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
+      return res;
     }
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[STORE] Request modification failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to request modification');
   }
-  if (updatedMaster) {
-    saveLocalOrders(localList);
-    return updatedMaster;
-  }
-  throw new Error('Vendor order not found');
 }
 
 export async function completeMasterOrder(id: string): Promise<MasterOrder> {
   try {
     const res = await api.post<MasterOrder>(`/orders/${id}/complete`);
-    if (res) return res;
-  } catch (err) {
-    console.warn('[STORE] Backend offline, completing order locally');
+    if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
+      return res;
+    }
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[STORE] Complete order failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to complete order');
   }
-
-  const localList = getLocalOrders();
-  const target = localList.find(o => o.id === id);
-  if (target) {
-    target.status = 'Completed';
-    target.updated_at = new Date().toISOString();
-    target.history.push({
-      action: 'Order Completed & Settled',
-      role: 'admin',
-      user_name: 'Admin',
-      remarks: 'Order finalized and settled',
-      timestamp: new Date().toISOString(),
-      master_order_id: id
-    });
-    saveLocalOrders(localList);
-    return target;
-  }
-  throw new Error('Order not found');
 }
 
 export async function completeOrder(id: string): Promise<MasterOrder> {
@@ -925,37 +708,19 @@ export async function resolveModification(
       `/orders/modification/${modId}/resolve?action=${action}`,
       { resolution_note: resolutionNote }
     );
-    if (res) return res;
-  } catch (err) {
-    console.warn('[STORE] Backend offline, resolving modification locally');
-  }
-
-  const localList = getLocalOrders();
-  let updatedMaster: MasterOrder | null = null;
-  for (const o of localList) {
-    for (const vo of o.vendor_orders) {
-      if (vo.modification && vo.modification.id === modId) {
-        vo.modification.status = action === 'accept' ? 'Accepted' : 'Rejected';
-        o.status = action === 'accept' ? 'Vendor Processing' : 'Pending';
-        o.history.push({
-          action: `Modification ${action === 'accept' ? 'Accepted' : 'Rejected'}`,
-          role: 'coordinator',
-          user_name: 'Coordinator',
-          remarks: resolutionNote || `Modification request ${action}ed`,
-          timestamp: new Date().toISOString(),
-          master_order_id: o.id
-        });
-        updatedMaster = o;
-        break;
-      }
+    if (res) {
+      const localList = getLocalOrders();
+      const idx = localList.findIndex(o => o.id === res.id);
+      if (idx >= 0) localList[idx] = res;
+      else localList.unshift(res);
+      saveLocalOrders(localList);
+      return res;
     }
-    if (updatedMaster) break;
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[STORE] Resolve modification failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to resolve modification');
   }
-  if (updatedMaster) {
-    saveLocalOrders(localList);
-    return updatedMaster;
-  }
-  throw new Error('Modification request not found');
 }
 
 export async function resetAllData(): Promise<void> {

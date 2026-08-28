@@ -29,21 +29,28 @@ class OrderRepository(BaseRepository[MasterOrder]):
     def get_by_id(self, order_id: str) -> Optional[MasterOrder]:
         return _eager_order_query(self.db).filter(MasterOrder.id == order_id).first()
 
-    def get_by_coordinator(self, coordinator_id: int) -> List[MasterOrder]:
-        return (
-            _eager_order_query(self.db)
-            .filter(MasterOrder.created_by_id == coordinator_id)
-            .order_by(MasterOrder.created_at.desc())
-            .all()
-        )
+    def get_by_coordinator(self, coordinator_id: int, department_id: Optional[str] = None) -> List[MasterOrder]:
+        query = _eager_order_query(self.db)
+        if department_id:
+            query = query.filter(
+                (MasterOrder.created_by_id == coordinator_id) |
+                (MasterOrder.department_id == department_id)
+            )
+        else:
+            query = query.filter(MasterOrder.created_by_id == coordinator_id)
+        return query.order_by(MasterOrder.created_at.desc()).all()
 
-    def get_by_departments(self, department_ids: List[str]) -> List[MasterOrder]:
-        return (
-            _eager_order_query(self.db)
-            .filter(MasterOrder.department_id.in_(department_ids))
-            .order_by(MasterOrder.created_at.desc())
-            .all()
-        )
+    def get_by_departments(self, department_ids: List[str], principal_id: Optional[int] = None) -> List[MasterOrder]:
+        query = _eager_order_query(self.db)
+        conditions = []
+        if department_ids:
+            conditions.append(MasterOrder.department_id.in_(department_ids))
+        if principal_id:
+            conditions.append(MasterOrder.created_by_id == principal_id)
+        if conditions:
+            from sqlalchemy import or_
+            query = query.filter(or_(*conditions))
+        return query.order_by(MasterOrder.created_at.desc()).all()
 
     def get_by_vendor(self, vendor_id: str) -> List[MasterOrder]:
         return (

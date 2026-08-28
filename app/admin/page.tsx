@@ -363,15 +363,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       }
     }).catch(() => {});
 
-    // Auto-wipe demo data once on client load if legacy keys exist
-    if (typeof window !== 'undefined' && !localStorage.getItem('aharsetu_fresh_zero_v3')) {
-      resetAllData().then(() => {
-        try { localStorage.setItem('aharsetu_fresh_zero_v3', 'true'); } catch {}
-        loadDashboardData();
-      });
-    } else {
-      loadDashboardData();
-    }
+    // Load live dashboard data directly from the database without destructive client wipes
+    loadDashboardData();
 
     const handleOrderChanged = () => { loadDashboardData(true); };
     const handleUserChanged = () => { loadDashboardData(true); };

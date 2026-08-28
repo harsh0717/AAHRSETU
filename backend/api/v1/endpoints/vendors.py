@@ -607,12 +607,16 @@ def sync_monthly_settlements(db: Session):
     # 1. Tally billed amounts from Bills
     bills = db.query(Bill).all()
     billed_by_vendor_month = defaultdict(float)
+    settled_billed_by_vendor_month = defaultdict(float)
     
     for b in bills:
         if b.vendor_id and b.amount:
             dt = b.generated_at or now
             m_str = f"{dt.year:04d}-{dt.month:02d}"
-            billed_by_vendor_month[(b.vendor_id, m_str)] += float(b.amount)
+            amt = float(b.amount)
+            billed_by_vendor_month[(b.vendor_id, m_str)] += amt
+            if b.settlement_status == 'SETTLED':
+                settled_billed_by_vendor_month[(b.vendor_id, m_str)] += amt
             
     # 2. Also tally completed vendor orders if bills not yet generated
     completed_orders = db.query(VendorOrder).filter(VendorOrder.status.in_(["Completed", "Vendor Confirmed"])).all()
@@ -650,7 +654,7 @@ def sync_monthly_settlements(db: Session):
             ).first()
             
             calc_total = billed_by_vendor_month[(vendor.id, month)]
-            calc_paid = paid_by_vendor_month[(vendor.id, month)]
+            calc_paid = max(paid_by_vendor_month[(vendor.id, month)], settled_billed_by_vendor_month[(vendor.id, month)])
             
             if not s:
                 actual_paid = calc_paid

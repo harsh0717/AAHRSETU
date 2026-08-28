@@ -22,11 +22,12 @@ def _check_bill_access(bill: Bill, user: User) -> bool:
     if user.role in ["admin", "dcr", "administration"]:
         return True
     elif user.role == "principal":
-        # Check if department is managed by principal
         principal_depts = [d.id for d in user.managed_departments]
-        return bill.department_id in principal_depts and bill.vendor_id is None
+        if user.department_id and user.department_id not in principal_depts:
+            principal_depts.append(user.department_id)
+        return bill.department_id in principal_depts
     elif user.role == "coordinator":
-        return bill.department_id == user.department_id and bill.vendor_id is None
+        return bill.department_id == user.department_id
     elif user.role == "vendor":
         return bill.vendor_id == user.vendor_id
     return False
@@ -63,17 +64,23 @@ def read_bills(
             query = query.filter(Bill.vendor_id == None)
     elif current_user.role == "principal":
         principal_depts = [d.id for d in current_user.managed_departments]
-        query = query.filter(
-            Bill.department_id.in_(principal_depts),
-            Bill.vendor_id == None
-        )
+        if current_user.department_id and current_user.department_id not in principal_depts:
+            principal_depts.append(current_user.department_id)
+        if not principal_depts:
+            return {"items": [], "total": 0, "page": page, "page_size": page_size, "total_pages": 0}
+        query = query.filter(Bill.department_id.in_(principal_depts))
+        if bill_type == "vendor":
+            query = query.filter(Bill.vendor_id != None)
+        elif bill_type == "master":
+            query = query.filter(Bill.vendor_id == None)
     elif current_user.role == "coordinator":
         if not current_user.department_id:
             return {"items": [], "total": 0, "page": page, "page_size": page_size, "total_pages": 0}
-        query = query.filter(
-            Bill.department_id == current_user.department_id,
-            Bill.vendor_id == None
-        )
+        query = query.filter(Bill.department_id == current_user.department_id)
+        if bill_type == "vendor":
+            query = query.filter(Bill.vendor_id != None)
+        elif bill_type == "master":
+            query = query.filter(Bill.vendor_id == None)
     elif current_user.role == "vendor":
         if not current_user.vendor_id:
             return {"items": [], "total": 0, "page": page, "page_size": page_size, "total_pages": 0}

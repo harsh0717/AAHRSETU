@@ -805,9 +805,19 @@ def finalize_settlement(
             VendorMonthlySettlement.month == month_str
         ).first()
         if vms:
-            vms.paid_amount = v_amount
-            vms.due_amount = 0.0
-            vms.status = "Settled"
+            vms.paid_amount = max(float(vms.paid_amount or 0.0), v_amount)
+            vms.due_amount = max(0.0, float(vms.total_amount or 0.0) - vms.paid_amount)
+            vms.status = "Settled" if vms.due_amount <= 0.0 else "Partially Settled"
+            db.add(vms)
+        else:
+            vms = VendorMonthlySettlement(
+                vendor_id=v_id,
+                month=month_str,
+                total_amount=v_amount,
+                paid_amount=v_amount,
+                due_amount=0.0,
+                status="Settled"
+            )
             db.add(vms)
 
     db.commit()

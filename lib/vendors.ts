@@ -622,42 +622,11 @@ export async function updateMonthlySettlement(
       saveLocalSettlements(list);
       return res;
     }
-  } catch (err) {
-    console.warn('[SETTLEMENTS] API update failed, saving locally');
+    throw new Error('No response from server');
+  } catch (err: any) {
+    console.error('[SETTLEMENTS] API update failed:', err);
+    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to update monthly settlement');
   }
-
-  const list = getLocalSettlements();
-  let target = list.find(s => s.vendor_id === vendorId && s.month === month);
-  
-  if (!target) {
-    target = {
-      id: Date.now(),
-      vendor_id: vendorId,
-      month,
-      total_amount: totalAmount,
-      paid_amount: paidAmount,
-      due_amount: Math.max(0.0, totalAmount - paidAmount),
-      status: 'Pending',
-      updated_at: new Date().toISOString(),
-    };
-    list.push(target);
-  } else {
-    target.total_amount = totalAmount;
-    target.paid_amount = paidAmount;
-    target.due_amount = Math.max(0.0, totalAmount - paidAmount);
-    target.updated_at = new Date().toISOString();
-  }
-
-  if (target.due_amount <= 0) {
-    target.status = 'Settled';
-  } else if (target.paid_amount > 0) {
-    target.status = 'Partially Settled';
-  } else {
-    target.status = 'Pending';
-  }
-
-  saveLocalSettlements(list);
-  return target;
 }
 
 

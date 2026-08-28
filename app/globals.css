@@ -58,6 +58,50 @@
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── Dark Mode Tokens ───────────────────────────────────────────────────────── */
+[data-theme="dark"],
+.dark {
+  --bg-main: #0B0F17;
+  --primary: #3B82F6;
+
+  /* Neutral scale - Inverted high-contrast Dark Grays */
+  --gray-50:  #151F30;
+  --gray-100: #1C273A;
+  --gray-200: #2D3D54;
+  --gray-300: #41536E;
+  --gray-400: #8899B5;
+  --gray-500: #B4C4DA;
+  --gray-600: #D3DFEE;
+  --gray-700: #E7EEF8;
+  --gray-800: #F4F7FC;
+  --gray-900: #FFFFFF;
+
+  /* Unified Blue Role accents for dark mode */
+  --color-coordinator: #3B82F6;
+  --color-principal:   #60A5FA;
+  --color-dcr:         #38BDF8;
+  --color-vendor:      #34D399;
+  --color-admin:       #818CF8;
+
+  /* Semantic alerts */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-danger:  #F87171;
+  --color-info:    #60A5FA;
+
+  /* Surfaces */
+  --surface-0: #131E2F;
+  --surface-1: #0B0F17;
+  --surface-2: #1A263B;
+
+  /* Dark mode shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow:    0 1px 3px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.5), 0 2px 4px -1px rgba(0,0,0,.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.6), 0 4px 6px -2px rgba(0,0,0,.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.7), 0 10px 10px -5px rgba(0,0,0,.4);
+}
+
 /* ── Reset ──────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -616,15 +660,66 @@ img, svg, canvas, .card, div {
     display: flex;
     flex-direction: column;
     margin-bottom: 12px;
-    background: #F8FAFC;
+    background: var(--surface-0);
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--gray-200);
   }
   .responsive-table-wrap td {
     display: flex;
     justify-content: space-between;
     padding: 6px 0 !important;
     border: none !important;
+  }
+}
+
+/* ── Responsive Bill Print & On-Screen Sheet Rules ── */
+.bill-paper {
+  background: var(--surface-0);
+  color: var(--gray-900);
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-lg);
+  padding: 40px;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .bill-paper {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bill-paper {
+    padding: 16px 12px;
+  }
+}
+
+/* Ensure no text overflows in print or preview */
+.bill-text-wrap {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Printable media always outputs crisp white paper */
+@media print {
+  body, html {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .bill-paper {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }

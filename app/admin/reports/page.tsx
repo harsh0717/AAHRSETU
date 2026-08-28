@@ -187,10 +187,10 @@ export default function StandaloneReportsPage() {
         {/* Header Title */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', display: 'flex', alignItems: 'center', gap: '10px' }}>
               📊 Standalone Procurement & Expenditure Reports
             </h1>
-            <p style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#64748B' }}>
+            <p style={{ margin: '4px 0 0', fontSize: '0.9rem', color: 'var(--gray-500, #64748B)' }}>
               Institutional financial summaries, vendor audits, department billing allocations, and real-time trends.
             </p>
           </div>
@@ -206,18 +206,18 @@ export default function StandaloneReportsPage() {
         </div>
 
         {/* Global Filter Bar Card */}
-        <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: 'var(--shadow-sm)' }}>
+        <div className="card" style={{ padding: '20px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
             <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Start Date</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Start Date</label>
               <input type="date" className="form-input" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>End Date</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>End Date</label>
               <input type="date" className="form-input" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Department</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Department</label>
               <select className="form-input" value={filterDeptId} onChange={e => setFilterDeptId(e.target.value)}>
                 <option value="">All Departments</option>
                 {departments.map(d => (
@@ -226,7 +226,7 @@ export default function StandaloneReportsPage() {
               </select>
             </div>
             <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Vendor</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Vendor</label>
               <select className="form-input" value={filterVendorId} onChange={e => setFilterVendorId(e.target.value)}>
                 <option value="">All Vendors</option>
                 {vendors.map(v => (
@@ -247,7 +247,7 @@ export default function StandaloneReportsPage() {
         </div>
 
         {loading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
+          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--gray-500, #64748B)' }}>
             <div style={{ width: '40px', height: '40px', border: '3px solid #2563EB', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px auto' }} />
             Calculating and aggregating institutional statistics...
           </div>
@@ -256,29 +256,29 @@ export default function StandaloneReportsPage() {
             {/* KPI metrics row */}
             {summary && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #2563EB', border: '1px solid #E2E8F0', borderLeftWidth: '5px' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>TOTAL TRANSACTIONS</div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginTop: '6px' }}>{summary.total_orders}</div>
+                <div className="card" style={{ padding: '20px', background: 'var(--surface-0)', borderRadius: '16px', borderLeft: '4px solid #2563EB', border: '1px solid var(--gray-200, #E2E8F0)', borderLeftWidth: '5px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>TOTAL TRANSACTIONS</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', marginTop: '6px' }}>{summary.total_orders}</div>
                   <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>Requisitions processed</div>
                 </div>
-                <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #10B981', border: '1px solid #E2E8F0', borderLeftWidth: '5px' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>COMPLETED ORDERS</div>
+                <div className="card" style={{ padding: '20px', background: 'var(--surface-0)', borderRadius: '16px', borderLeft: '4px solid #10B981', border: '1px solid var(--gray-200, #E2E8F0)', borderLeftWidth: '5px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>COMPLETED ORDERS</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#10B981', marginTop: '6px' }}>{summary.completed_orders}</div>
                   <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>Billed and closed</div>
                 </div>
-                <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #F59E0B', border: '1px solid #E2E8F0', borderLeftWidth: '5px' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>PENDING REVIEW</div>
+                <div className="card" style={{ padding: '20px', background: 'var(--surface-0)', borderRadius: '16px', borderLeft: '4px solid #F59E0B', border: '1px solid var(--gray-200, #E2E8F0)', borderLeftWidth: '5px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>PENDING REVIEW</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F59E0B', marginTop: '6px' }}>{summary.pending_orders}</div>
                   <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>Awaiting HOD/Auditor action</div>
                 </div>
-                <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #EF4444', border: '1px solid #E2E8F0', borderLeftWidth: '5px' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>REJECTED REQUESTS</div>
+                <div className="card" style={{ padding: '20px', background: 'var(--surface-0)', borderRadius: '16px', borderLeft: '4px solid #EF4444', border: '1px solid var(--gray-200, #E2E8F0)', borderLeftWidth: '5px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>REJECTED REQUESTS</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#EF4444', marginTop: '6px' }}>{summary.rejected_orders}</div>
                   <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>Principal/DCR rejected</div>
                 </div>
-                <div className="card" style={{ padding: '20px', background: 'white', borderRadius: '16px', borderLeft: '4px solid #8B5CF6', border: '1px solid #E2E8F0', borderLeftWidth: '5px', gridColumn: 'span 2' }}>
+                <div className="card" style={{ padding: '20px', background: 'var(--surface-0)', borderRadius: '16px', borderLeft: '4px solid #8B5CF6', border: '1px solid var(--gray-200, #E2E8F0)', borderLeftWidth: '5px', gridColumn: 'span 2' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>TOTAL EXPENDITURE</div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>TOTAL EXPENDITURE</div>
                     <span style={{ fontSize: '0.7rem', background: '#F5F3FF', color: '#8B5CF6', fontWeight: 800, padding: '2px 8px', borderRadius: '20px' }}>COMPLETED</span>
                   </div>
                   <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#8B5CF6', marginTop: '6px' }}>
@@ -296,8 +296,8 @@ export default function StandaloneReportsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))', gap: '20px' }}>
                 
                 {/* Expenditure Trend Chart */}
-                <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>📈 Requisition Expenditure Trend</h3>
+                <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                  <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>📈 Requisition Expenditure Trend</h3>
                   <div style={{ width: '100%', height: '280px' }}>
                     <ResponsiveContainer>
                       <AreaChart data={trends}>
@@ -318,8 +318,8 @@ export default function StandaloneReportsPage() {
                 </div>
 
                 {/* Department expenditure comparison */}
-                <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>🏢 Department Expenditure Share</h3>
+                <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                  <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>🏢 Department Expenditure Share</h3>
                   <div style={{ width: '100%', height: '280px' }}>
                     <ResponsiveContainer>
                       <BarChart data={deptReport}>
@@ -338,8 +338,8 @@ export default function StandaloneReportsPage() {
                 </div>
 
                 {/* Vendor Market Share Pie Chart */}
-                <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>🏪 Food Vendor Settlement Shares</h3>
+                <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                  <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>🏪 Food Vendor Settlement Shares</h3>
                   <div style={{ width: '100%', height: '280px', display: 'flex', alignItems: 'center' }}>
                     <div style={{ flex: 1, height: '100%' }}>
                       <ResponsiveContainer>
@@ -368,33 +368,33 @@ export default function StandaloneReportsPage() {
 
                 {/* Approval stage speed timing analysis */}
                 {approvalTime && (
-                  <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                    <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>⏱️ Institutional Verification Pipeline</h3>
+                  <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>⏱️ Institutional Verification Pipeline</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '10px' }}>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '6px' }}>
                           <span>1. HOD Review (Coordinator → Principal)</span>
-                          <span style={{ color: '#0F172A' }}>{approvalTime.submission_to_principal.avg || 0} hours avg</span>
+                          <span style={{ color: 'var(--gray-900, #0F172A)' }}>{approvalTime.submission_to_principal.avg || 0} hours avg</span>
                         </div>
-                        <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '4px' }}>
+                        <div style={{ width: '100%', height: '8px', background: 'var(--surface-2)', borderRadius: '4px' }}>
                           <div style={{ width: `${Math.min(100, (approvalTime.submission_to_principal.avg || 0) * 10)}%`, height: '100%', background: '#F59E0B', borderRadius: '4px' }} />
                         </div>
                       </div>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '6px' }}>
                           <span>2. Auditor Check (Principal → DCR Auditor)</span>
-                          <span style={{ color: '#0F172A' }}>{approvalTime.principal_to_dcr.avg || 0} hours avg</span>
+                          <span style={{ color: 'var(--gray-900, #0F172A)' }}>{approvalTime.principal_to_dcr.avg || 0} hours avg</span>
                         </div>
-                        <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '4px' }}>
+                        <div style={{ width: '100%', height: '8px', background: 'var(--surface-2)', borderRadius: '4px' }}>
                           <div style={{ width: `${Math.min(100, (approvalTime.principal_to_dcr.avg || 0) * 10)}%`, height: '100%', background: '#10B981', borderRadius: '4px' }} />
                         </div>
                       </div>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '6px' }}>
                           <span>3. Billing & Fulfillment (DCR → Completion)</span>
-                          <span style={{ color: '#0F172A' }}>{approvalTime.dcr_to_completion.avg || 0} hours avg</span>
+                          <span style={{ color: 'var(--gray-900, #0F172A)' }}>{approvalTime.dcr_to_completion.avg || 0} hours avg</span>
                         </div>
-                        <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '4px' }}>
+                        <div style={{ width: '100%', height: '8px', background: 'var(--surface-2)', borderRadius: '4px' }}>
                           <div style={{ width: `${Math.min(100, (approvalTime.dcr_to_completion.avg || 0) * 10)}%`, height: '100%', background: '#2563EB', borderRadius: '4px' }} />
                         </div>
                       </div>
@@ -406,8 +406,8 @@ export default function StandaloneReportsPage() {
             )}
 
             {/* Department Breakdown Table */}
-            <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>🏢 Department Breakdown Allocations</h3>
+            <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>🏢 Department Breakdown Allocations</h3>
               <div className="table-wrapper" style={{ border: '1px solid #F1F5F9', borderRadius: '12px', overflowX: 'auto' }}>
                 <table className="table">
                   <thead>
@@ -425,13 +425,13 @@ export default function StandaloneReportsPage() {
                   <tbody>
                     {deptReport.map(r => (
                       <tr key={r.department_id}>
-                        <td style={{ fontWeight: 800, color: '#475569' }}>{r.label}</td>
+                        <td style={{ fontWeight: 800, color: 'var(--gray-600, #475569)' }}>{r.label}</td>
                         <td style={{ fontWeight: 700 }}>{r.department_name}</td>
                         <td>{r.total_orders}</td>
                         <td>{r.completed_orders}</td>
                         <td>{r.rejected_orders}</td>
                         <td>₹{r.avg_order_value.toLocaleString()}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{r.total_expenditure.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{r.total_expenditure.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td>
                           <button
                             onClick={() => handleDeptDrilldown(r.department_id)}
@@ -448,8 +448,8 @@ export default function StandaloneReportsPage() {
             </div>
 
             {/* Vendor Performance Breakdown Table */}
-            <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>🏪 Vendor Procurement Metrics</h3>
+            <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>🏪 Vendor Procurement Metrics</h3>
               <div className="table-wrapper" style={{ border: '1px solid #F1F5F9', borderRadius: '12px', overflowX: 'auto' }}>
                 <table className="table">
                   <thead>
@@ -468,7 +468,7 @@ export default function StandaloneReportsPage() {
                   <tbody>
                     {vendorReport.map(v => (
                       <tr key={v.vendor_id}>
-                        <td style={{ fontWeight: 800, color: '#475569' }}>{v.vendor_id}</td>
+                        <td style={{ fontWeight: 800, color: 'var(--gray-600, #475569)' }}>{v.vendor_id}</td>
                         <td style={{ fontWeight: 700 }}>{v.vendor_name}</td>
                         <td>{v.owner_name}</td>
                         <td>
@@ -486,7 +486,7 @@ export default function StandaloneReportsPage() {
                         <td>{v.menu_items} ({v.available_items} avail)</td>
                         <td>{v.completion_rate}%</td>
                         <td>{v.modified_orders} requests</td>
-                        <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{v.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{v.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td>
                           <button
                             onClick={() => handleVendorDrilldown(v.vendor_id)}
@@ -506,8 +506,8 @@ export default function StandaloneReportsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
               
               {/* Top popular items */}
-              <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>🍽️ Top 10 Popular Menu Items (Institutional Demand)</h3>
+              <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>🍽️ Top 10 Popular Menu Items (Institutional Demand)</h3>
                 <div className="table-wrapper" style={{ border: '1px solid #F1F5F9', borderRadius: '12px', overflowX: 'auto' }}>
                   <table className="table">
                     <thead>
@@ -528,7 +528,7 @@ export default function StandaloneReportsPage() {
                           <td>{item.vendor_name}</td>
                           <td>{item.total_orders} orders</td>
                           <td style={{ fontWeight: 600 }}>{item.total_quantity}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{item.total_revenue.toLocaleString()}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{item.total_revenue.toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -537,16 +537,16 @@ export default function StandaloneReportsPage() {
               </div>
 
               {/* Order Status Funnel Table */}
-              <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>🌪️ Stage-wise Order Conversion Funnel</h3>
+              <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>🌪️ Stage-wise Order Conversion Funnel</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '10px' }}>
                   {funnel.map(f => (
                     <div key={f.stage}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '4px' }}>
                         <span>{f.stage}</span>
-                        <span style={{ color: '#0F172A' }}>{f.count} orders ({f.pct}%)</span>
+                        <span style={{ color: 'var(--gray-900, #0F172A)' }}>{f.count} orders ({f.pct}%)</span>
                       </div>
-                      <div style={{ width: '100%', height: '24px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                      <div style={{ width: '100%', height: '24px', background: 'var(--surface-1)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '6px', overflow: 'hidden', display: 'flex', alignItems: 'center', position: 'relative' }}>
                         <div style={{ width: `${f.pct}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6 0%, #2563EB 100%)', opacity: 0.8 }} />
                         <span style={{ position: 'absolute', left: '10px', fontSize: '0.75rem', fontWeight: 800, color: f.pct > 50 ? 'white' : '#64748B' }}>{f.count}</span>
                       </div>
@@ -565,19 +565,19 @@ export default function StandaloneReportsPage() {
       {/* Department Detail Modal */}
       {showDeptModal && selectedDeptDetail && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', borderRadius: '16px', padding: '32px', width: '560px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-xl)' }}>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '16px', padding: '32px', width: '560px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-xl)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>🏢 Dept Spend Breakdown: {selectedDeptDetail.department_id}</h2>
-              <button onClick={() => setShowDeptModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748B' }}>✕</button>
+              <button onClick={() => setShowDeptModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--gray-500, #64748B)' }}>✕</button>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Total Completed Spend</div>
+              <div style={{ background: 'var(--surface-1)', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>Total Completed Spend</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#8B5CF6', marginTop: '4px' }}>₹{selectedDeptDetail.total_expenditure.toLocaleString()}</div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Average Order Value</div>
+              <div style={{ background: 'var(--surface-1)', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>Average Order Value</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#10B981', marginTop: '4px' }}>₹{selectedDeptDetail.avg_order_value.toLocaleString()}</div>
               </div>
             </div>
@@ -585,14 +585,14 @@ export default function StandaloneReportsPage() {
             <h3 style={{ fontSize: '0.9rem', fontWeight: 800, margin: '20px 0 10px 0' }}>Canteen Vendor Split</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {selectedDeptDetail.vendor_breakdown.map((vb: any) => (
-                <div key={vb.vendor_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
+                <div key={vb.vendor_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '8px 12px', background: 'var(--surface-1)', borderRadius: '8px' }}>
                   <span>{vb.vendor_name} ({vb.orders} orders)</span>
-                  <strong style={{ color: '#0F172A' }}>₹{vb.revenue.toLocaleString()}</strong>
+                  <strong style={{ color: 'var(--gray-900, #0F172A)' }}>₹{vb.revenue.toLocaleString()}</strong>
                 </div>
               ))}
             </div>
 
-            <button onClick={() => setShowDeptModal(false)} style={{ width: '100%', background: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '12px', cursor: 'pointer', fontWeight: 700, marginTop: '24px' }}>
+            <button onClick={() => setShowDeptModal(false)} style={{ width: '100%', background: 'var(--surface-2)', color: 'var(--gray-600, #475569)', border: '1px solid var(--gray-300, #CBD5E1)', borderRadius: '10px', padding: '12px', cursor: 'pointer', fontWeight: 700, marginTop: '24px' }}>
               Close Drilldown Window
             </button>
           </div>
@@ -602,19 +602,19 @@ export default function StandaloneReportsPage() {
       {/* Vendor Detail Modal */}
       {showVendorModal && selectedVendorDetail && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', borderRadius: '16px', padding: '32px', width: '560px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-xl)' }}>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '16px', padding: '32px', width: '560px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-xl)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>🏪 Vendor performance details</h2>
-              <button onClick={() => setShowVendorModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748B' }}>✕</button>
+              <button onClick={() => setShowVendorModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--gray-500, #64748B)' }}>✕</button>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Calculated Revenue</div>
+              <div style={{ background: 'var(--surface-1)', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>Calculated Revenue</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#2563EB', marginTop: '4px' }}>₹{selectedVendorDetail.revenue.toLocaleString()}</div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Total Orders Fulfilled</div>
+              <div style={{ background: 'var(--surface-1)', padding: '16px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>Total Orders Fulfilled</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#10B981', marginTop: '4px' }}>{selectedVendorDetail.completed_orders}</div>
               </div>
             </div>
@@ -622,14 +622,14 @@ export default function StandaloneReportsPage() {
             <h3 style={{ fontSize: '0.9rem', fontWeight: 800, margin: '20px 0 10px 0' }}>Top Selling Items</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {selectedVendorDetail.top_items.map((ti: any) => (
-                <div key={ti.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
+                <div key={ti.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '8px 12px', background: 'var(--surface-1)', borderRadius: '8px' }}>
                   <span>{ti.name} (x{ti.quantity} sold)</span>
-                  <strong style={{ color: '#0F172A' }}>₹{ti.revenue.toLocaleString()}</strong>
+                  <strong style={{ color: 'var(--gray-900, #0F172A)' }}>₹{ti.revenue.toLocaleString()}</strong>
                 </div>
               ))}
             </div>
 
-            <button onClick={() => setShowVendorModal(false)} style={{ width: '100%', background: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '12px', cursor: 'pointer', fontWeight: 700, marginTop: '24px' }}>
+            <button onClick={() => setShowVendorModal(false)} style={{ width: '100%', background: 'var(--surface-2)', color: 'var(--gray-600, #475569)', border: '1px solid var(--gray-300, #CBD5E1)', borderRadius: '10px', padding: '12px', cursor: 'pointer', fontWeight: 700, marginTop: '24px' }}>
               Close Drilldown Window
             </button>
           </div>

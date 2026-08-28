@@ -47,8 +47,8 @@ export default function FoodMenuCard({
 
   return (
     <div style={{
-      background: 'white',
-      border: '1px solid #E2E8F0',
+      background: 'var(--surface-0)',
+      border: '1px solid var(--gray-200, #E2E8F0)',
       borderRadius: '16px',
       overflow: 'hidden',
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
@@ -119,7 +119,7 @@ export default function FoodMenuCard({
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Name & Price beside item name */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1.3 }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0, lineHeight: 1.3 }}>
             {name}
           </h3>
           <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#2563EB', whiteSpace: 'nowrap' }}>
@@ -128,32 +128,32 @@ export default function FoodMenuCard({
         </div>
 
         {/* Vendor Name */}
-        <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 600, marginBottom: '8px' }}>
+        <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', fontWeight: 600, marginBottom: '8px' }}>
           🏪 {vendorName} <span style={{ color: '#94A3B8' }}>• {unit}</span>
         </div>
 
         {/* Description */}
         {description && (
-          <p style={{ fontSize: '0.78rem', color: '#64748B', margin: '0 0 14px 0', flex: 1, lineHeight: 1.4 }}>
+          <p style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', margin: '0 0 14px 0', flex: 1, lineHeight: 1.4 }}>
             {description}
           </p>
         )}
 
         {/* Quantity Stepper & Add Button */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid #F1F5F9' }}>
-          <div style={{ display: 'flex', alignItems: 'center', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-1)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '8px' }}>
             <button
               onClick={() => setQty(Math.max(1, qty - 1))}
               disabled={!available}
-              style={{ width: '28px', height: '28px', border: 'none', background: 'transparent', fontWeight: 800, color: '#475569', cursor: 'pointer' }}
+              style={{ width: '28px', height: '28px', border: 'none', background: 'transparent', fontWeight: 800, color: 'var(--gray-600, #475569)', cursor: 'pointer' }}
             >
               -
             </button>
-            <span style={{ fontSize: '0.85rem', fontWeight: 800, padding: '0 8px', color: '#0F172A' }}>{qty}</span>
+            <span style={{ fontSize: '0.85rem', fontWeight: 800, padding: '0 8px', color: 'var(--gray-900, #0F172A)' }}>{qty}</span>
             <button
               onClick={() => setQty(qty + 1)}
               disabled={!available}
-              style={{ width: '28px', height: '28px', border: 'none', background: 'transparent', fontWeight: 800, color: '#475569', cursor: 'pointer' }}
+              style={{ width: '28px', height: '28px', border: 'none', background: 'transparent', fontWeight: 800, color: 'var(--gray-600, #475569)', cursor: 'pointer' }}
             >
               +
             </button>

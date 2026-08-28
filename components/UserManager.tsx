@@ -210,7 +210,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: '#64748B' }}>
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500, #64748B)' }}>
         <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
         <div style={{ fontWeight: 600 }}>Loading users list from database...</div>
       </div>
@@ -225,8 +225,8 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          background: '#F8FAFC',
-          border: '1px solid #CBD5E1',
+          background: 'var(--surface-1)',
+          border: '1px solid var(--gray-300, #CBD5E1)',
           borderRadius: '12px',
           padding: '8px 14px',
           minWidth: '240px',
@@ -234,7 +234,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
         }}>
           <span style={{ color: '#94A3B8' }}>🔍</span>
           <input 
-            style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.86rem', color: '#0F172A' }}
+            style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.86rem', color: 'var(--gray-900, #0F172A)' }}
             placeholder="Search users by name or email..."
             value={search} 
             onChange={e => setSearch(e.target.value)} 
@@ -242,13 +242,13 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
         </div>
         <select 
           style={{
-            background: '#F8FAFC',
-            border: '1px solid #CBD5E1',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--gray-300, #CBD5E1)',
             borderRadius: '12px',
             padding: '9px 14px',
             fontSize: '0.84rem',
             fontWeight: 600,
-            color: '#334155',
+            color: 'var(--gray-700, #334155)',
             outline: 'none',
             cursor: 'pointer'
           }}
@@ -269,39 +269,39 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
       </div>
 
       {/* Table */}
-      <div style={{ borderRadius: '14px', border: '1px solid #E2E8F0', background: '#FFFFFF', overflowX: 'auto', boxShadow: '0 2px 8px -2px rgba(0,0,0,0.03)' }}>
+      <div style={{ borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', background: 'var(--surface-0)', overflowX: 'auto', boxShadow: '0 2px 8px -2px rgba(0,0,0,0.03)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.86rem' }}>
           <thead>
-            <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Name</th>
-              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</th>
-              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role</th>
-              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Department Info</th>
-              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Language</th>
-              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Status</th>
-              <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Actions</th>
+            <tr style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--gray-200, #E2E8F0)' }}>
+              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Name</th>
+              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</th>
+              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role</th>
+              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Department Info</th>
+              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Language</th>
+              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Status</th>
+              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map(user => (
               <tr key={user.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0F172A' }}>
+                <td style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>
                   <span style={{ marginRight: '8px' }}>{ROLE_ICONS[user.role]}</span>
                   {user.name}
                 </td>
-                <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: '#64748B', fontFamily: 'monospace' }}>{user.email}</td>
+                <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', fontFamily: 'monospace' }}>{user.email}</td>
                 <td style={{ padding: '12px 16px' }}>
                   <UiverseBadge variant="info" size="sm">
                     {ROLE_LABELS[user.role]}
                   </UiverseBadge>
                 </td>
-                <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: '#64748B' }}>
+                <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>
                   {user.role === 'coordinator' && (departments.find(d => d.id === user.department_id)?.name || 'General')}
                   {user.role === 'principal' && (user.principal_depts && user.principal_depts.length > 0 ? user.principal_depts.map(d => departments.find(x => x.id === d)?.name || d).join(', ') : 'All Departments')}
                   {user.role === 'vendor' && (vendors.find(v => v.id === user.vendor_id)?.name || 'All Canteens')}
                   {['admin','dcr'].includes(user.role) && '— Institutional —'}
                 </td>
-                <td style={{ padding: '12px 16px', fontSize: '0.78rem', textAlign: 'center', textTransform: 'uppercase', fontWeight: 700, color: '#64748B' }}>
+                <td style={{ padding: '12px 16px', fontSize: '0.78rem', textAlign: 'center', textTransform: 'uppercase', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>
                   {user.preferred_language || 'en'}
                 </td>
                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
@@ -361,7 +361,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
           onClick={e => e.target === e.currentTarget && setShowModal(false)}
         >
           <div style={{ 
-            background: '#FFFFFF', 
+            background: 'var(--surface-0)', 
             borderRadius: '20px', 
             width: '100%', 
             maxWidth: '520px', 
@@ -369,25 +369,25 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
             maxHeight: '85vh', 
             overflowY: 'auto', 
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', 
-            border: '1px solid #E2E8F0' 
+            border: '1px solid var(--gray-200, #E2E8F0)' 
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '22px', alignItems: 'center' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>
                   {editUser ? 'Edit Institutional User' : 'Register New User'}
                 </h3>
-                <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748B' }}>
+                <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>
                   Configure role, departmental permissions, and credentials
                 </p>
               </div>
               <button 
                 onClick={() => setShowModal(false)} 
                 style={{ 
-                  background: '#F1F5F9', 
+                  background: 'var(--surface-2)', 
                   border: 'none', 
                   fontSize: '1rem', 
                   cursor: 'pointer', 
-                  color: '#64748B',
+                  color: 'var(--gray-500, #64748B)',
                   width: '32px',
                   height: '32px',
                   borderRadius: '10px',
@@ -402,14 +402,14 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Full Name *</label>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Full Name *</label>
                 <input 
                   type="text" 
                   style={{
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid #CBD5E1',
+                    border: '1px solid var(--gray-300, #CBD5E1)',
                     fontSize: '0.88rem',
                     outline: 'none',
                     boxSizing: 'border-box'
@@ -420,14 +420,14 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Email Address *</label>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Email Address *</label>
                 <input 
                   type="email" 
                   style={{
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid #CBD5E1',
+                    border: '1px solid var(--gray-300, #CBD5E1)',
                     fontSize: '0.88rem',
                     outline: 'none',
                     boxSizing: 'border-box'
@@ -438,7 +438,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>
                   Password {editUser ? '(leave blank to retain current)' : '*'}
                 </label>
                 <input 
@@ -447,7 +447,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid #CBD5E1',
+                    border: '1px solid var(--gray-300, #CBD5E1)',
                     fontSize: '0.88rem',
                     outline: 'none',
                     boxSizing: 'border-box'
@@ -458,16 +458,16 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
                 />
               </div>
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>User Role *</label>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>User Role *</label>
                 <select 
                   style={{
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid #CBD5E1',
+                    border: '1px solid var(--gray-300, #CBD5E1)',
                     fontSize: '0.88rem',
                     outline: 'none',
-                    background: '#FFFFFF',
+                    background: 'var(--surface-0)',
                     cursor: 'pointer',
                     boxSizing: 'border-box'
                   }}
@@ -480,16 +480,16 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
 
               {form.role === 'coordinator' && (
                 <div>
-                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Linked Department *</label>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Linked Department *</label>
                   <select 
                     style={{
                       width: '100%',
                       padding: '10px 14px',
                       borderRadius: '12px',
-                      border: '1px solid #CBD5E1',
+                      border: '1px solid var(--gray-300, #CBD5E1)',
                       fontSize: '0.88rem',
                       outline: 'none',
-                      background: '#FFFFFF',
+                      background: 'var(--surface-0)',
                       boxSizing: 'border-box'
                     }}
                     value={form.department_id} 
@@ -503,10 +503,10 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
 
               {form.role === 'principal' && (
                 <div>
-                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Departments Managed *</label>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Departments Managed *</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {departments.map(d => (
-                      <label key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', border: '1px solid #E2E8F0', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, background: (form.principal_depts || []).includes(d.id) ? '#EFF6FF' : 'white', borderColor: (form.principal_depts || []).includes(d.id) ? '#3B82F6' : '#E2E8F0' }}>
+                      <label key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, background: (form.principal_depts || []).includes(d.id) ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface-0)', borderColor: (form.principal_depts || []).includes(d.id) ? 'var(--primary)' : 'var(--gray-200)' }}>
                         <input type="checkbox" checked={(form.principal_depts || []).includes(d.id)} onChange={() => toggleDept(d.id)} />
                         {d.name}
                       </label>
@@ -517,16 +517,16 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
 
               {form.role === 'vendor' && (
                 <div>
-                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Linked Canteen Profile *</label>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Linked Canteen Profile *</label>
                   <select 
                     style={{
                       width: '100%',
                       padding: '10px 14px',
                       borderRadius: '12px',
-                      border: '1px solid #CBD5E1',
+                      border: '1px solid var(--gray-300, #CBD5E1)',
                       fontSize: '0.88rem',
                       outline: 'none',
-                      background: '#FFFFFF',
+                      background: 'var(--surface-0)',
                       boxSizing: 'border-box'
                     }}
                     value={form.vendor_id} 
@@ -539,16 +539,16 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
               )}
 
               <div>
-                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Preferred Language</label>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Preferred Language</label>
                 <select 
                   style={{
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid #CBD5E1',
+                    border: '1px solid var(--gray-300, #CBD5E1)',
                     fontSize: '0.88rem',
                     outline: 'none',
-                    background: '#FFFFFF',
+                    background: 'var(--surface-0)',
                     boxSizing: 'border-box'
                   }}
                   value={form.preferred_language} 
@@ -561,7 +561,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
               </div>
 
               {editUser && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#1E293B', marginTop: '4px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: 'var(--gray-800, #1E293B)', marginTop: '4px' }}>
                   <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} />
                   Active User Account (can sign in)
                 </label>

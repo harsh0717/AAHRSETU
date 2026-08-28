@@ -31,7 +31,7 @@ export default function ModificationPanel({ vendorOrder, mode, onResolve, onSubm
             value={reason}
             onChange={e => setReason(e.target.value)}
             placeholder="e.g. Snacks are out of stock today. Can replace with Samosa?"
-            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #FED7AA', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box', background: 'white' }}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #FED7AA', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box', background: 'var(--surface-0)' }}
           />
         </div>
         <div style={{ marginBottom: '12px' }}>
@@ -77,7 +77,7 @@ export default function ModificationPanel({ vendorOrder, mode, onResolve, onSubm
         <div style={{ fontWeight: 800, color: '#C2410C', marginBottom: '10px', fontSize: '0.9rem' }}>
           🔄 {t('mod.title')} — {vendorOrder.vendor_name}
         </div>
-        <div style={{ padding: '10px 14px', background: 'white', borderRadius: '8px', marginBottom: '12px', fontSize: '0.82rem', border: '1px solid #FFE4C4', color: 'var(--gray-700)', lineHeight: 1.4 }}>
+        <div style={{ padding: '10px 14px', background: 'var(--surface-0)', borderRadius: '8px', marginBottom: '12px', fontSize: '0.82rem', border: '1px solid #FFE4C4', color: 'var(--gray-700)', lineHeight: 1.4 }}>
           <strong>{t('mod.vendor_reason')}:</strong> {mod.reason}
         </div>
         <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', fontSize: '0.72rem', color: 'var(--gray-500)' }}>

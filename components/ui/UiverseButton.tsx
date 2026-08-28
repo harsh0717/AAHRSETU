@@ -63,7 +63,7 @@ export default function UiverseButton({
     secondary: {
       background: "#FFFFFF",
       color: "#334155",
-      border: "1px solid #CBD5E1",
+      border: "1px solid var(--gray-300, #CBD5E1)",
       boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
     },
     outline: {
@@ -75,7 +75,7 @@ export default function UiverseButton({
     glass: {
       background: "#FFFFFF",
       color: "#1E293B",
-      border: "1px solid #E2E8F0",
+      border: "1px solid var(--gray-200, #E2E8F0)",
       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
     },
   };

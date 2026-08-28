@@ -31,7 +31,7 @@ export default function SystemHealthPage() {
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 16px' }}>
         
         {/* Navigation Breadcrumb */}
-        <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '16px', fontWeight: 600 }}>
+        <div style={{ fontSize: '0.85rem', color: 'var(--gray-500, #64748B)', marginBottom: '16px', fontWeight: 600 }}>
           <Link href="/admin" style={{ color: '#2563EB', textDecoration: 'none' }}>Admin Portal</Link> / System Health & Observability
         </div>
 
@@ -79,7 +79,7 @@ export default function SystemHealthPage() {
         </div>
 
         {loading || !health ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#64748B' }}>
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500, #64748B)' }}>
             <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
             <div>Fetching system health telemetry...</div>
           </div>
@@ -87,31 +87,31 @@ export default function SystemHealthPage() {
           <div>
             {/* Quick Metrics */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '20px' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>API Latency</div>
+              <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '16px', padding: '20px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>API Latency</div>
                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#2563EB', marginTop: '4px' }}>{health.apiLatencyMs} ms</div>
                 <div style={{ fontSize: '0.75rem', color: '#16A34A', marginTop: '4px' }}>⚡ Sub-50ms response</div>
               </div>
-              <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '20px' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>Active Canteens</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>{health.activeCanteens.open} / {health.activeCanteens.total} Open</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '4px' }}>1 Temporarily Closed</div>
+              <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '16px', padding: '20px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Active Canteens</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', marginTop: '4px' }}>{health.activeCanteens.open} / {health.activeCanteens.total} Open</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>1 Temporarily Closed</div>
               </div>
-              <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '20px' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>Active Processing Orders</div>
+              <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '16px', padding: '20px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Active Processing Orders</div>
                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#D97706', marginTop: '4px' }}>{health.activeOrdersCount}</div>
                 <div style={{ fontSize: '0.75rem', color: '#16A34A', marginTop: '4px' }}>✓ Zero deadlock queues</div>
               </div>
-              <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '20px' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>System Uptime</div>
+              <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '16px', padding: '20px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>System Uptime</div>
                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#16A34A', marginTop: '4px' }}>99.98%</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '4px' }}>Last restart: 10 days ago</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>Last restart: 10 days ago</div>
               </div>
             </div>
 
             {/* Microservice Health Matrix */}
-            <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>
+            <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', marginBottom: '16px' }}>
                 Core Microservices & Telemetry
               </h3>
 
@@ -123,8 +123,8 @@ export default function SystemHealthPage() {
                     justifyContent: 'space-between',
                     padding: '14px 18px',
                     borderRadius: '12px',
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
+                    background: 'var(--surface-1)',
+                    border: '1px solid var(--gray-200, #E2E8F0)',
                     flexWrap: 'wrap',
                     gap: '10px'
                   }}>
@@ -134,13 +134,13 @@ export default function SystemHealthPage() {
                         background: s.status === 'OPERATIONAL' ? '#22C55E' : '#EAB308'
                       }}></span>
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0F172A' }}>{s.service} Service</div>
-                        <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{s.message}</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--gray-900, #0F172A)' }}>{s.service} Service</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>{s.message}</div>
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>{s.latencyMs} ms</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--gray-500, #64748B)' }}>{s.latencyMs} ms</span>
                       <span style={{
                         fontSize: '0.75rem', fontWeight: 800, padding: '4px 10px', borderRadius: '999px',
                         background: '#DCFCE7', color: '#15803D'

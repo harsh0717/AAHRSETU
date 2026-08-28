@@ -363,9 +363,9 @@ export default function BillsPage() {
           }}>
             {/* Tile 1: Total Pending Dues */}
             <div style={{
-              background: 'white',
+              background: 'var(--surface-0)',
               borderRadius: '16px',
-              border: '1.5px solid #E2E8F0',
+              border: '1.5px solid var(--gray-200, #E2E8F0)',
               padding: '20px 24px',
               boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
             }}>
@@ -380,14 +380,14 @@ export default function BillsPage() {
               <div style={{ fontSize: '2rem', fontWeight: 900, color: summary.pending_settlement_total > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.5px' }}>
                 {fmtAmount(summary.pending_settlement_total)}
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                 Total unsettled canteen payables awaiting clearance
               </div>
             </div>
 
             {/* Tile 2: Total Disbursed */}
             <div style={{
-              background: 'white',
+              background: 'var(--surface-0)',
               borderRadius: '16px',
               border: '1.5px solid #10B981',
               padding: '20px 24px',
@@ -404,28 +404,28 @@ export default function BillsPage() {
               <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                 {fmtAmount(summary.settled_total)}
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                 Direct NEFT/RTGS/UPI cleared disbursements
               </div>
             </div>
 
             {/* Tile 3: Total Invoiced */}
             <div style={{
-              background: 'white',
+              background: 'var(--surface-0)',
               borderRadius: '16px',
-              border: '1.5px solid #E2E8F0',
+              border: '1.5px solid var(--gray-200, #E2E8F0)',
               padding: '20px 24px',
               boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
                   TOTAL INVOICED FOOD
                 </span>
                 <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
                   ✓ ZERO VARIANCE
                 </span>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
                 {fmtAmount(summary.current_month_total)}
               </div>
               <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '4px', fontWeight: 600 }}>
@@ -440,10 +440,10 @@ export default function BillsPage() {
           display: 'flex',
           gap: '8px',
           marginBottom: '16px',
-          background: '#F1F5F9',
+          background: 'var(--surface-2)',
           padding: '6px',
           borderRadius: '14px',
-          border: '1px solid #E2E8F0',
+          border: '1px solid var(--gray-200, #E2E8F0)',
           flexWrap: 'wrap'
         }}>
           <button
@@ -514,39 +514,39 @@ export default function BillsPage() {
             <span><strong>Vendor Payable View:</strong> Displays itemized split vouchers payable directly to campus canteens. These amounts match the vendor settlements with zero double-counting.</span>
           </div>
         ) : billTypeTab === 'master' ? (
-          <div style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '10px 16px', marginBottom: '16px', fontSize: '0.82rem', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ background: 'var(--surface-1)', border: '1px solid var(--gray-300, #CBD5E1)', borderRadius: '10px', padding: '10px 16px', marginBottom: '16px', fontSize: '0.82rem', color: 'var(--gray-700, #334155)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span>ℹ️</span>
             <span><strong>Department Audit View:</strong> Displays single consolidated master invoices per requisition for departmental receipt generation and internal auditing.</span>
           </div>
         ) : null}
 
         {/* Filters */}
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 20px', marginBottom: '16px' }}>
+        <div style={{ background: 'var(--surface-0)', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px 20px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
             <input
               type="text"
               placeholder="🔍 Search by invoice #, order ID..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', outline: 'none', gridColumn: 'span 2' }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.85rem', outline: 'none', gridColumn: 'span 2' }}
             />
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', background: 'white' }}>
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.85rem', background: 'var(--surface-0)' }}>
               <option value="">All Statuses</option>
               <option value="PENDING_SETTLEMENT">Pending Settlement</option>
               <option value="SETTLED">Settled</option>
               <option value="GENERATED">Generated</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
-            <select value={filterMonth} onChange={e => setFilterMonth(Number(e.target.value))} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', background: 'white' }}>
+            <select value={filterMonth} onChange={e => setFilterMonth(Number(e.target.value))} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.85rem', background: 'var(--surface-0)' }}>
               <option value={0}>All Months</option>
               {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
             </select>
-            <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', background: 'white' }}>
+            <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.85rem', background: 'var(--surface-0)' }}>
               <option value={0}>All Years</option>
               {[currentYear, currentYear - 1, currentYear - 2].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} title="From date" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem' }} />
-            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} title="To date" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem' }} />
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} title="From date" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.85rem' }} />
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} title="To date" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.85rem' }} />
             <button onClick={() => { setSearchQuery(''); setFilterStatus(''); setFilterDept(''); setFilterVendor(''); setDateFrom(''); setDateTo(''); setFilterMonth(0); setFilterYear(0); }} style={{ padding: '8px 16px', borderRadius: '8px', background: '#F3F4F6', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
               ✕ Clear
             </button>
@@ -567,9 +567,9 @@ export default function BillsPage() {
         )}
 
         {/* Bills Table */}
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: 'var(--surface-0)', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           {/* Table header */}
-          <div style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontWeight: 700, color: '#374151', fontSize: '0.9rem' }}>
               {loading ? 'Loading...' : `${totalBills} bills found`}
             </span>
@@ -588,46 +588,46 @@ export default function BillsPage() {
             </div>
           ) : (
             <>
-              {/* Desktop table */}
-              <div style={{ overflowX: 'auto' }}>
+              {/* Desktop Table View */}
+              <div className="desktop-only-table" style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead>
-                    <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#374151', width: '40px' }}>
+                    <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid var(--gray-200)' }}>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700)', width: '40px' }}>
                         <input type="checkbox" checked={selectedBills.size === bills.length && bills.length > 0} onChange={toggleSelectAll} style={{ cursor: 'pointer' }} />
                       </th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Invoice #</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Order ID</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Department</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Vendor</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#374151' }}>Amount</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Bill Date</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#374151' }}>Settlement Status</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: '#374151' }}>Actions</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700)' }}>Invoice #</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700)' }}>Order ID</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700)' }}>Department</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700)' }}>Vendor</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700)' }}>Amount</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700)' }}>Bill Date</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700)' }}>Settlement Status</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700)' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bills.map((bill, idx) => {
                       const statusStyle = getStatusStyle(bill.settlement_status);
                       return (
-                        <tr key={bill.id} style={{ borderBottom: '1px solid #F3F4F6', background: selectedBills.has(bill.id) ? '#F0FDFA' : (idx % 2 === 0 ? 'white' : '#FAFAFA') }}>
+                        <tr key={bill.id} style={{ borderBottom: '1px solid var(--gray-200)', background: selectedBills.has(bill.id) ? 'rgba(37,99,235,0.08)' : 'transparent' }}>
                           <td style={{ padding: '10px 12px' }}>
                             <input type="checkbox" checked={selectedBills.has(bill.id)} onChange={() => toggleSelect(bill.id)} style={{ cursor: 'pointer' }} />
                           </td>
-                          <td style={{ padding: '10px 12px', fontWeight: 700, color: '#0F766E', fontFamily: 'monospace' }}>{bill.invoice_number || bill.id}</td>
-                          <td style={{ padding: '10px 12px', color: '#6B7280' }}>{bill.order_id}</td>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'monospace' }}>{bill.invoice_number || bill.id}</td>
+                          <td style={{ padding: '10px 12px', color: 'var(--gray-500)' }}>{bill.order_id}</td>
                           <td style={{ padding: '10px 12px' }}>{bill.department_label || bill.department_id || '—'}</td>
                           <td style={{ padding: '10px 12px' }}>
                             {bill.vendor_name ? (
-                              <span style={{ fontWeight: 700, color: '#0F172A' }}>🍽️ {bill.vendor_name}</span>
+                              <span style={{ fontWeight: 700, color: 'var(--gray-900)' }}>🍽️ {bill.vendor_name}</span>
                             ) : (
-                              <span style={{ background: '#F1F5F9', color: '#475569', padding: '2px 8px', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 800 }}>
+                              <span style={{ background: 'var(--surface-2)', color: 'var(--gray-600)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 800 }}>
                                 📑 Dept Master Receipt
                               </span>
                             )}
                           </td>
-                          <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>{fmtAmount(bill.amount)}</td>
-                          <td style={{ padding: '10px 12px', color: '#6B7280' }}>{fmtDate(bill.generated_at)}</td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-900)' }}>{fmtAmount(bill.amount)}</td>
+                          <td style={{ padding: '10px 12px', color: 'var(--gray-500)' }}>{fmtDate(bill.generated_at)}</td>
                           <td style={{ padding: '10px 12px' }}>
                             <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, background: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}`, whiteSpace: 'nowrap' }}>
                               {bill.settlement_status?.replace('_', ' ') || 'PENDING'}
@@ -635,7 +635,7 @@ export default function BillsPage() {
                           </td>
                           <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                             <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                              <button onClick={() => viewBillPdf(bill)} title="View PDF" style={{ padding: '4px 10px', borderRadius: '6px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>
+                              <button onClick={() => viewBillPdf(bill)} title="View PDF" style={{ padding: '4px 10px', borderRadius: '6px', background: 'rgba(37,99,235,0.1)', color: 'var(--primary)', border: '1px solid var(--primary)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>
                                 📄 PDF
                               </button>
                             </div>
@@ -647,15 +647,88 @@ export default function BillsPage() {
                 </table>
               </div>
 
+              {/* Mobile Card List (< 768px) */}
+              <div className="mobile-only-block">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px' }}>
+                  {bills.map((bill) => {
+                    const statusStyle = getStatusStyle(bill.settlement_status);
+                    return (
+                      <div
+                        key={bill.id}
+                        style={{
+                          background: 'var(--surface-1)',
+                          border: `1px solid ${selectedBills.has(bill.id) ? 'var(--primary)' : 'var(--gray-200)'}`,
+                          borderRadius: '12px',
+                          padding: '14px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedBills.has(bill.id)}
+                              onChange={() => toggleSelect(bill.id)}
+                              style={{ width: '18px', height: '18px' }}
+                            />
+                            <span style={{ fontWeight: 800, color: 'var(--primary)', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                              {bill.invoice_number || bill.id}
+                            </span>
+                          </div>
+                          <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 700, background: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}` }}>
+                            {bill.settlement_status?.replace('_', ' ') || 'PENDING'}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--gray-600)' }}>
+                          <span>{bill.department_label || bill.department_id || 'All Depts'}</span>
+                          <span style={{ fontWeight: 700, color: 'var(--gray-900)', fontSize: '0.95rem' }}>{fmtAmount(bill.amount)}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--gray-500)', borderTop: '1px solid var(--gray-200)', paddingTop: '6px', marginTop: '2px' }}>
+                          <span>{bill.vendor_name ? `🍽️ ${bill.vendor_name}` : '📑 Master Bill'}</span>
+                          <span>{fmtDate(bill.generated_at)}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                          <button
+                            onClick={() => viewBillPdf(bill)}
+                            style={{
+                              flex: 1,
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              background: 'var(--primary)',
+                              color: 'white',
+                              border: 'none',
+                              fontSize: '0.8rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            📄 View A4 Bill
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Pagination */}
               {totalPages > 1 && (
-                <div style={{ padding: '12px 20px', borderTop: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ padding: '12px 20px', borderTop: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                   <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>Page {page} of {totalPages}</span>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', background: page === 1 ? '#F9FAFB' : 'white', cursor: page === 1 ? 'default' : 'pointer', fontWeight: 600 }}>
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', background: page === 1 ? '#F9FAFB' : 'white', cursor: page === 1 ? 'default' : 'pointer', fontWeight: 600 }}>
                       ← Prev
                     </button>
-                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', background: page === totalPages ? '#F9FAFB' : 'white', cursor: page === totalPages ? 'default' : 'pointer', fontWeight: 600 }}>
+                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', background: page === totalPages ? '#F9FAFB' : 'white', cursor: page === totalPages ? 'default' : 'pointer', fontWeight: 600 }}>
                       Next →
                     </button>
                   </div>
@@ -665,6 +738,16 @@ export default function BillsPage() {
           )}
         </div>
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-only-table { display: none !important; }
+          .mobile-only-block { display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .desktop-only-table { display: block !important; }
+          .mobile-only-block { display: none !important; }
+        }
+      `}</style>
     </AppShell>
   );
 }

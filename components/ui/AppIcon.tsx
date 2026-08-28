@@ -160,7 +160,7 @@ export const ICON_COLORS: Record<string, IconColorTheme> = {
   notifications:{ color: '#FB923C', bg: 'rgba(251, 146, 60, 0.12)', glow: 'rgba(251, 146, 60, 0.25)' }, // Coral
   audit:        { color: '#6366F1', bg: 'rgba(99, 102, 241, 0.12)', glow: 'rgba(99, 102, 241, 0.25)' }, // Indigo
   health:       { color: '#14B8A6', bg: 'rgba(20, 184, 166, 0.12)', glow: 'rgba(20, 184, 166, 0.25)' }, // Mint
-  settings:     { color: '#64748B', bg: 'rgba(100, 116, 139, 0.12)', glow: 'rgba(100, 116, 139, 0.25)' }, // Slate
+  settings:     { color: 'var(--gray-500, #64748B)', bg: 'rgba(100, 116, 139, 0.12)', glow: 'rgba(100, 116, 139, 0.25)' }, // Slate
   profile:      { color: '#2563EB', bg: 'rgba(37, 99, 235, 0.12)', glow: 'rgba(37, 99, 235, 0.25)' }, // Blue
   menu:         { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)', glow: 'rgba(245, 158, 11, 0.25)' },
   incoming:     { color: '#6366F1', bg: 'rgba(99, 102, 241, 0.12)', glow: 'rgba(99, 102, 241, 0.25)' },
@@ -168,7 +168,7 @@ export const ICON_COLORS: Record<string, IconColorTheme> = {
   modifications:{ color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.12)', glow: 'rgba(6, 182, 212, 0.25)' },
   availability: { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)', glow: 'rgba(139, 92, 246, 0.25)' },
   revenue:      { color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)', glow: 'rgba(16, 185, 129, 0.25)' },
-  history:      { color: '#64748B', bg: 'rgba(100, 116, 139, 0.12)', glow: 'rgba(100, 116, 139, 0.25)' },
+  history:      { color: 'var(--gray-500, #64748B)', bg: 'rgba(100, 116, 139, 0.12)', glow: 'rgba(100, 116, 139, 0.25)' },
   logout:       { color: '#EF4444', bg: 'rgba(239, 68, 68, 0.12)', glow: 'rgba(239, 68, 68, 0.25)' },
 };
 

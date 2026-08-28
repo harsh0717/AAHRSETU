@@ -125,7 +125,7 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
     >
       <div
         style={{
-          background: 'white',
+          background: 'var(--surface-0)',
           width: '100%',
           maxWidth: '460px',
           height: isMobile ? '100dvh' : 'auto',
@@ -134,7 +134,7 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
           flexDirection: 'column',
           overflow: 'hidden',
           boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-          border: '1px solid #E2E8F0',
+          border: '1px solid var(--gray-200, #E2E8F0)',
           position: 'relative'
         }}
       >
@@ -149,13 +149,13 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
             flexShrink: 0
           }}
         >
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>
             Adjust Profile Picture
           </h3>
           <button
             onClick={onCancel}
             style={{
-              background: '#F1F5F9',
+              background: 'var(--surface-2)',
               border: 'none',
               borderRadius: '50%',
               width: '32px',
@@ -165,7 +165,7 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 'bold',
-              color: '#64748B'
+              color: 'var(--gray-500, #64748B)'
             }}
           >
             ✕
@@ -264,8 +264,8 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
         <div
           style={{
             padding: '20px 24px',
-            background: '#F8FAFC',
-            borderTop: '1px solid #E2E8F0',
+            background: 'var(--surface-1)',
+            borderTop: '1px solid var(--gray-200, #E2E8F0)',
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
@@ -274,7 +274,7 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
         >
           {/* Zoom Slider */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '8px' }}>
               <span>🔍 Zoom</span>
               <span>{Math.round(zoom * 100)}%</span>
             </div>
@@ -301,9 +301,9 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
               onClick={handleRotate}
               style={{
                 flex: 1,
-                background: 'white',
-                border: '1px solid #CBD5E1',
-                color: '#475569',
+                background: 'var(--surface-0)',
+                border: '1px solid var(--gray-300, #CBD5E1)',
+                color: 'var(--gray-600, #475569)',
                 padding: '10px 0',
                 borderRadius: '10px',
                 fontSize: '0.82rem',
@@ -321,9 +321,9 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
               onClick={handleReset}
               style={{
                 flex: 1,
-                background: 'white',
-                border: '1px solid #CBD5E1',
-                color: '#475569',
+                background: 'var(--surface-0)',
+                border: '1px solid var(--gray-300, #CBD5E1)',
+                color: 'var(--gray-600, #475569)',
                 padding: '10px 0',
                 borderRadius: '10px',
                 fontSize: '0.82rem',
@@ -345,9 +345,9 @@ export default function ImageCropperModal({ imageSrc, onCrop, onCancel }: ImageC
               onClick={onCancel}
               style={{
                 flex: 1,
-                background: 'white',
-                border: '1px solid #CBD5E1',
-                color: '#64748B',
+                background: 'var(--surface-0)',
+                border: '1px solid var(--gray-300, #CBD5E1)',
+                color: 'var(--gray-500, #64748B)',
                 padding: '12px 0',
                 borderRadius: '12px',
                 fontSize: '0.88rem',

@@ -156,7 +156,7 @@ export default function FirstTimeOnboardingModal() {
       {/* Modal shell — flex column so header/footer are fixed, body scrolls */}
       <div
         style={{
-          background: 'white',
+          background: 'var(--surface-0)',
           borderRadius: '20px',
           width: '100%',
           maxWidth: '460px',
@@ -164,7 +164,7 @@ export default function FirstTimeOnboardingModal() {
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 25px 60px -12px rgba(0,0,0,0.30)',
-          border: '1px solid #E2E8F0',
+          border: '1px solid var(--gray-200, #E2E8F0)',
           overflow: 'hidden',
         }}
       >
@@ -181,10 +181,10 @@ export default function FirstTimeOnboardingModal() {
         >
           <div>
             <div style={{ fontSize: '1.6rem', lineHeight: 1, marginBottom: '6px' }}>👋</div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0 }}>
               Welcome, {session.name.split(' ')[0]}!
             </h2>
-            <p style={{ fontSize: '0.79rem', color: '#64748B', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+            <p style={{ fontSize: '0.79rem', color: 'var(--gray-500, #64748B)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
               Complete your profile now or set it up later from Profile Settings.
             </p>
           </div>
@@ -193,12 +193,12 @@ export default function FirstTimeOnboardingModal() {
             aria-label="Skip profile setup"
             style={{
               background: 'none',
-              border: '1px solid #CBD5E1',
+              border: '1px solid var(--gray-300, #CBD5E1)',
               borderRadius: '8px',
               padding: '5px 12px',
               fontSize: '0.76rem',
               fontWeight: 700,
-              color: '#64748B',
+              color: 'var(--gray-500, #64748B)',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
               flexShrink: 0,
@@ -295,7 +295,7 @@ export default function FirstTimeOnboardingModal() {
 
           {/* Full Name */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>
               Full Name
             </label>
             <input
@@ -307,7 +307,7 @@ export default function FirstTimeOnboardingModal() {
                 width: '100%',
                 padding: '10px 14px',
                 borderRadius: '10px',
-                border: '1px solid #CBD5E1',
+                border: '1px solid var(--gray-300, #CBD5E1)',
                 fontSize: '0.9rem',
                 outline: 'none',
                 fontFamily: 'inherit',
@@ -318,7 +318,7 @@ export default function FirstTimeOnboardingModal() {
 
           {/* Mobile */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>
               Mobile Number <span style={{ color: '#94A3B8', fontWeight: 400 }}>(optional)</span>
             </label>
             <input
@@ -344,7 +344,7 @@ export default function FirstTimeOnboardingModal() {
           </div>
 
           {/* Account info */}
-          <div style={{ background: '#F8FAFC', padding: '10px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.79rem', color: '#475569' }}>
+          <div style={{ background: 'var(--surface-1)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.79rem', color: 'var(--gray-600, #475569)' }}>
             <div>🏢 <strong>Role:</strong> {session.role.charAt(0).toUpperCase() + session.role.slice(1)}</div>
             <div style={{ marginTop: '4px' }}>📧 <strong>Email:</strong> {session.email}</div>
           </div>
@@ -371,9 +371,9 @@ export default function FirstTimeOnboardingModal() {
               onClick={handleSkip}
               style={{
                 flex: 1,
-                background: 'white',
-                color: '#64748B',
-                border: '1px solid #CBD5E1',
+                background: 'var(--surface-0)',
+                color: 'var(--gray-500, #64748B)',
+                border: '1px solid var(--gray-300, #CBD5E1)',
                 borderRadius: '12px',
                 padding: '11px',
                 fontSize: '0.86rem',

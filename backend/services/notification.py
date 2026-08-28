@@ -300,26 +300,25 @@ class NotificationService:
         """
         import calendar
         month_name = calendar.month_name[month] if 1 <= month <= 12 else str(month)
-        await self.send_notification(
-            recipient_roles=["admin", "dcr", "administration"],
-            msg_type=event_type,
-            template_kwargs={
-                "settlement_number": settlement_number,
-                "month": month_name,
-                "year": year,
-                "amount": f"{amount:,.2f}"
-            }
-        )
+        for role in ["admin", "dcr", "administration"]:
+            await self.create_and_send_notification(
+                msg_key="administrative",
+                params={"message": f"Settlement {settlement_number} finalized for {month_name} {year} totaling ₹{amount:,.2f}."},
+                msg_type=event_type,
+                recipient_role=role,
+                route="/dcr#settlements"
+            )
 
     async def notify_month_end_reminder(self, days_remaining: int):
         """
         Send month-end payment/settlement reminder to Administration and Admin users.
         """
-        await self.send_notification(
-            recipient_roles=["admin", "dcr", "administration"],
-            msg_type="month_end_reminder",
-            template_kwargs={
-                "days": days_remaining
-            }
-        )
+        for role in ["admin", "dcr", "administration"]:
+            await self.create_and_send_notification(
+                msg_key="administrative",
+                params={"message": f"Month-end settlement audit reminder: {days_remaining} day(s) remaining in this billing cycle."},
+                msg_type="month_end_reminder",
+                recipient_role=role,
+                route="/dcr#settlements"
+            )
 

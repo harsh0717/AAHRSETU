@@ -62,9 +62,9 @@ export default function UiverseBadge({
       dotColor: '#10B981',
     },
     neutral: {
-      background: '#F1F5F9',
-      color: '#475569',
-      border: '1px solid #E2E8F0',
+      background: 'var(--surface-2)',
+      color: 'var(--gray-600, #475569)',
+      border: '1px solid var(--gray-200, #E2E8F0)',
       dotColor: '#94A3B8',
     },
   }[variant];

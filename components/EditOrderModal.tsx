@@ -120,7 +120,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
       padding: '16px'
     }}>
       <div style={{
-        background: 'white',
+        background: 'var(--surface-0)',
         borderRadius: '20px',
         width: '100%',
         maxWidth: '840px',
@@ -133,17 +133,17 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
         {/* Modal Header */}
         <div style={{
           padding: '20px 24px',
-          borderBottom: '1px solid #E2E8F0',
+          borderBottom: '1px solid var(--gray-200, #E2E8F0)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: '#F8FAFC'
+          background: 'var(--surface-1)'
         }}>
           <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>✏️</span> Edit Requisition: {order.id}
             </h2>
-            <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '4px 0 0' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', margin: '4px 0 0' }}>
               Update item quantities, add/remove items, or revise details before DCR final approval.
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
             {/* Title & Purpose Row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '6px' }}>
                   Requisition Title *
                 </label>
                 <input
@@ -184,7 +184,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '6px' }}>
                   Purpose / Notes
                 </label>
                 <input
@@ -199,9 +199,9 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
             </div>
 
             {/* Current Selected Items Summary Pill Box */}
-            <div style={{ background: '#F1F5F9', borderRadius: '14px', padding: '14px 18px', border: '1px solid #E2E8F0' }}>
+            <div style={{ background: 'var(--surface-2)', borderRadius: '14px', padding: '14px 18px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1E293B' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-800, #1E293B)' }}>
                   🛒 Selected Items ({totalItemCount} items)
                 </span>
                 <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2563EB' }}>
@@ -221,8 +221,8 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
                     const price = itemObj?.price || 15.0;
                     return (
                       <div key={id} style={{
-                        background: 'white',
-                        border: '1px solid #CBD5E1',
+                        background: 'var(--surface-0)',
+                        border: '1px solid var(--gray-300, #CBD5E1)',
                         borderRadius: '10px',
                         padding: '6px 10px',
                         display: 'flex',
@@ -230,13 +230,13 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
                         gap: '8px',
                         fontSize: '0.82rem'
                       }}>
-                        <span style={{ fontWeight: 700, color: '#0F172A' }}>{name}</span>
-                        <span style={{ color: '#64748B' }}>₹{price} × {qty}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{name}</span>
+                        <span style={{ color: 'var(--gray-500, #64748B)' }}>₹{price} × {qty}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px' }}>
                           <button
                             type="button"
                             onClick={() => handleQtyChange(id, qty - 1)}
-                            style={{ width: '22px', height: '22px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#F8FAFC', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}
+                            style={{ width: '22px', height: '22px', borderRadius: '6px', border: '1px solid var(--gray-300, #CBD5E1)', background: 'var(--surface-1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}
                           >
                             −
                           </button>
@@ -265,12 +265,12 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
 
             {/* Menu Selection Section */}
             <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#334155', marginBottom: '10px' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-700, #334155)', marginBottom: '10px' }}>
                 Add More Items from Canteen Menus:
               </div>
 
               {/* Vendor Tabs */}
-              <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px', marginBottom: '14px', overflowX: 'auto' }}>
+              <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--gray-200, #E2E8F0)', paddingBottom: '8px', marginBottom: '14px', overflowX: 'auto' }}>
                 {menuByVendor.map(v => (
                   <button
                     key={v.id}
@@ -302,8 +302,8 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
                       <div
                         key={item.id}
                         style={{
-                          border: qty > 0 ? '1.5px solid #2563EB' : '1px solid #E2E8F0',
-                          background: qty > 0 ? '#EFF6FF' : 'white',
+                          border: qty > 0 ? '1.5px solid #2563EB' : '1px solid var(--gray-200, #E2E8F0)',
+                          background: qty > 0 ? 'rgba(37, 99, 235, 0.12)' : 'var(--surface-0)',
                           borderRadius: '12px',
                           padding: '10px 12px',
                           display: 'flex',
@@ -313,7 +313,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
                         }}
                       >
                         <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-900, #0F172A)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {item.name}
                           </div>
                           <div style={{ fontSize: '0.78rem', color: '#2563EB', fontWeight: 800 }}>
@@ -329,7 +329,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
                               padding: '4px 10px',
                               borderRadius: '8px',
                               border: '1px solid #2563EB',
-                              background: 'white',
+                              background: 'var(--surface-0)',
                               color: '#2563EB',
                               fontSize: '0.75rem',
                               fontWeight: 700,
@@ -343,11 +343,11 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
                             <button
                               type="button"
                               onClick={() => handleQtyChange(item.id, qty - 1)}
-                              style={{ width: '24px', height: '24px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'white', cursor: 'pointer', fontWeight: 800, color: '#2563EB' }}
+                              style={{ width: '24px', height: '24px', borderRadius: '6px', border: '1px solid var(--gray-300, #CBD5E1)', background: 'var(--surface-0)', cursor: 'pointer', fontWeight: 800, color: '#2563EB' }}
                             >
                               −
                             </button>
-                            <span style={{ fontWeight: 800, fontSize: '0.82rem', color: '#0F172A', minWidth: '14px', textAlign: 'center' }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.82rem', color: 'var(--gray-900, #0F172A)', minWidth: '14px', textAlign: 'center' }}>
                               {qty}
                             </span>
                             <button
@@ -371,11 +371,11 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
           {/* Modal Footer */}
           <div style={{
             padding: '16px 24px',
-            borderTop: '1px solid #E2E8F0',
+            borderTop: '1px solid var(--gray-200, #E2E8F0)',
             display: 'flex',
             justifyContent: 'flex-end',
             gap: '12px',
-            background: '#F8FAFC'
+            background: 'var(--surface-1)'
           }}>
             <button
               type="button"

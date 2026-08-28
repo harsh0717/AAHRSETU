@@ -421,9 +421,9 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 }}>
                   {/* Tile 1: Pending Audits */}
                   <div style={{
-                    background: 'white',
+                    background: 'var(--surface-0)',
                     borderRadius: '16px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1.5px solid var(--gray-200, #E2E8F0)',
                     padding: '20px 24px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                   }}>
@@ -438,16 +438,16 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {totalPending}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Orders awaiting administrative verification & clearance
                     </div>
                   </div>
 
                   {/* Tile 2: Pending Settlements */}
                   <div style={{
-                    background: 'white',
+                    background: 'var(--surface-0)',
                     borderRadius: '16px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1.5px solid var(--gray-200, #E2E8F0)',
                     padding: '20px 24px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                   }}>
@@ -462,14 +462,14 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: Number(financialSummary?.pending_settlement_total || 0) > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.5px' }}>
                       {financialSummary ? `₹${Number(financialSummary.pending_settlement_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹0.00'}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Total unsettled canteen payables awaiting clearance
                     </div>
                   </div>
 
                   {/* Tile 3: Total Disbursed */}
                   <div style={{
-                    background: 'white',
+                    background: 'var(--surface-0)',
                     borderRadius: '16px',
                     border: '1.5px solid #10B981',
                     padding: '20px 24px',
@@ -486,7 +486,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {financialSummary ? `₹${Number(financialSummary.settled_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹0.00'}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Direct NEFT/RTGS/UPI cleared disbursements
                     </div>
                   </div>
@@ -546,10 +546,10 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
               <div className="card" style={{ padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.15rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>🏛️</span> DCR Financial Audit & Approval Queue
                     </h3>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748B' }}>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--gray-500, #64748B)' }}>
                       Review department budget requisitions, verify item allocations, and grant administrative clearance.
                     </p>
                   </div>
@@ -577,18 +577,18 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                           <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#B45309' }}>#{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 6px 0', fontSize: '0.8rem', color: '#64748B' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>
                           <strong>Dept:</strong> {o.department_label} · <strong>Prepared By:</strong> {o.created_by_name}
                         </p>
                         {o.purpose && (
-                          <p style={{ margin: '0 0 10px 0', fontSize: '0.75rem', color: '#475569', fontStyle: 'italic' }}>
+                          <p style={{ margin: '0 0 10px 0', fontSize: '0.75rem', color: 'var(--gray-600, #475569)', fontStyle: 'italic' }}>
                             Purpose: "{o.purpose}"
                           </p>
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: '1px solid #FDE68A', borderBottom: '1px solid #FDE68A', marginBottom: '12px' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</span>
-                          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -615,7 +615,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                       </div>
                     ))}
                     {pendingQueue.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '36px', color: 'var(--gray-400)', fontSize: '0.9rem', background: '#F8FAFC', borderRadius: '14px', border: '1px dashed #CBD5E1' }}>
+                      <div style={{ textAlign: 'center', padding: '36px', color: 'var(--gray-400)', fontSize: '0.9rem', background: 'var(--surface-1)', borderRadius: '14px', border: '1px dashed #CBD5E1' }}>
                         🎉 No requisitions currently awaiting DCR financial audit.
                       </div>
                     )}
@@ -624,7 +624,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', overflow: 'hidden' }}>
                     <table className="table">
                       <thead>
-                        <tr style={{ background: '#F8FAFC' }}>
+                        <tr style={{ background: 'var(--surface-1)' }}>
                           <th style={{ padding: '12px 14px' }}>Order ID</th>
                           <th style={{ padding: '12px 14px' }}>Title Description</th>
                           <th style={{ padding: '12px 14px' }}>Department</th>
@@ -638,13 +638,13 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                         {pendingQueue.map(o => (
                           <tr key={o.id} style={{ transition: 'background 0.15s' }}>
                             <td style={{ fontWeight: 800, color: '#B45309', padding: '12px 14px' }}>#{o.id}</td>
-                            <td style={{ fontWeight: 700, color: '#0F172A', padding: '12px 14px' }}>
+                            <td style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)', padding: '12px 14px' }}>
                               <div>{o.title}</div>
-                              {o.purpose && <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 500 }}>{o.purpose}</div>}
+                              {o.purpose && <div style={{ fontSize: '0.72rem', color: 'var(--gray-500, #64748B)', fontWeight: 500 }}>{o.purpose}</div>}
                             </td>
                             <td style={{ padding: '12px 14px' }}>{o.department_label}</td>
                             <td style={{ padding: '12px 14px' }}>{o.created_by_name}</td>
-                            <td style={{ fontWeight: 800, color: '#0F172A', padding: '12px 14px' }}>₹{o.total_bill_amount.toFixed(2)}</td>
+                            <td style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)', padding: '12px 14px' }}>₹{o.total_bill_amount.toFixed(2)}</td>
                             <td style={{ padding: '12px 14px' }}><StatusBadge status={o.status} size="sm" /></td>
                             <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                               <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
@@ -695,11 +695,11 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                           <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#047857' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #A7F3D0' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -756,11 +756,11 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                           <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#991B1B' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #FECACA' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -812,16 +812,16 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {historyOrders.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                      <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-1)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--gray-200, #E2E8F0)' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -873,13 +873,13 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {ordersWithBills.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: 'white' }}>
+                      <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-0)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                           <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: '#64748B' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>
                           Billing Date: {o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}
                         </p>
                         <Link
@@ -949,11 +949,11 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
 
             {/* TAB: REPORTS */}
             {activeTab === 'reports' && (
-              <div className="card" style={{ padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div className="card" style={{ padding: '24px', background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 4px', color: '#0F172A' }}>📊 Financial & Departmental Audit Reports</h3>
-                    <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748B' }}>Access comprehensive department ledgers, vendor aging, and certified CA settlement statements.</p>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--gray-900, #0F172A)' }}>📊 Financial & Departmental Audit Reports</h3>
+                    <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--gray-500, #64748B)' }}>Access comprehensive department ledgers, vendor aging, and certified CA settlement statements.</p>
                   </div>
                   <Link
                     href="/dcr/reports"
@@ -976,20 +976,20 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px', marginTop: '20px' }}>
-                  <div style={{ padding: '16px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface-1)', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                     <div style={{ fontSize: '1.2rem', marginBottom: '6px' }}>🏛️</div>
-                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem', marginBottom: '4px' }}>Department-Wise Budget Ledger</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Track spend share, requisition counts, and average order value across all college branches.</div>
+                    <div style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)', fontSize: '0.92rem', marginBottom: '4px' }}>Department-Wise Budget Ledger</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>Track spend share, requisition counts, and average order value across all college branches.</div>
                   </div>
-                  <div style={{ padding: '16px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface-1)', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                     <div style={{ fontSize: '1.2rem', marginBottom: '6px' }}>🍽️</div>
-                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem', marginBottom: '4px' }}>Canteen Disbursements & Aging</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Real-time 0-30 / 31-60 / 60+ days payable analysis and bank UTR transaction logs.</div>
+                    <div style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)', fontSize: '0.92rem', marginBottom: '4px' }}>Canteen Disbursements & Aging</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>Real-time 0-30 / 31-60 / 60+ days payable analysis and bank UTR transaction logs.</div>
                   </div>
-                  <div style={{ padding: '16px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface-1)', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                     <div style={{ fontSize: '1.2rem', marginBottom: '6px' }}>📑</div>
-                    <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem', marginBottom: '4px' }}>Statutory CA Downloads</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>1-Click certified PDF statements and multi-sheet Excel (.xlsx) workbooks for audits.</div>
+                    <div style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)', fontSize: '0.92rem', marginBottom: '4px' }}>Statutory CA Downloads</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>1-Click certified PDF statements and multi-sheet Excel (.xlsx) workbooks for audits.</div>
                   </div>
                 </div>
               </div>
@@ -1037,8 +1037,8 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
             {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
               <div style={{ maxWidth: '560px' }}>
-                <div className="card" style={{ padding: '28px', background: 'white', borderRadius: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0' }}>
+                <div className="card" style={{ padding: '28px', background: 'var(--surface-0)', borderRadius: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid var(--gray-200, #E2E8F0)' }}>
                     <div style={{ width: '72px', height: '72px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', outline: '2px solid #BFDBFE', boxShadow: '0 4px 12px rgba(37,99,235,0.15)' }}>
                       {profileAvatarPreview ? (
                         <img src={profileAvatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1049,9 +1049,9 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                       )}
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>{session.name}</h3>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0 }}>{session.name}</h3>
                       <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, marginTop: '2px' }}>🟢 DCR Officer</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '1px' }}>{session.email}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)', marginTop: '1px' }}>{session.email}</div>
                     </div>
                   </div>
 
@@ -1159,29 +1159,29 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
           >
             <div
               style={{
-                background: 'white',
+                background: 'var(--surface-0)',
                 borderRadius: '20px',
                 maxWidth: '600px',
                 width: '100%',
                 maxHeight: '90vh',
                 overflowY: 'auto',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                border: '1px solid #E2E8F0',
+                border: '1px solid var(--gray-200, #E2E8F0)',
                 padding: '24px',
                 position: 'relative'
               }}
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--gray-200, #E2E8F0)', paddingBottom: '16px', marginBottom: '20px' }}>
                 <div>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FEF3C7', color: '#92400E', padding: '3px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800, marginBottom: '6px' }}>
                     🏛️ DCR ADMINISTRATIVE AUDIT
                   </div>
-                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0F172A' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>
                     {selectedAuditOrder.title}
                   </h3>
-                  <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '2px' }}>
                     Requisition ID: <strong>#{selectedAuditOrder.id}</strong> · Dept: <strong>{selectedAuditOrder.department_label}</strong>
                   </div>
                 </div>
@@ -1193,9 +1193,9 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   }}
                   disabled={auditActioning}
                   style={{
-                    background: '#F1F5F9',
+                    background: 'var(--surface-2)',
                     border: 'none',
-                    color: '#64748B',
+                    color: 'var(--gray-500, #64748B)',
                     borderRadius: '50%',
                     width: '32px',
                     height: '32px',
@@ -1211,24 +1211,24 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
               </div>
 
               {/* Requisition Meta Details */}
-              <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '16px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
+              <div style={{ background: 'var(--surface-1)', borderRadius: '14px', padding: '16px', border: '1px solid var(--gray-200, #E2E8F0)', marginBottom: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', fontSize: '0.82rem' }}>
                   <div>
-                    <span style={{ color: '#64748B', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>PREPARED BY</span>
-                    <span style={{ fontWeight: 800, color: '#0F172A' }}>{selectedAuditOrder.created_by_name}</span>
+                    <span style={{ color: 'var(--gray-500, #64748B)', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>PREPARED BY</span>
+                    <span style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{selectedAuditOrder.created_by_name}</span>
                   </div>
                   <div>
-                    <span style={{ color: '#64748B', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>SUBMISSION DATE</span>
-                    <span style={{ fontWeight: 800, color: '#0F172A' }}>{new Date(selectedAuditOrder.created_at).toLocaleDateString('en-IN')}</span>
+                    <span style={{ color: 'var(--gray-500, #64748B)', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>SUBMISSION DATE</span>
+                    <span style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{new Date(selectedAuditOrder.created_at).toLocaleDateString('en-IN')}</span>
                   </div>
                   <div>
-                    <span style={{ color: '#64748B', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>ESTIMATED TOTAL</span>
+                    <span style={{ color: 'var(--gray-500, #64748B)', display: 'block', fontSize: '0.72rem', fontWeight: 700 }}>ESTIMATED TOTAL</span>
                     <span style={{ fontWeight: 900, color: '#059669', fontSize: '1.05rem' }}>₹{selectedAuditOrder.total_bill_amount.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {selectedAuditOrder.purpose && (
-                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #E2E8F0', fontSize: '0.78rem', color: '#475569' }}>
+                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.78rem', color: 'var(--gray-600, #475569)' }}>
                     <strong>Official Purpose:</strong> {selectedAuditOrder.purpose}
                   </div>
                 )}
@@ -1236,19 +1236,19 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
 
               {/* Itemized Vendor Breakdown Summary */}
               <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#334155', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-700, #334155)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>📋</span> Itemized Canteen Allocation
                 </h4>
-                <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', overflow: 'hidden' }}>
+                <div style={{ border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '12px', overflow: 'hidden' }}>
                   {(selectedAuditOrder.vendor_orders || []).map((vo, vIdx) => (
-                    <div key={vo.id || vIdx} style={{ borderBottom: vIdx < (selectedAuditOrder.vendor_orders?.length || 1) - 1 ? '1px solid #E2E8F0' : 'none' }}>
-                      <div style={{ padding: '8px 12px', background: '#F1F5F9', fontWeight: 700, fontSize: '0.78rem', color: '#475569', display: 'flex', justifyContent: 'space-between' }}>
+                    <div key={vo.id || vIdx} style={{ borderBottom: vIdx < (selectedAuditOrder.vendor_orders?.length || 1) - 1 ? '1px solid var(--gray-200, #E2E8F0)' : 'none' }}>
+                      <div style={{ padding: '8px 12px', background: 'var(--surface-2)', fontWeight: 700, fontSize: '0.78rem', color: 'var(--gray-600, #475569)', display: 'flex', justifyContent: 'space-between' }}>
                         <span>🏪 {vo.vendor_name}</span>
                         <span>₹{(vo.bill_amount || vo.items?.reduce((s, it) => s + (it.price || 0) * (it.quantity || 1), 0) || 0).toFixed(2)}</span>
                       </div>
                       <div style={{ padding: '8px 12px' }}>
                         {(vo.items || []).map((it, itIdx) => (
-                          <div key={itIdx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#334155', padding: '4px 0' }}>
+                          <div key={itIdx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--gray-700, #334155)', padding: '4px 0' }}>
                             <span>{it.name} × {it.quantity} {it.unit ? `(${it.unit})` : ''}</span>
                             <span style={{ fontWeight: 600 }}>₹{(it.price * it.quantity).toFixed(2)}</span>
                           </div>
@@ -1263,7 +1263,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
               {!auditRejectMode ? (
                 <div>
                   <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '6px' }}>
                       Audit Verification Remarks (Optional)
                     </label>
                     <textarea
@@ -1275,7 +1275,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                         width: '100%',
                         padding: '10px 14px',
                         borderRadius: '10px',
-                        border: '1.5px solid #CBD5E1',
+                        border: '1.5px solid var(--gray-300, #CBD5E1)',
                         fontSize: '0.85rem',
                         resize: 'vertical',
                         boxSizing: 'border-box'

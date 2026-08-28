@@ -51,13 +51,13 @@ export default function ToastContainer() {
         const icon = t.type === 'success' ? '✓' : t.type === 'error' ? '✖' : t.type === 'warning' ? '⚠' : 'ℹ';
         return (
           <div key={t.id} style={{
-            background: 'white',
-            color: '#0F172A',
+            background: 'var(--surface-0)',
+            color: 'var(--gray-900, #0F172A)',
             borderRadius: '12px',
             padding: '12px 16px',
             boxShadow: '0 10px 25px rgba(15, 23, 42, 0.15)',
             borderLeft: `4px solid ${bg}`,
-            border: '1px solid #E2E8F0',
+            border: '1px solid var(--gray-200, #E2E8F0)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',

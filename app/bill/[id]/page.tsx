@@ -343,8 +343,8 @@ export default function BillPage() {
   // ── Loading / Error States ────────────────────────────────────────────────
   if (!session || (!order && !loadError)) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAFAF9' }}>
-        <div style={{ textAlign: 'center', color: '#64748B' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--surface-1)' }}>
+        <div style={{ textAlign: 'center', color: 'var(--gray-500, #64748B)' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
           <div>Loading Invoice Details...</div>
         </div>
@@ -354,11 +354,11 @@ export default function BillPage() {
 
   if (loadError) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAFAF9', padding: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--surface-1)', padding: '24px' }}>
         <div style={{ textAlign: 'center', maxWidth: '460px' }}>
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📄</div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>Invoice Not Found</h2>
-          <p style={{ fontSize: '0.875rem', color: '#64748B', lineHeight: 1.6, marginBottom: '24px' }}>{loadError}</p>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', marginBottom: '10px' }}>Invoice Not Found</h2>
+          <p style={{ fontSize: '0.875rem', color: 'var(--gray-500, #64748B)', lineHeight: 1.6, marginBottom: '24px' }}>{loadError}</p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button
               onClick={() => window.location.reload()}
@@ -368,7 +368,7 @@ export default function BillPage() {
             </button>
             <button
               onClick={() => router.back()}
-              style={{ padding: '10px 20px', background: '#F1F5F9', color: '#0F172A', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
+              style={{ padding: '10px 20px', background: 'var(--surface-2, #F1F5F9)', color: 'var(--gray-900, #0F172A)', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
             >
               ← Go Back
             </button>
@@ -378,38 +378,52 @@ export default function BillPage() {
     );
   }
 
-  if (!order) return null;
+  if (!order || !session) return null;
 
   const roleBackLink = session.role === 'vendor' ? '/vendor' : (session.role === 'admin' ? '/admin' : '/order/' + order.id);
   const principalApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'principal') : null;
   const dcrApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'dcr') : null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF9', padding: '24px 16px', fontFamily: 'var(--font-sans)' }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--surface-1, #FAFAF9)', padding: '16px 12px', fontFamily: 'var(--font-sans)', transition: 'background 0.2s' }}>
+      <div style={{ maxWidth: '820px', margin: '0 auto', width: '100%' }}>
 
-        {/* Navigation */}
-        <div className="no-print" style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600, marginBottom: '10px' }}>
-          <Link href={`/${session.role}`} style={{ color: '#64748B', textDecoration: 'none' }}>Dashboard</Link>{' / '}
+        {/* Navigation Breadcrumb */}
+        <div className="no-print" style={{ fontSize: '0.8rem', color: 'var(--gray-500)', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <Link href={`/${session.role}`} style={{ color: 'var(--gray-500)', textDecoration: 'none' }}>Dashboard</Link>
+          <span>/</span>
           {session.role !== 'vendor' && session.role !== 'admin' ? (
-            <><Link href={`/order/${order.id}`} style={{ color: '#64748B', textDecoration: 'none' }}>Order {order.id}</Link>{' / '}</>
+            <>
+              <Link href={`/order/${order.id}`} style={{ color: 'var(--gray-500)', textDecoration: 'none' }}>Order {order.id}</Link>
+              <span>/</span>
+            </>
           ) : null}
-          <span>Invoice {invoiceNo}</span>
+          <span style={{ color: 'var(--gray-800)', fontWeight: 700 }}>Invoice {invoiceNo}</span>
         </div>
 
-        <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-          <Link href={roleBackLink} style={{ color: '#2563EB', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+        {/* Top Control Bar */}
+        <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <Link href={roleBackLink} style={{ color: 'var(--primary, #2563EB)', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>
             ← {session.role === 'vendor' ? 'Back to Dashboard' : (session.role === 'admin' ? 'Back to Admin Portal' : 'Back to Order Details')}
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', width: '100%', justifyContent: 'flex-end' }}>
             {session.role !== 'vendor' && allVendorOrders.length > 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>Select Invoice:</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: '160px' }}>
                 <select
                   value={selectedVendorId}
                   onChange={e => setSelectedVendorId(e.target.value)}
-                  style={{ height: '36px', padding: '0 10px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, background: 'white' }}
+                  style={{
+                    height: '38px',
+                    padding: '0 10px',
+                    border: '1px solid var(--gray-300)',
+                    borderRadius: '8px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    background: 'var(--surface-0)',
+                    color: 'var(--gray-800)',
+                    width: '100%'
+                  }}
                 >
                   <option value="master">Master College Bill</option>
                   {allVendorOrders.map(vo => (
@@ -423,21 +437,22 @@ export default function BillPage() {
               type="button"
               onClick={handlePrint}
               style={{
-                padding: '8px 16px',
-                background: '#2563EB',
+                padding: '8px 14px',
+                background: 'var(--primary, #2563EB)',
                 color: 'white',
-                border: '1px solid #1D4ED8',
+                border: '1px solid var(--primary, #2563EB)',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '0.85rem',
+                fontWeight: 700,
+                fontSize: '0.82rem',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
+                minHeight: '38px',
                 boxShadow: '0 1px 2px rgba(37,99,235,0.2)'
               }}
             >
-              🖨️ Print Official Bill
+              🖨️ <span className="hide-xs">Print Official</span> Bill
             </button>
 
             <button
@@ -445,145 +460,152 @@ export default function BillPage() {
               onClick={generatePDF}
               disabled={downloading}
               style={{
-                padding: '8px 16px',
-                background: '#FFFFFF',
-                color: '#334155',
-                border: '1px solid #CBD5E1',
+                padding: '8px 14px',
+                background: 'var(--surface-0, #FFFFFF)',
+                color: 'var(--gray-700, #334155)',
+                border: '1px solid var(--gray-300, #CBD5E1)',
                 borderRadius: '8px',
                 cursor: downloading ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
-                fontSize: '0.85rem',
+                fontWeight: 700,
+                fontSize: '0.82rem',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
+                minHeight: '38px',
                 opacity: downloading ? 0.7 : 1,
                 boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
               }}
             >
-              {downloading ? '⏳ Generating PDF...' : '📥 Download PDF'}
+              {downloading ? '⏳ Exporting...' : '📥 Download PDF'}
             </button>
           </div>
         </div>
 
         {/* Bill Preview Sheet */}
-        <div id="bill-print" style={{ background: 'white', borderRadius: '16px', padding: '40px', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
+        <div id="bill-print" className="bill-paper" style={{ padding: '24px 20px', borderRadius: '16px', border: '1px solid var(--gray-200)', background: 'var(--surface-0)', boxShadow: 'var(--shadow-md)', width: '100%', overflowX: 'hidden' }}>
 
           {/* Header */}
-          <div style={{ textAlign: 'center', borderBottom: '2px solid #2563EB', paddingBottom: '16px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 4px' }}>{COLLEGE_INFO.name}</h2>
-            <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '4px 0' }}>{COLLEGE_INFO.address}</p>
-            <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+          <div style={{ textAlign: 'center', borderBottom: '2px solid var(--primary, #2563EB)', paddingBottom: '14px', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gray-900)', margin: '0 0 4px', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+              {COLLEGE_INFO.name}
+            </h2>
+            <p style={{ fontSize: '0.78rem', color: 'var(--gray-500)', margin: '3px 0', overflowWrap: 'break-word' }}>
+              {COLLEGE_INFO.address}
+            </p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--gray-500)', margin: 0, overflowWrap: 'break-word' }}>
               Email: {COLLEGE_INFO.email} | Contact: {COLLEGE_INFO.phone}
             </p>
           </div>
 
-          {/* Title & Metadata */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '20px' }}>
-            <div style={{ flex: 1, minWidth: '280px' }}>
-              <h3 style={{ color: '#2563EB', fontSize: '1.1rem', fontWeight: 800, margin: '0 0 10px' }}>
-                {title.toUpperCase()}
+          {/* Title & Metadata Block */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ flex: 1, minWidth: '240px', width: '100%' }}>
+              <h3 style={{ color: 'var(--primary, #2563EB)', fontSize: '1.05rem', fontWeight: 800, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {title}
               </h3>
-              <table style={{ fontSize: '0.8125rem', borderCollapse: 'collapse', width: '100%' }}>
-                <tbody>
-                  {[
-                    ['Invoice No:', invoiceNo],
-                    ['Order Ref:', order.id],
-                    ['Date:', new Date(order.bill_generated_at || order.updated_at || order.created_at).toLocaleDateString('en-IN')],
-                    ['Department:', order.department_label || 'All Departments'],
-                    ['Coordinator:', order.created_by_name || 'N/A'],
-                    ['Principal:', principalApproval ? `Approved by ${principalApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'principal')?.name || 'Principal'}`],
-                    ['DCR Audit:', dcrApproval ? `Approved by ${dcrApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'dcr')?.name || 'DCR Auditor'}`],
-                  ].map(([label, value]) => (
-                    <tr key={label}>
-                      <td style={{ color: '#64748B', paddingRight: '12px', paddingBottom: '4px', whiteSpace: 'nowrap' }}>{label}</td>
-                      <td style={{ fontWeight: 600, color: '#1E293B' }}>{value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', width: '100%' }}>
+                {[
+                  ['Invoice No:', invoiceNo],
+                  ['Order Ref:', order.id],
+                  ['Date:', new Date(order.bill_generated_at || order.updated_at || order.created_at).toLocaleDateString('en-IN')],
+                  ['Department:', order.department_label || 'All Departments'],
+                  ['Coordinator:', order.created_by_name || 'N/A'],
+                  ['Principal:', principalApproval ? `Approved by ${principalApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'principal')?.name || 'Principal'}`],
+                  ['DCR Audit:', dcrApproval ? `Approved by ${dcrApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'dcr')?.name || 'DCR Auditor'}`],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', borderBottom: '1px dashed var(--gray-100)', paddingBottom: '4px' }}>
+                    <span style={{ color: 'var(--gray-500)', fontWeight: 600, minWidth: '95px', flexShrink: 0 }}>{label}</span>
+                    <span style={{ fontWeight: 700, color: 'var(--gray-900)', flex: 1, minWidth: '140px', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div style={{ textAlign: 'center', background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+            {/* QR Code Verification Box */}
+            <div style={{ textAlign: 'center', background: 'var(--surface-1)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--gray-200)', margin: '0 auto', maxWidth: '140px', flexShrink: 0 }}>
               {qrCodeUrl ? (
                 <Link href={`/verify/invoice/${invoiceNo}`} target="_blank" style={{ textDecoration: 'none' }}>
-                  <img src={qrCodeUrl} alt="Invoice QR" style={{ width: '96px', height: '96px', display: 'block', margin: '0 auto 6px', borderRadius: '4px' }} />
+                  <img src={qrCodeUrl} alt="Invoice QR" style={{ width: '90px', height: '90px', display: 'block', margin: '0 auto 4px', borderRadius: '6px', background: 'var(--surface-0)', padding: '2px' }} />
                 </Link>
               ) : (
-                <div style={{ width: '96px', height: '96px', background: '#F1F5F9', borderRadius: '4px', margin: '0 auto 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#94A3B8' }}>
+                <div style={{ width: '90px', height: '90px', background: 'var(--surface-2)', borderRadius: '6px', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: 'var(--gray-400)' }}>
                   Loading QR...
                 </div>
               )}
-              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#2563EB', letterSpacing: '0.5px' }}>SCAN TO VERIFY</div>
-              <div style={{ fontSize: '0.6rem', color: '#64748B', marginTop: '2px' }}>QR Secure Authenticator</div>
+              <div style={{ fontSize: '0.62rem', fontWeight: 800, color: 'var(--primary, #2563EB)', letterSpacing: '0.5px' }}>SCAN TO VERIFY</div>
+              <div style={{ fontSize: '0.58rem', color: 'var(--gray-500)', marginTop: '2px' }}>QR Secure Check</div>
             </div>
           </div>
 
-          {/* Items Table */}
-          <div style={{ overflowX: 'auto', width: '100%', marginBottom: '24px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
-              <thead>
-                <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Sr.</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Description</th>
-                  {!selectedVO && (
-                    <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Vendor</th>
-                  )}
-                  <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Qty</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Unit Price</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#64748B' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={selectedVO ? 5 : 6} style={{ padding: '32px', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>
-                      No line items available for this invoice.
-                    </td>
+          {/* Items Table / Responsive Item List */}
+          <div style={{ width: '100%', marginBottom: '20px' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%', borderRadius: '8px', border: '1px solid var(--gray-200)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
+                <thead>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--gray-200)' }}>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gray-500)', width: '35px' }}>#</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gray-500)' }}>Item Description</th>
+                    {!selectedVO && (
+                      <th style={{ padding: '8px 10px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gray-500)' }}>Vendor</th>
+                    )}
+                    <th style={{ padding: '8px 10px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gray-500)', width: '60px' }}>Qty</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gray-500)', width: '70px' }}>Unit</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right', fontSize: '0.72rem', fontWeight: 700, color: 'var(--gray-500)', width: '80px' }}>Total</th>
                   </tr>
-                ) : items.map((item, idx) => {
-                  const price = Number(item?.price ?? 0);
-                  const qty = Number(item?.quantity ?? 0);
-                  const name = getMenuItemName(item?.menu_item_id, item?.name) || 'Item';
-                  const unit = item?.unit || '';
-                  return (
-                    <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9', fontSize: '0.8rem' }}>
-                      <td style={{ padding: '10px 12px', color: '#64748B' }}>{idx + 1}</td>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#1E293B' }}>{name}</td>
-                      {!selectedVO && (
-                        <td style={{ padding: '10px 12px', color: '#475569' }}>{item?.vendorName || 'N/A'}</td>
-                      )}
-                      <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>
-                        {qty}{unit ? ` (${unit})` : ''}
-                      </td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right' }}>₹{price.toFixed(2)}</td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>
-                        ₹{(price * qty).toFixed(2)}
+                </thead>
+                <tbody>
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={selectedVO ? 5 : 6} style={{ padding: '24px', textAlign: 'center', color: 'var(--gray-400)', fontSize: '0.82rem' }}>
+                        No line items available for this invoice.
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ) : items.map((item, idx) => {
+                    const price = Number(item?.price ?? 0);
+                    const qty = Number(item?.quantity ?? 0);
+                    const name = getMenuItemName(item?.menu_item_id, item?.name) || 'Item';
+                    const unit = item?.unit || '';
+                    return (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--gray-100)', fontSize: '0.78rem' }}>
+                        <td style={{ padding: '8px 10px', color: 'var(--gray-500)' }}>{idx + 1}</td>
+                        <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--gray-900)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{name}</td>
+                        {!selectedVO && (
+                          <td style={{ padding: '8px 10px', color: 'var(--gray-600)', overflowWrap: 'break-word' }}>{item?.vendorName || 'N/A'}</td>
+                        )}
+                        <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--gray-800)' }}>
+                          {qty}{unit ? ` (${unit})` : ''}
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'right', color: 'var(--gray-600)' }}>₹{price.toFixed(2)}</td>
+                        <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-900)' }}>
+                          ₹{(price * qty).toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Grand Total */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px dashed #E2E8F0', paddingTop: '16px', marginBottom: '24px' }}>
-            <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-              <strong>Amount in Words:</strong><br />
+          {/* Grand Total & Words */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderTop: '2px dashed var(--gray-200)', paddingTop: '14px', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', flex: 1, minWidth: '200px', overflowWrap: 'break-word', wordBreak: 'break-word', lineHeight: 1.5 }}>
+              <strong style={{ color: 'var(--gray-700)' }}>Amount in Words:</strong><br />
               Rupees {numToWords(Math.floor(totalAmount))} Only.
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>GRAND TOTAL</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#4F46E5' }}>₹{totalAmount.toFixed(2)}</div>
+            <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '120px' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500)', letterSpacing: '0.5px' }}>GRAND TOTAL</div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--primary, #2563EB)' }}>₹{totalAmount.toFixed(2)}</div>
             </div>
           </div>
 
           {/* Signatures */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '60px', borderTop: '1px solid #F1F5F9', paddingTop: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '16px', marginTop: '36px', borderTop: '1px solid var(--gray-200)', paddingTop: '16px', width: '100%' }}>
             {['Prepared By (Coord)', 'Audited By (DCR)', 'Settle Signature (Canteen)'].map(label => (
-              <div key={label} style={{ textAlign: 'center' }}>
-                <div style={{ width: '120px', borderBottom: '1px solid #CBD5E1', marginBottom: '4px' }} />
-                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B' }}>{label}</div>
+              <div key={label} style={{ textAlign: 'center', width: '100%' }}>
+                <div style={{ width: '80%', maxWidth: '120px', margin: '0 auto 4px auto', borderBottom: '1px solid var(--gray-300)' }} />
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--gray-500)', overflowWrap: 'break-word' }}>{label}</div>
               </div>
             ))}
           </div>
@@ -591,9 +613,15 @@ export default function BillPage() {
       </div>
 
       <style>{`
+        @media (max-width: 480px) {
+          .hide-xs {
+            display: none !important;
+          }
+        }
         @media print {
           body, html {
             background: #FFFFFF !important;
+            color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
           }
@@ -601,6 +629,8 @@ export default function BillPage() {
             display: none !important;
           }
           #bill-print {
+            background: #FFFFFF !important;
+            color: #000000 !important;
             box-shadow: none !important;
             border: none !important;
             padding: 10px 0 !important;

@@ -192,7 +192,7 @@ export default function ToastContainer() {
                 >
                   {toast.role || 'System'}
                 </span>
-                <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {toast.title}
                 </span>
               </div>
@@ -221,7 +221,7 @@ export default function ToastContainer() {
             </div>
 
             {/* Message Body */}
-            <p style={{ margin: 0, fontSize: '0.78rem', color: '#334155', lineHeight: 1.4, wordBreak: 'break-word' }}>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--gray-700, #334155)', lineHeight: 1.4, wordBreak: 'break-word' }}>
               {toast.message}
             </p>
 

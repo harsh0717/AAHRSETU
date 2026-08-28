@@ -181,7 +181,7 @@ export default function GlobalErrorPage({
             style={{
               background: 'none',
               border: 'none',
-              color: '#64748B',
+              color: 'var(--gray-500, #64748B)',
               fontSize: '0.74rem',
               fontWeight: 600,
               cursor: 'pointer',

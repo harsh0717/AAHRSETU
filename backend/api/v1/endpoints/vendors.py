@@ -17,7 +17,7 @@ from backend.schemas.vendor import (
     MenuItemAvailabilityUpdate,
 )
 from backend.schemas.settlement import SettlementResponse, SettlementUpdate
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 router = APIRouter()

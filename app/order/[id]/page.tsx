@@ -126,7 +126,7 @@ export default function OrderDetailsPage() {
 
   if (!order || !session) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAFAF9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--surface-1)' }}>
         <div style={{ textAlign: 'center', color: 'var(--gray-500)' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '8px', animation: 'spin 1s infinite linear' }}>🔄</div>
           <div>Loading Order Details...</div>
@@ -301,7 +301,7 @@ export default function OrderDetailsPage() {
         </div>
 
         {/* Stepper progress pipeline */}
-        <div className="card" style={{ padding: '20px', marginBottom: '24px', background: 'white' }}>
+        <div className="card" style={{ padding: '20px', marginBottom: '24px', background: 'var(--surface-0)' }}>
           <OrderStepper status={order.status} />
         </div>
 

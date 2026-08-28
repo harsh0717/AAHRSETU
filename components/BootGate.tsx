@@ -43,21 +43,21 @@ export default function BootGate({ children }: { children: React.ReactNode }) {
         >
           <div
             style={{
-              background: 'white',
+              background: 'var(--surface-0)',
               borderRadius: '24px',
               padding: '32px 24px',
               maxWidth: '360px',
               width: '100%',
               textAlign: 'center',
               boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-              border: '1px solid #E2E8F0',
+              border: '1px solid var(--gray-200, #E2E8F0)',
             }}
           >
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔌</div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A6F', margin: '0 0 8px 0' }}>
               Unable to Connect
             </h3>
-            <p style={{ fontSize: '0.88rem', color: '#64748B', margin: '0 0 24px 0', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.88rem', color: 'var(--gray-500, #64748B)', margin: '0 0 24px 0', lineHeight: 1.5 }}>
               We are having trouble connecting to the AaharSetu server. Please check your internet connection and try again.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -83,8 +83,8 @@ export default function BootGate({ children }: { children: React.ReactNode }) {
                 style={{
                   width: '100%',
                   background: 'transparent',
-                  color: '#64748B',
-                  border: '1px solid #CBD5E1',
+                  color: 'var(--gray-500, #64748B)',
+                  border: '1px solid var(--gray-300, #CBD5E1)',
                   borderRadius: '12px',
                   padding: '12px',
                   fontSize: '0.9rem',

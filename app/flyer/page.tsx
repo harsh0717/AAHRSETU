@@ -103,7 +103,7 @@ export default function FlyerPage() {
       <div id="print-sheet" style={{
         width: '100%',
         maxWidth: '900px',
-        background: '#FFFFFF',
+        background: 'var(--surface-0)',
         borderRadius: '24px',
         overflow: 'hidden',
         boxShadow: '0 30px 80px rgba(0, 0, 0, 0.5)',
@@ -161,11 +161,11 @@ export default function FlyerPage() {
         </header>
 
         {/* 2. Realistic Product UI Showcase (No Cartoon) */}
-        <section style={{ padding: '22px 36px 14px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+        <section style={{ padding: '22px 36px 14px', background: 'var(--surface-1)', borderBottom: '1px solid var(--gray-200, #E2E8F0)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '18px', alignItems: 'stretch' }}>
             
             {/* Desktop Window Mockup */}
-            <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #CBD5E1', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.08)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-300, #CBD5E1)', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.08)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <div style={{ background: '#0F172A', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#EF4444' }}></div>
@@ -178,30 +178,30 @@ export default function FlyerPage() {
                 <div style={{ fontSize: '0.65rem', color: '#FCD34D', fontWeight: 700 }}>LIVE PORTAL</div>
               </div>
 
-              <div style={{ padding: '14px', background: '#F8FAFC', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+              <div style={{ padding: '14px', background: 'var(--surface-1)', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                  <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 10px' }}>
-                    <div style={{ fontSize: '0.62rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Active Orders</div>
+                  <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '8px', padding: '8px 10px' }}>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--gray-500, #64748B)', fontWeight: 700, textTransform: 'uppercase' }}>Active Orders</div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#2563EB', marginTop: '1px' }}>18 Live</div>
                   </div>
-                  <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 10px' }}>
-                    <div style={{ fontSize: '0.62rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Avg Approval</div>
+                  <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '8px', padding: '8px 10px' }}>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--gray-500, #64748B)', fontWeight: 700, textTransform: 'uppercase' }}>Avg Approval</div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669', marginTop: '1px' }}>42 Sec</div>
                   </div>
-                  <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 10px' }}>
-                    <div style={{ fontSize: '0.62rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Budget Used</div>
+                  <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '8px', padding: '8px 10px' }}>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--gray-500, #64748B)', fontWeight: 700, textTransform: 'uppercase' }}>Budget Used</div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#D97706', marginTop: '1px' }}>68% Quota</div>
                   </div>
                 </div>
 
-                <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '10px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
                       ☕
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0F172A' }}>Faculty Seminar Refreshments</div>
-                      <div style={{ fontSize: '0.65rem', color: '#64748B' }}>Computer Eng. · 45 Guests · Sharma Canteen</div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>Faculty Seminar Refreshments</div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--gray-500, #64748B)' }}>Computer Eng. · 45 Guests · Sharma Canteen</div>
                     </div>
                   </div>
                   <span style={{ background: '#DCFCE7', color: '#166534', fontSize: '0.65rem', fontWeight: 800, padding: '4px 8px', borderRadius: '6px', border: '1px solid #BBF7D0' }}>
@@ -209,14 +209,14 @@ export default function FlyerPage() {
                   </span>
                 </div>
 
-                <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '10px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
                       🍱
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0F172A' }}>Annual Tech Fest Lunch Packs</div>
-                      <div style={{ fontSize: '0.65rem', color: '#64748B' }}>Student Council · 120 Units · Fresh Bites</div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>Annual Tech Fest Lunch Packs</div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--gray-500, #64748B)' }}>Student Council · 120 Units · Fresh Bites</div>
                     </div>
                   </div>
                   <span style={{ background: '#FEF3C7', color: '#B45309', fontSize: '0.65rem', fontWeight: 800, padding: '4px 8px', borderRadius: '6px', border: '1px solid #FDE68A' }}>
@@ -228,7 +228,7 @@ export default function FlyerPage() {
 
             {/* Mobile App Frame Mockup */}
             <div style={{ background: '#0B132B', borderRadius: '22px', padding: '10px', boxShadow: '0 12px 30px rgba(0, 0, 0, 0.2)', border: '2px solid #334155', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ background: '#FFFFFF', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+              <div style={{ background: 'var(--surface-0)', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px', borderBottom: '1px solid #F1F5F9' }}>
                   <span style={{ fontSize: '0.78rem', fontWeight: 900, color: '#1E3A8A' }}>🍱 AaharSetu Mobile</span>
                   <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#059669' }}>ONLINE</span>
@@ -238,7 +238,7 @@ export default function FlyerPage() {
                   <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#FCD34D', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Instant Digital Pass</div>
                   
                   {/* Clean Vector QR Code */}
-                  <svg style={{ width: '72px', height: '72px', margin: '6px auto 4px', background: 'white', padding: '4px', borderRadius: '6px', display: 'block' }} viewBox="0 0 100 100" fill="none">
+                  <svg style={{ width: '72px', height: '72px', margin: '6px auto 4px', background: 'var(--surface-0)', padding: '4px', borderRadius: '6px', display: 'block' }} viewBox="0 0 100 100" fill="none">
                     <rect width="100" height="100" fill="white"/>
                     <rect x="10" y="10" width="26" height="26" fill="#0F172A"/>
                     <rect x="14" y="14" width="18" height="18" fill="white"/>
@@ -267,7 +267,7 @@ export default function FlyerPage() {
                   <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '0.1em', fontFamily: 'monospace' }}>#AST-8942-VERIFIED</div>
                 </div>
 
-                <div style={{ fontSize: '0.65rem', color: '#475569', textAlign: 'center', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.65rem', color: 'var(--gray-600, #475569)', textAlign: 'center', fontWeight: 600 }}>
                   Scan at canteen counter for zero-wait instant serving
                 </div>
               </div>
@@ -277,54 +277,54 @@ export default function FlyerPage() {
         </section>
 
         {/* 3. Multi-Tier Roles */}
-        <section style={{ padding: '18px 36px 14px', background: '#FFFFFF' }}>
+        <section style={{ padding: '18px 36px 14px', background: 'var(--surface-0)' }}>
           <div style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#D97706', marginBottom: '12px', textAlign: 'center' }}>
             Designed for Every Campus Stakeholder
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
             {roles.map((r, idx) => (
-              <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div key={idx} style={{ background: 'var(--surface-1)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '14px', padding: '14px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: r.bg, color: r.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', marginBottom: '8px' }}>
                   {r.icon}
                 </div>
                 <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0B132B', marginBottom: '2px' }}>{r.title}</div>
-                <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 500, lineHeight: 1.3 }}>{r.desc}</div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--gray-500, #64748B)', fontWeight: 500, lineHeight: 1.3 }}>{r.desc}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* 4. Features */}
-        <section style={{ padding: '14px 36px 16px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}>
+        <section style={{ padding: '14px 36px 16px', background: 'var(--surface-1)', borderTop: '1px solid var(--gray-200, #E2E8F0)', borderBottom: '1px solid var(--gray-200, #E2E8F0)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <div style={{ fontSize: '1.3rem', width: '34px', height: '34px', borderRadius: '8px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>⚡</div>
+            <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '12px', padding: '12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{ fontSize: '1.3rem', width: '34px', height: '34px', borderRadius: '8px', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>⚡</div>
               <div>
                 <h5 style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0B132B', margin: '0 0 2px 0' }}>Zero Waiting Queues</h5>
-                <p style={{ fontSize: '0.68rem', color: '#64748B', margin: 0, lineHeight: 1.3 }}>Direct digital order routing from event desks to the kitchen prep line.</p>
+                <p style={{ fontSize: '0.68rem', color: 'var(--gray-500, #64748B)', margin: 0, lineHeight: 1.3 }}>Direct digital order routing from event desks to the kitchen prep line.</p>
               </div>
             </div>
 
-            <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <div style={{ fontSize: '1.3rem', width: '34px', height: '34px', borderRadius: '8px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>🔒</div>
+            <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '12px', padding: '12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{ fontSize: '1.3rem', width: '34px', height: '34px', borderRadius: '8px', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>🔒</div>
               <div>
                 <h5 style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0B132B', margin: '0 0 2px 0' }}>Tamper-Proof QR Bills</h5>
-                <p style={{ fontSize: '0.68rem', color: '#64748B', margin: 0, lineHeight: 1.3 }}>Cryptographically verifiable invoices prevent double-billing and fraud.</p>
+                <p style={{ fontSize: '0.68rem', color: 'var(--gray-500, #64748B)', margin: 0, lineHeight: 1.3 }}>Cryptographically verifiable invoices prevent double-billing and fraud.</p>
               </div>
             </div>
 
-            <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <div style={{ fontSize: '1.3rem', width: '34px', height: '34px', borderRadius: '8px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>🌐</div>
+            <div style={{ background: 'var(--surface-0)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '12px', padding: '12px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{ fontSize: '1.3rem', width: '34px', height: '34px', borderRadius: '8px', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>🌐</div>
               <div>
                 <h5 style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0B132B', margin: '0 0 2px 0' }}>Tri-Lingual Interface</h5>
-                <p style={{ fontSize: '0.68rem', color: '#64748B', margin: 0, lineHeight: 1.3 }}>Full native support for English, हिन्दी (Hindi) and ગુજરાતી (Gujarati).</p>
+                <p style={{ fontSize: '0.68rem', color: 'var(--gray-500, #64748B)', margin: 0, lineHeight: 1.3 }}>Full native support for English, हिन्दी (Hindi) and ગુજરાતી (Gujarati).</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* 5. Metrics Strip */}
-        <div style={{ padding: '12px 36px', background: '#FFFFFF', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', textAlign: 'center' }}>
+        <div style={{ padding: '12px 36px', background: 'var(--surface-0)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', textAlign: 'center' }}>
           <div style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)', border: '1px solid #FDE68A', borderRadius: '10px', padding: '8px 4px' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#B45309', lineHeight: 1 }}>100%</div>
             <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#78350F', textTransform: 'uppercase', marginTop: '3px' }}>Paperless Bills</div>
@@ -370,7 +370,7 @@ export default function FlyerPage() {
             ))}
           </div>
 
-          <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: '#64748B' }}>
+          <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: 'var(--gray-500, #64748B)' }}>
             <div><strong style={{ color: '#CBD5E1' }}>AaharSetu</strong> — Campus Canteen Management & Dining ERP</div>
             <div>Official Launch · 2026</div>
           </div>

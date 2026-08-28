@@ -1,5 +1,6 @@
 import './globals.css';
 import { I18nProvider } from '@/lib/i18n';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import BootGate from '@/components/BootGate';
 import type { Metadata, Viewport } from 'next';
 import { NotificationProvider } from '@/components/NotificationProvider';
@@ -29,7 +30,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-192.png" />
@@ -41,6 +42,27 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="apple-mobile-web-app-title" content="AharSetu" />
         <meta name="theme-color" content="#2563EB" />
         
+        {/* Instant Anti-Flash Theme Script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('aharsetu_theme');
+                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  var theme = stored === 'dark' || (!stored && prefersDark) || (stored === 'system' && prefersDark) ? 'dark' : 'light';
+                  document.documentElement.setAttribute('data-theme', theme);
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+
         {/* Preconnect to Font Origins for Zero Render-Blocking Delay */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -71,16 +93,18 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </noscript>
       </head>
       <body>
-        <I18nProvider>
-          <NotificationProvider>
-            <BootGate>
-              <main id="main-content" style={{ minHeight: '100vh', width: '100%' }}>
-                {children}
-              </main>
-              <ToastContainer />
-            </BootGate>
-          </NotificationProvider>
-        </I18nProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            <NotificationProvider>
+              <BootGate>
+                <main id="main-content" style={{ minHeight: '100vh', width: '100%' }}>
+                  {children}
+                </main>
+                <ToastContainer />
+              </BootGate>
+            </NotificationProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -49,11 +49,11 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '9px 12px',
   borderRadius: '8px',
-  border: '1px solid #CBD5E1',
+  border: '1px solid var(--gray-300, #CBD5E1)',
   fontSize: '0.85rem',
-  background: 'white',
+  background: 'var(--surface-0)',
   boxSizing: 'border-box',
-  color: '#0F172A',
+  color: 'var(--gray-900, #0F172A)',
   outline: 'none',
 };
 
@@ -194,8 +194,8 @@ export default function VendorLedgerPage() {
       <AppShell role={(session?.role as any) || 'dcr'} currentPath="/dcr/settlements">
         <div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8' }}>
           <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔍</div>
-          <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1E293B' }}>Vendor not found</div>
-          <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '6px 0 16px' }}>The requested vendor profile could not be found.</p>
+          <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--gray-800, #1E293B)' }}>Vendor not found</div>
+          <p style={{ color: 'var(--gray-500, #64748B)', fontSize: '0.88rem', margin: '6px 0 16px' }}>The requested vendor profile could not be found.</p>
           <Link href="/dcr/settlements" style={{ padding: '8px 16px', borderRadius: '8px', background: '#0D9488', color: 'white', textDecoration: 'none', fontWeight: 700 }}>
             ← Back to Settlements
           </Link>
@@ -212,17 +212,17 @@ export default function VendorLedgerPage() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header with Breadcrumb */}
         <div style={{
-          background: 'white',
+          background: 'var(--surface-0)',
           borderRadius: '16px',
-          border: '1px solid #E2E8F0',
+          border: '1px solid var(--gray-200, #E2E8F0)',
           padding: '20px 24px',
           marginBottom: '20px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-            <Link href="/dcr" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>Administration</Link>
+            <Link href="/dcr" style={{ color: 'var(--gray-500, #64748B)', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>Administration</Link>
             <span style={{ color: '#CBD5E1' }}>›</span>
-            <Link href="/dcr/settlements" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>Settlements & Dues</Link>
+            <Link href="/dcr/settlements" style={{ color: 'var(--gray-500, #64748B)', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>Settlements & Dues</Link>
             <span style={{ color: '#CBD5E1' }}>›</span>
             <span style={{ fontSize: '0.82rem', color: '#0D9488', fontWeight: 700 }}>Vendor Passbook: {vendor.name}</span>
           </div>
@@ -230,7 +230,7 @@ export default function VendorLedgerPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--gray-900, #0F172A)' }}>
                   🍽️ {vendor.name} — Account Passbook
                 </h1>
                 <span style={{
@@ -245,7 +245,7 @@ export default function VendorLedgerPage() {
                   {isClear ? 'All Clear' : `₹${summary.current_outstanding.toLocaleString('en-IN')} Due`}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '14px', marginTop: '6px', fontSize: '0.82rem', color: '#64748B', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '14px', marginTop: '6px', fontSize: '0.82rem', color: 'var(--gray-500, #64748B)', flexWrap: 'wrap' }}>
                 <span>👤 Owner: <strong>{vendor.owner_name}</strong></span>
                 <span>📞 Phone: <strong>{vendor.phone}</strong></span>
                 <span>✉️ Email: <strong>{vendor.email}</strong></span>
@@ -281,9 +281,9 @@ export default function VendorLedgerPage() {
                 style={{
                   padding: '10px 14px',
                   borderRadius: '8px',
-                  background: '#F8FAFC',
-                  color: '#334155',
-                  border: '1px solid #CBD5E1',
+                  background: 'var(--surface-1)',
+                  color: 'var(--gray-700, #334155)',
+                  border: '1px solid var(--gray-300, #CBD5E1)',
                   cursor: 'pointer',
                   fontWeight: 700,
                   fontSize: '0.88rem',
@@ -312,28 +312,28 @@ export default function VendorLedgerPage() {
 
         {/* Summary Financial Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '18px 20px', borderLeft: '5px solid #0284C7' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Invoiced (Debits)</div>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '18px 20px', borderLeft: '5px solid #0284C7' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Invoiced (Debits)</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0369A1', marginTop: '4px' }}>
               {fmtAmount(summary.total_billed)}
             </div>
-            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '4px' }}>Cumulative bills raised by vendor</div>
+            <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>Cumulative bills raised by vendor</div>
           </div>
 
-          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '18px 20px', borderLeft: '5px solid #059669' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Disbursed (Credits)</div>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '18px 20px', borderLeft: '5px solid #059669' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Disbursed (Credits)</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#059669', marginTop: '4px' }}>
               {fmtAmount(summary.total_paid)}
             </div>
-            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '4px' }}>Total payments cleared to vendor</div>
+            <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>Total payments cleared to vendor</div>
           </div>
 
-          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', padding: '18px 20px', borderLeft: `5px solid ${isClear ? '#15803D' : '#DC2626'}` }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Outstanding Due</div>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '18px 20px', borderLeft: `5px solid ${isClear ? '#15803D' : '#DC2626'}` }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Outstanding Due</div>
             <div style={{ fontSize: '1.6rem', fontWeight: 900, color: isClear ? '#15803D' : '#991B1B', marginTop: '4px' }}>
               {fmtAmount(summary.current_outstanding)}
             </div>
-            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '4px' }}>
+            <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
               {isClear ? 'No pending dues' : 'Pending payment clearance'}
             </div>
           </div>
@@ -341,9 +341,9 @@ export default function VendorLedgerPage() {
 
         {/* Ledger Control & Filter Bar */}
         <div style={{
-          background: 'white',
+          background: 'var(--surface-0)',
           borderRadius: '14px',
-          border: '1px solid #E2E8F0',
+          border: '1px solid var(--gray-200, #E2E8F0)',
           padding: '14px 20px',
           marginBottom: '16px',
           display: 'flex',
@@ -353,7 +353,7 @@ export default function VendorLedgerPage() {
           gap: '12px'
         }}>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>Filter Type:</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-600, #475569)' }}>Filter Type:</span>
             {(['ALL', 'INVOICE', 'PAYMENT'] as const).map(t => (
               <button
                 key={t}
@@ -384,7 +384,7 @@ export default function VendorLedgerPage() {
             />
             <button
               onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
-              style={{ padding: '6px 12px', borderRadius: '6px', background: '#F8FAFC', border: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem' }}
+              style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--surface-1)', border: '1px solid var(--gray-300, #CBD5E1)', cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem' }}
             >
               Sort: {sortOrder === 'desc' ? 'Newest First ↓' : 'Oldest First ↑'}
             </button>
@@ -392,12 +392,12 @@ export default function VendorLedgerPage() {
         </div>
 
         {/* Tally / Accounting Passbook Table */}
-        <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '0.95rem' }}>
+        <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--gray-200, #E2E8F0)', background: 'var(--surface-1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontWeight: 800, color: 'var(--gray-800, #1E293B)', fontSize: '0.95rem' }}>
               📜 Chronological Account Ledger ({sortedEntries.length} entries)
             </h3>
-            <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)' }}>
               Running balance calculated automatically
             </span>
           </div>
@@ -412,7 +412,7 @@ export default function VendorLedgerPage() {
               {sortedEntries.map((e, idx) => {
                 const isInvoice = e.type === 'INVOICE';
                 return (
-                  <div key={idx} style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '12px 14px', background: isInvoice ? '#F8FAFC' : '#F0FDF4' }}>
+                  <div key={idx} style={{ border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '12px', padding: '12px 14px', background: isInvoice ? '#F8FAFC' : '#F0FDF4' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <span style={{
                         fontSize: '0.72rem',
@@ -428,14 +428,14 @@ export default function VendorLedgerPage() {
                         {isInvoice ? fmtAmount(e.debit) : fmtAmount(e.credit)}
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.74rem', color: '#64748B', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginBottom: '4px' }}>
                       {fmtDateTime(e.date)} · Ref: <strong style={{ fontFamily: 'monospace' }}>{e.reference}</strong>
                     </div>
                     {e.description && (
-                      <div style={{ fontSize: '0.74rem', color: '#334155', marginBottom: '6px' }}>{e.description}</div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--gray-700, #334155)', marginBottom: '6px' }}>{e.description}</div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(0,0,0,0.05)', fontSize: '0.74rem' }}>
-                      <span style={{ color: '#64748B' }}>Balance: <strong style={{ color: e.balance > 0 ? '#991B1B' : '#15803D' }}>{fmtAmount(e.balance)}</strong></span>
+                      <span style={{ color: 'var(--gray-500, #64748B)' }}>Balance: <strong style={{ color: e.balance > 0 ? '#991B1B' : '#15803D' }}>{fmtAmount(e.balance)}</strong></span>
                       <span style={{
                         padding: '1px 6px',
                         borderRadius: '10px',
@@ -455,15 +455,15 @@ export default function VendorLedgerPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                 <thead>
-                  <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Date</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Type</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Reference #</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Narration / Details</th>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid #E2E8F0' }}>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Date</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Type</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Reference #</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Narration / Details</th>
                     <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#0369A1' }}>Billed (Debit)</th>
                     <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>Paid (Credit)</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>Running Balance</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Status</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>Running Balance</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -471,7 +471,7 @@ export default function VendorLedgerPage() {
                     const isInvoice = e.type === 'INVOICE';
                     return (
                       <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: '#475569' }}>
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--gray-600, #475569)' }}>
                           {fmtDateTime(e.date)}
                         </td>
                         <td style={{ padding: '10px 14px' }}>
@@ -488,7 +488,7 @@ export default function VendorLedgerPage() {
                         <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontWeight: 700, color: '#0F766E' }}>
                           {e.reference}
                         </td>
-                        <td style={{ padding: '10px 14px', color: '#334155' }}>
+                        <td style={{ padding: '10px 14px', color: 'var(--gray-700, #334155)' }}>
                           {e.description}
                         </td>
                         <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: isInvoice ? 700 : 400, color: isInvoice ? '#0369A1' : '#94A3B8' }}>
@@ -518,7 +518,7 @@ export default function VendorLedgerPage() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr style={{ background: '#F8FAFC', borderTop: '2px solid #0D9488' }}>
+                  <tr style={{ background: 'var(--surface-1)', borderTop: '2px solid #0D9488' }}>
                     <td colSpan={4} style={{ padding: '12px 14px', fontWeight: 800, color: '#0F766E' }}>
                       TOTALS & CLOSING BALANCE
                     </td>
@@ -544,17 +544,17 @@ export default function VendorLedgerPage() {
         {/* Quick Payment Modal */}
         {payModalOpen && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '26px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-              <h2 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '16px', padding: '26px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+              <h2 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>
                 💳 Record Disbursement to {vendor.name}
               </h2>
-              <p style={{ margin: '0 0 16px', color: '#64748B', fontSize: '0.82rem' }}>
+              <p style={{ margin: '0 0 16px', color: 'var(--gray-500, #64748B)', fontSize: '0.82rem' }}>
                 Current outstanding balance: <strong>{fmtAmount(summary.current_outstanding)}</strong>
               </p>
 
               <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.82rem' }}>Amount (₹) *</label>
+                  <label style={{ display: 'block', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '4px', fontSize: '0.82rem' }}>Amount (₹) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -568,13 +568,13 @@ export default function VendorLedgerPage() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.82rem' }}>Payment Mode</label>
+                    <label style={{ display: 'block', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '4px', fontSize: '0.82rem' }}>Payment Mode</label>
                     <select value={payMode} onChange={e => setPayMode(e.target.value)} style={inputStyle}>
                       {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.82rem' }}>Bank</label>
+                    <label style={{ display: 'block', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '4px', fontSize: '0.82rem' }}>Bank</label>
                     <select value={payBank} onChange={e => setPayBank(e.target.value)} style={inputStyle}>
                       {POPULAR_BANKS.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
@@ -582,7 +582,7 @@ export default function VendorLedgerPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.82rem' }}>UTR / Transaction Reference</label>
+                  <label style={{ display: 'block', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '4px', fontSize: '0.82rem' }}>UTR / Transaction Reference</label>
                   <input
                     type="text"
                     value={payUtr}
@@ -593,7 +593,7 @@ export default function VendorLedgerPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.82rem' }}>Payment Date</label>
+                  <label style={{ display: 'block', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '4px', fontSize: '0.82rem' }}>Payment Date</label>
                   <input
                     type="date"
                     value={payDate}
@@ -604,7 +604,7 @@ export default function VendorLedgerPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, color: '#334155', marginBottom: '4px', fontSize: '0.82rem' }}>Notes</label>
+                  <label style={{ display: 'block', fontWeight: 700, color: 'var(--gray-700, #334155)', marginBottom: '4px', fontSize: '0.82rem' }}>Notes</label>
                   <input
                     type="text"
                     value={payNotes}
@@ -619,7 +619,7 @@ export default function VendorLedgerPage() {
                     type="button"
                     onClick={() => setPayModalOpen(false)}
                     disabled={recordingPayment}
-                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#F1F5F9', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#475569' }}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'var(--surface-2)', border: 'none', cursor: 'pointer', fontWeight: 700, color: 'var(--gray-600, #475569)' }}
                   >
                     Cancel
                   </button>

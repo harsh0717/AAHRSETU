@@ -30,8 +30,8 @@ export default function UiverseCard({
 
   const variantStyles: React.CSSProperties = {
     default: {
-      background: '#FFFFFF',
-      border: '1px solid #E2E8F0',
+      background: 'var(--surface-0)',
+      border: '1px solid var(--gray-200, #E2E8F0)',
       boxShadow: glow
         ? `0 10px 25px -5px ${accentColor ? `${accentColor}25` : 'rgba(0, 0, 0, 0.05)'}, 0 2px 6px rgba(0,0,0,0.02)`
         : '0 2px 8px -2px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)',
@@ -44,13 +44,13 @@ export default function UiverseCard({
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
     },
     elevated: {
-      background: '#FFFFFF',
-      border: '1px solid #E2E8F0',
+      background: 'var(--surface-0)',
+      border: '1px solid var(--gray-200, #E2E8F0)',
       boxShadow: '0 12px 30px -8px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03)',
     },
     kpi: {
       background: 'linear-gradient(135deg, #FFFFFF 0%, #FAFAFC 100%)',
-      border: '1px solid #E2E8F0',
+      border: '1px solid var(--gray-200, #E2E8F0)',
       borderTop: accentColor ? `4px solid ${accentColor}` : '4px solid #2563EB',
       boxShadow: '0 4px 14px -2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02)',
     },

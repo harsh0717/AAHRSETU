@@ -230,7 +230,7 @@ export default function NotFoundPage() {
         </div>
 
         {/* Footer Legal Links */}
-        <div style={{ marginTop: '28px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px', display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '0.75rem', color: '#64748B' }}>
+        <div style={{ marginTop: '28px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px', display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '0.75rem', color: 'var(--gray-500, #64748B)' }}>
           <Link href="/privacy" style={{ color: '#94A3B8', textDecoration: 'none' }}>Privacy Policy</Link>
           <span>·</span>
           <Link href="/terms" style={{ color: '#94A3B8', textDecoration: 'none' }}>Terms of Service</Link>

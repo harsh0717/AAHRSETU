@@ -14,6 +14,7 @@ import ToastContainer from './Toast';
 import BrandLogo from './BrandLogo';
 import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
 import AvatarImage from './AvatarImage';
+import ThemeToggle from './ThemeToggle';
 import AppIcon, { getIconTheme } from './ui/AppIcon';
 import styles from './AppShell.module.css';
 
@@ -166,7 +167,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                 border: 'none',
                 fontSize: '1.4rem',
                 cursor: 'pointer',
-                color: '#64748B',
+                color: 'var(--gray-500, #64748B)',
                 padding: '4px 8px',
                 lineHeight: 1
               }}
@@ -290,11 +291,15 @@ export default function AppShell({ children, role }: AppShellProps) {
             </div>
           </div>
           <div className={styles.headerRight}>
+            <ThemeToggle variant="icon" />
             {!isMobileDevice && (
               <>
                 <LanguageSwitcher />
                 {session && <NotificationBell userId={session.id} role={session.role} />}
               </>
+            )}
+            {isMobileDevice && session && (
+              <NotificationBell userId={session.id} role={session.role} />
             )}
             
             <div style={{ position: 'relative' }}>
@@ -322,9 +327,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                   top: '46px',
                   right: 0,
                   width: '180px',
-                  background: 'white',
+                  background: 'var(--surface-0)',
                   borderRadius: '12px',
-                  border: '1px solid #E2E8F0',
+                  border: '1px solid var(--gray-200, #E2E8F0)',
                   boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
                   zIndex: 1000,
                   overflow: 'hidden',
@@ -342,7 +347,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                       padding: '10px 12px',
                       fontSize: '0.85rem',
                       fontWeight: 700,
-                      color: '#334155',
+                      color: 'var(--gray-700, #334155)',
                       borderRadius: '8px',
                       textDecoration: 'none',
                       transition: 'background 0.15s'
@@ -438,19 +443,21 @@ export default function AppShell({ children, role }: AppShellProps) {
           />
           <div className={`${styles.moreDrawer} ${moreDrawerOpen ? styles.open : ''}`}>
             {/* Grab handle for sliding feel */}
-            <div style={{ width: '40px', height: '4px', background: '#CBD5E1', borderRadius: '2px', margin: '0 auto 20px auto' }} />
+            <div style={{ width: '40px', height: '4px', background: 'var(--gray-300, #CBD5E1)', borderRadius: '2px', margin: '0 auto 16px auto' }} />
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <AvatarImage userId={session.id} name={session.name} size={44} />
               <div>
-                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{session.name}</h4>
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{session.name}</h4>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--role-accent)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <AppIcon name={role} size={14} color="var(--role-accent)" /> {ROLE_LABELS[role]}
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '60vh', overflowY: 'auto' }}>
+              <ThemeToggle variant="menu" style={{ marginBottom: '4px' }} />
+
               <Link
                 href={`/${role}/settings`}
                 onClick={() => setMoreDrawerOpen(false)}
@@ -458,13 +465,14 @@ export default function AppShell({ children, role }: AppShellProps) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '14px 16px',
+                  padding: '12px 14px',
                   borderRadius: '12px',
-                  background: '#F8FAFC',
-                  color: '#334155',
+                  background: 'var(--surface-1, #F8FAFC)',
+                  color: 'var(--gray-800, #334155)',
+                  border: '1px solid var(--gray-200, #E2E8F0)',
                   textDecoration: 'none',
                   fontWeight: 700,
-                  fontSize: '0.9rem'
+                  fontSize: '0.88rem'
                 }}
               >
                 <AppIcon name="settings" size={18} /> <span>Settings & Languages</span>
@@ -482,8 +490,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -501,8 +510,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -520,8 +530,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -539,8 +550,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -562,8 +574,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -581,8 +594,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -600,8 +614,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -619,8 +634,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -638,8 +654,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -661,8 +678,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -680,8 +698,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -699,8 +718,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -718,8 +738,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -737,8 +758,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -756,8 +778,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -779,8 +802,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -798,8 +822,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -817,8 +842,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -836,8 +862,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -855,8 +882,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -874,8 +902,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -897,8 +926,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -916,8 +946,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -935,8 +966,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -954,8 +986,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -973,8 +1006,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -992,8 +1026,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -1011,8 +1046,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                       gap: '12px',
                       padding: '14px 16px',
                       borderRadius: '12px',
-                      background: '#F8FAFC',
-                      color: '#334155',
+                      background: 'var(--surface-1, #F8FAFC)',
+                      color: 'var(--gray-800, #334155)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       textDecoration: 'none',
                       fontWeight: 700,
                       fontSize: '0.9rem'
@@ -1048,10 +1084,10 @@ export default function AppShell({ children, role }: AppShellProps) {
                 <AppIcon name="logout" size={18} color="#DC2626" /> <span>Sign Out of Session</span>
               </button>
 
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '16px', paddingBottom: '8px', fontSize: '0.76rem', color: '#64748B' }}>
-                <Link href="/privacy" onClick={() => setMoreDrawerOpen(false)} style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '16px', paddingBottom: '8px', fontSize: '0.76rem', color: 'var(--gray-500, #64748B)' }}>
+                <Link href="/privacy" onClick={() => setMoreDrawerOpen(false)} style={{ color: 'var(--gray-500, #64748B)', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
                 <span>·</span>
-                <Link href="/terms" onClick={() => setMoreDrawerOpen(false)} style={{ color: '#64748B', textDecoration: 'none', fontWeight: 600 }}>Terms of Service</Link>
+                <Link href="/terms" onClick={() => setMoreDrawerOpen(false)} style={{ color: 'var(--gray-500, #64748B)', textDecoration: 'none', fontWeight: 600 }}>Terms of Service</Link>
               </div>
             </div>
           </div>

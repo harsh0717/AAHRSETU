@@ -44,7 +44,7 @@ export default function CancelOrderModal({ order, isOpen, onClose, onCancelled }
       padding: '16px'
     }}>
       <div style={{
-        background: 'white',
+        background: 'var(--surface-0)',
         borderRadius: '20px',
         width: '100%',
         maxWidth: '480px',
@@ -71,12 +71,12 @@ export default function CancelOrderModal({ order, isOpen, onClose, onCancelled }
         {/* Form Body */}
         <form onSubmit={handleConfirm}>
           <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <p style={{ fontSize: '0.85rem', color: '#334155', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--gray-700, #334155)', margin: 0, lineHeight: 1.5 }}>
               Are you sure you want to cancel this requisition? This will withdraw the requisition before DCR approval and notify supervisors.
             </p>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '6px' }}>
                 Reason for Cancellation (Optional)
               </label>
               <textarea
@@ -91,7 +91,7 @@ export default function CancelOrderModal({ order, isOpen, onClose, onCancelled }
           </div>
 
           {/* Footer */}
-          <div style={{ padding: '16px 24px', borderTop: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--gray-200, #E2E8F0)', background: 'var(--surface-1)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               type="button"
               onClick={onClose}

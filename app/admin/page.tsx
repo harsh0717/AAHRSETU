@@ -633,7 +633,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
         {/* Main Content Area */}
         {loading && activeTab === 'dashboard' ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748B' }}>
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--gray-500, #64748B)' }}>
             <div style={{ fontSize: '2rem', marginBottom: '12px', animation: 'spin 1s infinite linear' }}>🔄</div>
             <div style={{ fontWeight: 700 }}>Synchronizing institutional metrics...</div>
           </div>
@@ -787,7 +787,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           <AppIcon name="departments" size={18} color="#F59E0B" />
                           <span>Department Spending</span>
                         </div>
-                        <span style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700 }}>Total: ₹{totalDeptExp.toLocaleString('en-IN')}</span>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', fontWeight: 700 }}>Total: ₹{totalDeptExp.toLocaleString('en-IN')}</span>
                       </div>
 
                       <div className={styles.deptProgressList}>
@@ -827,16 +827,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.82rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
-                          <span style={{ color: '#475569' }}>PostgreSQL Database Node</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--surface-1)', borderRadius: '8px' }}>
+                          <span style={{ color: 'var(--gray-600, #475569)' }}>PostgreSQL Database Node</span>
                           <strong style={{ color: '#059669' }}>ONLINE (0ms latency)</strong>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
-                          <span style={{ color: '#475569' }}>Realtime WebSocket Gateway</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--surface-1)', borderRadius: '8px' }}>
+                          <span style={{ color: 'var(--gray-600, #475569)' }}>Realtime WebSocket Gateway</span>
                           <strong style={{ color: '#059669' }}>CONNECTED</strong>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '8px' }}>
-                          <span style={{ color: '#475569' }}>Multi-Language i18n Engine</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--surface-1)', borderRadius: '8px' }}>
+                          <span style={{ color: 'var(--gray-600, #475569)' }}>Multi-Language i18n Engine</span>
                           <strong style={{ color: '#2563EB' }}>OPTIMIZED (v2.0)</strong>
                         </div>
                       </div>
@@ -888,8 +888,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                               {dept.code || dept.id.toUpperCase()}
                             </span>
                           </td>
-                          <td style={{ fontWeight: 700, color: '#0F172A' }}>{dept.name}</td>
-                          <td style={{ color: '#64748B' }}>{dept.description || dept.label || 'Standard Academic Section'}</td>
+                          <td style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{dept.name}</td>
+                          <td style={{ color: 'var(--gray-500, #64748B)' }}>{dept.description || dept.label || 'Standard Academic Section'}</td>
                           <td>
                             <span className={`badge ${dept.active !== false ? 'badge-success' : 'badge-danger'}`}>
                               {dept.active !== false ? 'Active' : 'Inactive'}
@@ -945,11 +945,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       {vendors.map((v) => (
                         <tr key={v.id}>
                           <td style={{ fontWeight: 800, color: '#6366F1' }}>{v.id}</td>
-                          <td style={{ fontWeight: 700, color: '#0F172A' }}>{v.name}</td>
+                          <td style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{v.name}</td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <span>👤 {v.owner_name || 'Owner'}</span>
-                              <span style={{ fontSize: '0.78rem', color: '#64748B' }}>📞 {v.phone || 'N/A'} • ✉️ {v.email || 'N/A'}</span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>📞 {v.phone || 'N/A'} • ✉️ {v.email || 'N/A'}</span>
                             </div>
                           </td>
                           <td>
@@ -1069,16 +1069,16 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           <td style={{ fontWeight: 800, color: '#2563EB', cursor: 'pointer' }} onClick={() => router.push(`/order/${ord.id}`)}>
                             {ord.id}
                           </td>
-                          <td style={{ fontWeight: 700, color: '#0F172A', cursor: 'pointer' }} onClick={() => router.push(`/order/${ord.id}`)}>
+                          <td style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)', cursor: 'pointer' }} onClick={() => router.push(`/order/${ord.id}`)}>
                             {ord.title}
                           </td>
                           <td>🏛️ {ord.department_label || 'Dept'}</td>
                           <td>👤 {ord.created_by_name || 'Coordinator'}</td>
-                          <td style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>
                             {new Date(ord.created_at).toLocaleDateString('en-IN')}
                           </td>
                           <td><StatusBadge status={ord.status} size="sm" /></td>
-                          <td style={{ textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>₹{ord.total_bill_amount || 0}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{ord.total_bill_amount || 0}</td>
                           <td style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                               <UiverseButton
@@ -1122,7 +1122,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 
                 {/* Sub-navigation Tabs */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                  <div style={{ display: 'flex', gap: '8px', background: '#F1F5F9', padding: '4px', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', gap: '8px', background: 'var(--surface-2)', padding: '4px', borderRadius: '12px' }}>
                     <button
                       className={`${styles.quickActionBtn} ${billsSubTab === 'invoices' ? styles.quickActionPrimary : ''}`}
                       style={{ border: 'none', background: billsSubTab === 'invoices' ? '#2563EB' : 'transparent', color: billsSubTab === 'invoices' ? '#FFFFFF' : '#64748B' }}
@@ -1231,15 +1231,15 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                                     </span>
                                   </td>
                                   <td>
-                                    <div style={{ fontWeight: 700, color: '#0F172A' }}>{ord.title}</div>
-                                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Order ID: #{ord.id}</div>
+                                    <div style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{ord.title}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)' }}>Order ID: #{ord.id}</div>
                                   </td>
                                   <td>🏛️ {ord.department_label || 'Dept'}</td>
                                   <td>🏪 {vendorNames}</td>
-                                  <td style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                                  <td style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>
                                     {new Date(ord.bill_generated_at || ord.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                   </td>
-                                  <td style={{ textAlign: 'right', fontWeight: 900, color: '#0F172A', fontSize: '0.95rem' }}>
+                                  <td style={{ textAlign: 'right', fontWeight: 900, color: 'var(--gray-900, #0F172A)', fontSize: '0.95rem' }}>
                                     ₹{Number(ord.total_bill_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                   </td>
                                   <td>
@@ -1268,10 +1268,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                             })}
                           {orders.length === 0 && (
                             <tr>
-                              <td colSpan={8} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748B' }}>
+                              <td colSpan={8} style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--gray-500, #64748B)' }}>
                                 <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🧾</div>
-                                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A' }}>No Institutional Bills Generated Yet</div>
-                                <div style={{ fontSize: '0.82rem', color: '#64748B', maxWidth: '420px', margin: '4px auto 0 auto' }}>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--gray-900, #0F172A)' }}>No Institutional Bills Generated Yet</div>
+                                <div style={{ fontSize: '0.82rem', color: 'var(--gray-500, #64748B)', maxWidth: '420px', margin: '4px auto 0 auto' }}>
                                   As soon as coordinators create requisitions and canteen vendors fulfill them, all verified printable vouchers with QR authentication will appear here automatically.
                                 </div>
                               </td>
@@ -1317,7 +1317,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                             return (
                               <tr key={idx}>
-                                <td style={{ fontWeight: 800, color: '#0F172A' }}>{s.month}</td>
+                                <td style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{s.month}</td>
                                 <td style={{ fontWeight: 700 }}>🏪 {vendor?.name || s.vendor_id}</td>
                                 <td style={{ textAlign: 'right', fontWeight: 800 }}>₹{Number(s.total_amount || 0).toLocaleString('en-IN')}</td>
                                 <td style={{ textAlign: 'right', color: '#059669', fontWeight: 700 }}>₹{Number(s.paid_amount || 0).toLocaleString('en-IN')}</td>
@@ -1349,10 +1349,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           })}
                           {settlements.length === 0 && (
                             <tr>
-                              <td colSpan={7} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748B' }}>
+                              <td colSpan={7} style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--gray-500, #64748B)' }}>
                                 <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💳</div>
-                                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A' }}>No Monthly Settlements Recorded</div>
-                                <div style={{ fontSize: '0.82rem', color: '#64748B', maxWidth: '420px', margin: '4px auto 0 auto' }}>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--gray-900, #0F172A)' }}>No Monthly Settlements Recorded</div>
+                                <div style={{ fontSize: '0.82rem', color: 'var(--gray-500, #64748B)', maxWidth: '420px', margin: '4px auto 0 auto' }}>
                                   Use the &quot;+ Record Monthly Settlement&quot; button above to disburse and settle monthly canteen billing cycles.
                                 </div>
                               </td>
@@ -1390,24 +1390,24 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 </div>
 
                 {/* Filter Controls */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', padding: '16px', background: 'var(--surface-1)', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)', marginBottom: '20px' }}>
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Start Date</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', display: 'block', marginBottom: '4px' }}>Start Date</label>
                     <input type="date" className={styles.filterSelect} style={{ width: '100%' }} value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>End Date</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', display: 'block', marginBottom: '4px' }}>End Date</label>
                     <input type="date" className={styles.filterSelect} style={{ width: '100%' }} value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Department</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', display: 'block', marginBottom: '4px' }}>Department</label>
                     <select className={styles.filterSelect} style={{ width: '100%' }} value={filterDeptId} onChange={e => setFilterDeptId(e.target.value)}>
                       <option value="">All Departments</option>
                       {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Vendor</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', display: 'block', marginBottom: '4px' }}>Vendor</label>
                     <select className={styles.filterSelect} style={{ width: '100%' }} value={filterVendorId} onChange={e => setFilterVendorId(e.target.value)}>
                       <option value="">All Vendors</option>
                       {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -1444,7 +1444,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     </div>
                     <div className={styles.sectionSubtitle}>Visual insights on departmental food ordering patterns and canteen distribution</div>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px', background: '#F1F5F9', padding: '4px', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', gap: '6px', background: 'var(--surface-2)', padding: '4px', borderRadius: '8px' }}>
                     <button
                       onClick={() => setAnalyticsTimeframe('monthly')}
                       className={styles.quickActionBtn}
@@ -1462,15 +1462,15 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
                 </div>
 
-                <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
+                <div style={{ padding: '24px', background: 'var(--surface-1)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                     {departments.map((dept, idx) => {
                       const deptOrders = orders.filter(o => o.department_id === dept.id);
                       const amount = deptOrders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
                       return (
-                        <div key={idx} style={{ padding: '16px', background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                          <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 700 }}>{dept.name}</div>
-                          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0F172A', marginTop: '6px' }}>₹{amount.toLocaleString('en-IN')}</div>
+                        <div key={idx} style={{ padding: '16px', background: 'var(--surface-0)', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', fontWeight: 700 }}>{dept.name}</div>
+                          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', marginTop: '6px' }}>₹{amount.toLocaleString('en-IN')}</div>
                           <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700, marginTop: '4px' }}>{deptOrders.length} Completed Orders</div>
                         </div>
                       );
@@ -1510,10 +1510,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     <tbody>
                       {auditLogs.map((log, idx) => (
                         <tr key={idx}>
-                          <td style={{ fontSize: '0.78rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
+                          <td style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', fontFamily: 'var(--font-mono)' }}>
                             {new Date(log.created_at || log.timestamp || Date.now()).toLocaleString('en-IN')}
                           </td>
-                          <td style={{ fontWeight: 700, color: '#0F172A' }}>
+                          <td style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>
                             👤 {log.actor_name || log.user_email || 'System Admin'}
                           </td>
                           <td>
@@ -1521,8 +1521,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                               {log.action || 'UPDATE_ORDER'}
                             </span>
                           </td>
-                          <td style={{ color: '#475569', fontWeight: 600 }}>{log.resource_type || 'Order'} #{log.resource_id || log.order_id || 'N/A'}</td>
-                          <td style={{ fontSize: '0.8rem', color: '#64748B' }}>{log.details || log.description || 'Status changed'}</td>
+                          <td style={{ color: 'var(--gray-600, #475569)', fontWeight: 600 }}>{log.resource_type || 'Order'} #{log.resource_id || log.order_id || 'N/A'}</td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>{log.details || log.description || 'Status changed'}</td>
                         </tr>
                       ))}
                       {auditLogs.length === 0 && (
@@ -1553,21 +1553,21 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-                  <div style={{ padding: '20px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>DATABASE CLUSTER</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '6px 0' }}>PostgreSQL Node 1</div>
+                  <div style={{ padding: '20px', background: 'var(--surface-1)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>DATABASE CLUSTER</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: '6px 0' }}>PostgreSQL Node 1</div>
                     <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700 }}>● Active • 0.8ms Ping</div>
                   </div>
 
-                  <div style={{ padding: '20px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>NEXT.JS APP RUNTIME</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '6px 0' }}>Turbopack Server</div>
+                  <div style={{ padding: '20px', background: 'var(--surface-1)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>NEXT.JS APP RUNTIME</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: '6px 0' }}>Turbopack Server</div>
                     <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700 }}>● Fast SSR • 63 Routes Static</div>
                   </div>
 
-                  <div style={{ padding: '20px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>WEBSOCKET GATEWAY</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '6px 0' }}>Event Stream v3.7</div>
+                  <div style={{ padding: '20px', background: 'var(--surface-1)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>WEBSOCKET GATEWAY</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: '6px 0' }}>Event Stream v3.7</div>
                     <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700 }}>● Broadcasting Live Alerts</div>
                   </div>
                 </div>
@@ -1604,7 +1604,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       <input
                         type="text"
                         className={styles.filterSelect}
-                        style={{ flex: 1, background: '#FFFFFF' }}
+                        style={{ flex: 1, background: 'var(--surface-0)' }}
                         placeholder="Type RESET USERS"
                         value={resetConfirmPhrase}
                         onChange={e => setResetConfirmPhrase(e.target.value)}
@@ -1648,7 +1648,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   
                   {/* Photo Upload Section */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '18px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '18px', background: 'var(--surface-1)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                       {profileAvatarPreview || session.avatar_url ? (
                         <img
@@ -1678,7 +1678,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A' }}>Profile Picture</label>
+                      <label style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>Profile Picture</label>
                       <div>
                         <UiverseButton
                           type="button"
@@ -1713,17 +1713,17 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                           }}
                         />
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Supports JPG, PNG or WEBP (Max 5MB). Photo will be cropped in a square.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)' }}>Supports JPG, PNG or WEBP (Max 5MB). Photo will be cropped in a square.</div>
                     </div>
                   </div>
 
                   {/* Full Name */}
                   <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Administrator Full Name *</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Administrator Full Name *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={profileName}
                       onChange={e => setProfileName(e.target.value)}
                       required
@@ -1733,11 +1733,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                   {/* Email */}
                   <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Email Address (System ID)</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Email Address (System ID)</label>
                     <input
                       type="email"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#F1F5F9', color: '#64748B', cursor: 'not-allowed' }}
+                      style={{ width: '100%', background: 'var(--surface-2)', color: 'var(--gray-500, #64748B)', cursor: 'not-allowed' }}
                       value={session.email}
                       disabled
                     />
@@ -1745,13 +1745,13 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                   {/* Mobile */}
                   <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>
                       Contact Mobile Number <span style={{ color: '#94A3B8', fontWeight: 500 }}>(10 digits)</span>
                     </label>
                     <input
                       type="tel"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={profileMobile}
                       onChange={e => { setProfileMobile(e.target.value); setProfileMobileError(''); }}
                       placeholder="10-digit mobile number"
@@ -1761,10 +1761,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                   {/* Language */}
                   <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>Preferred Language</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700, #334155)', display: 'block', marginBottom: '6px' }}>Preferred Language</label>
                     <select
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={preferredLang}
                       onChange={e => setPreferredLang(e.target.value)}
                     >
@@ -1815,11 +1815,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
               <form onSubmit={handleAddDeptSubmit}>
                 <div className={styles.modalBody}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Department Code *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Department Code *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="e.g. CS, MECH, PHARMA"
                       value={deptCode}
                       onChange={e => setDeptCode(e.target.value)}
@@ -1827,11 +1827,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Department Full Name *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Department Full Name *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="e.g. Computer Science & Engineering"
                       value={deptName}
                       onChange={e => setDeptName(e.target.value)}
@@ -1839,10 +1839,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Description / Scope</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Description / Scope</label>
                     <textarea
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF', minHeight: '80px' }}
+                      style={{ width: '100%', background: 'var(--surface-0)', minHeight: '80px' }}
                       placeholder="e.g. Undergraduate engineering requisitions"
                       value={deptDesc}
                       onChange={e => setDeptDesc(e.target.value)}
@@ -1875,11 +1875,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   {addVendorSuccess && <div style={{ color: '#059669', fontSize: '0.8rem', fontWeight: 700 }}>{addVendorSuccess}</div>}
                   
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Unique Vendor ID *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Unique Vendor ID *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="e.g. sharma_canteen"
                       value={newVendorId}
                       onChange={e => setNewVendorId(e.target.value)}
@@ -1887,11 +1887,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Canteen Display Name *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Canteen Display Name *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="e.g. Sharma Canteen & Cafe"
                       value={newVendorName}
                       onChange={e => setNewVendorName(e.target.value)}
@@ -1899,11 +1899,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Proprietor / Contact Person *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Proprietor / Contact Person *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="e.g. Rajesh Sharma"
                       value={newVendorOwner}
                       onChange={e => setNewVendorOwner(e.target.value)}
@@ -1911,11 +1911,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Contact Email *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Contact Email *</label>
                     <input
                       type="email"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="vendor@aharsetu.edu.in"
                       value={newVendorEmail}
                       onChange={e => setNewVendorEmail(e.target.value)}
@@ -1923,11 +1923,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Phone Number *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Phone Number *</label>
                     <input
                       type="tel"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="10-digit phone"
                       value={newVendorPhone}
                       onChange={e => setNewVendorPhone(e.target.value)}
@@ -1935,11 +1935,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Initial Login Password *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Initial Login Password *</label>
                     <input
                       type="password"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       placeholder="Password for vendor login"
                       value={newVendorPassword}
                       onChange={e => setNewVendorPassword(e.target.value)}
@@ -1970,10 +1970,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 <button className={styles.modalCloseBtn} onClick={() => setSelectedVendor(null)}>✕</button>
               </div>
               <div className={styles.modalBody}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Select Operational State</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Select Operational State</label>
                 <select
                   className={styles.filterSelect}
-                  style={{ width: '100%', background: '#FFFFFF' }}
+                  style={{ width: '100%', background: 'var(--surface-0)' }}
                   value={editStatus}
                   onChange={e => setEditStatus(e.target.value)}
                 >
@@ -2005,22 +2005,22 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
               <form onSubmit={handleSaveVendorDetails}>
                 <div className={styles.modalBody} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Canteen / Business Name *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '4px' }}>Canteen / Business Name *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={editCanteenName}
                       onChange={e => setEditCanteenName(e.target.value)}
                       required
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Proprietor / Owner Name *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '4px' }}>Proprietor / Owner Name *</label>
                     <input
                       type="text"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={editOwnerName}
                       onChange={e => setEditOwnerName(e.target.value)}
                       required
@@ -2028,20 +2028,20 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Phone Number</label>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '4px' }}>Phone Number</label>
                       <input
                         type="text"
                         className={styles.filterSelect}
-                        style={{ width: '100%', background: '#FFFFFF' }}
+                        style={{ width: '100%', background: 'var(--surface-0)' }}
                         value={editPhone}
                         onChange={e => setEditPhone(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Operational Status</label>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '4px' }}>Operational Status</label>
                       <select
                         className={styles.filterSelect}
-                        style={{ width: '100%', background: '#FFFFFF' }}
+                        style={{ width: '100%', background: 'var(--surface-0)' }}
                         value={editOpStatus}
                         onChange={e => setEditOpStatus(e.target.value)}
                       >
@@ -2052,11 +2052,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Email Address</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '4px' }}>Email Address</label>
                     <input
                       type="email"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={editEmail}
                       onChange={e => setEditEmail(e.target.value)}
                     />
@@ -2088,10 +2088,10 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   {settlementSuccess && <div style={{ color: '#059669', fontSize: '0.8rem', fontWeight: 700 }}>{settlementSuccess}</div>}
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Food Vendor *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Food Vendor *</label>
                     <select
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={selectedSettlementVendor}
                       onChange={e => setSelectedSettlementVendor(e.target.value)}
                       required
@@ -2101,11 +2101,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Billing Cycle Month (YYYY-MM) *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Billing Cycle Month (YYYY-MM) *</label>
                     <input
                       type="month"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={selectedSettlementMonth}
                       onChange={e => setSelectedSettlementMonth(e.target.value)}
                       required
@@ -2113,12 +2113,12 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Total Amount Billed (₹) *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Total Amount Billed (₹) *</label>
                     <input
                       type="number"
                       step="0.01"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={settlementTotalAmount}
                       onChange={e => setSettlementTotalAmount(parseFloat(e.target.value) || 0)}
                       required
@@ -2126,12 +2126,12 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Paid / Disbursed Amount (₹) *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Paid / Disbursed Amount (₹) *</label>
                     <input
                       type="number"
                       step="0.01"
                       className={styles.filterSelect}
-                      style={{ width: '100%', background: '#FFFFFF' }}
+                      style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={settlementPaidAmount}
                       onChange={e => setSettlementPaidAmount(parseFloat(e.target.value) || 0)}
                       required

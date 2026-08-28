@@ -6,6 +6,7 @@ import { login, getSession, UserProfile } from '@/lib/auth';
 import { useI18n, LangCode } from '@/lib/i18n';
 import { LANGUAGES, DEPARTMENTS } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
+import ThemeToggle from '@/components/ThemeToggle';
 import UiverseButton from '@/components/ui/UiverseButton';
 import AppIcon from '@/components/ui/AppIcon';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
@@ -211,6 +212,7 @@ export default function LoginPage() {
           </div>
           
           <div className={styles.heroHeaderRight}>
+            <ThemeToggle variant="icon" />
             <Link href="/privacy" className={styles.legalTopLink} title="View Privacy Policy">
               <span>🔒</span> Privacy Policy
             </Link>
@@ -375,10 +377,10 @@ export default function LoginPage() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#0D9488', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.5px', marginBottom: '10px' }}>
               AHARSETU ENTERPRISE AUTHENTICATION
             </div>
-            <h3 className={styles.formTitle} style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px', margin: '0 0 6px' }}>
+            <h3 className={styles.formTitle} style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px', margin: '0 0 6px' }}>
               {formatBrandText(t('login.welcome_title', 'Welcome to AharSetu'), lang)}
             </h3>
-            <p className={styles.formSub} style={{ fontSize: '0.85rem', color: '#64748B', margin: 0 }}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
+            <p className={styles.formSub} style={{ fontSize: '0.85rem', color: 'var(--gray-500, #64748B)', margin: 0 }}>{t('login.welcome_sub', 'Authenticate using your institutional profile credentials')}</p>
           </div>
 
           {error && (
@@ -484,7 +486,7 @@ export default function LoginPage() {
               </div>
 
               {/* Remember this device */}
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: '#475569', cursor: 'pointer', marginTop: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--gray-600, #475569)', cursor: 'pointer', marginTop: '12px' }}>
                 <input
                   type="checkbox"
                   checked={rememberDevice}

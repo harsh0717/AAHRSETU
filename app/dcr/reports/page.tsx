@@ -403,9 +403,9 @@ export default function DCRFinancialReportsPage() {
         }}>
           {/* Tile 1: Total Pending Liabilities */}
           <div style={{
-            background: 'white',
+            background: 'var(--surface-0)',
             borderRadius: '16px',
-            border: '1.5px solid #E2E8F0',
+            border: '1.5px solid var(--gray-200, #E2E8F0)',
             padding: '20px 24px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
           }}>
@@ -420,14 +420,14 @@ export default function DCRFinancialReportsPage() {
             <div style={{ fontSize: '2rem', fontWeight: 900, color: grandTotalPending > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.5px' }}>
               {fmtCurrency(grandTotalPending)}
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
               Total unsettled canteen payables awaiting clearance
             </div>
           </div>
 
           {/* Tile 2: Total Disbursed / Paid */}
           <div style={{
-            background: 'white',
+            background: 'var(--surface-0)',
             borderRadius: '16px',
             border: '1.5px solid #10B981',
             padding: '20px 24px',
@@ -444,28 +444,28 @@ export default function DCRFinancialReportsPage() {
             <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
               {fmtCurrency(grandTotalSettled)}
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
               Direct NEFT/RTGS/UPI cleared disbursements
             </div>
           </div>
 
           {/* Tile 3: Total Institutional Expenditure */}
           <div style={{
-            background: 'white',
+            background: 'var(--surface-0)',
             borderRadius: '16px',
-            border: '1.5px solid #E2E8F0',
+            border: '1.5px solid var(--gray-200, #E2E8F0)',
             padding: '20px 24px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
                 TOTAL INVOICED FOOD
               </span>
               <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
                 ✓ ZERO VARIANCE
               </span>
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
               {fmtCurrency(grandTotalBilled)}
             </div>
             <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '4px', fontWeight: 600 }}>
@@ -476,18 +476,18 @@ export default function DCRFinancialReportsPage() {
 
         {/* Filters Panel */}
         <div style={{
-          background: 'white',
+          background: 'var(--surface-0)',
           borderRadius: '16px',
-          border: '1px solid #E2E8F0',
+          border: '1px solid var(--gray-200, #E2E8F0)',
           padding: '16px 20px',
           marginBottom: '20px',
           boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0F172A' }}>
+            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: 'var(--gray-900, #0F172A)' }}>
               🔍 Multi-Dimensional Audit Filters
             </span>
-            <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>
               Showing {filteredBills.length} matched records
             </span>
           </div>
@@ -500,7 +500,7 @@ export default function DCRFinancialReportsPage() {
             <select
               value={filterMonth}
               onChange={e => setFilterMonth(Number(e.target.value))}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.84rem', background: 'white' }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.84rem', background: 'var(--surface-0)' }}
             >
               <option value={0}>All Months</option>
               {MONTHS.map((m, idx) => (
@@ -511,7 +511,7 @@ export default function DCRFinancialReportsPage() {
             <select
               value={filterYear}
               onChange={e => setFilterYear(Number(e.target.value))}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.84rem', background: 'white' }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.84rem', background: 'var(--surface-0)' }}
             >
               <option value={0}>All Years</option>
               {[currentYear, currentYear - 1, currentYear - 2].map(y => (
@@ -522,7 +522,7 @@ export default function DCRFinancialReportsPage() {
             <select
               value={filterDept}
               onChange={e => setFilterDept(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.84rem', background: 'white' }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.84rem', background: 'var(--surface-0)' }}
             >
               <option value="">All Departments</option>
               {uniqueDepts.map(d => (
@@ -533,7 +533,7 @@ export default function DCRFinancialReportsPage() {
             <select
               value={filterVendor}
               onChange={e => setFilterVendor(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.84rem', background: 'white' }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.84rem', background: 'var(--surface-0)' }}
             >
               <option value="">All Canteen Vendors</option>
               {uniqueVendors.map(v => (
@@ -546,7 +546,7 @@ export default function DCRFinancialReportsPage() {
               value={dateFrom}
               onChange={e => setDateFrom(e.target.value)}
               title="From Date"
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.84rem' }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.84rem' }}
             />
 
             <input
@@ -554,7 +554,7 @@ export default function DCRFinancialReportsPage() {
               value={dateTo}
               onChange={e => setDateTo(e.target.value)}
               title="To Date"
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.84rem' }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.84rem' }}
             />
 
             <button
@@ -569,12 +569,12 @@ export default function DCRFinancialReportsPage() {
               style={{
                 padding: '8px 16px',
                 borderRadius: '8px',
-                background: '#F1F5F9',
-                border: '1px solid #E2E8F0',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--gray-200, #E2E8F0)',
                 cursor: 'pointer',
                 fontWeight: 700,
                 fontSize: '0.82rem',
-                color: '#475569'
+                color: 'var(--gray-600, #475569)'
               }}
             >
               ✕ Reset
@@ -587,10 +587,10 @@ export default function DCRFinancialReportsPage() {
           display: 'flex',
           gap: '8px',
           marginBottom: '20px',
-          background: '#F1F5F9',
+          background: 'var(--surface-2)',
           padding: '6px',
           borderRadius: '14px',
-          border: '1px solid #E2E8F0',
+          border: '1px solid var(--gray-200, #E2E8F0)',
           flexWrap: 'wrap'
         }}>
           <button
@@ -673,11 +673,11 @@ export default function DCRFinancialReportsPage() {
             {/* Visual Charts Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))', gap: '20px' }}>
               {/* Monthly Spending Trend */}
-              <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>
+              <div style={{ background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', marginBottom: '4px' }}>
                   📈 Monthly Dining Expenditure Trend (₹)
                 </h3>
-                <p style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '16px' }}>
+                <p style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginBottom: '16px' }}>
                   Monthly billed volume vs. cleared settlements
                 </p>
                 <div style={{ width: '100%', height: 260 }}>
@@ -696,11 +696,11 @@ export default function DCRFinancialReportsPage() {
               </div>
 
               {/* Department Share Donut */}
-              <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>
+              <div style={{ background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', marginBottom: '4px' }}>
                   🏛️ Department Budget Distribution (%)
                 </h3>
-                <p style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '16px' }}>
+                <p style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginBottom: '16px' }}>
                   Percentage breakdown of total campus food requisitions
                 </p>
                 <div style={{ width: '100%', height: 260 }}>
@@ -736,22 +736,22 @@ export default function DCRFinancialReportsPage() {
             </div>
 
             {/* Quick Summary Highlights */}
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '20px 24px' }}>
-              <h4 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
+            <div style={{ background: 'var(--surface-1)', border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '16px', padding: '20px 24px' }}>
+              <h4 style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', marginBottom: '12px' }}>
                 📋 Statutory Fiscal Compliance & Summary Notes
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '16px', fontSize: '0.82rem' }}>
-                <div style={{ background: 'white', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                <div style={{ background: 'var(--surface-0)', padding: '14px', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                   <div style={{ fontWeight: 700, color: '#0F766E', marginBottom: '4px' }}>✓ Strict Double-Counting Protection</div>
-                  <div style={{ color: '#64748B' }}>Master department invoices are excluded from settlement disbursements. All voucher sums reconcile exactly.</div>
+                  <div style={{ color: 'var(--gray-500, #64748B)' }}>Master department invoices are excluded from settlement disbursements. All voucher sums reconcile exactly.</div>
                 </div>
-                <div style={{ background: 'white', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                <div style={{ background: 'var(--surface-0)', padding: '14px', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                   <div style={{ fontWeight: 700, color: '#0F766E', marginBottom: '4px' }}>✓ SAC 9963 & Section 194C Compliant</div>
-                  <div style={{ color: '#64748B' }}>All exports include GST Service Accounting Code 9963 and Income Tax contractor payment schedules.</div>
+                  <div style={{ color: 'var(--gray-500, #64748B)' }}>All exports include GST Service Accounting Code 9963 and Income Tax contractor payment schedules.</div>
                 </div>
-                <div style={{ background: 'white', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                <div style={{ background: 'var(--surface-0)', padding: '14px', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                   <div style={{ fontWeight: 700, color: '#0F766E', marginBottom: '4px' }}>✓ 4-Tier Audit Sign-Off Matrix</div>
-                  <div style={{ color: '#64748B' }}>Certified by Internal Accounts Officer, DCR Officer, Finance Officer / Principal, and Statutory CA.</div>
+                  <div style={{ color: 'var(--gray-500, #64748B)' }}>Certified by Internal Accounts Officer, DCR Officer, Finance Officer / Principal, and Statutory CA.</div>
                 </div>
               </div>
             </div>
@@ -760,13 +760,13 @@ export default function DCRFinancialReportsPage() {
 
         {/* TAB 2: DEPARTMENT-WISE EXPENDITURE LEDGER */}
         {activeReportSection === 'departments' && (
-          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 2px' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: '0 0 2px' }}>
                   🏛️ Department-Wise Expenditure & Budget Ledger
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', margin: 0 }}>
                   Itemized food requisition totals, average ticket size, and settlement status by department.
                 </p>
               </div>
@@ -778,29 +778,29 @@ export default function DCRFinancialReportsPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
                 <thead>
-                  <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Department Label</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Requisitions Count</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Avg. Order Value</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Settled (Paid)</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Pending Dues</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Total Spend (₹)</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Budget Share</th>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid #E2E8F0' }}>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Department Label</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Requisitions Count</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Avg. Order Value</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Settled (Paid)</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Pending Dues</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Total Spend (₹)</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Budget Share</th>
                   </tr>
                 </thead>
                 <tbody>
                   {departmentBreakdown.map((row, idx) => (
                     <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
-                      <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0F172A' }}>{row.label}</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center', color: '#475569', fontWeight: 600 }}>{row.count} orders</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', color: '#64748B' }}>{fmtCurrency(row.avgOrder)}</td>
+                      <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{row.label}</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'center', color: 'var(--gray-600, #475569)', fontWeight: 600 }}>{row.count} orders</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--gray-500, #64748B)' }}>{fmtCurrency(row.avgOrder)}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>{fmtCurrency(row.settled)}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', color: row.pending > 0 ? '#DC2626' : '#64748B', fontWeight: row.pending > 0 ? 700 : 400 }}>
                         {fmtCurrency(row.pending)}
                       </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>{fmtCurrency(row.total)}</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{fmtCurrency(row.total)}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <span style={{ background: '#F1F5F9', color: '#334155', padding: '3px 8px', borderRadius: '12px', fontSize: '0.74rem', fontWeight: 700 }}>
+                        <span style={{ background: 'var(--surface-2)', color: 'var(--gray-700, #334155)', padding: '3px 8px', borderRadius: '12px', fontSize: '0.74rem', fontWeight: 700 }}>
                           {row.share.toFixed(1)}%
                         </span>
                       </td>
@@ -816,13 +816,13 @@ export default function DCRFinancialReportsPage() {
                 </tbody>
                 {departmentBreakdown.length > 0 && (
                   <tfoot>
-                    <tr style={{ background: '#F8FAFC', borderTop: '2px solid #CBD5E1', fontWeight: 800 }}>
-                      <td style={{ padding: '12px 14px', color: '#0F172A' }}>GRAND TOTAL</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center', color: '#0F172A' }}>{filteredBills.length} orders</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', color: '#64748B' }}>—</td>
+                    <tr style={{ background: 'var(--surface-1)', borderTop: '2px solid #CBD5E1', fontWeight: 800 }}>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray-900, #0F172A)' }}>GRAND TOTAL</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'center', color: 'var(--gray-900, #0F172A)' }}>{filteredBills.length} orders</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--gray-500, #64748B)' }}>—</td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', color: '#059669' }}>{fmtCurrency(grandTotalSettled)}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', color: grandTotalPending > 0 ? '#DC2626' : '#64748B' }}>{fmtCurrency(grandTotalPending)}</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', color: '#0F172A', fontSize: '0.95rem' }}>{fmtCurrency(grandTotalBilled)}</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--gray-900, #0F172A)', fontSize: '0.95rem' }}>{fmtCurrency(grandTotalBilled)}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'center', color: '#0D9488' }}>100.0%</td>
                     </tr>
                   </tfoot>
@@ -834,13 +834,13 @@ export default function DCRFinancialReportsPage() {
 
         {/* TAB 3: CANTEEN VENDOR AGING & PAYOUTS */}
         {activeReportSection === 'vendors' && (
-          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 2px' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: '0 0 2px' }}>
                   🍽️ Canteen Vendor Disbursements & Aging Ledger
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', margin: 0 }}>
                   Real-time vendor dues, 0-30/31-60/60+ days aging liability, and bank UTR tracking.
                 </p>
               </div>
@@ -855,24 +855,24 @@ export default function DCRFinancialReportsPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
                 <thead>
-                  <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Canteen & Proprietor</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Total Invoiced</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Total Paid</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Outstanding Due</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Aging Breakdown</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Last Payment Ref</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Status</th>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid #E2E8F0' }}>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Canteen & Proprietor</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Total Invoiced</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Total Paid</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Outstanding Due</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Aging Breakdown</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Last Payment Ref</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {outstandingVendors.map((v, idx) => (
                     <tr key={v.vendor_id} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
                       <td style={{ padding: '12px 14px' }}>
-                        <div style={{ fontWeight: 800, color: '#0F172A' }}>{v.vendor_name}</div>
-                        <div style={{ fontSize: '0.74rem', color: '#64748B' }}>👤 {v.owner_name} · 📞 {v.phone || '—'}</div>
+                        <div style={{ fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.vendor_name}</div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)' }}>👤 {v.owner_name} · 📞 {v.phone || '—'}</div>
                       </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#0F172A' }}>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>
                         {fmtCurrency(v.total_billed)}
                       </td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
@@ -895,7 +895,7 @@ export default function DCRFinancialReportsPage() {
                       <td style={{ padding: '12px 14px' }}>
                         {v.last_payment_ref ? (
                           <div>
-                            <div style={{ fontWeight: 600, color: '#334155', fontFamily: 'monospace', fontSize: '0.78rem' }}>{v.last_payment_ref}</div>
+                            <div style={{ fontWeight: 600, color: 'var(--gray-700, #334155)', fontFamily: 'monospace', fontSize: '0.78rem' }}>{v.last_payment_ref}</div>
                             <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{v.last_payment_date ? new Date(v.last_payment_date).toLocaleDateString('en-IN') : '—'}</div>
                           </div>
                         ) : (
@@ -924,13 +924,13 @@ export default function DCRFinancialReportsPage() {
 
         {/* TAB 4: STATUTORY CA AUDIT STATEMENTS & ARCHIVES */}
         {activeReportSection === 'archives' && (
-          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '20px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 2px' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: '0 0 2px' }}>
                   📑 Certified Monthly Statutory Settlement Statements
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', margin: 0 }}>
                   Signed monthly archives with SAC 9963 tax schedules and dynamic 6-sheet reconciliation for Chartered Accountants.
                 </p>
               </div>
@@ -939,14 +939,14 @@ export default function DCRFinancialReportsPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
                 <thead>
-                  <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Settlement Voucher #</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#334155' }}>Billing Period</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Vendor Bills</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Total Amount</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>Settled (Paid)</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Audit Status</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#334155' }}>Statutory Exports</th>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid #E2E8F0' }}>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Settlement Voucher #</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Billing Period</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Vendor Bills</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Total Amount</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Settled (Paid)</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Audit Status</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Statutory Exports</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -955,13 +955,13 @@ export default function DCRFinancialReportsPage() {
                       <td style={{ padding: '12px 14px', fontWeight: 800, color: '#0F766E', fontFamily: 'monospace' }}>
                         {s.settlement_number}
                       </td>
-                      <td style={{ padding: '12px 14px', fontWeight: 600, color: '#334155' }}>
+                      <td style={{ padding: '12px 14px', fontWeight: 600, color: 'var(--gray-700, #334155)' }}>
                         {MONTHS[s.month - 1]} {s.year}
                       </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center', color: '#64748B' }}>
+                      <td style={{ padding: '12px 14px', textAlign: 'center', color: 'var(--gray-500, #64748B)' }}>
                         {s.total_bills} bills
                       </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>
                         {fmtCurrency(s.total_amount)}
                       </td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>

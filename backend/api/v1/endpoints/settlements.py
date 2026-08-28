@@ -554,7 +554,6 @@ def create_draft_settlement(
     month = int(payload.get('month', datetime.now().month))
     year = int(payload.get('year', datetime.now().year))
     notes = payload.get('notes')
-
     if month < 1 or month > 12:
         raise HTTPException(status_code=400, detail="Invalid month (must be 1-12)")
 
@@ -562,9 +561,6 @@ def create_draft_settlement(
         Settlement.month == month,
         Settlement.year == year
     ).first()
-
-    if existing and existing.status == 'FINALIZED':
-        raise HTTPException(status_code=400, detail=f"Settlement for {calendar.month_name[month]} {year} is already finalized.")
 
     dept_breakdown, vendor_breakdown, bills = _get_settlement_breakdowns(db, month, year)
     # Only count vendor-specific bills (master bills excluded) to avoid double-counting
@@ -574,14 +570,18 @@ def create_draft_settlement(
     settled_amount = sum(float(b.amount or 0.0) for b in vendor_bills_only if b.settlement_status == 'SETTLED')
     pending_amount = total_amount - settled_amount
 
+    if existing and existing.status == 'FINALIZED' and pending_amount <= 0:
+        raise HTTPException(status_code=400, detail=f"Settlement for {calendar.month_name[month]} {year} is already fully finalized with zero pending balance.")
+
     settlement_num = f"SET-{year:04d}-{month:02d}"
 
     if existing:
+        existing.status = 'DRAFT' if pending_amount > 0 else existing.status
         existing.total_bills = total_bills
         existing.total_amount = total_amount
         existing.settled_amount = settled_amount
         existing.pending_amount = pending_amount
-        existing.notes = notes
+        existing.notes = notes or existing.notes
         existing.created_by_id = current_user.id
         db.commit()
         db.refresh(existing)
@@ -710,7 +710,7 @@ def get_settlement_report(
 
 
 @router.post("/{settlement_id}/finalize")
-def finalize_settlement(
+async def finalize_settlement(
     settlement_id: int,
     payload: Optional[dict] = None,
     db: Session = Depends(get_db),
@@ -826,7 +826,7 @@ def finalize_settlement(
     # Broadcast notification
     try:
         notif_service = NotificationService(db)
-        notif_service.notify_settlement_event(
+        await notif_service.notify_settlement_event(
             settlement_number=settlement.settlement_number,
             month=settlement.month,
             year=settlement.year,

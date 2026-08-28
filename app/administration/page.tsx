@@ -28,7 +28,7 @@ export default function AdministrationRedirectPage() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '12px' }}>
       <div style={{ fontSize: '2rem' }}>🏛️</div>
-      <div style={{ fontWeight: 700, color: '#0F172A' }}>Redirecting to Administration...</div>
+      <div style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>Redirecting to Administration...</div>
     </div>
   );
 }

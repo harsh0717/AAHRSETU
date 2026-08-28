@@ -414,9 +414,9 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 }}>
                   {/* Tile 1: Pending Approvals */}
                   <div style={{
-                    background: 'white',
+                    background: 'var(--surface-0)',
                     borderRadius: '16px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1.5px solid var(--gray-200, #E2E8F0)',
                     padding: '20px 24px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                   }}>
@@ -431,14 +431,14 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {totalPending}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Requisitions awaiting your executive signature
                     </div>
                   </div>
 
                   {/* Tile 2: Approved Orders */}
                   <div style={{
-                    background: 'white',
+                    background: 'var(--surface-0)',
                     borderRadius: '16px',
                     border: '1.5px solid #10B981',
                     padding: '20px 24px',
@@ -455,31 +455,31 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {totalApproved}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Requisitions approved & forwarded to Administration/Kitchen
                     </div>
                   </div>
 
                   {/* Tile 3: My Requisitions */}
                   <div style={{
-                    background: 'white',
+                    background: 'var(--surface-0)',
                     borderRadius: '16px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1.5px solid var(--gray-200, #E2E8F0)',
                     padding: '20px 24px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
                         MY REQUISITIONS
                       </span>
                       <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
                         PRINCIPAL DRAFTED
                       </span>
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
                       {totalMyOrders}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Direct orders initiated by Principal office
                     </div>
                   </div>
@@ -520,16 +520,16 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {myOrders.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                      <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-1)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Department: {o.department_label || o.department_id}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Department: {o.department_label || o.department_id}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--gray-200, #E2E8F0)' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -580,7 +580,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                   /* Guided Flow on Mobile */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '80px' }}>
                     {/* Visual Progress Steps Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-0)', padding: '16px', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', boxShadow: 'var(--shadow-sm)' }}>
                       {[
                         { step: 1, label: 'Details' },
                         { step: 2, label: 'Menu' },
@@ -613,10 +613,10 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
                     {/* Step Content */}
                     {createOrderStep === 1 && (
-                      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'white' }}>
+                      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--surface-0)' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 1: Requisition Details</h3>
                         <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Select Target Department</label>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Select Target Department</label>
                           <select className="form-input" value={selectedDeptId} onChange={e => setSelectedDeptId(e.target.value)} required>
                             <option value="">-- Select Department --</option>
                             {session.principal_depts.map((d: string) => (
@@ -625,11 +625,11 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                           </select>
                         </div>
                         <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Event / Meeting Title</label>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Event / Meeting Title</label>
                           <input type="text" className="form-input" placeholder="e.g. Board of Trustees Lunch" value={title} onChange={e => setTitle(e.target.value)} required />
                         </div>
                         <div>
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Purpose of Request</label>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Purpose of Request</label>
                           <textarea className="form-input" style={{ height: '90px', resize: 'none' }} placeholder="Provide brief official purpose for approval..." value={purpose} onChange={e => setPurpose(e.target.value)} required />
                         </div>
                         <button
@@ -648,9 +648,9 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 2: Add Food Items</h3>
                         {menuByVendor.map(v => (
-                          <div key={v.id} style={{ background: 'white', padding: '16px', borderRadius: '20px', border: '1px solid #E2E8F0' }}>
+                          <div key={v.id} style={{ background: 'var(--surface-0)', padding: '16px', borderRadius: '20px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                              <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 {v.image_url ? (
                                   <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
@@ -658,7 +658,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                                 )}
                               </div>
                               <div>
-                                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{v.name}</div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
                                 <div style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items</div>
                               </div>
                             </div>
@@ -687,13 +687,13 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                                       transition: 'all 0.15s'
                                     }}
                                   >
-                                    <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'var(--surface-0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid var(--gray-200, #E2E8F0)', overflow: 'hidden' }}>
                                       {item.image_url ? (
                                         <img src={item.image_url} alt={translatedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                       ) : emoji}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{translatedName}</div>
+                                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{translatedName}</div>
                                       <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2563EB', marginTop: '2px' }}>₹{item.price}</div>
                                     </div>
 
@@ -713,11 +713,11 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                                           <button
                                             type="button"
                                             onClick={() => handleQtyChange(item.id, qty - 1)}
-                                            style={{ width: '32px', height: '32px', background: 'white', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            style={{ width: '32px', height: '32px', background: 'var(--surface-0)', border: '1px solid var(--gray-300, #CBD5E1)', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                           >
                                             −
                                           </button>
-                                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A', minWidth: '16px', textAlign: 'center' }}>{qty}</span>
+                                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--gray-900, #0F172A)', minWidth: '16px', textAlign: 'center' }}>{qty}</span>
                                           <button
                                             type="button"
                                             onClick={() => handleQtyChange(item.id, qty + 1)}
@@ -745,7 +745,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                               right: 0,
                               background: 'rgba(255,255,255,0.96)',
                               backdropFilter: 'blur(12px)',
-                              borderTop: '1px solid #E2E8F0',
+                              borderTop: '1px solid var(--gray-200, #E2E8F0)',
                               padding: '12px 16px',
                               display: 'flex',
                               alignItems: 'center',
@@ -755,10 +755,10 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                             }}
                           >
                             <div>
-                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--gray-500, #64748B)', fontWeight: 700 }}>
                                 {Object.values(selectedItems).filter(q => q > 0).length} Items · {new Set(menuByVendor.filter(v => v.menu.some(i => selectedItems[i.id] > 0)).map(v => v.id)).size} Canteens
                               </div>
-                              <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0F172A' }}>
+                              <div style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>
                                 Total: <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
                               </div>
                             </div>
@@ -777,7 +777,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                           type="button"
                           className="btn btn-ghost"
                           onClick={() => setCreateOrderStep(1)}
-                          style={{ minHeight: '44px', width: '100%', justifyContent: 'center', color: '#64748B', fontWeight: 700 }}
+                          style={{ minHeight: '44px', width: '100%', justifyContent: 'center', color: 'var(--gray-500, #64748B)', fontWeight: 700 }}
                         >
                           ← Back to Details
                         </button>
@@ -789,27 +789,27 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 3: Review & Submit</h3>
                         
                         {/* Event specifications */}
-                        <div className="card" style={{ background: 'white' }}>
-                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: '12px' }}>Event Requisition Details</h4>
+                        <div className="card" style={{ background: 'var(--surface-0)' }}>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gray-500, #64748B)', marginBottom: '12px' }}>Event Requisition Details</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700 }}>DEPARTMENT</div>
-                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{selectedDeptId === 'diploma' ? 'Diploma Department' : selectedDeptId === 'degree' ? 'Degree Department' : selectedDeptId.toUpperCase()}</div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{selectedDeptId === 'diploma' ? 'Diploma Department' : selectedDeptId === 'degree' ? 'Degree Department' : selectedDeptId.toUpperCase()}</div>
                             </div>
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700 }}>TITLE</div>
-                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{title}</div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{title}</div>
                             </div>
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700 }}>PURPOSE</div>
-                              <div style={{ fontSize: '0.88rem', color: '#334155', lineHeight: 1.4 }}>{purpose}</div>
+                              <div style={{ fontSize: '0.88rem', color: 'var(--gray-700, #334155)', lineHeight: 1.4 }}>{purpose}</div>
                             </div>
                           </div>
                         </div>
 
                         {/* Selected items card */}
-                        <div className="card" style={{ background: 'white' }}>
-                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: '12px' }}>Items Summary</h4>
+                        <div className="card" style={{ background: 'var(--surface-0)' }}>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gray-500, #64748B)', marginBottom: '12px' }}>Items Summary</h4>
                           {menuByVendor.map(v => {
                             const vendorItems = v.menu.filter(item => (selectedItems[item.id] || 0) > 0);
                             if (vendorItems.length === 0) return null;
@@ -818,19 +818,19 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                               <div key={v.id} style={{ marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #EFF6FF' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', marginBottom: '6px' }}>{v.name}</div>
                                 {vendorItems.map(item => (
-                                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#334155', marginBottom: '4px' }}>
+                                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: 'var(--gray-700, #334155)', marginBottom: '4px' }}>
                                     <span>{selectedItems[item.id]} × {item.name}</span>
                                     <span style={{ fontWeight: 700 }}>₹{(selectedItems[item.id] * item.price).toFixed(0)}</span>
                                   </div>
                                 ))}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: '#64748B', marginTop: '6px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--gray-500, #64748B)', marginTop: '6px' }}>
                                   <span>Subtotal</span>
                                   <span style={{ fontWeight: 700 }}>₹{vendorTotal.toFixed(0)}</span>
                                 </div>
                               </div>
                             );
                           })}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 900, color: '#0F172A', marginTop: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', marginTop: '10px' }}>
                             <span>Grand Total</span>
                             <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
                           </div>
@@ -851,7 +851,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                             type="button"
                             className="btn btn-ghost"
                             onClick={() => setCreateOrderStep(2)}
-                            style={{ minHeight: '44px', justifyContent: 'center', width: '100%', color: '#64748B', fontWeight: 700 }}
+                            style={{ minHeight: '44px', justifyContent: 'center', width: '100%', color: 'var(--gray-500, #64748B)', fontWeight: 700 }}
                           >
                             ← Back to Select Food
                           </button>
@@ -868,7 +868,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                         <div key={v.id}>
                           {/* Vendor header */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               {v.image_url ? (
                                 <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               ) : (
@@ -876,7 +876,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                               )}
                             </div>
                             <div>
-                              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{v.name}</div>
+                              <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
                               <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items available</div>
                             </div>
                           </div>
@@ -906,7 +906,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                                     background: qty > 0
                                       ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)'
                                       : 'white',
-                                    border: qty > 0 ? '2px solid #93C5FD' : '1px solid #E2E8F0',
+                                    border: qty > 0 ? '2px solid #93C5FD' : '1px solid var(--gray-200, #E2E8F0)',
                                     borderRadius: '16px',
                                     overflow: 'hidden',
                                     transition: 'all 0.18s cubic-bezier(.4,0,.2,1)',
@@ -953,7 +953,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
                                   {/* Card body */}
                                   <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>{translatedName}</div>
+                                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', lineHeight: 1.3 }}>{translatedName}</div>
                                     <div style={{ fontSize: '0.95rem', color: '#2563EB', fontWeight: 800 }}>₹{item.price}</div>
                                     <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{translatedUnit}</div>
                                   </div>
@@ -987,7 +987,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                                           onClick={() => handleQtyChange(item.id, qty - 1)}
                                           style={{
                                             width: '34px', height: '34px',
-                                            background: 'white',
+                                            background: 'var(--surface-0)',
                                             border: '1.5px solid #93C5FD',
                                             borderRadius: '10px',
                                             fontSize: '1.1rem',
@@ -1000,7 +1000,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                                         >
                                           −
                                         </button>
-                                        <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
+                                        <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--gray-900, #0F172A)', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
                                         <button
                                           type="button"
                                           onClick={() => handleQtyChange(item.id, qty + 1)}
@@ -1030,9 +1030,9 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                       ))}
 
                       {menuByVendor.length === 0 && (
-                        <div style={{ padding: '48px 24px', textAlign: 'center', background: 'white', borderRadius: '20px', border: '1px dashed #CBD5E1' }}>
+                        <div style={{ padding: '48px 24px', textAlign: 'center', background: 'var(--surface-0)', borderRadius: '20px', border: '1px dashed #CBD5E1' }}>
                           <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏪</div>
-                          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>No canteen open right now</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '6px' }}>No canteen open right now</div>
                           <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Vendors will appear here once they set their status to Open.</div>
                         </div>
                       )}
@@ -1041,8 +1041,8 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                     {/* RIGHT: Order details + smart summary */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '80px' }}>
                       {/* Event details card */}
-                      <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'white' }}>
-                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: '#0F172A' }}>Requisition Details</h3>
+                      <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'var(--surface-0)' }}>
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: 'var(--gray-900, #0F172A)' }}>Requisition Details</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           <div>
                             <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '5px' }}>Target Department</label>
@@ -1066,8 +1066,8 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
                       {/* Order summary card */}
                       {Object.keys(selectedItems).some(k => selectedItems[k] > 0) && (
-                        <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'white' }}>
-                          <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: '#0F172A' }}>🛒 Order Summary</h3>
+                        <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'var(--surface-0)' }}>
+                          <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: 'var(--gray-900, #0F172A)' }}>🛒 Order Summary</h3>
                           {menuByVendor.map(v => {
                             const vendorItems = v.menu.filter(item => (selectedItems[item.id] || 0) > 0);
                             if (vendorItems.length === 0) return null;
@@ -1076,19 +1076,19 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                               <div key={v.id} style={{ marginBottom: '12px' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #EFF6FF' }}>{v.name}</div>
                                 {vendorItems.map(item => (
-                                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.81rem', color: '#334155', marginBottom: '3px' }}>
+                                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.81rem', color: 'var(--gray-700, #334155)', marginBottom: '3px' }}>
                                     <span>{selectedItems[item.id]}× {item.name}</span>
                                     <span style={{ fontWeight: 700 }}>₹{(selectedItems[item.id] * item.price).toFixed(0)}</span>
                                   </div>
                                 ))}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748B', marginTop: '4px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                                   <span>Subtotal</span>
                                   <span style={{ fontWeight: 700 }}>₹{vendorTotal.toFixed(0)}</span>
                                 </div>
                               </div>
                             );
                           })}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', borderTop: '2px solid #EFF6FF', paddingTop: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', borderTop: '2px solid #EFF6FF', paddingTop: '10px' }}>
                             <span>Grand Total</span>
                             <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
                           </div>
@@ -1116,16 +1116,16 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {pendingQueue.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                      <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-1)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--gray-200, #E2E8F0)' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>Submitted: {new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -1177,16 +1177,16 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {approvedOrders.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                      <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-1)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--gray-200, #E2E8F0)' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -1243,11 +1243,11 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                           <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#991B1B' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #FECACA' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -1299,16 +1299,16 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {historyOrders.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                      <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-1)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                           <StatusBadge status={o.status} size="sm" />
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Prepared By: {o.created_by_name} · Dept: {o.department_label}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--gray-200, #E2E8F0)' }}>
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>₹{o.total_bill_amount.toFixed(2)}</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -1360,13 +1360,13 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {ordersWithBills.map(o => (
-                      <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: 'white' }}>
+                      <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-0)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                           <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669' }}>₹{o.total_bill_amount.toFixed(2)}</span>
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                        <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: '#64748B' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                        <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>
                           Billing Date: {o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}
                         </p>
                         <Link
@@ -1476,8 +1476,8 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
             {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
               <div style={{ maxWidth: '560px' }}>
-                <div className="card" style={{ padding: '28px', background: 'white', borderRadius: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0' }}>
+                <div className="card" style={{ padding: '28px', background: 'var(--surface-0)', borderRadius: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid var(--gray-200, #E2E8F0)' }}>
                     <div style={{ width: '72px', height: '72px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', outline: '2px solid #BFDBFE', boxShadow: '0 4px 12px rgba(37,99,235,0.15)' }}>
                       {profileAvatarPreview ? (
                         <img src={profileAvatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1488,9 +1488,9 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                       )}
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>{session.name}</h3>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0 }}>{session.name}</h3>
                       <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, marginTop: '2px' }}>🟢 Principal / HOD</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '1px' }}>{session.email}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)', marginTop: '1px' }}>{session.email}</div>
                     </div>
                   </div>
 

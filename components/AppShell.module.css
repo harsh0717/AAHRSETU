@@ -212,15 +212,17 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: white;
-  border-bottom: 2px solid var(--gray-100);
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--gray-200);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   height: 60px;
   gap: 12px;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .headerLeft {
@@ -397,13 +399,15 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--surface-0);
+  color: var(--gray-900);
   border-radius: 24px 24px 0 0;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--gray-200);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
   z-index: 2000;
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 24px;
+  padding: 20px 16px;
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
   max-width: 480px;
   margin: 0 auto;
@@ -416,8 +420,9 @@
 .moreDrawerOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 1999;
   opacity: 0;
   pointer-events: none;
@@ -436,15 +441,16 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(64px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.95);
+    height: calc(62px + env(safe-area-inset-bottom));
+    background: var(--surface-0);
     backdrop-filter: blur(16px);
-    border-top: 1px solid #E2E8F0;
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--gray-200);
     z-index: 1000;
     align-items: center;
     justify-content: space-around;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
   }
 
   .bottomNavItem {
@@ -452,22 +458,23 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     height: 100%;
-    color: #64748B;
+    color: var(--gray-400);
     text-decoration: none;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
     flex: 1;
     min-width: 0;
-    transition: color 0.15s;
+    transition: all 0.15s;
     background: transparent;
     border: none;
     cursor: pointer;
+    padding: 6px 0;
   }
 
   .bottomNavItemActive {
-    color: #2563EB;
+    color: var(--primary, #2563EB) !important;
   }
 
   .bottomNavIcon {

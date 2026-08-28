@@ -78,18 +78,18 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
       paddingTop: '80px'
     }} onClick={onClose}>
       <div style={{
-        background: 'white',
+        background: 'var(--surface-0)',
         borderRadius: '16px',
         width: '100%',
         maxWidth: '560px',
         boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.25)',
-        border: '1px solid #E2E8F0',
+        border: '1px solid var(--gray-200, #E2E8F0)',
         overflow: 'hidden'
       }} onClick={e => e.stopPropagation()}>
         
         {/* Search Header */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #E2E8F0', gap: '12px' }}>
-          <span style={{ fontSize: '1.2rem', color: '#64748B' }}>🔍</span>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--gray-200, #E2E8F0)', gap: '12px' }}>
+          <span style={{ fontSize: '1.2rem', color: 'var(--gray-500, #64748B)' }}>🔍</span>
           <input
             autoFocus
             type="text"
@@ -102,17 +102,17 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
               outline: 'none',
               fontSize: '0.95rem',
               fontWeight: 600,
-              color: '#0F172A',
+              color: 'var(--gray-900, #0F172A)',
               background: 'transparent'
             }}
           />
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', background: '#F1F5F9', padding: '4px 8px', borderRadius: '6px' }}>ESC</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', background: 'var(--surface-2)', padding: '4px 8px', borderRadius: '6px' }}>ESC</span>
         </div>
 
         {/* Results List */}
         <div style={{ maxHeight: '320px', overflowY: 'auto', padding: '8px' }}>
           {results.length === 0 ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '0.85rem' }}>
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--gray-500, #64748B)', fontSize: '0.85rem' }}>
               No matching records found.
             </div>
           ) : (
@@ -133,8 +133,8 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0F172A' }}>{item.title}</div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>{item.subtitle}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--gray-900, #0F172A)' }}>{item.title}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '2px' }}>{item.subtitle}</div>
                 </div>
                 <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#2563EB', background: '#EFF6FF', padding: '3px 8px', borderRadius: '6px' }}>
                   {item.type}

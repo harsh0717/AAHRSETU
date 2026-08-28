@@ -37,12 +37,12 @@ export default function OrderStepper({ status }: OrderStepperProps) {
           const circleColor = failed ? '#EF4444'
             : done   ? '#10B981'
             : active ? 'var(--role-accent, #2563EB)'
-            : '#E2E8F0';
+            : 'var(--gray-300, #E2E8F0)';
 
           const bgFill = failed ? 'linear-gradient(135deg, #EF4444, #DC2626)'
             : done ? 'linear-gradient(135deg, #10B981, #059669)'
             : active ? 'linear-gradient(135deg, #2563EB, #1D4ED8)'
-            : '#FFFFFF';
+            : 'var(--surface-0)';
 
           return (
             <div key={stage.key} style={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -54,13 +54,13 @@ export default function OrderStepper({ status }: OrderStepperProps) {
                     width: '36px',
                     height: '36px',
                     borderRadius: '50%',
-                    background: (done || active) ? bgFill : '#FFFFFF',
-                    border: (done || active) ? 'none' : `2px solid #CBD5E1`,
+                    background: (done || active) ? bgFill : 'var(--surface-0)',
+                    border: (done || active) ? 'none' : `2px solid var(--gray-300, #CBD5E1)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: done ? '0.9rem' : '1rem',
-                    color: (done || active) ? '#FFFFFF' : '#94A3B8',
+                    color: (done || active) ? '#FFFFFF' : 'var(--gray-400, #94A3B8)',
                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                     position: 'relative',
                     boxShadow: active
@@ -89,14 +89,14 @@ export default function OrderStepper({ status }: OrderStepperProps) {
                     <AppIcon
                       name={STAGE_ICON_MAP[stage.key] || 'orders'}
                       size={16}
-                      color={active ? '#FFFFFF' : '#64748B'}
+                      color={active ? '#FFFFFF' : 'var(--gray-500, #64748B)'}
                     />
                   )}
                 </div>
                 <div style={{
                   fontSize: '0.66rem',
                   fontWeight: active ? 800 : done ? 700 : 500,
-                  color: active ? circleColor : done ? '#059669' : '#64748B',
+                  color: active ? circleColor : done ? 'var(--color-success, #059669)' : 'var(--gray-500, #64748B)',
                   textAlign: 'center',
                   marginTop: '8px',
                   lineHeight: 1.3,
@@ -115,7 +115,7 @@ export default function OrderStepper({ status }: OrderStepperProps) {
                   borderRadius: '2px',
                   background: done
                     ? 'linear-gradient(90deg, #10B981 0%, #059669 100%)'
-                    : '#E2E8F0',
+                    : 'var(--gray-200, #E2E8F0)',
                   marginTop: '16px',
                   flexShrink: 0,
                   transition: 'all 0.4s ease-in-out',

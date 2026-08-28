@@ -625,9 +625,9 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                   <div
                     onClick={() => setActiveTab('incoming')}
                     style={{
-                      background: 'white',
+                      background: 'var(--surface-0)',
                       borderRadius: '16px',
-                      border: '1.5px solid #E2E8F0',
+                      border: '1.5px solid var(--gray-200, #E2E8F0)',
                       padding: '20px 24px',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
                       cursor: 'pointer'
@@ -644,7 +644,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: pendingPricingCount > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {pendingPricingCount}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Orders awaiting canteen price confirmation
                     </div>
                   </div>
@@ -653,7 +653,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                   <div
                     onClick={() => setActiveTab('incoming')}
                     style={{
-                      background: 'white',
+                      background: 'var(--surface-0)',
                       borderRadius: '16px',
                       border: '1.5px solid #10B981',
                       padding: '20px 24px',
@@ -672,31 +672,31 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {activeOrdersCount}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Orders currently being prepared in the kitchen
                     </div>
                   </div>
 
                   {/* Tile 3: Today's Revenue */}
                   <div style={{
-                    background: 'white',
+                    background: 'var(--surface-0)',
                     borderRadius: '16px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1.5px solid var(--gray-200, #E2E8F0)',
                     padding: '20px 24px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
                         TOTAL COMPLETED REVENUE
                       </span>
                       <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
                         {completedOrdersCount} ORDERS TODAY
                       </span>
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
                       ₹{totalEarnings.toFixed(2)}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Direct fulfilled kitchen volume for this vendor
                     </div>
                   </div>
@@ -716,8 +716,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
                   return (
                     <div key={o.id} style={{
-                      background: 'white',
-                      border: '1px solid #E2E8F0',
+                      background: 'var(--surface-0)',
+                      border: '1px solid var(--gray-200, #E2E8F0)',
                       borderRadius: '16px',
                       padding: '20px',
                       marginBottom: '16px',
@@ -725,10 +725,10 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                         <div>
-                          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>
                             🍕 Order #{o.order_reference || o.id}
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '2px' }}>
                             🏢 Department: <strong>{o.department_label}</strong> • Requested by {o.created_by_name}
                           </div>
                         </div>
@@ -736,8 +736,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       </div>
 
                       {/* Food Items List */}
-                      <div style={{ background: '#F8FAFC', padding: '14px 16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid #E2E8F0' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                      <div style={{ background: 'var(--surface-1)', padding: '14px 16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-500, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
                           Items Requested:
                         </div>
                         
@@ -747,11 +747,11 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                               const displayName = getMenuItemName(item.menu_item_id, item.name);
                               return (
                               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>
-                                  • {displayName} <span style={{ fontWeight: 500, color: '#64748B' }}>(x{item.quantity} {item.unit || 'qty'})</span>
+                                <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)', fontSize: '0.9rem' }}>
+                                  • {displayName} <span style={{ fontWeight: 500, color: 'var(--gray-500, #64748B)' }}>(x{item.quantity} {item.unit || 'qty'})</span>
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <span style={{ fontSize: '0.8rem', color: '#64748B' }}>₹</span>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)' }}>₹</span>
                                   <input
                                     type="number"
                                     min="1"
@@ -769,7 +769,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                                       width: '80px',
                                       height: '32px',
                                       padding: '0 8px',
-                                      border: '1px solid #CBD5E1',
+                                      border: '1px solid var(--gray-300, #CBD5E1)',
                                       borderRadius: '6px',
                                       fontSize: '0.85rem',
                                       textAlign: 'right'
@@ -786,7 +786,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                               const displayName = getMenuItemName(item.menu_item_id, item.name);
                               return (
                               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
-                                <span style={{ fontWeight: 700, color: '#0F172A' }}>
+                                <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>
                                   • {displayName}
                                 </span>
                                 <span style={{ fontWeight: 800, color: '#2563EB', background: '#EFF6FF', padding: '2px 10px', borderRadius: '999px' }}>
@@ -798,7 +798,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         )}
                         
                         <div style={{ borderTop: '1px dashed #CBD5E1', marginTop: '12px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--gray-600, #475569)' }}>
                             {isPricingThis ? 'Calculated Total Amount:' : 'Total Estimated Amount:'}
                           </span>
                           <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#059669' }}>
@@ -915,14 +915,14 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     {completedOrders.map(o => {
                       const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
                       return (
-                        <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                        <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-1)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                             <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669' }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</span>
                           </div>
-                          <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                          <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: '#64748B' }}>Department: {o.department_label}</p>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                          <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                          <p style={{ margin: '0 0 10px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>Department: {o.department_label}</p>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--gray-200, #E2E8F0)' }}>
                             <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{new Date(o.updated_at).toLocaleDateString('en-IN')}</span>
                             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#059669' }}>✓ Settled</span>
                           </div>
@@ -988,7 +988,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         <strong>{o.title} (ID: {o.id})</strong>
                         <StatusBadge status={myVO.modification.status} size="sm" />
                       </div>
-                      <div style={{ fontSize: '0.8rem', background: '#F8FAFC', padding: '10px', borderRadius: '8px', color: 'var(--gray-700)', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '0.8rem', background: 'var(--surface-1)', padding: '10px', borderRadius: '8px', color: 'var(--gray-700)', marginBottom: '8px' }}>
                         <strong>Reason:</strong> {myVO.modification.reason}
                         <br />
                         <strong>Type:</strong> <span style={{ textTransform: 'capitalize' }}>{myVO.modification.type} Modification</span>
@@ -1011,12 +1011,12 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
             {activeTab === 'menu' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Header & Main Add Action */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'white', padding: '20px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'var(--surface-0)', padding: '20px 24px', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
                   <div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0 }}>
                       🍽️ Restaurant Menu Manager
                     </h2>
-                    <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '4px 0 0 0' }}>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--gray-500, #64748B)', margin: '4px 0 0 0' }}>
                       Manage your canteen dishes, upload food photos, and toggle instant stock availability.
                     </p>
                   </div>
@@ -1039,7 +1039,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                 </div>
 
                 {/* Zomato-Style Search & Category Chips */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'white', padding: '16px 20px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--surface-0)', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                   <input
                     type="text"
                     placeholder="🔍 Search dish by name..."
@@ -1049,7 +1049,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       width: '100%',
                       padding: '10px 16px',
                       borderRadius: '10px',
-                      border: '1px solid #CBD5E1',
+                      border: '1px solid var(--gray-300, #CBD5E1)',
                       fontSize: '0.9rem',
                       outline: 'none'
                     }}
@@ -1062,7 +1062,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         style={{
                           padding: '6px 14px',
                           borderRadius: '999px',
-                          border: menuCategoryFilter === cat ? 'none' : '1px solid #E2E8F0',
+                          border: menuCategoryFilter === cat ? 'none' : '1px solid var(--gray-200, #E2E8F0)',
                           background: menuCategoryFilter === cat ? '#2563EB' : '#F8FAFC',
                           color: menuCategoryFilter === cat ? 'white' : '#475569',
                           fontWeight: 800,
@@ -1095,8 +1095,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
                       return (
                         <div key={item.id} style={{
-                          background: 'white',
-                          border: '1px solid #E2E8F0',
+                          background: 'var(--surface-0)',
+                          border: '1px solid var(--gray-200, #E2E8F0)',
                           borderRadius: '16px',
                           overflow: 'hidden',
                           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.04)',
@@ -1177,7 +1177,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                           {/* Dish Details */}
                           <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0 }}>
                                 {item.name}
                               </h3>
                               <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#2563EB' }}>
@@ -1185,7 +1185,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                               </span>
                             </div>
 
-                            <p style={{ fontSize: '0.78rem', color: '#64748B', margin: '0 0 14px 0', flex: 1, lineHeight: 1.4 }}>
+                            <p style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', margin: '0 0 14px 0', flex: 1, lineHeight: 1.4 }}>
                               {item.description || `Fresh ${item.name.toLowerCase()} prepared in canteen.`}
                             </p>
 
@@ -1218,7 +1218,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button
                                   onClick={() => openEditMenuItem(item)}
-                                  style={{ background: '#F1F5F9', border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8rem', cursor: 'pointer' }}
+                                  style={{ background: 'var(--surface-2)', border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8rem', cursor: 'pointer' }}
                                 >
                                   ✏️ Edit
                                 </button>
@@ -1255,10 +1255,10 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     justifyContent: 'space-between',
                   }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0F172A' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--gray-900, #0F172A)' }}>
                         Kitchen Instant Availability
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '2px' }}>
                         {vendorDetails?.status === 'open'
                           ? '🟢 Currently OPEN and accepting new requisitions'
                           : '🔴 Currently CLOSED to new department orders'}
@@ -1306,12 +1306,12 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         {completedOrders.slice(0, 5).map(o => {
                           const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
                           return (
-                            <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '12px 14px', borderRadius: '12px', background: '#F8FAFC' }}>
+                            <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '12px 14px', borderRadius: '12px', background: 'var(--surface-1)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>{o.title}</span>
                                 <span style={{ fontWeight: 800, color: '#10B981', fontSize: '0.9rem' }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</span>
                               </div>
-                              <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                                 #{o.id} · {new Date(o.updated_at).toLocaleDateString('en-IN')}
                               </div>
                             </div>
@@ -1369,9 +1369,9 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       {settlements.map(s => {
                         const due = s.due_amount;
                         return (
-                          <div key={s.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: 'white' }}>
+                          <div key={s.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-0)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>{s.month}</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{s.month}</span>
                               <span style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -1390,7 +1390,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                               <div>Paid: <strong style={{ color: '#10B981' }}>₹{s.paid_amount.toFixed(2)}</strong></div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid #F1F5F9' }}>
-                              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Outstanding Dues:</span>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)' }}>Outstanding Dues:</span>
                               <span style={{ fontSize: '0.95rem', fontWeight: 900, color: due > 0 ? '#EF4444' : '#10B981' }}>₹{due.toFixed(2)}</span>
                             </div>
                           </div>
@@ -1436,7 +1436,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                                     {s.status}
                                   </span>
                                 </td>
-                                <td style={{ fontSize: '0.78rem', color: '#64748B' }}>{new Date(s.updated_at).toLocaleString('en-IN')}</td>
+                                <td style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>{new Date(s.updated_at).toLocaleString('en-IN')}</td>
                               </tr>
                             );
                           })}
@@ -1463,13 +1463,13 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     {ordersWithBills.map(o => {
                       const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
                       return (
-                        <div key={o.id} style={{ border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px', background: 'white' }}>
+                        <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-0)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{o.id}</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
                             <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#059669' }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</span>
                           </div>
-                          <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{o.title}</h4>
-                          <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: '#64748B' }}>
+                          <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>{o.title}</h4>
+                          <p style={{ margin: '0 0 12px 0', fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>
                             Billing Date: {o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}
                           </p>
                           <Link
@@ -1583,8 +1583,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
             {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
               <div style={{ maxWidth: '560px' }}>
-                <div className="card" style={{ padding: '28px', background: 'white', borderRadius: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0' }}>
+                <div className="card" style={{ padding: '28px', background: 'var(--surface-0)', borderRadius: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid var(--gray-200, #E2E8F0)' }}>
                     <div style={{ width: '72px', height: '72px', borderRadius: '50%', overflow: 'hidden', border: '3px solid white', outline: '2px solid #BFDBFE', boxShadow: '0 4px 12px rgba(37,99,235,0.15)' }}>
                       {profileAvatarPreview ? (
                         <img src={profileAvatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1595,9 +1595,9 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       )}
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>{session.name}</h3>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', margin: 0 }}>{session.name}</h3>
                       <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, marginTop: '2px' }}>🟢 Canteen Vendor Manager</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '1px' }}>{session.email}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)', marginTop: '1px' }}>{session.email}</div>
                     </div>
                   </div>
 
@@ -1638,7 +1638,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         placeholder="e.g. Sharma Canteen / Fresh Bites"
                         style={{ fontWeight: 600 }}
                       />
-                      <p style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                         🏛️ This name is updated permanently across the entire campus system (coordinators, requisitions, bills, settlements, and PDF invoices).
                       </p>
                     </div>
@@ -1682,12 +1682,12 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                   <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>🏪</span> Canteen Establishment Settings
                   </h3>
-                  <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700 }}>CURRENT CANTEEN NAME</div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0F172A', marginTop: '2px' }}>
+                  <div style={{ background: 'var(--surface-1)', padding: '16px', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', fontWeight: 700 }}>CURRENT CANTEEN NAME</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', marginTop: '2px' }}>
                       {vendorDetails?.name || 'Authorized Canteen'}
                     </div>
-                    <div style={{ fontSize: '0.76rem', color: '#64748B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Vendor ID: <strong>{vendorDetails?.id || session.vendor_id}</strong> · Status: <span style={{ textTransform: 'capitalize', fontWeight: 700, color: vendorDetails?.status === 'open' ? '#16A34A' : '#DC2626' }}>{vendorDetails?.status || 'open'}</span>
                     </div>
                   </div>
@@ -1723,7 +1723,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
         {/* Menu Item Add/Edit Modal */}
         {showMenuModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '420px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '16px', padding: '24px', width: '420px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
               <h3 style={{ margin: '0 0 16px', fontSize: '1.05rem', fontWeight: 800 }}>
                 {editItem ? '✏️ Edit Menu Item' : '➕ Add Menu Item'}
               </h3>
@@ -1826,7 +1826,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
         {/* Vendor Modification Request Modal */}
         {showModModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '420px', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '16px', padding: '28px', width: '420px', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)' }}>
               {/* Modal Header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900)' }}>

@@ -14,6 +14,7 @@ import ImageCropperModal from '@/components/ImageCropperModal';
 import { showToast } from '@/components/Toast';
 import UiverseButton from '@/components/ui/UiverseButton';
 import AppIcon from '@/components/ui/AppIcon';
+import ChangePasswordCard from '@/components/ChangePasswordCard';
 
 import { api } from '@/lib/api';
 
@@ -1113,6 +1114,8 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                     />
                   )}
                 </div>
+
+                <ChangePasswordCard />
               </div>
             )}
 

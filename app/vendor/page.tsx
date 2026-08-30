@@ -12,6 +12,7 @@ import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
 import UiverseToggle from '@/components/ui/UiverseToggle';
 import UiverseButton from '@/components/ui/UiverseButton';
+import ChangePasswordCard from '@/components/ChangePasswordCard';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -1672,6 +1673,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                     />
                   )}
                 </div>
+
+                <ChangePasswordCard />
               </div>
             )}
 

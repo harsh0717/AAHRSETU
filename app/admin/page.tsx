@@ -18,6 +18,7 @@ import UiverseToggle from '@/components/ui/UiverseToggle';
 import UiverseButton from '@/components/ui/UiverseButton';
 import UiverseBadge from '@/components/ui/UiverseBadge';
 import AppIcon, { getIconTheme } from '@/components/ui/AppIcon';
+import ChangePasswordCard from '@/components/ChangePasswordCard';
 import { api } from '@/lib/api';
 import styles from './admin.module.css';
 
@@ -1796,6 +1797,8 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                     onCancel={() => setCropSrc(null)}
                   />
                 )}
+
+                <ChangePasswordCard />
               </div>
             )}
           </div>

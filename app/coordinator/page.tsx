@@ -15,6 +15,7 @@ import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
 import EditOrderModal from '@/components/EditOrderModal';
 import CancelOrderModal from '@/components/CancelOrderModal';
+import ChangePasswordCard from '@/components/ChangePasswordCard';
 
 export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -1391,6 +1392,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                     />
                   )}
                 </div>
+
+                <ChangePasswordCard />
               </div>
             )}
 

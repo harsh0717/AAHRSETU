@@ -12,6 +12,7 @@ import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
 import BrandLogo from '@/components/BrandLogo';
 import ImageCropperModal from '@/components/ImageCropperModal';
+import ChangePasswordCard from '@/components/ChangePasswordCard';
 
 export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -1552,6 +1553,8 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                     />
                   )}
                 </div>
+
+                <ChangePasswordCard />
               </div>
             )}
 

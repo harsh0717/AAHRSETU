@@ -89,3 +89,9 @@ class TokenResponse(BaseModel):
 
 class TokenRefreshPayload(BaseModel):
     refresh_token: str
+
+
+class ChangePasswordPayload(BaseModel):
+    current_password: str
+    new_password: str
+

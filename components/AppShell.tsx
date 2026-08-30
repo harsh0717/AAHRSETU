@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { getSession, logout, initializeApplication, UserProfile } from '@/lib/auth';
+import { getSession, logout, logoutUser, initializeApplication, UserProfile } from '@/lib/auth';
 import { ROLE_COLORS, ROLE_LABELS, ROLE_ICONS, DEPARTMENTS } from '@/lib/constants';
 import { NAVIGATION_CONFIG } from '@/lib/navigationConfig';
 import { useI18n } from '@/lib/i18n';
@@ -13,6 +13,7 @@ import PwaInstallPrompt from './PwaInstallPrompt';
 import ToastContainer from './Toast';
 import BrandLogo from './BrandLogo';
 import FirstTimeOnboardingModal from './FirstTimeOnboardingModal';
+import NetworkStatusBanner from './NetworkStatusBanner';
 import AvatarImage from './AvatarImage';
 import ThemeToggle from './ThemeToggle';
 import AppIcon, { getIconTheme } from './ui/AppIcon';
@@ -125,7 +126,7 @@ export default function AppShell({ children, role }: AppShellProps) {
   }, [router]);
 
   async function handleLogout() {
-    await logout();
+    await logoutUser();
     router.push('/login');
   }
 
@@ -731,6 +732,7 @@ export default function AppShell({ children, role }: AppShellProps) {
         </>
       )}
 
+      <NetworkStatusBanner />
       <ToastContainer />
       <PushPrompt />
       <PwaInstallPrompt />

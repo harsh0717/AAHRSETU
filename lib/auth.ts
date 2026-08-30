@@ -543,6 +543,27 @@ export async function uploadAvatar(file: File): Promise<UserProfile> {
   return updated;
 }
 
+export async function changeUserPassword(payload: {
+  current_password: string;
+  new_password: string;
+}): Promise<{ success: boolean; message: string }> {
+  return await api.post<{ success: boolean; message: string }>('/auth/change-password', payload);
+}
+
+export async function logoutUser(): Promise<void> {
+  if (typeof window !== 'undefined') {
+    const refreshToken = localStorage.getItem('aharsetu_refresh_token');
+    if (refreshToken && !refreshToken.startsWith('mock-') && !refreshToken.startsWith('offline-')) {
+      try {
+        await api.post('/auth/logout', { refresh_token: refreshToken });
+      } catch (e) {
+        console.warn('[AUTH] Logout backend revocation warning:', e);
+      }
+    }
+  }
+  clearSession();
+}
+
 export async function initializeApplication(): Promise<UserProfile | null> {
   const session = getSession();
   if (!session) {
@@ -580,3 +601,4 @@ export async function initializeApplication(): Promise<UserProfile | null> {
   }
   return null;
 }
+

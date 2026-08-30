@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from backend.api import deps
 from backend.core.database import get_db
-from backend.schemas.user import LoginPayload, TokenResponse, TokenRefreshPayload, UserResponse
+from backend.core.rate_limiter import login_rate_limiter
+from backend.schemas.user import LoginPayload, TokenResponse, TokenRefreshPayload, UserResponse, ChangePasswordPayload
 from backend.services.auth import AuthService
 from backend.models.user import User
 
@@ -18,8 +19,14 @@ def login(
 ) -> Any:
     """
     Authenticate user credentials, including role and department (where applicable),
-    and return access/refresh tokens.
+    and return access/refresh tokens with brute-force rate limit protection.
     """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    rate_key = f"{client_ip}:{payload.email.lower().strip()}"
+    
+    # Check rate limit before attempting authentication
+    login_rate_limiter.check_rate_limit(client_ip)
+    
     auth_service = AuthService(db)
     user = auth_service.authenticate_user(
         email=payload.email,
@@ -28,11 +35,15 @@ def login(
         department_id=payload.department_id
     )
     if not user:
+        login_rate_limiter.record_failed_attempt(client_ip)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email, password, role or department configuration"
         )
         
+    # Reset rate limit tracker on successful authentication
+    login_rate_limiter.record_successful_login(client_ip)
+    
     # Map principal departments relation back to response list
     principal_depts = [d.id for d in user.managed_departments]
     
@@ -41,7 +52,7 @@ def login(
     # Audit log login event
     from backend.repositories.audit import AuditRepository
     audit_repo = AuditRepository(db)
-    ip_address = request.client.host if request.client else "127.0.0.1"
+    ip_address = client_ip
     browser = request.headers.get("user-agent", "Unknown")
     audit_repo.log_action(
         user_id=user.id,
@@ -182,3 +193,38 @@ def get_me(
         principal_depts=principal_depts,
         created_at=current_user.created_at
     )
+
+
+@router.post("/change-password")
+def change_password(
+    payload: ChangePasswordPayload,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Change user password after verifying the existing password.
+    Automatically invalidates old sessions to ensure credential security.
+    """
+    if len(payload.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters long."
+        )
+
+    auth_service = AuthService(db)
+    success = auth_service.change_password(
+        user=current_user,
+        current_password=payload.current_password,
+        new_password=payload.new_password
+    )
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password entered is incorrect."
+        )
+
+    return {
+        "success": True,
+        "message": "Password changed successfully."
+    }
+

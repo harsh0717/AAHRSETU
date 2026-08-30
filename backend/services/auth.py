@@ -99,3 +99,13 @@ class AuthService:
 
     def logout_user(self, refresh_token: str) -> None:
         self.user_repo.remove_session(refresh_token)
+
+    def change_password(self, user: User, current_password: str, new_password: str) -> bool:
+        if not verify_password(current_password, user.password_hash):
+            return False
+        user.password_hash = get_password_hash(new_password)
+        self.db.commit()
+        # Revoke old refresh tokens upon password change for security
+        self.user_repo.clear_user_sessions(user.id)
+        return True
+

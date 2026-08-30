@@ -222,30 +222,19 @@ export default function LoginPage() {
           </div>
           
           <div className={styles.heroHeaderRight}>
-            <div className={styles.legalTopRow}>
-              <Link href="/privacy" className={styles.legalTopLink} title="View Privacy Policy">
-                <span>🔒</span> Privacy Policy
-              </Link>
-              <Link href="/terms" className={styles.legalTopLink} title="View Terms of Service">
-                <span>⚖️</span> Terms
-              </Link>
-            </div>
-
-            <div className={styles.controlsRow}>
-              <ThemeToggle variant="icon" />
-              <div className={styles.langRow}>
-                {LANGUAGES.map((l) => (
-                  <button
-                    key={l.code}
-                    type="button"
-                    aria-label={`Select ${l.label} language`}
-                    onClick={() => setLang(l.code as LangCode)}
-                    className={`${styles.langBtn} ${lang === l.code ? styles.langActive : ''}`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
+            <ThemeToggle variant="icon" />
+            <div className={styles.langRow}>
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  aria-label={`Select ${l.label} language`}
+                  onClick={() => setLang(l.code as LangCode)}
+                  className={`${styles.langBtn} ${lang === l.code ? styles.langActive : ''}`}
+                >
+                  {l.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

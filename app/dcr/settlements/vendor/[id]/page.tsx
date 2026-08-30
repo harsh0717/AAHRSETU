@@ -300,12 +300,12 @@ export default function VendorLedgerPage() {
 
         {/* Notifications */}
         {successMsg && (
-          <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#15803D', fontWeight: 700, fontSize: '0.9rem' }}>
+          <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#10B981', fontWeight: 700, fontSize: '0.9rem' }}>
             ✅ {successMsg}
           </div>
         )}
         {error && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#991B1B', fontWeight: 700, fontSize: '0.9rem' }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#EF4444', fontWeight: 700, fontSize: '0.9rem' }}>
             ⚠️ {error}
           </div>
         )}
@@ -314,7 +314,7 @@ export default function VendorLedgerPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
           <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '18px 20px', borderLeft: '5px solid #0284C7' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Invoiced (Debits)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0369A1', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary, #3B82F6)', marginTop: '4px' }}>
               {fmtAmount(summary.total_billed)}
             </div>
             <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>Cumulative bills raised by vendor</div>
@@ -322,15 +322,15 @@ export default function VendorLedgerPage() {
 
           <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '18px 20px', borderLeft: '5px solid #059669' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Disbursed (Credits)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#059669', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#10B981', marginTop: '4px' }}>
               {fmtAmount(summary.total_paid)}
             </div>
             <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>Total payments cleared to vendor</div>
           </div>
 
-          <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '18px 20px', borderLeft: `5px solid ${isClear ? '#15803D' : '#DC2626'}` }}>
+          <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '18px 20px', borderLeft: `5px solid ${isClear ? '#10B981' : '#EF4444'}` }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gray-500, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Outstanding Due</div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: isClear ? '#15803D' : '#991B1B', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: isClear ? '#10B981' : '#EF4444', marginTop: '4px' }}>
               {fmtAmount(summary.current_outstanding)}
             </div>
             <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
@@ -365,8 +365,8 @@ export default function VendorLedgerPage() {
                   fontSize: '0.78rem',
                   border: 'none',
                   cursor: 'pointer',
-                  background: typeFilter === t ? '#0D9488' : '#F1F5F9',
-                  color: typeFilter === t ? 'white' : '#475569',
+                  background: typeFilter === t ? '#0D9488' : 'var(--surface-2)',
+                  color: typeFilter === t ? 'white' : 'var(--gray-700, #334155)',
                 }}
               >
                 {t === 'ALL' ? 'All Transactions' : t === 'INVOICE' ? '🧾 Invoices (Debits)' : '💸 Payments (Credits)'}
@@ -384,7 +384,7 @@ export default function VendorLedgerPage() {
             />
             <button
               onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
-              style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--surface-1)', border: '1px solid var(--gray-300, #CBD5E1)', cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem' }}
+              style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--surface-1)', border: '1px solid var(--gray-300, #CBD5E1)', color: 'var(--gray-700, #334155)', cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem' }}
             >
               Sort: {sortOrder === 'desc' ? 'Newest First ↓' : 'Oldest First ↑'}
             </button>
@@ -394,7 +394,7 @@ export default function VendorLedgerPage() {
         {/* Tally / Accounting Passbook Table */}
         <div style={{ background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--gray-200, #E2E8F0)', background: 'var(--surface-1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontWeight: 800, color: 'var(--gray-800, #1E293B)', fontSize: '0.95rem' }}>
+            <h3 style={{ margin: 0, fontWeight: 800, color: 'var(--gray-900, #0F172A)', fontSize: '0.95rem' }}>
               📜 Chronological Account Ledger ({sortedEntries.length} entries)
             </h3>
             <span style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)' }}>
@@ -403,7 +403,7 @@ export default function VendorLedgerPage() {
           </div>
 
           {sortedEntries.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--gray-400, #94A3B8)' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📖</div>
               <div style={{ fontWeight: 700 }}>No transaction entries match the filter</div>
             </div>
@@ -412,37 +412,37 @@ export default function VendorLedgerPage() {
               {sortedEntries.map((e, idx) => {
                 const isInvoice = e.type === 'INVOICE';
                 return (
-                  <div key={idx} style={{ border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '12px', padding: '12px 14px', background: isInvoice ? '#F8FAFC' : '#F0FDF4' }}>
+                  <div key={idx} style={{ border: '1px solid var(--gray-200, #E2E8F0)', borderRadius: '12px', padding: '12px 14px', background: isInvoice ? 'var(--surface-1)' : 'rgba(16, 185, 129, 0.06)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <span style={{
                         fontSize: '0.72rem',
                         fontWeight: 800,
                         padding: '2px 6px',
                         borderRadius: '4px',
-                        background: isInvoice ? '#EFF6FF' : '#DCFCE7',
-                        color: isInvoice ? '#1D4ED8' : '#15803D'
+                        background: isInvoice ? 'rgba(37, 99, 235, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                        color: isInvoice ? 'var(--primary, #3B82F6)' : '#10B981'
                       }}>
                         {isInvoice ? '🧾 INVOICE' : '💸 PAYMENT'}
                       </span>
-                      <span style={{ fontSize: '0.95rem', fontWeight: 900, color: isInvoice ? '#0369A1' : '#059669' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 900, color: isInvoice ? 'var(--primary, #3B82F6)' : '#10B981' }}>
                         {isInvoice ? fmtAmount(e.debit) : fmtAmount(e.credit)}
                       </span>
                     </div>
                     <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginBottom: '4px' }}>
-                      {fmtDateTime(e.date)} · Ref: <strong style={{ fontFamily: 'monospace' }}>{e.reference}</strong>
+                      {fmtDateTime(e.date)} · Ref: <strong style={{ fontFamily: 'monospace', color: '#14B8A6' }}>{e.reference}</strong>
                     </div>
                     {e.description && (
                       <div style={{ fontSize: '0.74rem', color: 'var(--gray-700, #334155)', marginBottom: '6px' }}>{e.description}</div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(0,0,0,0.05)', fontSize: '0.74rem' }}>
-                      <span style={{ color: 'var(--gray-500, #64748B)' }}>Balance: <strong style={{ color: e.balance > 0 ? '#991B1B' : '#15803D' }}>{fmtAmount(e.balance)}</strong></span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid var(--gray-200, #E2E8F0)', fontSize: '0.74rem' }}>
+                      <span style={{ color: 'var(--gray-500, #64748B)' }}>Balance: <strong style={{ color: e.balance > 0 ? '#EF4444' : '#10B981' }}>{fmtAmount(e.balance)}</strong></span>
                       <span style={{
                         padding: '1px 6px',
                         borderRadius: '10px',
                         fontSize: '0.68rem',
                         fontWeight: 700,
-                        background: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#DCFCE7' : '#FEF3C7',
-                        color: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#15803D' : '#92400E'
+                        background: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                        color: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#10B981' : '#F59E0B'
                       }}>
                         {e.settlement_status}
                       </span>
@@ -455,13 +455,13 @@ export default function VendorLedgerPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                 <thead>
-                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid #E2E8F0' }}>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid var(--gray-200, #E2E8F0)' }}>
                     <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Date</th>
                     <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Type</th>
                     <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Reference #</th>
                     <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Narration / Details</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#0369A1' }}>Billed (Debit)</th>
-                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>Paid (Credit)</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--primary, #3B82F6)' }}>Billed (Debit)</th>
+                    <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: '#10B981' }}>Paid (Credit)</th>
                     <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>Running Balance</th>
                     <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>Status</th>
                   </tr>
@@ -470,34 +470,34 @@ export default function VendorLedgerPage() {
                   {sortedEntries.map((e, idx) => {
                     const isInvoice = e.type === 'INVOICE';
                     return (
-                      <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--gray-200, #E2E8F0)', background: idx % 2 === 0 ? 'transparent' : 'var(--surface-1)' }}>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--gray-600, #475569)' }}>
                           {fmtDateTime(e.date)}
                         </td>
                         <td style={{ padding: '10px 14px' }}>
                           {isInvoice ? (
-                            <span style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', borderRadius: '4px', padding: '2px 7px', fontSize: '0.72rem', fontWeight: 700 }}>
+                            <span style={{ background: 'rgba(37, 99, 235, 0.15)', color: 'var(--primary, #3B82F6)', border: '1px solid rgba(37, 99, 235, 0.3)', borderRadius: '4px', padding: '2px 7px', fontSize: '0.72rem', fontWeight: 700 }}>
                               🧾 INVOICE
                             </span>
                           ) : (
-                            <span style={{ background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0', borderRadius: '4px', padding: '2px 7px', fontSize: '0.72rem', fontWeight: 700 }}>
+                            <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '4px', padding: '2px 7px', fontSize: '0.72rem', fontWeight: 700 }}>
                               💸 PAYMENT
                             </span>
                           )}
                         </td>
-                        <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontWeight: 700, color: '#0F766E' }}>
+                        <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontWeight: 700, color: '#14B8A6' }}>
                           {e.reference}
                         </td>
                         <td style={{ padding: '10px 14px', color: 'var(--gray-700, #334155)' }}>
                           {e.description}
                         </td>
-                        <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: isInvoice ? 700 : 400, color: isInvoice ? '#0369A1' : '#94A3B8' }}>
+                        <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: isInvoice ? 700 : 400, color: isInvoice ? 'var(--primary, #3B82F6)' : 'var(--gray-400, #94A3B8)' }}>
                           {e.debit > 0 ? fmtAmount(e.debit) : '—'}
                         </td>
-                        <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: !isInvoice ? 800 : 400, color: !isInvoice ? '#059669' : '#94A3B8' }}>
+                        <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: !isInvoice ? 800 : 400, color: !isInvoice ? '#10B981' : 'var(--gray-400, #94A3B8)' }}>
                           {e.credit > 0 ? fmtAmount(e.credit) : '—'}
                         </td>
-                        <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 900, color: e.balance > 0 ? '#991B1B' : '#15803D' }}>
+                        <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 900, color: e.balance > 0 ? '#EF4444' : '#10B981' }}>
                           {fmtAmount(e.balance)}
                         </td>
                         <td style={{ padding: '10px 14px', textAlign: 'center' }}>
@@ -506,9 +506,9 @@ export default function VendorLedgerPage() {
                             borderRadius: '12px',
                             fontSize: '0.7rem',
                             fontWeight: 700,
-                            background: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#DCFCE7' : '#FEF3C7',
-                            color: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#15803D' : '#92400E',
-                            border: `1px solid ${e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#86EFAC' : '#FDE68A'}`
+                            background: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                            color: e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? '#10B981' : '#F59E0B',
+                            border: `1px solid ${e.settlement_status === 'SETTLED' || e.settlement_status === 'PAID' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
                           }}>
                             {e.settlement_status}
                           </span>
@@ -519,19 +519,19 @@ export default function VendorLedgerPage() {
                 </tbody>
                 <tfoot>
                   <tr style={{ background: 'var(--surface-1)', borderTop: '2px solid #0D9488' }}>
-                    <td colSpan={4} style={{ padding: '12px 14px', fontWeight: 800, color: '#0F766E' }}>
+                    <td colSpan={4} style={{ padding: '12px 14px', fontWeight: 800, color: '#14B8A6' }}>
                       TOTALS & CLOSING BALANCE
                     </td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#0369A1' }}>
+                    <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--primary, #3B82F6)' }}>
                       {fmtAmount(summary.total_billed)}
                     </td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>
+                    <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 800, color: '#10B981' }}>
                       {fmtAmount(summary.total_paid)}
                     </td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, fontSize: '1.05rem', color: isClear ? '#15803D' : '#991B1B' }}>
+                    <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 900, fontSize: '1.05rem', color: isClear ? '#10B981' : '#EF4444' }}>
                       {fmtAmount(summary.current_outstanding)}
                     </td>
-                    <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 700, color: isClear ? '#15803D' : '#991B1B' }}>
+                    <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 700, color: isClear ? '#10B981' : '#EF4444' }}>
                       {isClear ? 'CLEARED' : 'DUE'}
                     </td>
                   </tr>
@@ -543,13 +543,13 @@ export default function VendorLedgerPage() {
 
         {/* Quick Payment Modal */}
         {payModalOpen && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'var(--surface-0)', borderRadius: '16px', padding: '26px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '26px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
               <h2 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>
                 💳 Record Disbursement to {vendor.name}
               </h2>
               <p style={{ margin: '0 0 16px', color: 'var(--gray-500, #64748B)', fontSize: '0.82rem' }}>
-                Current outstanding balance: <strong>{fmtAmount(summary.current_outstanding)}</strong>
+                Current outstanding balance: <strong style={{ color: '#EF4444' }}>{fmtAmount(summary.current_outstanding)}</strong>
               </p>
 
               <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -619,7 +619,7 @@ export default function VendorLedgerPage() {
                     type="button"
                     onClick={() => setPayModalOpen(false)}
                     disabled={recordingPayment}
-                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'var(--surface-2)', border: 'none', cursor: 'pointer', fontWeight: 700, color: 'var(--gray-600, #475569)' }}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'var(--surface-2)', border: '1px solid var(--gray-300, #CBD5E1)', cursor: 'pointer', fontWeight: 700, color: 'var(--gray-700, #334155)' }}
                   >
                     Cancel
                   </button>

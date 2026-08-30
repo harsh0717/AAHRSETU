@@ -520,13 +520,13 @@ export default function SettlementsPage() {
           <div style={{
             background: 'var(--surface-0)',
             borderRadius: '16px',
-            border: `1.5px solid ${grandOutstanding > 0 ? '#F59E0B' : '#E2E8F0'}`,
+            border: `1.5px solid ${grandOutstanding > 0 ? 'rgba(245, 158, 11, 0.4)' : 'var(--gray-200, #E2E8F0)'}`,
             padding: '20px 24px',
             position: 'relative',
             boxShadow: grandOutstanding > 0 ? '0 4px 20px -2px rgba(245, 158, 11, 0.12)' : '0 1px 3px rgba(0,0,0,0.03)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: grandOutstanding > 0 ? '#B45309' : '#15803D', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: grandOutstanding > 0 ? '#F59E0B' : '#10B981', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 Total Pending Dues
               </span>
               <span style={{
@@ -534,13 +534,14 @@ export default function SettlementsPage() {
                 fontWeight: 800,
                 padding: '3px 8px',
                 borderRadius: '12px',
-                background: grandOutstanding > 0 ? '#FEF3C7' : '#DCFCE7',
-                color: grandOutstanding > 0 ? '#92400E' : '#15803D'
+                background: grandOutstanding > 0 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                color: grandOutstanding > 0 ? '#F59E0B' : '#10B981',
+                border: `1px solid ${grandOutstanding > 0 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`
               }}>
                 {outstandingData?.summary.vendors_with_dues_count || 0} CANTEENS DUE
               </span>
             </div>
-            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: grandOutstanding > 0 ? '#991B1B' : '#15803D', margin: '2px 0 4px', letterSpacing: '-0.5px' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: grandOutstanding > 0 ? '#EF4444' : '#10B981', margin: '2px 0 4px', letterSpacing: '-0.5px' }}>
               {fmtAmount(grandOutstanding)}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>
@@ -557,14 +558,22 @@ export default function SettlementsPage() {
             boxShadow: '0 4px 20px -2px rgba(16, 185, 129, 0.1)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#047857', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 Total Disbursed (Paid)
               </span>
-              <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '3px 8px', borderRadius: '12px', background: '#DCFCE7', color: '#15803D' }}>
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                padding: '3px 8px',
+                borderRadius: '12px',
+                background: 'rgba(16, 185, 129, 0.15)',
+                color: '#10B981',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
                 CLEARED BANK PAYMENTS
               </span>
             </div>
-            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: '#059669', margin: '2px 0 4px', letterSpacing: '-0.5px' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: '#10B981', margin: '2px 0 4px', letterSpacing: '-0.5px' }}>
               {fmtAmount(grandPaid)}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)' }}>
@@ -581,17 +590,25 @@ export default function SettlementsPage() {
             boxShadow: '0 4px 20px -2px rgba(13, 148, 136, 0.1)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0F766E', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#14B8A6', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 Total Invoiced Food
               </span>
-              <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '3px 8px', borderRadius: '12px', background: '#CCFBF1', color: '#0F766E' }}>
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                padding: '3px 8px',
+                borderRadius: '12px',
+                background: 'rgba(13, 148, 136, 0.15)',
+                color: '#14B8A6',
+                border: '1px solid rgba(13, 148, 136, 0.3)'
+              }}>
                 ✓ ZERO VARIANCE
               </span>
             </div>
             <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', margin: '2px 0 4px', letterSpacing: '-0.5px' }}>
               {fmtAmount(grandBilled)}
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 800 }}>
+            <div style={{ fontSize: '0.78rem', color: '#10B981', fontWeight: 800 }}>
               ✓ Audit Balanced (₹0.00 Mathematical Variance)
             </div>
           </div>
@@ -622,12 +639,12 @@ export default function SettlementsPage() {
           </div>
 
           {outstandingLoading ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#94A3B8' }}>
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400, #94A3B8)' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div>
               <div style={{ fontWeight: 700 }}>Synchronizing canteen fiscal accounts...</div>
             </div>
           ) : !outstandingData || outstandingData.vendors.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#94A3B8' }}>
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-400, #94A3B8)' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🎉</div>
               <div style={{ fontWeight: 700 }}>No canteen vendor profiles registered in the system.</div>
             </div>
@@ -637,33 +654,34 @@ export default function SettlementsPage() {
                 const hasDues = v.outstanding > 0;
                 return (
                   <div key={v.vendor_id} style={{
-                    border: `1.5px solid ${hasDues ? '#FDE68A' : '#E2E8F0'}`,
+                    border: `1.5px solid ${hasDues ? 'rgba(245, 158, 11, 0.35)' : 'var(--gray-200, #E2E8F0)'}`,
                     borderRadius: '14px',
                     padding: '16px',
-                    background: hasDues ? '#FFFBEB' : '#FAFAFA'
+                    background: hasDues ? 'rgba(245, 158, 11, 0.08)' : 'var(--surface-1)'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                       <div>
                         <div style={{ fontWeight: 900, color: 'var(--gray-900, #0F172A)', fontSize: '1rem' }}>{v.vendor_name}</div>
                         <div style={{ fontSize: '0.76rem', color: 'var(--gray-500, #64748B)' }}>👤 {v.owner_name} · 📞 {v.phone || '—'}</div>
-                        <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>✉️ {v.email || '—'}</div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--gray-400, #94A3B8)' }}>✉️ {v.email || '—'}</div>
                       </div>
                       <span style={{
                         padding: '3px 8px',
                         borderRadius: '12px',
                         fontSize: '0.72rem',
                         fontWeight: 800,
-                        background: hasDues ? '#FEF3C7' : '#DCFCE7',
-                        color: hasDues ? '#92400E' : '#15803D'
+                        background: hasDues ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                        color: hasDues ? '#F59E0B' : '#10B981',
+                        border: `1px solid ${hasDues ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`
                       }}>
                         {hasDues ? 'DUE' : 'CLEARED'}
                       </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem', marginBottom: '12px', background: 'var(--surface-0)', padding: '10px 12px', borderRadius: '10px', border: '1px solid #F1F5F9' }}>
-                      <div>Invoiced: <strong>{fmtAmount(v.total_billed)}</strong></div>
-                      <div>Paid: <strong style={{ color: '#059669' }}>{fmtAmount(v.total_paid)}</strong></div>
-                      <div style={{ gridColumn: '1 / -1', paddingTop: '6px', borderTop: '1px solid #F1F5F9', color: hasDues ? '#991B1B' : '#15803D', fontWeight: 900 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem', marginBottom: '12px', background: 'var(--surface-0)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                      <div>Invoiced: <strong style={{ color: 'var(--gray-900, #0F172A)' }}>{fmtAmount(v.total_billed)}</strong></div>
+                      <div>Paid: <strong style={{ color: '#10B981' }}>{fmtAmount(v.total_paid)}</strong></div>
+                      <div style={{ gridColumn: '1 / -1', paddingTop: '6px', borderTop: '1px solid var(--gray-200, #E2E8F0)', color: hasDues ? '#EF4444' : '#10B981', fontWeight: 900 }}>
                         Balance Due: {fmtAmount(v.outstanding)}
                       </div>
                     </div>
@@ -685,7 +703,7 @@ export default function SettlementsPage() {
                       </button>
                       <Link
                         href={`/dcr/settlements/vendor/${v.vendor_id}`}
-                        style={{ flex: 1, textAlign: 'center', padding: '9px', borderRadius: '8px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', textDecoration: 'none', fontWeight: 700, fontSize: '0.82rem' }}
+                        style={{ flex: 1, textAlign: 'center', padding: '9px', borderRadius: '8px', background: 'rgba(37, 99, 235, 0.12)', color: 'var(--primary, #3B82F6)', border: '1px solid rgba(37, 99, 235, 0.25)', textDecoration: 'none', fontWeight: 700, fontSize: '0.82rem' }}
                       >
                         📖 Passbook
                       </Link>
@@ -698,10 +716,10 @@ export default function SettlementsPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                 <thead>
-                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid #E2E8F0' }}>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid var(--gray-200, #E2E8F0)' }}>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>Canteen & Proprietor</th>
                     <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>Total Invoiced</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>Total Paid</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: '#10B981' }}>Total Paid</th>
                     <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>Balance Due</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>Status</th>
                     <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>Actions</th>
@@ -711,7 +729,7 @@ export default function SettlementsPage() {
                   {filteredVendors.map((v, idx) => {
                     const hasDues = v.outstanding > 0;
                     return (
-                      <tr key={v.vendor_id} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                      <tr key={v.vendor_id} style={{ borderBottom: '1px solid var(--gray-200, #E2E8F0)', background: idx % 2 === 0 ? 'transparent' : 'var(--surface-1)' }}>
                         <td style={{ padding: '14px 16px' }}>
                           <div style={{ fontWeight: 900, color: 'var(--gray-900, #0F172A)', fontSize: '0.92rem' }}>{v.vendor_name}</div>
                           <div style={{ fontSize: '0.76rem', color: 'var(--gray-500, #64748B)' }}>👤 {v.owner_name} · 📞 {v.phone || '—'} · ✉️ {v.email || '—'}</div>
@@ -719,10 +737,10 @@ export default function SettlementsPage() {
                         <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 700, color: 'var(--gray-700, #334155)' }}>
                           {fmtAmount(v.total_billed)}
                         </td>
-                        <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>
+                        <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 800, color: '#10B981' }}>
                           {fmtAmount(v.total_paid)}
                         </td>
-                        <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 900, color: hasDues ? '#991B1B' : '#15803D', fontSize: '0.95rem' }}>
+                        <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 900, color: hasDues ? '#EF4444' : '#10B981', fontSize: '0.95rem' }}>
                           {fmtAmount(v.outstanding)}
                         </td>
                         <td style={{ padding: '14px 16px', textAlign: 'center' }}>
@@ -731,8 +749,9 @@ export default function SettlementsPage() {
                             borderRadius: '12px',
                             fontSize: '0.72rem',
                             fontWeight: 900,
-                            background: hasDues ? '#FEF3C7' : '#DCFCE7',
-                            color: hasDues ? '#92400E' : '#15803D'
+                            background: hasDues ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                            color: hasDues ? '#F59E0B' : '#10B981',
+                            border: `1px solid ${hasDues ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`
                           }}>
                             {hasDues ? 'DUE' : 'CLEARED'}
                           </span>
@@ -756,7 +775,7 @@ export default function SettlementsPage() {
                             </button>
                             <Link
                               href={`/dcr/settlements/vendor/${v.vendor_id}`}
-                              style={{ padding: '7px 12px', borderRadius: '8px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', textDecoration: 'none', fontWeight: 700, fontSize: '0.8rem' }}
+                              style={{ padding: '7px 12px', borderRadius: '8px', background: 'rgba(37, 99, 235, 0.12)', color: 'var(--primary, #3B82F6)', border: '1px solid rgba(37, 99, 235, 0.25)', textDecoration: 'none', fontWeight: 700, fontSize: '0.8rem' }}
                             >
                               📖 Passbook
                             </Link>
@@ -801,7 +820,7 @@ export default function SettlementsPage() {
               <button
                 onClick={handleCalculate}
                 disabled={calculating}
-                style={{ padding: '8px 16px', borderRadius: '10px', background: '#0F766E', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: calculating ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '8px 16px', borderRadius: '10px', background: '#0D9488', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: calculating ? 'not-allowed' : 'pointer' }}
               >
                 {calculating ? '⏳ Checking...' : '🔢 Calculate Month'}
               </button>
@@ -809,14 +828,14 @@ export default function SettlementsPage() {
           </div>
 
           {draft && (
-            <div style={{ background: '#F0FDFA', border: '1.5px solid #0D9488', borderRadius: '14px', padding: '18px', marginBottom: '18px' }}>
+            <div style={{ background: 'rgba(13, 148, 136, 0.08)', border: '1.5px solid #0D9488', borderRadius: '14px', padding: '18px', marginBottom: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
                 <div>
                   <span style={{ fontSize: '0.78rem', fontWeight: 900, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '6px' }}>
                     DRAFT SETTLEMENT: {MONTHS[draft.month - 1]} {draft.year}
                   </span>
-                  <span style={{ fontSize: '0.86rem', color: '#0F766E', marginLeft: '10px', fontWeight: 800 }}>
-                    {draft.total_bills} verified bills · Total Invoiced: <strong>{fmtAmount(draft.total_amount)}</strong>
+                  <span style={{ fontSize: '0.86rem', color: '#14B8A6', marginLeft: '10px', fontWeight: 800 }}>
+                    {draft.total_bills} verified bills · Total Invoiced: <strong style={{ color: 'var(--gray-900, #0F172A)' }}>{fmtAmount(draft.total_amount)}</strong>
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -835,7 +854,7 @@ export default function SettlementsPage() {
                   </button>
                   <button
                     onClick={() => { setActiveSettlementForDelete(draft); setDeleteConfirmOpen(true); }}
-                    style={{ padding: '7px 12px', borderRadius: '8px', background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
+                    style={{ padding: '7px 12px', borderRadius: '8px', background: 'rgba(220, 38, 38, 0.12)', color: '#EF4444', border: '1px solid rgba(220, 38, 38, 0.25)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
                     title="Discard Draft"
                   >
                     🗑️ Discard Draft
@@ -846,21 +865,29 @@ export default function SettlementsPage() {
           )}
 
           {historyLoading ? (
-            <div style={{ padding: '28px', textAlign: 'center', color: '#94A3B8' }}>Loading settlement statement archive...</div>
+            <div style={{ padding: '28px', textAlign: 'center', color: 'var(--gray-400, #94A3B8)' }}>Loading settlement statement archive...</div>
           ) : settlements.length === 0 ? (
-            <div style={{ padding: '28px', textAlign: 'center', color: '#94A3B8' }}>No monthly settlement statements finalized yet.</div>
+            <div style={{ padding: '28px', textAlign: 'center', color: 'var(--gray-400, #94A3B8)' }}>No monthly settlement statements finalized yet.</div>
           ) : isMobileDevice ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {settlements.map(s => (
                 <div key={s.id} style={{ border: '1.5px solid var(--gray-200, #E2E8F0)', borderRadius: '14px', padding: '16px', background: 'var(--surface-1)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <div style={{ fontWeight: 900, color: 'var(--gray-900, #0F172A)', fontSize: '0.98rem' }}>{s.month_name} {s.year}</div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 900, padding: '2px 8px', borderRadius: '6px', background: s.status === 'FINALIZED' ? '#DCFCE7' : '#FEF3C7', color: s.status === 'FINALIZED' ? '#15803D' : '#92400E' }}>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 900,
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      background: s.status === 'FINALIZED' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      color: s.status === 'FINALIZED' ? '#10B981' : '#F59E0B',
+                      border: `1px solid ${s.status === 'FINALIZED' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+                    }}>
                       {s.status}
                     </span>
                   </div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginBottom: '10px' }}>
-                    Voucher Ref: <strong style={{ fontFamily: 'monospace', color: '#0D9488' }}>{s.settlement_number}</strong> · Amount: <strong style={{ color: '#0F766E' }}>{fmtAmount(s.total_amount)}</strong>
+                    Voucher Ref: <strong style={{ fontFamily: 'monospace', color: '#14B8A6' }}>{s.settlement_number}</strong> · Amount: <strong style={{ color: '#10B981' }}>{fmtAmount(s.total_amount)}</strong>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button
@@ -879,7 +906,7 @@ export default function SettlementsPage() {
                     </button>
                     <button
                       onClick={() => { setActiveSettlementForDelete(s); setDeleteConfirmOpen(true); }}
-                      style={{ padding: '8px 12px', borderRadius: '8px', background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer' }}
+                      style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(220, 38, 38, 0.12)', color: '#EF4444', border: '1px solid rgba(220, 38, 38, 0.25)', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer' }}
                       title="Delete / Reopen Settlement"
                     >
                       🗑️
@@ -892,7 +919,7 @@ export default function SettlementsPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                 <thead>
-                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid #E2E8F0' }}>
+                  <tr style={{ background: 'var(--surface-1)', borderBottom: '2px solid var(--gray-200, #E2E8F0)' }}>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>Period & Voucher Ref</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>Audit Status</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>Vouchers</th>
@@ -902,10 +929,10 @@ export default function SettlementsPage() {
                 </thead>
                 <tbody>
                   {settlements.map((s, idx) => (
-                    <tr key={s.id} style={{ borderBottom: '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#FAFAFA' }}>
+                    <tr key={s.id} style={{ borderBottom: '1px solid var(--gray-200, #E2E8F0)', background: idx % 2 === 0 ? 'transparent' : 'var(--surface-1)' }}>
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>{s.month_name} {s.year}</div>
-                        <div style={{ fontSize: '0.76rem', fontFamily: 'monospace', color: '#0D9488' }}>{s.settlement_number}</div>
+                        <div style={{ fontSize: '0.76rem', fontFamily: 'monospace', color: '#14B8A6' }}>{s.settlement_number}</div>
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                         <span style={{
@@ -913,16 +940,17 @@ export default function SettlementsPage() {
                           borderRadius: '12px',
                           fontSize: '0.72rem',
                           fontWeight: 900,
-                          background: s.status === 'FINALIZED' ? '#DCFCE7' : '#FEF3C7',
-                          color: s.status === 'FINALIZED' ? '#15803D' : '#92400E'
+                          background: s.status === 'FINALIZED' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                          color: s.status === 'FINALIZED' ? '#10B981' : '#F59E0B',
+                          border: `1px solid ${s.status === 'FINALIZED' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
                         }}>
                           {s.status}
                         </span>
                       </td>
-                      <td style={{ padding: '14px 16px', textAlign: 'center', color: 'var(--gray-600, #475569)', fontWeight: 700 }}>
+                      <td style={{ padding: '14px 16px', textAlign: 'center', color: 'var(--gray-700, #334155)', fontWeight: 700 }}>
                         {s.total_bills}
                       </td>
-                      <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 900, color: '#0F766E', fontSize: '0.95rem' }}>
+                      <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 900, color: '#14B8A6', fontSize: '0.95rem' }}>
                         {fmtAmount(s.total_amount)}
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'right' }}>
@@ -945,7 +973,7 @@ export default function SettlementsPage() {
                           </button>
                           <button
                             onClick={() => { setActiveSettlementForDelete(s); setDeleteConfirmOpen(true); }}
-                            style={{ padding: '7px 10px', borderRadius: '8px', background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer' }}
+                            style={{ padding: '7px 10px', borderRadius: '8px', background: 'rgba(220, 38, 38, 0.12)', color: '#EF4444', border: '1px solid rgba(220, 38, 38, 0.25)', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer' }}
                             title="Delete / Reopen Settlement"
                           >
                             🗑️
@@ -964,7 +992,7 @@ export default function SettlementsPage() {
         <div style={{ background: 'var(--surface-0)', borderRadius: '20px', border: '1.5px solid var(--gray-200, #E2E8F0)', padding: '20px 24px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--gray-800, #1E293B)' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--gray-900, #0F172A)' }}>
                 📜 Bank Disbursement Ledger ({paymentsList.length})
               </h3>
               <p style={{ fontSize: '0.76rem', color: 'var(--gray-500, #64748B)', margin: '2px 0 0' }}>
@@ -973,26 +1001,26 @@ export default function SettlementsPage() {
             </div>
             <button
               onClick={() => setShowPaymentsLog(!showPaymentsLog)}
-              style={{ padding: '6px 14px', borderRadius: '8px', background: 'var(--surface-2)', border: 'none', color: 'var(--gray-700, #334155)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
+              style={{ padding: '6px 14px', borderRadius: '8px', background: 'var(--surface-2)', border: '1px solid var(--gray-300, #CBD5E1)', color: 'var(--gray-700, #334155)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
             >
               {showPaymentsLog ? 'Hide Ledger ▲' : 'View Ledger ▼'}
             </button>
           </div>
 
           {showPaymentsLog && (
-            <div style={{ marginTop: '16px', borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+            <div style={{ marginTop: '16px', borderTop: '1px solid var(--gray-200, #E2E8F0)', paddingTop: '14px' }}>
               {paymentsList.length === 0 ? (
-                <div style={{ padding: '18px', textAlign: 'center', color: '#94A3B8', fontSize: '0.84rem' }}>No payment disbursement entries recorded yet.</div>
+                <div style={{ padding: '18px', textAlign: 'center', color: 'var(--gray-400, #94A3B8)', fontSize: '0.84rem' }}>No payment disbursement entries recorded yet.</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {paymentsList.slice(0, 15).map((p, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-1)', borderRadius: '10px', fontSize: '0.82rem', border: '1px solid #F1F5F9' }}>
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-1)', borderRadius: '10px', fontSize: '0.82rem', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                       <div>
                         <span style={{ fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>{p.vendor_name}</span>
-                        <span style={{ color: 'var(--gray-500, #64748B)', marginLeft: '10px' }}>Bank UTR: <strong style={{ fontFamily: 'monospace', color: '#0D9488' }}>{p.payment_reference}</strong></span>
-                        <span style={{ color: '#94A3B8', marginLeft: '10px' }}>· {p.payment_method} · {fmtDate(p.payment_date)}</span>
+                        <span style={{ color: 'var(--gray-500, #64748B)', marginLeft: '10px' }}>Bank UTR: <strong style={{ fontFamily: 'monospace', color: '#14B8A6' }}>{p.payment_reference}</strong></span>
+                        <span style={{ color: 'var(--gray-400, #94A3B8)', marginLeft: '10px' }}>· {p.payment_method} · {fmtDate(p.payment_date)}</span>
                       </div>
-                      <div style={{ fontWeight: 900, color: '#059669', fontSize: '0.9rem' }}>
+                      <div style={{ fontWeight: 900, color: '#10B981', fontSize: '0.9rem' }}>
                         {fmtAmount(p.amount)}
                       </div>
                     </div>
@@ -1005,16 +1033,16 @@ export default function SettlementsPage() {
 
         {/* MODAL 1: 1-Click Pay Canteen Vendor Modal */}
         {payModalOpen && activeVendorForPay && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>
                   💳 Record Bank Disbursement
                 </h2>
-                <button onClick={() => { setPayModalOpen(false); setActiveVendorForPay(null); }} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#94A3B8', fontWeight: 800 }}>✕</button>
+                <button onClick={() => { setPayModalOpen(false); setActiveVendorForPay(null); }} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--gray-400, #94A3B8)', fontWeight: 800 }}>✕</button>
               </div>
               <p style={{ margin: '0 0 18px', color: 'var(--gray-500, #64748B)', fontSize: '0.84rem' }}>
-                Disbursing to <strong>{activeVendorForPay.vendor_name}</strong> (Outstanding: <strong style={{ color: '#991B1B' }}>{fmtAmount(activeVendorForPay.outstanding)}</strong>)
+                Disbursing to <strong style={{ color: 'var(--gray-900, #0F172A)' }}>{activeVendorForPay.vendor_name}</strong> (Outstanding: <strong style={{ color: '#EF4444' }}>{fmtAmount(activeVendorForPay.outstanding)}</strong>)
               </p>
 
               <form onSubmit={handleRecordPaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1024,7 +1052,7 @@ export default function SettlementsPage() {
                     <button
                       type="button"
                       onClick={() => setPayAmount(String(activeVendorForPay.outstanding))}
-                      style={{ background: '#F0FDFA', color: '#0D9488', border: '1px solid #99F6E4', borderRadius: '6px', padding: '2px 8px', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
+                      style={{ background: 'rgba(13, 148, 136, 0.15)', color: '#14B8A6', border: '1px solid rgba(13, 148, 136, 0.3)', borderRadius: '6px', padding: '2px 8px', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
                     >
                       ⚡ Full Balance
                     </button>
@@ -1094,7 +1122,7 @@ export default function SettlementsPage() {
                     type="button"
                     onClick={() => { setPayModalOpen(false); setActiveVendorForPay(null); }}
                     disabled={recordingPayment}
-                    style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: 'none', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-600, #475569)' }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--gray-300, #CBD5E1)', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-700, #334155)' }}
                   >
                     Cancel
                   </button>
@@ -1113,16 +1141,16 @@ export default function SettlementsPage() {
 
         {/* MODAL 2: Edit Canteen Details Modal */}
         {editVendorModalOpen && activeVendorForEdit && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>
                   ✏️ Edit Canteen Profile
                 </h2>
-                <button onClick={() => { setEditVendorModalOpen(false); setActiveVendorForEdit(null); }} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#94A3B8', fontWeight: 800 }}>✕</button>
+                <button onClick={() => { setEditVendorModalOpen(false); setActiveVendorForEdit(null); }} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--gray-400, #94A3B8)', fontWeight: 800 }}>✕</button>
               </div>
               <p style={{ margin: '0 0 18px', color: 'var(--gray-500, #64748B)', fontSize: '0.84rem' }}>
-                Updating vendor profile for <strong>{activeVendorForEdit.vendor_id}</strong>
+                Updating vendor profile for <strong style={{ color: 'var(--gray-900, #0F172A)' }}>{activeVendorForEdit.vendor_id}</strong>
               </p>
 
               <form onSubmit={handleEditVendorSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1187,14 +1215,14 @@ export default function SettlementsPage() {
                     type="button"
                     onClick={() => { setEditVendorModalOpen(false); setActiveVendorForEdit(null); }}
                     disabled={savingVendor}
-                    style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: 'none', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-600, #475569)' }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--gray-300, #CBD5E1)', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-700, #334155)' }}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={savingVendor}
-                    style={{ flex: 2, padding: '12px', borderRadius: '10px', background: '#0F766E', color: 'white', border: 'none', cursor: savingVendor ? 'not-allowed' : 'pointer', fontWeight: 900 }}
+                    style={{ flex: 2, padding: '12px', borderRadius: '10px', background: '#0D9488', color: 'white', border: 'none', cursor: savingVendor ? 'not-allowed' : 'pointer', fontWeight: 900 }}
                   >
                     {savingVendor ? '⏳ Saving...' : '💾 Update Canteen'}
                   </button>
@@ -1206,17 +1234,17 @@ export default function SettlementsPage() {
 
         {/* MODAL 3: Delete / Reopen Settlement Confirmation Modal */}
         {deleteConfirmOpen && activeSettlementForDelete && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>⚠️</div>
-              <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 900, color: '#991B1B' }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 900, color: '#EF4444' }}>
                 Delete / Reopen Settlement?
               </h3>
               <p style={{ margin: '0 0 16px', color: 'var(--gray-600, #475569)', fontSize: '0.86rem', lineHeight: '1.5' }}>
-                Are you sure you want to delete Settlement <strong>#{activeSettlementForDelete.settlement_number}</strong> ({activeSettlementForDelete.month_name} {activeSettlementForDelete.year})?
+                Are you sure you want to delete Settlement <strong style={{ color: 'var(--gray-900, #0F172A)' }}>#{activeSettlementForDelete.settlement_number}</strong> ({activeSettlementForDelete.month_name} {activeSettlementForDelete.year})?
               </p>
 
-              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '12px 16px', marginBottom: '18px', fontSize: '0.82rem', color: '#991B1B', fontWeight: 700 }}>
+              <div style={{ background: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.3)', borderRadius: '10px', padding: '12px 16px', marginBottom: '18px', fontSize: '0.82rem', color: '#F87171', fontWeight: 700 }}>
                 • Reverts all {activeSettlementForDelete.total_bills} bills back to <strong>Pending Settlement</strong>.<br/>
                 • Unlocks payment records and allows recalculation.
               </div>
@@ -1225,7 +1253,7 @@ export default function SettlementsPage() {
                 <button
                   onClick={() => { setDeleteConfirmOpen(false); setActiveSettlementForDelete(null); }}
                   disabled={deletingSettlement}
-                  style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: 'none', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-600, #475569)' }}
+                  style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--gray-300, #CBD5E1)', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-700, #334155)' }}
                 >
                   Cancel
                 </button>
@@ -1243,22 +1271,22 @@ export default function SettlementsPage() {
 
         {/* MODAL 4: Finalize Settlement Confirmation Modal */}
         {confirmOpen && draft && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: 'var(--surface-0)', borderRadius: '20px', border: '1px solid var(--gray-200, #E2E8F0)', padding: '28px', maxWidth: '480px', width: '100%', boxShadow: '0 25px 60px -12px rgba(0,0,0,0.3)' }}>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)' }}>
                 Confirm Final Settlement
               </h3>
               <p style={{ margin: '0 0 16px', color: 'var(--gray-500, #64748B)', fontSize: '0.84rem' }}>
-                Finalizing settlement for <strong>{MONTHS[draft.month - 1]} {draft.year}</strong> will lock these records permanently for audit and higher authority submission.
+                Finalizing settlement for <strong style={{ color: 'var(--gray-900, #0F172A)' }}>{MONTHS[draft.month - 1]} {draft.year}</strong> will lock these records permanently for audit and higher authority submission.
               </p>
 
-              <div style={{ background: '#F0FDFA', border: '1.5px solid #99F6E4', borderRadius: '12px', padding: '14px 18px', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 800, color: '#0F766E', fontSize: '0.88rem' }}>Total Settlement Amount:</span>
-                <span style={{ fontWeight: 900, color: '#0F766E', fontSize: '1.3rem' }}>{fmtAmount(draft.total_amount)}</span>
+              <div style={{ background: 'rgba(13, 148, 136, 0.1)', border: '1.5px solid rgba(13, 148, 136, 0.3)', borderRadius: '12px', padding: '14px 18px', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 800, color: '#14B8A6', fontSize: '0.88rem' }}>Total Settlement Amount:</span>
+                <span style={{ fontWeight: 900, color: '#10B981', fontSize: '1.3rem' }}>{fmtAmount(draft.total_amount)}</span>
               </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => setConfirmOpen(false)} disabled={finalizing} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: 'none', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-600, #475569)' }}>
+                <button onClick={() => setConfirmOpen(false)} disabled={finalizing} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--gray-300, #CBD5E1)', cursor: 'pointer', fontWeight: 800, color: 'var(--gray-700, #334155)' }}>
                   Cancel
                 </button>
                 <button onClick={handleFinalize} disabled={finalizing} style={{ flex: 2, padding: '12px', borderRadius: '10px', background: '#059669', color: 'white', border: 'none', cursor: finalizing ? 'not-allowed' : 'pointer', fontWeight: 900 }}>

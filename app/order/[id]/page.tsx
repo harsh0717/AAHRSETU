@@ -17,6 +17,7 @@ import { showToast } from '@/components/Toast';
 import Link from 'next/link';
 import EditOrderModal from '@/components/EditOrderModal';
 import CancelOrderModal from '@/components/CancelOrderModal';
+import KitchenTicketModal from '@/components/KitchenTicketModal';
 
 export default function OrderDetailsPage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function OrderDetailsPage() {
   const [actioning, setActioning] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [kotModalOpen, setKotModalOpen] = useState(false);
 
   const loadOrderRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
@@ -272,6 +274,14 @@ export default function OrderDetailsPage() {
           </div>
           
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setKotModalOpen(true)}
+              className="btn btn-secondary"
+              style={{ padding: '8px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+            >
+              <span>🖨️</span> Print Kitchen Ticket (KOT)
+            </button>
             {canEdit && (
               <button
                 type="button"
@@ -569,6 +579,12 @@ export default function OrderDetailsPage() {
                 loadOrder(true);
               }}
             />
+            {kotModalOpen && (
+              <KitchenTicketModal
+                order={order}
+                onClose={() => setKotModalOpen(false)}
+              />
+            )}
           </>
         )}
 

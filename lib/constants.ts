@@ -150,7 +150,7 @@ export const VENDOR_STATUS = {
 };
 
 export const VENDOR_STATUS_LABELS: Record<string, string> = {
-  open:                    'Open',
+  open:                    'Opened',
   closed:                  'Closed',
   temporarily_unavailable: 'Temporarily Unavailable',
 };

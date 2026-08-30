@@ -1980,7 +1980,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   value={editStatus}
                   onChange={e => setEditStatus(e.target.value)}
                 >
-                  <option value="open">🟢 Open (Taking Orders)</option>
+                  <option value="open">🟢 Opened (Taking Orders)</option>
                   <option value="busy">🟡 Busy (High Volume)</option>
                   <option value="closing_soon">🟠 Closing Soon</option>
                   <option value="closed">🔴 Closed</option>
@@ -2048,7 +2048,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                         value={editOpStatus}
                         onChange={e => setEditOpStatus(e.target.value)}
                       >
-                        <option value="open">🟢 Open</option>
+                        <option value="open">🟢 Opened</option>
                         <option value="closed">🔴 Closed</option>
                         <option value="temporarily_unavailable">🟠 Unavailable</option>
                       </select>

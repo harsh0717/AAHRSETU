@@ -1192,7 +1192,7 @@ export default function SettlementsPage() {
                   <div>
                     <label style={{ display: 'block', fontWeight: 800, color: 'var(--gray-700, #334155)', marginBottom: '6px', fontSize: '0.84rem' }}>Operating Status</label>
                     <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={inputStyle}>
-                      <option value="open">Open (Serving)</option>
+                      <option value="open">Opened (Serving)</option>
                       <option value="closed">Closed</option>
                       <option value="temporarily_unavailable">Unavailable</option>
                     </select>

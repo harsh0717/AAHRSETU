@@ -1002,8 +1002,8 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                       {menuByVendor.length === 0 && (
                         <div style={{ padding: '48px 24px', textAlign: 'center', background: 'var(--surface-0)', borderRadius: '20px', border: '1px dashed #CBD5E1' }}>
                           <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏪</div>
-                          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '6px' }}>No canteen open right now</div>
-                          <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Vendors will appear here once they set their status to Open.</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--gray-600, #475569)', marginBottom: '6px' }}>No canteen opened right now</div>
+                          <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Vendors will appear here once they set their status to Opened.</div>
                         </div>
                       )}
                     </div>

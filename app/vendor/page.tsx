@@ -13,6 +13,7 @@ import ImageCropperModal from '@/components/ImageCropperModal';
 import UiverseToggle from '@/components/ui/UiverseToggle';
 import UiverseButton from '@/components/ui/UiverseButton';
 import ChangePasswordCard from '@/components/ChangePasswordCard';
+import KitchenTicketModal from '@/components/KitchenTicketModal';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -25,6 +26,10 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // KOT Ticket Modal State
+  const [kotOrder, setKotOrder] = useState<MasterOrder | null>(null);
+  const [kotVendorOrder, setKotVendorOrder] = useState<VendorOrder | null>(null);
 
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   useEffect(() => {
@@ -562,25 +567,65 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
           </div>
 
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => handleToggleStatus(vendorDetails?.status === 'open' ? 'closed' : 'open')}
-              style={{
-                padding: '9px 18px',
-                borderRadius: '10px',
-                background: vendorDetails?.status === 'open' ? '#DC2626' : '#16A34A',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: 800,
-                fontSize: '0.84rem',
-                boxShadow: vendorDetails?.status === 'open' ? '0 4px 12px rgba(220, 38, 38, 0.3)' : '0 4px 12px rgba(22, 163, 74, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              {vendorDetails?.status === 'open' ? `🔒 ${t('common.close', 'Close')} ${t('common.vendor', 'Canteen')}` : `🔓 ${t('common.availability', 'Open')} ${t('common.vendor', 'Canteen')}`}
-            </button>
+            {/* Canteen Availability Switch: Opened / Closed */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'rgba(15, 23, 42, 0.65)',
+              padding: '4px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              gap: '4px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+            }}>
+              <button
+                type="button"
+                onClick={() => handleToggleStatus('open')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '9px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  background: vendorDetails?.status === 'open' ? '#16A34A' : 'transparent',
+                  color: vendorDetails?.status === 'open' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
+                  boxShadow: vendorDetails?.status === 'open' ? '0 3px 10px rgba(22, 163, 74, 0.45)' : 'none',
+                  transform: vendorDetails?.status === 'open' ? 'scale(1.02)' : 'scale(1)'
+                }}
+              >
+                <span>🟢</span>
+                <span>{t('common.opened', 'Opened')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleStatus('closed')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '9px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  background: vendorDetails?.status !== 'open' ? '#DC2626' : 'transparent',
+                  color: vendorDetails?.status !== 'open' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
+                  boxShadow: vendorDetails?.status !== 'open' ? '0 3px 10px rgba(220, 38, 38, 0.45)' : 'none',
+                  transform: vendorDetails?.status !== 'open' ? 'scale(1.02)' : 'scale(1)'
+                }}
+              >
+                <span>🔴</span>
+                <span>{t('common.closed', 'Closed')}</span>
+              </button>
+            </div>
+
             <button
               onClick={() => setActiveTab('incoming')}
               style={{
@@ -848,6 +893,15 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                           </UiverseButton>
                           <UiverseButton
                             variant="outline"
+                            onClick={() => {
+                              setKotOrder(o);
+                              setKotVendorOrder(myVO);
+                            }}
+                          >
+                            🖨️ Print KOT
+                          </UiverseButton>
+                          <UiverseButton
+                            variant="outline"
                             disabled={saving}
                             onClick={() => initModRequest(myVO.id)}
                           >
@@ -890,11 +944,25 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                         </div>
                         <StatusBadge status={o.status} size="sm" />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--gray-600)' }}>Items: {myVO.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</span>
-                        <strong style={{ fontSize: '0.9rem', color: colors.accent }}>
-                          ₹{((myVO.bill_amount > 0 ? myVO.bill_amount : myVO.items.reduce((acc, i) => acc + (i.price * i.quantity), 0)) || 0).toFixed(2)}
-                        </strong>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setKotOrder(o);
+                              setKotVendorOrder(myVO);
+                            }}
+                            className="btn btn-secondary"
+                            style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            <span>🖨️</span> Print KOT
+                          </button>
+                          <strong style={{ fontSize: '0.9rem', color: colors.accent }}>
+                            ₹{((myVO.bill_amount > 0 ? myVO.bill_amount : myVO.items.reduce((acc, i) => acc + (i.price * i.quantity), 0)) || 0).toFixed(2)}
+                          </strong>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1241,46 +1309,88 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
 
             {/* TAB: AVAILABILITY */}
             {activeTab === 'availability' && (
-              <div className="card" style={{ padding: '24px', maxWidth: '520px', borderRadius: '16px' }}>
+              <div className="card" style={{ padding: '24px', maxWidth: '560px', borderRadius: '16px' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '16px', color: 'var(--gray-900)' }}>
                   ⚡ Operational Availability Settings
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div style={{
-                    padding: '16px',
+                    padding: '18px',
                     borderRadius: '14px',
-                    background: vendorDetails?.status === 'open' ? 'rgba(16, 185, 129, 0.08)' : '#F8FAFC',
-                    border: `1px solid ${vendorDetails?.status === 'open' ? 'rgba(16, 185, 129, 0.25)' : '#E2E8F0'}`,
+                    background: vendorDetails?.status === 'open' ? 'rgba(22, 163, 74, 0.08)' : 'rgba(220, 38, 38, 0.08)',
+                    border: `1px solid ${vendorDetails?.status === 'open' ? 'rgba(22, 163, 74, 0.3)' : 'rgba(220, 38, 38, 0.3)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '14px'
                   }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--gray-900, #0F172A)' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.96rem', color: 'var(--gray-900, #0F172A)' }}>
                         Kitchen Instant Availability
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--gray-600, #475569)', marginTop: '3px' }}>
                         {vendorDetails?.status === 'open'
-                          ? '🟢 Currently OPEN and accepting new requisitions'
-                          : '🔴 Currently CLOSED to new department orders'}
+                          ? '🟢 Currently OPENED — Accepting incoming orders'
+                          : '🔴 Currently CLOSED — Not accepting orders'}
                       </div>
                     </div>
-                    <UiverseToggle
-                      checked={vendorDetails?.status === 'open'}
-                      onChange={(checked) => handleToggleStatus(checked ? 'open' : 'closed')}
-                      activeColor="#10B981"
-                      size="md"
-                    />
+                    {/* Direct Opened / Closed Buttons */}
+                    <div style={{
+                      display: 'inline-flex',
+                      background: 'var(--gray-100, #F1F5F9)',
+                      padding: '4px',
+                      borderRadius: '12px',
+                      gap: '4px',
+                      border: '1px solid var(--gray-200, #E2E8F0)'
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus('open')}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: '0.84rem',
+                          background: vendorDetails?.status === 'open' ? '#16A34A' : 'transparent',
+                          color: vendorDetails?.status === 'open' ? '#FFFFFF' : 'var(--gray-600)',
+                          boxShadow: vendorDetails?.status === 'open' ? '0 2px 8px rgba(22, 163, 74, 0.35)' : 'none',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        🟢 {t('common.opened', 'Opened')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus('closed')}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: '0.84rem',
+                          background: vendorDetails?.status !== 'open' ? '#DC2626' : 'transparent',
+                          color: vendorDetails?.status !== 'open' ? '#FFFFFF' : 'var(--gray-600)',
+                          boxShadow: vendorDetails?.status !== 'open' ? '0 2px 8px rgba(220, 38, 38, 0.35)' : 'none',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        🔴 {t('common.closed', 'Closed')}
+                      </button>
+                    </div>
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: '6px' }}>
                       Detailed Operational Mode
                     </label>
                     <select className="form-input" value={vendorDetails?.status} onChange={e => handleToggleStatus(e.target.value)}>
-                      <option value="open">Open (Available for new orders)</option>
-                      <option value="closed">Closed (Unavailable for new orders)</option>
-                      <option value="temporarily_unavailable">Temporarily Unavailable (Busy kitchen)</option>
+                      <option value="open">🟢 Opened (Accepting orders)</option>
+                      <option value="closed">🔴 Closed (Unavailable for new orders)</option>
+                      <option value="temporarily_unavailable">🟡 Temporarily Unavailable (Busy kitchen)</option>
                     </select>
                   </div>
                 </div>
@@ -1691,7 +1801,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                       {vendorDetails?.name || 'Authorized Canteen'}
                     </div>
                     <div style={{ fontSize: '0.76rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
-                      Vendor ID: <strong>{vendorDetails?.id || session.vendor_id}</strong> · Status: <span style={{ textTransform: 'capitalize', fontWeight: 700, color: vendorDetails?.status === 'open' ? '#16A34A' : '#DC2626' }}>{vendorDetails?.status || 'open'}</span>
+                      Vendor ID: <strong>{vendorDetails?.id || session.vendor_id}</strong> · Status: <span style={{ fontWeight: 700, color: vendorDetails?.status === 'open' ? '#16A34A' : '#DC2626' }}>{vendorDetails?.status === 'open' ? '🟢 Opened' : '🔴 Closed'}</span>
                     </div>
                   </div>
                   <button
@@ -1910,6 +2020,19 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
               </div>
             </div>
           </div>
+        )}
+
+        {/* Kitchen Order Ticket (KOT) Thermal Receipt Modal */}
+        {kotOrder && (
+          <KitchenTicketModal
+            order={kotOrder}
+            vendorOrder={kotVendorOrder}
+            canteenName={vendorDetails?.name}
+            onClose={() => {
+              setKotOrder(null);
+              setKotVendorOrder(null);
+            }}
+          />
         )}
 
       </div>

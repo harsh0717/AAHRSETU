@@ -101,16 +101,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
   gap: 12px;
-  min-width: 0;
+  width: 100%;
 }
 
 .heroHeaderRight {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.legalTopRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controlsRow {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .legalTopLink {
@@ -128,6 +138,7 @@
   border-radius: 14px;
   text-decoration: none;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .legalTopLink:hover {
@@ -141,7 +152,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 14px;
+  padding: 6px 12px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -267,10 +278,12 @@
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1.5px solid rgba(255, 255, 255, 0.14);
-  border-radius: 22px;
-  padding: 20px 22px;
+  border-radius: 20px;
+  padding: 18px 20px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mainShowcaseCard:hover {
@@ -283,7 +296,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
 .showcaseSpecialTag {
@@ -295,42 +310,42 @@
   color: #FB923C;
   font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
 }
 
 .showcaseRatingTag {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 800;
   color: #34D399;
   background: rgba(16, 185, 129, 0.14);
   border: 1px solid rgba(16, 185, 129, 0.3);
-  padding: 3px 9px;
+  padding: 4px 8px;
   border-radius: 8px;
 }
 
 .showcaseDishBody {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 14px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .showcaseDishIcon {
-  font-size: 2.3rem;
+  font-size: 2rem;
   background: rgba(16, 185, 129, 0.12);
   border: 1.5px solid rgba(16, 185, 129, 0.25);
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
+  border-radius: 14px;
   flex-shrink: 0;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
@@ -341,7 +356,7 @@
 }
 
 .showcaseDishTitle {
-  font-size: 1.02rem;
+  font-size: 0.96rem;
   font-weight: 800;
   color: #F8FAFC;
   margin: 0 0 4px;
@@ -351,18 +366,18 @@
 .showcaseDishPills {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 6px;
+  gap: 4px;
+  margin-top: 4px;
 }
 
 .dishItemChip {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
   color: #E2E8F0;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 3px 8px;
-  border-radius: 8px;
+  padding: 2px 7px;
+  border-radius: 6px;
   transition: all 0.15s ease;
 }
 
@@ -375,12 +390,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .showcasePrice {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 900;
   color: #FB923C;
   display: flex;
@@ -389,7 +406,7 @@
 }
 
 .showcaseVendorName {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #34D399;
   display: flex;
@@ -399,6 +416,7 @@
   border: 1px solid rgba(16, 185, 129, 0.25);
   padding: 3px 8px;
   border-radius: 8px;
+  white-space: normal;
 }
 
 /* 3D Feature Grid in Navy & Green Theme */
@@ -657,7 +675,7 @@
 /* Role grid layout options */
 .roleGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -737,22 +755,27 @@
 /* Department chips layout options */
 .deptGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-bottom: 20px;
 }
 
 .deptChip {
-  padding: 10px 12px;
+  padding: 12px 10px;
   background: var(--surface-0);
   border: 1.5px solid var(--gray-200);
-  border-radius: 10px;
-  font-size: 0.8rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--gray-800);
   text-align: center;
   cursor: pointer;
   transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  box-sizing: border-box;
 }
 
 .deptChip:hover {
@@ -896,22 +919,19 @@
   animation: slideDown 0.2s ease-out;
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .demoCard {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 10px 14px;
   background: var(--surface-0);
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
+  min-height: 48px;
+  box-sizing: border-box;
 }
 
 .demoCard:hover {
@@ -925,18 +945,29 @@
   flex-shrink: 0;
 }
 
+.demoMeta {
+  flex: 1;
+  min-width: 0;
+}
+
 .demoMeta h5 {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
   margin: 0;
   color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .demoMeta p {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   color: var(--gray-500);
   margin: 2px 0 0;
   font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .spinner {
@@ -964,36 +995,43 @@
     overflow: visible;
   }
   .heroHeader {
-    flex-wrap: nowrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 8px;
-    overflow: visible;
+    width: 100%;
+  }
+  .legalTopRow {
+    display: none;
   }
   .heroContent {
-    margin-top: 16px;
-    padding: 12px 0;
+    margin-top: 14px;
+    padding: 8px 0;
   }
   .heroTitle {
     font-size: 1.85rem;
+    line-height: 1.15;
   }
   .heroSub {
-    font-size: 0.88rem;
-    margin-bottom: 16px;
+    font-size: 0.86rem;
+    margin-bottom: 14px;
   }
   .showcaseWrapper {
-    margin: 16px 0 12px;
+    margin: 14px 0 12px;
   }
   .mainShowcaseCard {
-    padding: 14px;
+    padding: 14px 16px;
   }
   .floatingBadgeTopRight,
   .floatingBadgeBottomLeft {
     display: none;
   }
   .bentoChipsGrid {
+    grid-template-columns: 1fr;
     gap: 8px;
   }
   .bentoChip {
-    padding: 8px 10px;
+    padding: 10px 12px;
   }
   .formPanel {
     padding: 24px 16px;
@@ -1004,17 +1042,25 @@
   }
 }
 
+@media (max-width: 640px) {
+  .demoGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
 @media (max-width: 480px) {
   .stepsHeader {
     gap: 4px;
+    margin-bottom: 20px;
   }
   .stepLabel {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
   .stepCircle {
     width: 24px;
     height: 24px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
   .heroHeader {
     gap: 6px;
@@ -1027,8 +1073,17 @@
     gap: 2px;
     padding: 3px;
   }
-  .bentoChipsGrid {
-    grid-template-columns: 1fr;
+  .roleGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .deptGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .deptChip {
+    padding: 10px 8px;
+    font-size: 0.78rem;
   }
 }
 

@@ -218,30 +218,34 @@ export default function LoginPage() {
         {/* ── Brand Logo Header & Quick Navigation ── */}
         <div className={styles.heroHeader}>
           <div className={styles.heroLogoGlassWrapper}>
-            <BrandLogo size={52} />
+            <BrandLogo size={46} />
           </div>
           
           <div className={styles.heroHeaderRight}>
-            <ThemeToggle variant="icon" />
-            <Link href="/privacy" className={styles.legalTopLink} title="View Privacy Policy">
-              <span>🔒</span> Privacy Policy
-            </Link>
-            <Link href="/terms" className={styles.legalTopLink} title="View Terms of Service">
-              <span>⚖️</span> Terms
-            </Link>
+            <div className={styles.legalTopRow}>
+              <Link href="/privacy" className={styles.legalTopLink} title="View Privacy Policy">
+                <span>🔒</span> Privacy Policy
+              </Link>
+              <Link href="/terms" className={styles.legalTopLink} title="View Terms of Service">
+                <span>⚖️</span> Terms
+              </Link>
+            </div>
 
-            <div className={styles.langRow}>
-              {LANGUAGES.map((l) => (
-                <button
-                  key={l.code}
-                  type="button"
-                  aria-label={`Select ${l.label} language`}
-                  onClick={() => setLang(l.code as LangCode)}
-                  className={`${styles.langBtn} ${lang === l.code ? styles.langActive : ''}`}
-                >
-                  {l.label}
-                </button>
-              ))}
+            <div className={styles.controlsRow}>
+              <ThemeToggle variant="icon" />
+              <div className={styles.langRow}>
+                {LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    aria-label={`Select ${l.label} language`}
+                    onClick={() => setLang(l.code as LangCode)}
+                    className={`${styles.langBtn} ${lang === l.code ? styles.langActive : ''}`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -455,25 +455,13 @@ export default function AppShell({ children, role }: AppShellProps) {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '60vh', overflowY: 'auto' }}>
+            <div className={styles.drawerMenuContainer}>
               <ThemeToggle variant="menu" style={{ marginBottom: '4px' }} />
 
               <Link
                 href={`/${role}/settings`}
                 onClick={() => setMoreDrawerOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 14px',
-                  borderRadius: '12px',
-                  background: 'var(--surface-1, #F8FAFC)',
-                  color: 'var(--gray-800, #334155)',
-                  border: '1px solid var(--gray-200, #E2E8F0)',
-                  textDecoration: 'none',
-                  fontWeight: 700,
-                  fontSize: '0.88rem'
-                }}
+                className={styles.drawerLink}
               >
                 <AppIcon name="settings" size={18} /> <span>Settings & Languages</span>
               </Link>
@@ -484,19 +472,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/coordinator/orders/pending"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="pending" size={18} /> <span>Pending Approvals</span>
                   </Link>
@@ -504,19 +480,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/coordinator/orders/completed"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="completed" size={18} /> <span>Completed Orders</span>
                   </Link>
@@ -524,19 +488,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/coordinator/orders/rejected"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="rejected" size={18} /> <span>Rejected Orders</span>
                   </Link>
@@ -544,19 +496,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/coordinator/bills"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
                   </Link>
@@ -568,19 +508,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/principal/approved"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="approved" size={18} /> <span>Approved Orders</span>
                   </Link>
@@ -588,19 +516,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/principal/rejected"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="rejected" size={18} /> <span>Rejected Orders</span>
                   </Link>
@@ -608,19 +524,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/principal/bills"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
                   </Link>
@@ -628,19 +532,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/principal/history"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="history" size={18} /> <span>Requisition History</span>
                   </Link>
@@ -648,19 +540,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/principal/profile"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="profile" size={18} /> <span>My Profile</span>
                   </Link>
@@ -672,19 +552,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/dcr/approved"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="approved" size={18} /> <span>Approved Orders</span>
                   </Link>
@@ -692,19 +560,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/dcr/rejected"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="rejected" size={18} /> <span>Rejected Orders</span>
                   </Link>
@@ -712,19 +568,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/dcr/history"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="history" size={18} /> <span>Audit History</span>
                   </Link>
@@ -732,19 +576,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/dcr/bills"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
                   </Link>
@@ -752,19 +584,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/dcr/reports"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="reports" size={18} /> <span>Financial Reports</span>
                   </Link>
@@ -772,19 +592,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/dcr/profile"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="profile" size={18} /> <span>My Profile</span>
                   </Link>
@@ -796,19 +604,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/vendor/orders/active"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="active" size={18} /> <span>Active Orders Pipeline</span>
                   </Link>
@@ -816,19 +612,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/vendor/orders/completed"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="completed" size={18} /> <span>Completed Orders</span>
                   </Link>
@@ -836,19 +620,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/vendor/modifications"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="modifications" size={18} /> <span>Order Modifications</span>
                   </Link>
@@ -856,19 +628,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/vendor/availability"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="availability" size={18} /> <span>Kitchen Availability</span>
                   </Link>
@@ -876,19 +636,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/vendor/revenue"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="revenue" size={18} /> <span>Revenue & Settlements</span>
                   </Link>
@@ -896,19 +644,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/vendor/bills"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="bills" size={18} /> <span>Invoices & Bills</span>
                   </Link>
@@ -920,19 +656,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/admin/departments"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="departments" size={18} /> <span>Departments Management</span>
                   </Link>
@@ -940,19 +664,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/admin/vendors"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="vendors" size={18} /> <span>Vendors Management</span>
                   </Link>
@@ -960,19 +672,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/admin/bills"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="bills" size={18} /> <span>Institutional Bills</span>
                   </Link>
@@ -980,19 +680,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/admin/analytics"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="analytics" size={18} /> <span>System Analytics</span>
                   </Link>
@@ -1000,19 +688,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/admin/audit-logs"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="audit" size={18} /> <span>Audit Trails & Logs</span>
                   </Link>
@@ -1020,19 +696,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/admin/notifications"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="notifications" size={18} /> <span>Notification Alerts</span>
                   </Link>
@@ -1040,19 +704,7 @@ export default function AppShell({ children, role }: AppShellProps) {
                   <Link
                     href="/admin/system-health"
                     onClick={() => setMoreDrawerOpen(false)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      background: 'var(--surface-1, #F8FAFC)',
-                      color: 'var(--gray-800, #334155)',
-                      border: '1px solid var(--gray-200, #E2E8F0)',
-                      textDecoration: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.9rem'
-                    }}
+                    className={styles.drawerLink}
                   >
                     <AppIcon name="health" size={18} /> <span>System Health Status</span>
                   </Link>
@@ -1064,24 +716,9 @@ export default function AppShell({ children, role }: AppShellProps) {
                   setMoreDrawerOpen(false);
                   handleLogout();
                 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '14px 16px',
-                  borderRadius: '12px',
-                  background: '#FEF2F2',
-                  color: '#DC2626',
-                  border: 'none',
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  width: '100%',
-                  marginTop: '12px'
-                }}
+                className={styles.drawerLogoutBtn}
               >
-                <AppIcon name="logout" size={18} color="#DC2626" /> <span>Sign Out of Session</span>
+                <AppIcon name="logout" size={18} color="#EF4444" /> <span>Sign Out of Session</span>
               </button>
 
               <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '16px', paddingBottom: '8px', fontSize: '0.76rem', color: 'var(--gray-500, #64748B)' }}>

@@ -16,6 +16,7 @@ import ImageCropperModal from '@/components/ImageCropperModal';
 import EditOrderModal from '@/components/EditOrderModal';
 import CancelOrderModal from '@/components/CancelOrderModal';
 import ChangePasswordCard from '@/components/ChangePasswordCard';
+import DepartmentBudgetCard from '@/components/DepartmentBudgetCard';
 
 export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: { initialTab?: string }) {
   const router = useRouter();
@@ -527,6 +528,13 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                   </div>
                 </div>
 
+                {/* Department Fiscal Year Budget Card */}
+                {session?.department_id && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <DepartmentBudgetCard deptId={session.department_id} />
+                  </div>
+                )}
+
                 {/* Quick actions & recent items */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
                   <div className="card" style={{ padding: '20px' }}>
@@ -1010,6 +1018,16 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
                     {/* RIGHT: Order details + smart summary */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '80px' }}>
+                      {/* Department Budget Allocation & Spend Utilization Card */}
+                      {session?.department_id && (
+                        <DepartmentBudgetCard
+                          deptId={session.department_id}
+                          projectedAmount={menuByVendor.reduce((sum, v) => {
+                            return sum + v.menu.reduce((subSum, item) => subSum + (selectedItems[item.id] || 0) * item.price, 0);
+                          }, 0)}
+                        />
+                      )}
+
                       {/* Event details card */}
                       <div className="card" style={{ padding: '18px', borderRadius: '16px', background: 'var(--surface-0)' }}>
                         <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '14px', color: 'var(--gray-900, #0F172A)' }}>{t('coord.draft_specs', 'Requisition Details')}</h3>

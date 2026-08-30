@@ -18,6 +18,7 @@ import Link from 'next/link';
 import EditOrderModal from '@/components/EditOrderModal';
 import CancelOrderModal from '@/components/CancelOrderModal';
 import KitchenTicketModal from '@/components/KitchenTicketModal';
+import DepartmentBudgetCard from '@/components/DepartmentBudgetCard';
 
 export default function OrderDetailsPage() {
   const router = useRouter();
@@ -314,6 +315,17 @@ export default function OrderDetailsPage() {
         <div className="card" style={{ padding: '20px', marginBottom: '24px', background: 'var(--surface-0)' }}>
           <OrderStepper status={order.status} />
         </div>
+
+        {/* Department Budget Allocation & Spend Utilization */}
+        {order.department_id && (
+          <div style={{ marginBottom: '24px' }}>
+            <DepartmentBudgetCard
+              deptId={order.department_id}
+              projectedAmount={['Draft', 'Pending Principal Approval', 'Pending DCR Review'].includes(order.status) ? order.total_bill_amount : 0}
+              compact={true}
+            />
+          </div>
+        )}
 
         {/* Actionable Panels */}
         {showCoordSubmit && (

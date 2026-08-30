@@ -19,6 +19,10 @@ import UiverseButton from '@/components/ui/UiverseButton';
 import UiverseBadge from '@/components/ui/UiverseBadge';
 import AppIcon, { getIconTheme } from '@/components/ui/AppIcon';
 import ChangePasswordCard from '@/components/ChangePasswordCard';
+import DepartmentBudgetCard from '@/components/DepartmentBudgetCard';
+import EditBudgetModal from '@/components/EditBudgetModal';
+import { DepartmentBudget } from '@/lib/budget';
+import { DEPARTMENTS } from '@/lib/constants';
 import { api } from '@/lib/api';
 import styles from './admin.module.css';
 
@@ -113,6 +117,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
   const [deptName, setDeptName] = useState('');
   const [deptCode, setDeptCode] = useState('');
   const [deptDesc, setDeptDesc] = useState('');
+  const [editingBudget, setEditingBudget] = useState<DepartmentBudget | null>(null);
 
   // Analytics timeframe state
   const [analyticsTimeframe, setAnalyticsTimeframe] = useState<'monthly' | 'yearly'>('monthly');
@@ -868,6 +873,20 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                   <UiverseButton variant="primary" size="sm" onClick={() => setShowDeptModal(true)}>
                     + Add New Department
                   </UiverseButton>
+                </div>
+
+                {/* Department Annual Budget Caps & Spend Utilization Matrix */}
+                <div style={{ marginBottom: '28px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '16px' }}>
+                    {DEPARTMENTS.map(dept => (
+                      <DepartmentBudgetCard
+                        key={dept.id}
+                        deptId={dept.id}
+                        showAdminEdit={true}
+                        onEditCap={(b) => setEditingBudget(b)}
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 <div className={styles.tableContainer}>
@@ -2150,6 +2169,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
               </form>
             </div>
           </div>
+        )}
+
+        {editingBudget && (
+          <EditBudgetModal
+            budget={editingBudget}
+            onClose={() => setEditingBudget(null)}
+            onSaved={() => setEditingBudget(null)}
+          />
         )}
 
       </div>

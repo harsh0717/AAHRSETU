@@ -15,6 +15,10 @@ import { showToast } from '@/components/Toast';
 import UiverseButton from '@/components/ui/UiverseButton';
 import AppIcon from '@/components/ui/AppIcon';
 import ChangePasswordCard from '@/components/ChangePasswordCard';
+import DepartmentBudgetCard from '@/components/DepartmentBudgetCard';
+import EditBudgetModal from '@/components/EditBudgetModal';
+import { DepartmentBudget } from '@/lib/budget';
+import { DEPARTMENTS } from '@/lib/constants';
 
 import { api } from '@/lib/api';
 
@@ -52,6 +56,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   // Financial summary & reminder
   const [financialSummary, setFinancialSummary] = useState<any>(null);
   const [reminderState, setReminderState] = useState<any>(null);
+  const [editingBudget, setEditingBudget] = useState<DepartmentBudget | null>(null);
 
   // Profile Edit State
   const [profileName, setProfileName] = useState('');
@@ -490,6 +495,31 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                     <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       Direct NEFT/RTGS/UPI cleared disbursements
                     </div>
+                  </div>
+                </div>
+
+                {/* Department Budget Allocation & Spend Utilization Matrix */}
+                <div className="card" style={{ padding: '24px', marginBottom: '28px', background: 'var(--surface-0)', borderRadius: '18px', border: '1.5px solid var(--gray-200, #E2E8F0)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', margin: 0 }}>
+                        🏛️ Department Budget Allocations & Spend Utilization
+                      </h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', margin: '4px 0 0' }}>
+                        Institutional fiscal headroom, threshold warnings (80%), and live expenditure tracking.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '16px' }}>
+                    {DEPARTMENTS.map(dept => (
+                      <DepartmentBudgetCard
+                        key={dept.id}
+                        deptId={dept.id}
+                        showAdminEdit={true}
+                        onEditCap={(b) => setEditingBudget(b)}
+                      />
+                    ))}
                   </div>
                 </div>
 
@@ -1237,6 +1267,17 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                 )}
               </div>
 
+              {/* Department Budget Allocation & Projected Impact */}
+              {selectedAuditOrder.department_id && (
+                <div style={{ marginBottom: '18px' }}>
+                  <DepartmentBudgetCard
+                    deptId={selectedAuditOrder.department_id}
+                    projectedAmount={selectedAuditOrder.total_bill_amount}
+                    compact={true}
+                  />
+                </div>
+              )}
+
               {/* Itemized Vendor Breakdown Summary */}
               <div style={{ marginBottom: '20px' }}>
                 <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-700, #334155)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1365,6 +1406,14 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
               )}
             </div>
           </div>
+        )}
+
+        {editingBudget && (
+          <EditBudgetModal
+            budget={editingBudget}
+            onClose={() => setEditingBudget(null)}
+            onSaved={() => setEditingBudget(null)}
+          />
         )}
 
       </div>

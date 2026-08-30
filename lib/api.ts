@@ -6,7 +6,14 @@ export interface ApiError {
   status: number;
 }
 
-const BASE_URL = '/api/v1';
+const getBaseUrl = (): string => {
+  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) {
+    return `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}/api/v1`;
+  }
+  return '/api/v1';
+};
+
+const BASE_URL = getBaseUrl();
 
 // Token Storage Keys
 const ACCESS_TOKEN_KEY = 'aharsetu_access_token';
@@ -45,10 +52,12 @@ class ApiClient {
   private isRefreshing = false;
   private refreshSubscribers: ((token: string) => void)[] = [];
 
+  public getBaseUrl(): string {
+    return getBaseUrl();
+  }
+
   private getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    // Try sessionStorage first (current tab), then fall back to localStorage
-    // (restored after page reload when session is remembered)
     return sessionStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
@@ -61,8 +70,6 @@ class ApiClient {
     if (typeof window === 'undefined') return;
     sessionStorage.setItem(ACCESS_TOKEN_KEY, access);
     sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh);
-    // Also persist to localStorage so tokens survive page reload
-    // (sessionStorage is tab-scoped and cleared on tab close/reload)
     try {
       localStorage.setItem(ACCESS_TOKEN_KEY, access);
       localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
@@ -81,13 +88,12 @@ class ApiClient {
 
   /**
    * Returns true when the stored access token is clearly a mock/offline token
-   * (not a real JWT). Mock tokens must never be sent to the authenticated backend
-   * because the backend no longer supports the mock-token bypass.
+   * (not a real JWT). Mock tokens must never be sent to the authenticated backend.
    */
   public hasMockToken(): boolean {
     const token = this.getAccessToken();
     if (!token) return false;
-    return token.startsWith('mock-token-') || token.startsWith('demo-');
+    return token.startsWith('mock-token-') || token.startsWith('demo-') || token.startsWith('offline-session-');
   }
 
   private subscribeTokenRefresh(cb: (token: string) => void) {
@@ -115,17 +121,18 @@ class ApiClient {
     }
 
     // Do NOT attempt to refresh mock/offline tokens — they are not real JWTs
-    if (refresh.startsWith('mock-token-') || refresh.startsWith('demo-')) {
+    if (refresh.startsWith('mock-token-') || refresh.startsWith('demo-') || refresh.startsWith('offline-session-')) {
       this.clearTokens();
       throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
     }
 
     this.isRefreshing = true;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
+    const timer = setTimeout(() => controller.abort(), 15000);
 
     try {
-      const response = await fetch(`${BASE_URL}/auth/refresh`, {
+      const targetBase = this.getBaseUrl();
+      const response = await fetch(`${targetBase}/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +142,6 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        // Parse backend error detail if available
         let detail = 'Your session has expired. Please log in again.';
         try {
           const errData = await response.json();
@@ -151,7 +157,6 @@ class ApiClient {
       return data.access_token;
     } catch (err: any) {
       this.isRefreshing = false;
-      // Propagate structured errors as-is; wrap raw errors
       if (err?.status) throw err;
       throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
     } finally {
@@ -161,9 +166,11 @@ class ApiClient {
 
   public async request<T>(
     endpoint: string,
-    options: RequestInit & { timeoutMs?: number } = {}
+    options: RequestInit & { timeoutMs?: number; retryCount?: number } = {}
   ): Promise<T> {
-    const timeoutMs = options.timeoutMs ?? 5000;
+    // Generous default timeout (45s) for Render free-tier cold-starts
+    const timeoutMs = options.timeoutMs ?? 45000;
+    const retryCount = options.retryCount ?? 0;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -177,7 +184,8 @@ class ApiClient {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
+    const targetBase = this.getBaseUrl();
+    const url = endpoint.startsWith('http') ? endpoint : `${targetBase}${endpoint}`;
     let response: Response;
     try {
       response = await fetch(url, {
@@ -187,6 +195,10 @@ class ApiClient {
       });
     } catch (fetchErr: any) {
       clearTimeout(timer);
+      // Auto-retry once on cold-start / network failure if not aborted intentionally
+      if (retryCount < 1) {
+        return this.request<T>(endpoint, { ...options, retryCount: retryCount + 1, timeoutMs: 30000 });
+      }
       throw { message: 'Service unavailable or connection reset. Please try again.', status: 503 } as ApiError;
     } finally {
       clearTimeout(timer);
@@ -194,7 +206,7 @@ class ApiClient {
 
     if (response.status === 401) {
       // Only attempt token refresh if we have a real (non-mock) token
-      if (token && !token.startsWith('mock-token-') && !token.startsWith('demo-')) {
+      if (token && !token.startsWith('mock-token-') && !token.startsWith('demo-') && !token.startsWith('offline-session-')) {
         try {
           const newToken = await this.refreshTokens();
           headers.set('Authorization', `Bearer ${newToken}`);
@@ -211,12 +223,10 @@ class ApiClient {
             clearTimeout(retryTimer);
           }
         } catch (err: any) {
-          // Propagate the specific error from refreshTokens or the retried request
           if (err?.status) throw err;
           throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
         }
       } else {
-        // Mock/offline token — clear it and signal session expired
         this.clearTokens();
         throw { message: 'Your session has expired. Please log in again.', status: 401 } as ApiError;
       }

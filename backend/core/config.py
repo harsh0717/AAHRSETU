@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # Database
-    DATABASE_URL: str = "postgresql://postgres:postgrespassword@localhost:5432/aharsetu"
+    # Database (defaults to local sqlite for dev; overridden by DATABASE_URL env on Render / Neon)
+    DATABASE_URL: str = "sqlite:///./aharsetu.db"
     
     BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",

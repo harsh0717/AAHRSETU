@@ -111,6 +111,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [directoryUsers, setDirectoryUsers] = useState<UserProfile[]>([]);
 
   function fillDemo(account: any) {
     setRole(account.role === 'administration' ? 'dcr' : account.role);
@@ -133,6 +134,15 @@ export default function LoginPage() {
           router.replace('/' + session.role);
         }
       }
+      
+      // Load live users from DB directory to reflect updated names on all devices
+      import('@/lib/auth').then(({ getUsers }) => {
+        getUsers().then(users => {
+          if (Array.isArray(users) && users.length > 0) {
+            setDirectoryUsers(users);
+          }
+        }).catch(() => {});
+      });
     }
   }, [router]);
 
@@ -520,21 +530,25 @@ export default function LoginPage() {
 
             {showDemo && (
               <div className={styles.demoGrid}>
-                {QUICK_TEST_ACCOUNTS.map((acc, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => fillDemo(acc)}
-                    className={styles.demoCard}
-                  >
-                    <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
-                      <AppIcon name={acc.icon as any} size={20} color="#2563EB" />
-                    </span>
-                    <div className={styles.demoMeta}>
-                      <h5>{acc.name || acc.label}</h5>
-                      <p>{acc.email}</p>
+                {QUICK_TEST_ACCOUNTS.map((acc, idx) => {
+                  const liveUser = directoryUsers.find(u => u.email.toLowerCase() === acc.email.toLowerCase());
+                  const displayName = liveUser?.name || acc.name || acc.label;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => fillDemo(acc)}
+                      className={styles.demoCard}
+                    >
+                      <span className={styles.demoIcon} style={{ display: 'flex', alignItems: 'center' }}>
+                        <AppIcon name={acc.icon as any} size={20} color="#2563EB" />
+                      </span>
+                      <div className={styles.demoMeta}>
+                        <h5>{displayName}</h5>
+                        <p>{acc.email}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

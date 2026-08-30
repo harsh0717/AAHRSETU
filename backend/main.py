@@ -49,9 +49,6 @@ try:
             db.execute(text("ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_by_id INTEGER;"))
             db.execute(text("UPDATE users SET role='administration' WHERE role='dcr';"))
             db.execute(text("UPDATE approval_history SET role='administration' WHERE role='dcr';"))
-            db.execute(text("UPDATE users SET name='Neha Mam' WHERE email='dcr@aharsetu.edu.in';"))
-            db.execute(text("UPDATE users SET name='Pranav Sir' WHERE email='principal.dd@aharsetu.edu.in';"))
-            db.execute(text("UPDATE users SET name='Sachin Sir' WHERE email='principal.pharma@aharsetu.edu.in';"))
             db.commit()
             # Performance indexes — idempotent, safe to re-run
             perf_indexes = [
@@ -146,10 +143,11 @@ app = FastAPI(
     redirect_slashes=True
 )
 
-# CORS configuration
+# CORS configuration supporting localhost, LAN IP addresses (192.168.x.x, 10.x.x.x), and Vercel domains
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=settings.BACKEND_CORS_ORIGINS or ["*"],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.vercel\.app)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

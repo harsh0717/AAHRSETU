@@ -50,9 +50,6 @@ class AuthService:
         return user
 
     def login_user(self, user: User) -> Dict[str, Any]:
-        # Clear existing sessions for single login policy or to manage load
-        self.user_repo.clear_user_sessions(user.id)
-        
         access_token = create_access_token(subject=user.id)
         refresh_token = create_refresh_token(subject=user.id)
         

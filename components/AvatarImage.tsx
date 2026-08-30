@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getSession } from '@/lib/auth';
+import { getSession, getSavedUsers } from '@/lib/auth';
 
 interface AvatarImageProps {
   userId?: number | string | null;
@@ -25,21 +25,28 @@ export default function AvatarImage({
 
     const loadAvatar = () => {
       const activeUser = getSession();
-      // Only show avatar if this component is for the currently logged-in user
-      const isCurrentUser = !userId || userId === activeUser?.id;
-      if (!isCurrentUser || !activeUser) {
-        setAvatarUrl(null);
-        return;
+      let targetUser = null;
+
+      if (!userId || (activeUser && String(activeUser.id) === String(userId))) {
+        targetUser = activeUser;
+      } else if (userId) {
+        const allUsers = getSavedUsers();
+        targetUser = allUsers.find(u => String(u.id) === String(userId)) || null;
       }
 
-      setDisplayName(activeUser.name || name || null);
+      const resolvedName = targetUser?.name || name || activeUser?.name || null;
+      setDisplayName(resolvedName);
 
-      if (activeUser.avatar_url) {
-        const version = activeUser.avatar_version || 1;
-        // Cache-bust with version number so browser fetches updated photo
-        const url = activeUser.avatar_url.startsWith('http')
-          ? `${activeUser.avatar_url}?v=${version}`
-          : `${activeUser.avatar_url}?v=${version}`;
+      if (targetUser?.avatar_url) {
+        const version = targetUser.avatar_version || 1;
+        let rawUrl = targetUser.avatar_url;
+        
+        // Resolve full URL if relative path and NEXT_PUBLIC_API_URL is configured
+        if (rawUrl.startsWith('/') && process.env.NEXT_PUBLIC_API_URL) {
+          rawUrl = `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}${rawUrl}`;
+        }
+        
+        const url = rawUrl.includes('?') ? `${rawUrl}&v=${version}` : `${rawUrl}?v=${version}`;
         setAvatarUrl(url);
       } else {
         setAvatarUrl(null);
@@ -48,13 +55,14 @@ export default function AvatarImage({
 
     loadAvatar();
 
-    // Listen for profile updates dispatched by auth.ts and useWebSocket.ts
     const handleProfileChange = () => loadAvatar();
     window.addEventListener('aharsetu_profile_changed', handleProfileChange);
+    window.addEventListener('aharsetu_user_changed', handleProfileChange);
     window.addEventListener('focus', handleProfileChange);
 
     return () => {
       window.removeEventListener('aharsetu_profile_changed', handleProfileChange);
+      window.removeEventListener('aharsetu_user_changed', handleProfileChange);
       window.removeEventListener('focus', handleProfileChange);
     };
   }, [userId, name]);

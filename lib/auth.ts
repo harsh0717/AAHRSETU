@@ -548,6 +548,11 @@ export async function initializeApplication(): Promise<UserProfile | null> {
   if (!session) {
     return null;
   }
+
+  // Do not send mock/offline tokens to the backend
+  if (api.hasMockToken()) {
+    return session;
+  }
   
   try {
     const freshUser = await api.get<UserProfile>('/auth/me');

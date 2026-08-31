@@ -271,14 +271,26 @@ export async function checkBudgetOverflow(deptId: string, estimatedAmount: numbe
   return { allowed: true };
 }
 
+const CANCELLED_STATUSES = [
+  'Cancelled',
+  'Coordinator Cancelled',
+  'Principal Rejected',
+  'DCR Rejected',
+  'Admin Rejected',
+  'Vendor Rejected',
+  'Rejected',
+  'Draft'
+];
+
 export function syncLocalBudgetsWithOrders(orders: any[] = []): Record<string, DepartmentBudget> {
   const budgets = getLocalBudgets();
   const deptSpendMap = new Map<string, number>();
 
   if (Array.isArray(orders)) {
     for (const order of orders) {
-      const isCompleted = ['Completed', 'Vendor Confirmed', 'Bill Generated'].includes(order.status);
-      if (!isCompleted && order.status !== 'Completed') continue;
+      if (CANCELLED_STATUSES.includes(order.status)) continue;
+      const isCompletedOrBilled = ['Completed', 'Bill Generated'].includes(order.status);
+      if (!isCompletedOrBilled) continue;
       if (order.department_id) {
         const amt = Number(order.total_bill_amount || 0);
         deptSpendMap.set(order.department_id, (deptSpendMap.get(order.department_id) || 0) + amt);

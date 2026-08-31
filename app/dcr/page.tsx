@@ -301,13 +301,15 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
   // Department-wise audit reports data
   const deptAuditSummary: Record<string, { count: number; total: number; label: string }> = {};
   orders.forEach(o => {
-    if (o.history.some(h => h.role === 'dcr')) {
+    const isCancelled = ['Cancelled', 'Coordinator Cancelled', 'Principal Rejected', 'DCR Rejected', 'Admin Rejected', 'Vendor Rejected', 'Rejected', 'Draft'].includes(o.status);
+    const isCompleted = ['Completed', 'Bill Generated'].includes(o.status);
+    if (o.history.some(h => h.role === 'dcr') && isCompleted && !isCancelled) {
       const dept = o.department_label || o.department_id || 'Unknown';
       if (!deptAuditSummary[dept]) {
         deptAuditSummary[dept] = { count: 0, total: 0, label: dept };
       }
       deptAuditSummary[dept].count += 1;
-      deptAuditSummary[dept].total += o.total_bill_amount;
+      deptAuditSummary[dept].total += (o.total_bill_amount || 0);
     }
   });
   const deptAuditRows = Object.values(deptAuditSummary);

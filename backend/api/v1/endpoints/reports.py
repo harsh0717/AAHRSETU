@@ -81,17 +81,21 @@ def get_summary(
     )
     orders = query.all()
 
+    CANCELLED_STATUSES = [
+        'Cancelled', 'Coordinator Cancelled', 'Principal Rejected',
+        'DCR Rejected', 'Admin Rejected', 'Vendor Rejected', 'Rejected', 'Draft'
+    ]
     total = len(orders)
-    completed = sum(1 for o in orders if o.status == 'Completed')
+    completed = sum(1 for o in orders if o.status == 'Completed' and o.status not in CANCELLED_STATUSES)
     pending = sum(1 for o in orders if o.status in [
         'Sent for Approval', 'Principal Reviewing', 'Principal Approved',
         'DCR Reviewing', 'Vendor Processing', 'Vendor Clarification Required',
         'Coordinator Updated', 'Vendor Confirmed'
-    ])
-    rejected = sum(1 for o in orders if o.status in ['Principal Rejected', 'DCR Rejected'])
-    bill_generated = sum(1 for o in orders if o.status in ['Bill Generated', 'Completed'])
-    total_expenditure = sum(o.total_bill_amount for o in orders if o.status == 'Completed')
-    total_billed = sum(o.total_bill_amount for o in orders if o.status in ['Completed', 'Bill Generated'])
+    ] and o.status not in CANCELLED_STATUSES)
+    rejected = sum(1 for o in orders if o.status in CANCELLED_STATUSES)
+    bill_generated = sum(1 for o in orders if o.status in ['Bill Generated', 'Completed'] and o.status not in CANCELLED_STATUSES)
+    total_expenditure = sum(o.total_bill_amount for o in orders if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES and o.total_bill_amount)
+    total_billed = sum(o.total_bill_amount for o in orders if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES and o.total_bill_amount)
     avg_order = total_expenditure / completed if completed > 0 else 0
 
     active_vendors = db.query(Vendor).filter(Vendor.status == 'open', Vendor.active == True).count()
@@ -130,10 +134,10 @@ def get_departments_report(
         orders = query.all()
 
         total_orders = len(orders)
-        completed = sum(1 for o in orders if o.status == 'Completed')
-        pending = sum(1 for o in orders if o.status not in ['Completed', 'Principal Rejected', 'DCR Rejected'])
-        rejected = sum(1 for o in orders if o.status in ['Principal Rejected', 'DCR Rejected'])
-        expenditure = sum(o.total_bill_amount for o in orders if o.status == 'Completed')
+        completed = sum(1 for o in orders if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES)
+        pending = sum(1 for o in orders if o.status not in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES)
+        rejected = sum(1 for o in orders if o.status in CANCELLED_STATUSES)
+        expenditure = sum(o.total_bill_amount for o in orders if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES and o.total_bill_amount)
         avg_val = expenditure / completed if completed > 0 else 0
 
         result.append({
@@ -689,15 +693,19 @@ def get_filtered_summary(
     )
     orders = query.all()
 
+    CANCELLED_STATUSES = [
+        'Cancelled', 'Coordinator Cancelled', 'Principal Rejected',
+        'DCR Rejected', 'Admin Rejected', 'Vendor Rejected', 'Rejected', 'Draft'
+    ]
     total_orders = len(orders)
-    completed_orders = sum(1 for o in orders if o.status == 'Completed')
+    completed_orders = sum(1 for o in orders if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES)
     pending_orders = sum(1 for o in orders if o.status in [
         'Sent for Approval', 'Principal Reviewing', 'Principal Approved',
         'DCR Reviewing', 'Vendor Processing', 'Vendor Confirmed'
-    ])
-    rejected_orders = sum(1 for o in orders if o.status in ['Principal Rejected', 'DCR Rejected'])
-    total_expenditure = sum(o.total_bill_amount for o in orders if o.status == 'Completed')
-    total_billed = sum(o.total_bill_amount for o in orders if o.status in ['Completed', 'Bill Generated'])
+    ] and o.status not in CANCELLED_STATUSES)
+    rejected_orders = sum(1 for o in orders if o.status in CANCELLED_STATUSES)
+    total_expenditure = sum(o.total_bill_amount for o in orders if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES and o.total_bill_amount)
+    total_billed = sum(o.total_bill_amount for o in orders if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES and o.total_bill_amount)
 
     dept_exp: Dict[str, dict] = {}
     for o in orders:
@@ -708,12 +716,14 @@ def get_filtered_summary(
             dept_exp[d_id] = {'department_id': d_id, 'department_name': d_name, 'label': d_label,
                                'total_orders': 0, 'completed_orders': 0, 'revenue': 0.0}
         dept_exp[d_id]['total_orders'] += 1
-        if o.status == 'Completed':
+        if o.status in ['Completed', 'Bill Generated'] and o.status not in CANCELLED_STATUSES and o.total_bill_amount:
             dept_exp[d_id]['completed_orders'] += 1
             dept_exp[d_id]['revenue'] += o.total_bill_amount
 
     vendor_rev: Dict[str, dict] = {}
     for o in orders:
+        if o.status in CANCELLED_STATUSES or o.status not in ['Completed', 'Bill Generated']:
+            continue
         for vo in o.vendor_orders:
             if vendor_id and vo.vendor_id != vendor_id:
                 continue
@@ -725,7 +735,7 @@ def get_filtered_summary(
                                      'status': vo.vendor.status if vo.vendor else 'closed',
                                      'revenue': 0.0,
                                      'menu_count': len(vo.vendor.menu_items) if vo.vendor else 0}
-            if o.status in ['Completed', 'Bill Generated']:
+            if vo.bill_amount:
                 vendor_rev[v_id]['revenue'] += vo.bill_amount
 
     orders_list = [{

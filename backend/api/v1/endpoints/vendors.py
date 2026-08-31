@@ -604,13 +604,24 @@ def sync_monthly_settlements(db: Session):
     now = datetime.now(timezone.utc)
     current_month_str = f"{now.year:04d}-{now.month:02d}"
     
-    # 1. Tally billed amounts from Bills
+    CANCELLED_STATUSES = [
+        "Cancelled", "Coordinator Cancelled", "Principal Rejected",
+        "DCR Rejected", "Admin Rejected", "Vendor Rejected", "Rejected", "Draft"
+    ]
+    
+    # 1. Tally billed amounts from Bills (ignoring cancelled bills/orders)
     bills = db.query(Bill).all()
     billed_by_vendor_month = defaultdict(float)
     settled_billed_by_vendor_month = defaultdict(float)
     billed_order_keys = set()
     
     for b in bills:
+        if b.status == "CANCELLED":
+            continue
+        if b.order_id:
+            mo = db.query(MasterOrder).filter(MasterOrder.id == b.order_id).first()
+            if mo and mo.status in CANCELLED_STATUSES:
+                continue
         if b.vendor_id and b.amount:
             dt = b.generated_at or now
             m_str = f"{dt.year:04d}-{dt.month:02d}"
@@ -620,10 +631,17 @@ def sync_monthly_settlements(db: Session):
             if b.settlement_status == 'SETTLED':
                 settled_billed_by_vendor_month[(b.vendor_id, m_str)] += amt
             
-    # 2. Also tally completed vendor orders if bills not yet generated
-    completed_orders = db.query(VendorOrder).filter(VendorOrder.status.in_(["Completed", "Vendor Confirmed"])).all()
+    # 2. Also tally completed vendor orders (strictly excluding cancelled or rejected orders)
+    completed_orders = db.query(VendorOrder).filter(
+        VendorOrder.status.in_(["Completed", "Bill Generated"]),
+        ~VendorOrder.status.in_(CANCELLED_STATUSES)
+    ).all()
     for vo in completed_orders:
         if vo.vendor_id and vo.bill_amount:
+            if vo.master_order_id:
+                mo = db.query(MasterOrder).filter(MasterOrder.id == vo.master_order_id).first()
+                if mo and (mo.status in CANCELLED_STATUSES or mo.status not in ["Completed", "Bill Generated"]):
+                    continue
             # Check if this specific vendor order was already counted from Bills table
             if (vo.master_order_id, vo.vendor_id) not in billed_order_keys:
                 dt = vo.updated_at or now

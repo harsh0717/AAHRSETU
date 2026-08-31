@@ -58,12 +58,17 @@ def _get_department_budget_obj(dept_id: str, db: Session) -> dict:
         except Exception:
             pass
 
-    # Calculate actual completed order spend in database for this department
+    CANCELLED_STATUSES = [
+        "Cancelled", "Coordinator Cancelled", "Principal Rejected",
+        "DCR Rejected", "Admin Rejected", "Vendor Rejected", "Rejected", "Draft"
+    ]
+    # Calculate actual completed order spend in database for this department (excluding cancelled/rejected/draft orders)
     db_orders = db.query(MasterOrder).filter(
         MasterOrder.department_id == dept_id,
-        MasterOrder.status.in_(["Completed", "Bill Generated", "Vendor Confirmed"])
+        MasterOrder.status.in_(["Completed", "Bill Generated"]),
+        ~MasterOrder.status.in_(CANCELLED_STATUSES)
     ).all()
-    db_spend = sum([o.total_bill_amount for o in db_orders]) if db_orders else 0.0
+    db_spend = sum([o.total_bill_amount for o in db_orders if o.total_bill_amount]) if db_orders else 0.0
     
     used_amount = meta["baseline_used"] + db_spend
     remaining_amount = max(0.0, annual_budget - used_amount)

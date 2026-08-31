@@ -310,9 +310,23 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       setOrders(oList);
       setVendors(vList);
       
-      const calcRevenue = oList.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
+      const CANCELLED_STATUSES = [
+        'Cancelled',
+        'Coordinator Cancelled',
+        'Principal Rejected',
+        'DCR Rejected',
+        'Admin Rejected',
+        'Vendor Rejected',
+        'Rejected',
+        'Draft'
+      ];
+      const validCompleted = oList.filter(o => 
+        ['Completed', 'Bill Generated'].includes(o.status) &&
+        !CANCELLED_STATUSES.includes(o.status)
+      );
+      const calcRevenue = validCompleted.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
       const calcTotalOrders = oList.length;
-      const calcCompleted = oList.filter(o => o.status === 'Completed').length;
+      const calcCompleted = validCompleted.length;
       const calcActiveVendors = vList.filter(v => v.active !== false).length;
 
       setStats({
@@ -820,7 +834,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
 
                       <div className={styles.deptProgressList}>
                         {departments.map((dept, idx) => {
-                          const deptOrders = orders.filter(o => o.department_id === dept.id);
+                          const deptOrders = orders.filter(o => 
+                            o.department_id === dept.id &&
+                            ['Completed', 'Bill Generated'].includes(o.status) &&
+                            !['Cancelled', 'Coordinator Cancelled', 'Principal Rejected', 'DCR Rejected', 'Admin Rejected', 'Vendor Rejected', 'Rejected', 'Draft'].includes(o.status)
+                          );
                           const deptSpent = deptOrders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
                           const pct = totalDeptExp > 0 ? Math.min(100, Math.round((deptSpent / totalDeptExp) * 100)) : 25;
                           const barColors = ['#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
@@ -1526,7 +1544,11 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 <div style={{ padding: '24px', background: 'var(--surface-1)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                     {departments.map((dept, idx) => {
-                      const deptOrders = orders.filter(o => o.department_id === dept.id);
+                      const deptOrders = orders.filter(o => 
+                        o.department_id === dept.id &&
+                        ['Completed', 'Bill Generated'].includes(o.status) &&
+                        !['Cancelled', 'Coordinator Cancelled', 'Principal Rejected', 'DCR Rejected', 'Admin Rejected', 'Vendor Rejected', 'Rejected', 'Draft'].includes(o.status)
+                      );
                       const amount = deptOrders.reduce((sum, o) => sum + (o.total_bill_amount || 0), 0);
                       return (
                         <div key={idx} style={{ padding: '16px', background: 'var(--surface-0)', borderRadius: '12px', border: '1px solid var(--gray-200, #E2E8F0)' }}>

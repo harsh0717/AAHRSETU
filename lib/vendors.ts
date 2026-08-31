@@ -586,8 +586,20 @@ function syncLocalMonthlySettlements(): VendorMonthlySettlement[] {
 
     if (Array.isArray(orders)) {
       for (const order of orders) {
-        const isCompleted = ['Completed', 'Vendor Confirmed', 'Bill Generated'].includes(order.status);
-        if (!isCompleted && order.status !== 'Completed') continue;
+        const isCancelled = [
+          'Cancelled',
+          'Coordinator Cancelled',
+          'Principal Rejected',
+          'DCR Rejected',
+          'Admin Rejected',
+          'Vendor Rejected',
+          'Rejected',
+          'Draft'
+        ].includes(order.status);
+        if (isCancelled) continue;
+
+        const isCompleted = ['Completed', 'Bill Generated'].includes(order.status);
+        if (!isCompleted) continue;
 
         const dateStr = order.created_at || order.bill_generated_at || new Date().toISOString();
         const month = dateStr.slice(0, 7);

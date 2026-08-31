@@ -12,12 +12,12 @@ import json
 router = APIRouter()
 
 DEPARTMENTS_META = {
-    "diploma": {"name": "Diploma Department", "default_budget": 250000.0, "baseline_used": 124500.0},
-    "degree": {"name": "Degree Department", "default_budget": 350000.0, "baseline_used": 289000.0},
-    "pharmacy": {"name": "Pharmacy Department", "default_budget": 150000.0, "baseline_used": 45000.0},
-    "physiotherapy": {"name": "Physiotherapy Department", "default_budget": 180000.0, "baseline_used": 62000.0},
-    "nursing": {"name": "Nursing Department", "default_budget": 200000.0, "baseline_used": 88000.0},
-    "bsc": {"name": "B.Sc./Paramedical Department", "default_budget": 160000.0, "baseline_used": 51000.0},
+    "diploma": {"name": "Diploma Department", "default_budget": 250000.0, "baseline_used": 0.0},
+    "degree": {"name": "Degree Department", "default_budget": 350000.0, "baseline_used": 0.0},
+    "pharmacy": {"name": "Pharmacy Department", "default_budget": 150000.0, "baseline_used": 0.0},
+    "physiotherapy": {"name": "Physiotherapy Department", "default_budget": 180000.0, "baseline_used": 0.0},
+    "nursing": {"name": "Nursing Department", "default_budget": 200000.0, "baseline_used": 0.0},
+    "bsc": {"name": "B.Sc./Paramedical Department", "default_budget": 160000.0, "baseline_used": 0.0},
 }
 
 class DepartmentBudgetResponse(BaseModel):

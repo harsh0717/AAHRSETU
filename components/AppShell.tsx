@@ -196,11 +196,26 @@ export default function AppShell({ children, role }: AppShellProps) {
             <button
               type="button"
               onClick={toggleSidebarMinimize}
-              className={styles.minimizeBtn}
+              className={`${styles.minimizeBtn} ${sidebarMinimized ? styles.minimizeBtnCollapsed : ''}`}
               title={sidebarMinimized ? 'Expand Sidebar' : 'Collapse Sidebar'}
               aria-label={sidebarMinimized ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
-              {sidebarMinimized ? '»' : '«'}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: sidebarMinimized ? 'rotate(180deg)' : 'rotate(0deg)'
+                }}
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
           )}
         </div>

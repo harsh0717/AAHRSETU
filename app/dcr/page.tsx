@@ -417,34 +417,33 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   </div>
                 )}
 
-                {/* Real-time Institutional Financial Stats Grid */}
+                {/* 3 Executive Stat Tiles */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-                  gap: '16px',
-                  marginBottom: '24px',
-                  width: '100%'
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
+                  gap: '14px',
+                  marginBottom: '20px'
                 }}>
-                  {/* Tile 1: Pending Audits */}
+                  {/* Tile 1: Pending Audit Queue */}
                   <div style={{
                     background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid var(--gray-200, #E2E8F0)',
-                    padding: '20px 24px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                    borderRadius: '14px',
+                    border: '1px solid var(--gray-200, #E2E8F0)',
+                    padding: '14px 18px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.04em' }}>
                         {t('dcr.pending_tile', 'AUDIT REVIEW QUEUE')}
                       </span>
-                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '6px', padding: '2px 6px', fontSize: '0.68rem', fontWeight: 800 }}>
                         {totalPending} {t('common.items', 'REQUISITIONS')}
                       </span>
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
+                    <div style={{ fontSize: '1.35rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.3px' }}>
                       {totalPending}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '3px' }}>
                       {t('dcr.pending_tile_sub', 'Orders awaiting administrative verification & clearance')}
                     </div>
                   </div>
@@ -452,23 +451,23 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   {/* Tile 2: Pending Settlements */}
                   <div style={{
                     background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid var(--gray-200, #E2E8F0)',
-                    padding: '20px 24px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                    borderRadius: '14px',
+                    border: '1px solid var(--gray-200, #E2E8F0)',
+                    padding: '14px 18px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.04em' }}>
                         {t('dcr.settlements_tile', 'TOTAL PENDING DUES')}
                       </span>
-                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '6px', padding: '2px 6px', fontSize: '0.68rem', fontWeight: 800 }}>
                         {financialSummary?.pending_settlement_bills || 0} {t('bills.title', 'BILLS DUE')}
                       </span>
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: Number(financialSummary?.pending_settlement_total || 0) > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.5px' }}>
+                    <div style={{ fontSize: '1.35rem', fontWeight: 900, color: Number(financialSummary?.pending_settlement_total || 0) > 0 ? '#DC2626' : '#059669', letterSpacing: '-0.3px' }}>
                       {financialSummary ? `₹${Number(financialSummary.pending_settlement_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹0.00'}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '3px' }}>
                       {t('dcr.settlements_tile_sub', 'Total unsettled canteen payables awaiting clearance')}
                     </div>
                   </div>
@@ -476,42 +475,42 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                   {/* Tile 3: Total Disbursed */}
                   <div style={{
                     background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid #10B981',
-                    padding: '20px 24px',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)'
+                    borderRadius: '14px',
+                    border: '1px solid #10B981',
+                    padding: '14px 18px',
+                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.06)'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.04em' }}>
                         TOTAL DISBURSED (PAID)
                       </span>
-                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '6px', padding: '2px 6px', fontSize: '0.68rem', fontWeight: 800 }}>
                         CLEARED PAYMENTS
                       </span>
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
+                    <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.3px' }}>
                       {financialSummary ? `₹${Number(financialSummary.settled_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹0.00'}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--gray-500, #64748B)', marginTop: '3px' }}>
                       Direct NEFT/RTGS/UPI cleared disbursements
                     </div>
                   </div>
                 </div>
 
                 {/* Department Budget Allocation & Spend Utilization Matrix */}
-                <div className="card" style={{ padding: '24px', marginBottom: '28px', background: 'var(--surface-0)', borderRadius: '18px', border: '1.5px solid var(--gray-200, #E2E8F0)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                <div className="card" style={{ padding: '16px 18px', marginBottom: '20px', background: 'var(--surface-0)', borderRadius: '14px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
                     <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', margin: 0 }}>
+                      <h3 style={{ fontSize: '0.98rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', margin: 0 }}>
                         🏛️ Department Budget Allocations & Spend Utilization
                       </h3>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', margin: '4px 0 0' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--gray-500, #64748B)', margin: '2px 0 0' }}>
                         Institutional fiscal headroom, threshold warnings (80%), and live expenditure tracking.
                       </p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '14px' }}>
                     {DEPARTMENTS.map(dept => (
                       <DepartmentBudgetCard
                         key={dept.id}

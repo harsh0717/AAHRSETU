@@ -31,7 +31,7 @@ export interface ProjectedBudgetImpact {
   warning_message?: string;
 }
 
-const LOCAL_BUDGETS_KEY = 'aharsetu_budgets_v5';
+const LOCAL_BUDGETS_KEY = 'aharsetu_budgets_v6';
 
 const INITIAL_BUDGETS: Record<string, DepartmentBudget> = {
   diploma: {
@@ -39,9 +39,9 @@ const INITIAL_BUDGETS: Record<string, DepartmentBudget> = {
     department_name: 'Diploma Department',
     budget_year: '2026-27',
     annual_budget: 250000.0,
-    used_amount: 124500.0,
-    remaining_amount: 125500.0,
-    utilization_pct: 49.80,
+    used_amount: 0.0,
+    remaining_amount: 250000.0,
+    utilization_pct: 0.0,
     warning_threshold: 0.80,
     has_warning: false,
     status: 'OPTIMAL'
@@ -51,21 +51,21 @@ const INITIAL_BUDGETS: Record<string, DepartmentBudget> = {
     department_name: 'Degree Department',
     budget_year: '2026-27',
     annual_budget: 350000.0,
-    used_amount: 289000.0,
-    remaining_amount: 61000.0,
-    utilization_pct: 82.57,
+    used_amount: 0.0,
+    remaining_amount: 350000.0,
+    utilization_pct: 0.0,
     warning_threshold: 0.80,
-    has_warning: true,
-    status: 'WARNING'
+    has_warning: false,
+    status: 'OPTIMAL'
   },
   pharmacy: {
     department_id: 'pharmacy',
     department_name: 'Pharmacy Department',
     budget_year: '2026-27',
     annual_budget: 150000.0,
-    used_amount: 45000.0,
-    remaining_amount: 105000.0,
-    utilization_pct: 30.00,
+    used_amount: 0.0,
+    remaining_amount: 150000.0,
+    utilization_pct: 0.0,
     warning_threshold: 0.80,
     has_warning: false,
     status: 'OPTIMAL'
@@ -75,9 +75,9 @@ const INITIAL_BUDGETS: Record<string, DepartmentBudget> = {
     department_name: 'Physiotherapy Department',
     budget_year: '2026-27',
     annual_budget: 180000.0,
-    used_amount: 62000.0,
-    remaining_amount: 118000.0,
-    utilization_pct: 34.44,
+    used_amount: 0.0,
+    remaining_amount: 180000.0,
+    utilization_pct: 0.0,
     warning_threshold: 0.80,
     has_warning: false,
     status: 'OPTIMAL'
@@ -87,9 +87,9 @@ const INITIAL_BUDGETS: Record<string, DepartmentBudget> = {
     department_name: 'Nursing Department',
     budget_year: '2026-27',
     annual_budget: 200000.0,
-    used_amount: 88000.0,
-    remaining_amount: 112000.0,
-    utilization_pct: 44.00,
+    used_amount: 0.0,
+    remaining_amount: 200000.0,
+    utilization_pct: 0.0,
     warning_threshold: 0.80,
     has_warning: false,
     status: 'OPTIMAL'
@@ -99,9 +99,9 @@ const INITIAL_BUDGETS: Record<string, DepartmentBudget> = {
     department_name: 'B.Sc./Paramedical Department',
     budget_year: '2026-27',
     annual_budget: 160000.0,
-    used_amount: 51000.0,
-    remaining_amount: 109000.0,
-    utilization_pct: 31.88,
+    used_amount: 0.0,
+    remaining_amount: 160000.0,
+    utilization_pct: 0.0,
     warning_threshold: 0.80,
     has_warning: false,
     status: 'OPTIMAL'
@@ -269,4 +269,32 @@ export async function checkBudgetOverflow(deptId: string, estimatedAmount: numbe
     };
   }
   return { allowed: true };
+}
+
+export function syncLocalBudgetsWithOrders(orders: any[] = []): Record<string, DepartmentBudget> {
+  const budgets = getLocalBudgets();
+  const deptSpendMap = new Map<string, number>();
+
+  if (Array.isArray(orders)) {
+    for (const order of orders) {
+      const isCompleted = ['Completed', 'Vendor Confirmed', 'Bill Generated'].includes(order.status);
+      if (!isCompleted && order.status !== 'Completed') continue;
+      if (order.department_id) {
+        const amt = Number(order.total_bill_amount || 0);
+        deptSpendMap.set(order.department_id, (deptSpendMap.get(order.department_id) || 0) + amt);
+      }
+    }
+  }
+
+  for (const [deptId, b] of Object.entries(budgets)) {
+    const calculatedSpend = deptSpendMap.get(deptId) || 0.0;
+    b.used_amount = calculatedSpend;
+    b.remaining_amount = Math.max(0, b.annual_budget - calculatedSpend);
+    b.utilization_pct = b.annual_budget > 0 ? parseFloat(((calculatedSpend / b.annual_budget) * 100).toFixed(2)) : 0;
+    b.has_warning = b.annual_budget > 0 ? (calculatedSpend / b.annual_budget) >= (b.warning_threshold || 0.80) : false;
+    b.status = calculatedSpend > b.annual_budget ? 'EXCEEDED' : (b.has_warning ? 'WARNING' : 'OPTIMAL');
+  }
+
+  saveLocalBudgets(budgets);
+  return budgets;
 }

@@ -65,7 +65,39 @@ export interface MasterOrder {
   history: ApprovalHistory[];
 }
 
-const LOCAL_ORDERS_KEY = 'aharsetu_orders_v5';
+export const LOCAL_ORDERS_KEY = 'aharsetu_orders_v8';
+
+// Automatic client purge of legacy cache keys to guarantee a 100% fresh start
+if (typeof window !== 'undefined') {
+  try {
+    const LEGACY_KEYS = [
+      'aharsetu_orders_v1',
+      'aharsetu_orders_v2',
+      'aharsetu_orders_v3',
+      'aharsetu_orders_v4',
+      'aharsetu_orders_v5',
+      'aharsetu_orders_v6',
+      'aharsetu_orders_v7',
+      'aharsetu_bills',
+      'aharsetu_bills_v1',
+      'aharsetu_bills_v2',
+      'aharsetu_bills_v3',
+      'aharsetu_bills_v4',
+      'aharsetu_bills_v5',
+      'aharsetu_offline_orders_cache',
+      'aharsetu_offline_bills_cache',
+      'aharsetu_offline_order_queue',
+      'aharsetu_settlements',
+      'aharsetu_settlements_v1',
+      'aharsetu_settlements_v2',
+      'aharsetu_settlements_v3',
+      'aharsetu_settlements_v4',
+      'aharsetu_settlements_v5',
+      'aharsetu_custom_orders'
+    ];
+    LEGACY_KEYS.forEach(k => localStorage.removeItem(k));
+  } catch {}
+}
 
 const FALLBACK_ORDERS: MasterOrder[] = [];
 

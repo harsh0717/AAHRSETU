@@ -11,10 +11,10 @@ export interface QueuedOfflineOrder {
 }
 
 const KEYS = {
-  ORDERS: "aharsetu_offline_orders_cache",
-  MENUS: "aharsetu_offline_menus_cache",
-  BILLS: "aharsetu_offline_bills_cache",
-  QUEUE: "aharsetu_offline_order_queue",
+  ORDERS: "aharsetu_offline_orders_cache_v8",
+  MENUS: "aharsetu_offline_menus_cache_v8",
+  BILLS: "aharsetu_offline_bills_cache_v8",
+  QUEUE: "aharsetu_offline_order_queue_v8",
 };
 
 // ── Cache Getters & Setters ──────────────────────────────────────────────────

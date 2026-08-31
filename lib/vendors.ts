@@ -450,7 +450,7 @@ export async function upsertVendorMenuItem(vendorId: string, item: any): Promise
   // Synchronize item names in any pending/active local orders
   if (typeof window !== 'undefined') {
     try {
-      const rawOrders = localStorage.getItem('aharsetu_orders_v3');
+      const rawOrders = localStorage.getItem('aharsetu_orders_v8');
       if (rawOrders) {
         const orders = JSON.parse(rawOrders);
         let modified = false;
@@ -470,7 +470,7 @@ export async function upsertVendorMenuItem(vendorId: string, item: any): Promise
           }
         });
         if (modified) {
-          localStorage.setItem('aharsetu_orders_v3', JSON.stringify(orders));
+          localStorage.setItem('aharsetu_orders_v8', JSON.stringify(orders));
           window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'menu_update' } }));
         }
       }
@@ -536,7 +536,7 @@ export interface VendorMonthlySettlement {
   updated_at: string;
 }
 
-const LOCAL_SETTLEMENTS_KEY = 'aharsetu_settlements_v4';
+const LOCAL_SETTLEMENTS_KEY = 'aharsetu_settlements_v8';
 
 const FALLBACK_SETTLEMENTS: VendorMonthlySettlement[] = [];
 
@@ -580,7 +580,7 @@ function syncLocalMonthlySettlements(): VendorMonthlySettlement[] {
     }
 
     // Tally orders from local storage
-    const rawOrders = localStorage.getItem('aharsetu_orders_v5');
+    const rawOrders = localStorage.getItem('aharsetu_orders_v8');
     const orders = rawOrders ? JSON.parse(rawOrders) : [];
     const billedByVendorMonth = new Map<string, number>();
 

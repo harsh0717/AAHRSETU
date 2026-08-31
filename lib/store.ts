@@ -70,32 +70,22 @@ export const LOCAL_ORDERS_KEY = 'aharsetu_orders_v8';
 // Automatic client purge of legacy cache keys to guarantee a 100% fresh start
 if (typeof window !== 'undefined') {
   try {
-    const LEGACY_KEYS = [
-      'aharsetu_orders_v1',
-      'aharsetu_orders_v2',
-      'aharsetu_orders_v3',
-      'aharsetu_orders_v4',
-      'aharsetu_orders_v5',
-      'aharsetu_orders_v6',
-      'aharsetu_orders_v7',
-      'aharsetu_bills',
-      'aharsetu_bills_v1',
-      'aharsetu_bills_v2',
-      'aharsetu_bills_v3',
-      'aharsetu_bills_v4',
-      'aharsetu_bills_v5',
-      'aharsetu_offline_orders_cache',
-      'aharsetu_offline_bills_cache',
-      'aharsetu_offline_order_queue',
-      'aharsetu_settlements',
-      'aharsetu_settlements_v1',
-      'aharsetu_settlements_v2',
-      'aharsetu_settlements_v3',
-      'aharsetu_settlements_v4',
-      'aharsetu_settlements_v5',
-      'aharsetu_custom_orders'
-    ];
-    LEGACY_KEYS.forEach(k => localStorage.removeItem(k));
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+        key.startsWith('aharsetu_order') ||
+        key.startsWith('aharsetu_bill') ||
+        key.startsWith('aharsetu_settle') ||
+        key.startsWith('aharsetu_audit') ||
+        key.startsWith('aharsetu_notif') ||
+        key.startsWith('aharsetu_offline') ||
+        key.startsWith('aharsetu_custom_order')
+      ) && key !== LOCAL_ORDERS_KEY) {
+        toRemove.push(key);
+      }
+    }
+    toRemove.forEach(k => localStorage.removeItem(k));
   } catch {}
 }
 
@@ -776,32 +766,27 @@ export async function resetAllData(): Promise<void> {
     await api.post('/orders/system/reset', {});
   } catch {}
   if (typeof window !== 'undefined') {
-    const keysToRemove = [
-      'aharsetu_orders_v1',
-      'aharsetu_orders_v2',
-      'aharsetu_orders_v3',
-      'aharsetu_orders_v4',
-      'aharsetu_bills',
-      'aharsetu_bills_v1',
-      'aharsetu_settlements',
-      'aharsetu_settlements_v1',
-      'aharsetu_settlements_v2',
-      'aharsetu_settlements_v4',
-      'aharsetu_notifications_v1',
-      'aharsetu_notifications_v2',
-      'aharsetu_notifications_v3',
-      'aharsetu_notifications_v3.7',
-      'aharsetu_notifications_v4',
-      'aharsetu_audit_logs_v1',
-      'aharsetu_audit_logs_v2',
-      'aharsetu_audit_logs_v3',
-      'aharsetu_custom_orders'
-    ];
-    keysToRemove.forEach(k => localStorage.removeItem(k));
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+        key.startsWith('aharsetu_order') ||
+        key.startsWith('aharsetu_bill') ||
+        key.startsWith('aharsetu_settle') ||
+        key.startsWith('aharsetu_audit') ||
+        key.startsWith('aharsetu_notif') ||
+        key.startsWith('aharsetu_offline') ||
+        key.startsWith('aharsetu_custom_order')
+      )) {
+        toRemove.push(key);
+      }
+    }
+    toRemove.forEach(k => localStorage.removeItem(k));
     localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify([]));
     try {
       window.dispatchEvent(new CustomEvent('aharsetu_order_changed', { detail: { source: 'reset', orders: [] } }));
       window.dispatchEvent(new CustomEvent('aharsetu_notification_changed', { detail: { count: 0 } }));
+      window.dispatchEvent(new CustomEvent('aharsetu_settlement_updated', { detail: [] }));
       window.dispatchEvent(new CustomEvent('aharsetu_user_changed'));
     } catch {}
   }

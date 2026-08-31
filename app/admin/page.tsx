@@ -500,6 +500,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
       setResetting(true);
       try {
         await resetAllData();
+        setOrders([]);
+        setSettlements([]);
+        setStats({ total_orders: 0, completed_orders: 0, total_revenue: 0, active_vendors: vendors.length });
         await loadDashboardData();
         alert('All transactions, orders, and bills have been successfully cleared.');
       } catch (err) {

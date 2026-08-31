@@ -207,9 +207,11 @@ export default function LoginPage() {
     <div className={styles.page}>
       
       <section className={styles.hero}>
-        {/* Subtle ambient backdrop glows with Emerald Green and Navy Blue */}
+        {/* Subtle high-tech geometric texture & ambient glows */}
+        <div className={styles.heroGridTexture} aria-hidden="true" />
         <div className={styles.heroGlowTop} aria-hidden="true" />
         <div className={styles.heroGlowBottom} aria-hidden="true" />
+        <div className={styles.heroGlowCenter} aria-hidden="true" />
 
         {/* Decorative rotating background geometry */}
         <div className={styles.heroRing1} aria-hidden="true" />
@@ -260,6 +262,11 @@ export default function LoginPage() {
           {/* ── Centerpiece 3D Showcase Card (Clean, Sharp & Contained) ── */}
           <div className={styles.showcaseWrapper}>
             <div className={styles.mainShowcaseCard}>
+              <div className={styles.floatingLiveTag}>
+                <span className={styles.livePulseDot} />
+                LIVE KITCHEN
+              </div>
+
               <div className={styles.showcaseTopRow}>
                 <span className={styles.showcaseSpecialTag}>
                   <span>🌟</span> TODAY'S EXECUTIVE SPECIAL
@@ -330,6 +337,21 @@ export default function LoginPage() {
                 <p>Strictly vegetarian campus food</p>
               </div>
             </div>
+          </div>
+
+          {/* ── Live Campus Status Ticker Bar ── */}
+          <div className={styles.heroTickerBar}>
+            <span className={styles.tickerItem}>
+              <span style={{ color: '#10B981', fontSize: '0.65rem' }}>●</span> 4/4 Canteens Active
+            </span>
+            <span style={{ opacity: 0.4 }}>|</span>
+            <span className={styles.tickerItem}>
+              ⚡ Instant Digital Orders
+            </span>
+            <span style={{ opacity: 0.4 }}>|</span>
+            <span className={styles.tickerItem}>
+              🛡️ ISO 22000 Protocol
+            </span>
           </div>
         </div>
 

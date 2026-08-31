@@ -645,6 +645,150 @@
   gap: 8px;
 }
 
+/* ── 9. Reports & Analytics Advanced Suite ── */
+.reportsPresetBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: var(--surface-1, #F8FAFC);
+  border-radius: 12px;
+  border: 1px solid var(--gray-200, #E2E8F0);
+}
+
+.presetBtn {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--gray-600, #64748B);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.presetBtn:hover {
+  color: var(--gray-900, #0F172A);
+  background: var(--surface-2, #EDF2F7);
+}
+
+.presetBtnActive {
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.reportKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.reportKpiCard {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--surface-0, #FFFFFF);
+  border: 1px solid var(--gray-200, #E2E8F0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.reportKpiCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.reportsSubNav {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--gray-200, #E2E8F0);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.reportsSubTabBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--gray-600, #64748B);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.reportsSubTabBtn:hover {
+  background: var(--surface-1, #F1F5F9);
+  color: var(--gray-900, #0F172A);
+}
+
+.reportsSubTabActive {
+  background: var(--surface-2, #E2E8F0) !important;
+  color: var(--gray-900, #0F172A) !important;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1px var(--gray-300, #CBD5E1);
+}
+
+.progressTrack {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-200, #E2E8F0);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.chartContainer {
+  background: var(--surface-0, #FFFFFF);
+  border: 1px solid var(--gray-200, #E2E8F0);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+
+.popularItemsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.popularItemCard {
+  background: var(--surface-1, #F8FAFC);
+  border: 1px solid var(--gray-200, #E2E8F0);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.popularItemCard:hover {
+  background: var(--surface-0, #FFFFFF);
+  border-color: #34D399;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
 /* ── 10. Responsive Breakpoints ── */
 @media (max-width: 1200px) {
   .statsGrid {

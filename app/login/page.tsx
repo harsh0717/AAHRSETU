@@ -111,6 +111,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualRoleTab, setManualRoleTab] = useState<'coordinator' | 'principal' | 'dcr' | 'vendor' | 'admin'>('coordinator');
   const [directoryUsers, setDirectoryUsers] = useState<UserProfile[]>([]);
 
   function fillDemo(account: any) {
@@ -243,11 +245,18 @@ export default function LoginPage() {
 
         {/* ── Hero Center Content ── */}
         <div className={styles.heroContent}>
-          <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
             <span className={styles.heroBadge}>
               <span className={styles.heroBadgeDot} />
               {t('login.hero_badge', '100% Pure Veg · Institutional Dining')}
             </span>
+            <button
+              type="button"
+              onClick={() => setShowManualModal(true)}
+              className={styles.manualGuideBtn}
+            >
+              <span>📖</span> User Manual & Demo Guide →
+            </button>
           </div>
 
           <h2 className={styles.heroTitle}>
@@ -578,6 +587,308 @@ export default function LoginPage() {
 
         </div>
       </section>
+
+      {/* ── Interactive User Manual & Demo Modal ── */}
+      {showManualModal && (
+        <div className={styles.manualModalOverlay} onClick={() => setShowManualModal(false)}>
+          <div className={styles.manualModalCard} onClick={e => e.stopPropagation()}>
+            <div className={styles.manualModalHeader}>
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#0D9488', color: '#FFFFFF', padding: '3px 10px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 800, marginBottom: '6px' }}>
+                  CAMPUS DINING ONBOARDING MANUAL
+                </div>
+                <h3 className={styles.manualModalTitle}>
+                  <span>📖</span> {formatBrandText('AharSetu', lang)} User Manual & Role Demo
+                </h3>
+                <p className={styles.manualModalSub}>
+                  Complete guide to institutional requisitions, multi-tiered approvals, billing, and settlements.
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close manual modal"
+                onClick={() => setShowManualModal(false)}
+                className={styles.manualCloseBtn}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Requisition Lifecycle Timeline */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--gray-500, #94A3B8)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                🔄 Standard Requisition & Approval Lifecycle
+              </div>
+              <div className={styles.manualWorkflowTimeline}>
+                <div className={styles.timelineNode}>
+                  <div className={styles.timelineBadge}>1</div>
+                  <div className={styles.timelineTitle}>Draft Order</div>
+                  <div className={styles.timelineDesc}>Coordinator creates requisition</div>
+                </div>
+                <div className={styles.timelineNode}>
+                  <div className={styles.timelineBadge} style={{ background: '#3B82F6' }}>2</div>
+                  <div className={styles.timelineTitle}>Principal Review</div>
+                  <div className={styles.timelineDesc}>Approval with remarks</div>
+                </div>
+                <div className={styles.timelineNode}>
+                  <div className={styles.timelineBadge} style={{ background: '#8B5CF6' }}>3</div>
+                  <div className={styles.timelineTitle}>DCR Audit</div>
+                  <div className={styles.timelineDesc}>Institutional verification</div>
+                </div>
+                <div className={styles.timelineNode}>
+                  <div className={styles.timelineBadge} style={{ background: '#F59E0B' }}>4</div>
+                  <div className={styles.timelineTitle}>Kitchen Prep</div>
+                  <div className={styles.timelineDesc}>Vendor cooks & dispatches</div>
+                </div>
+                <div className={styles.timelineNode}>
+                  <div className={styles.timelineBadge} style={{ background: '#10B981' }}>5</div>
+                  <div className={styles.timelineTitle}>Bill & Settle</div>
+                  <div className={styles.timelineDesc}>GST invoice & monthly payout</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Role Navigation Tabs */}
+            <div className={styles.manualRoleTabs}>
+              {[
+                { id: 'coordinator', label: 'Coordinator', icon: 'coordinator' },
+                { id: 'principal', label: 'Principal', icon: 'principal' },
+                { id: 'dcr', label: 'Administration / DCR', icon: 'dcr' },
+                { id: 'vendor', label: 'Canteen Vendor', icon: 'vendor' },
+                { id: 'admin', label: 'System Admin', icon: 'admin' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setManualRoleTab(tab.id as any)}
+                  className={`${styles.manualRoleTabBtn} ${manualRoleTab === tab.id ? styles.manualRoleTabActive : ''}`}
+                >
+                  <AppIcon name={tab.icon as any} size={16} color={manualRoleTab === tab.id ? '#FFFFFF' : '#94A3B8'} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Role Specific Detailed Content */}
+            <div className={styles.manualRoleContent}>
+              {manualRoleTab === 'coordinator' && (
+                <>
+                  <div className={styles.manualActionCards}>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🛒</span> Food Catalog & Multi-Vendor Cart</h5>
+                      <p>Browse 100% Pure Veg food menus from authorized campus canteens. Add items from multiple canteens in a single order.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>📅</span> Immediate vs Scheduled Orders</h5>
+                      <p>Place immediate food orders or schedule future refreshments for guest seminars and committee meetings in IST timezone.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🔍</span> Real-Time Order Tracking</h5>
+                      <p>Track live status: Pending Principal Review, DCR Verification, Kitchen Prep, Dispatched, and Completed.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🧾</span> Printable Bills & QR Verification</h5>
+                      <p>Download computerized GST invoices and scan secure anti-tamper QR verification codes.</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.manualTestBox}>
+                    <div className={styles.manualTestInfo}>
+                      <h6>🔑 Coordinator Demo Account</h6>
+                      <p>Nandini Mam (Diploma) · coord.diploma@aharsetu.edu.in / Coord@123</p>
+                    </div>
+                    <UiverseButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        fillDemo(QUICK_TEST_ACCOUNTS.find(a => a.role === 'coordinator' && a.department_id === 'diploma'));
+                        setShowManualModal(false);
+                      }}
+                    >
+                      Fill & Test Coordinator →
+                    </UiverseButton>
+                  </div>
+                </>
+              )}
+
+              {manualRoleTab === 'principal' && (
+                <>
+                  <div className={styles.manualActionCards}>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>📋</span> Departmental Approvals</h5>
+                      <p>Review requisitions submitted by department coordinators with item-by-item price breakdowns and stated purpose.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>💰</span> Budget Cap Monitoring</h5>
+                      <p>View real-time department spend against annual budget allocation before granting approval.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>⚡</span> 1-Click Decision with Remarks</h5>
+                      <p>Approve and forward to Administration, or reject with specific feedback for coordinators.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>📊</span> Department Order History</h5>
+                      <p>Audit historical logs of all departmental requisitions and download signed invoices.</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.manualTestBox}>
+                    <div className={styles.manualTestInfo}>
+                      <h6>🔑 Principal Demo Account</h6>
+                      <p>Pranav Sir (Diploma/Degree) · principal.dd@aharsetu.edu.in / Principal@123</p>
+                    </div>
+                    <UiverseButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        fillDemo(QUICK_TEST_ACCOUNTS.find(a => a.role === 'principal'));
+                        setShowManualModal(false);
+                      }}
+                    >
+                      Fill & Test Principal →
+                    </UiverseButton>
+                  </div>
+                </>
+              )}
+
+              {manualRoleTab === 'dcr' && (
+                <>
+                  <div className={styles.manualActionCards}>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🏛️</span> Institutional Verification</h5>
+                      <p>Final administrative authorization for departmental food expenditure across all university faculties.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>💳</span> Vendor Monthly Settlements</h5>
+                      <p>Track cumulative dues, record payments (NEFT/RTGS/Cheque), and generate monthly settlement vouchers.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>⚙️</span> Dynamic Department Budgets</h5>
+                      <p>Set and update annual budget caps and warning thresholds (e.g. 80%) for all academic departments.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>📈</span> Financial Auditing & CSV Export</h5>
+                      <p>Generate financial audit reports, analyze spending velocity, and export compliance logs.</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.manualTestBox}>
+                    <div className={styles.manualTestInfo}>
+                      <h6>🔑 Administration / DCR Demo Account</h6>
+                      <p>Neha Mam (DCR) · dcr@aharsetu.edu.in / DCR@123</p>
+                    </div>
+                    <UiverseButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        fillDemo(QUICK_TEST_ACCOUNTS.find(a => a.role === 'dcr'));
+                        setShowManualModal(false);
+                      }}
+                    >
+                      Fill & Test Administration →
+                    </UiverseButton>
+                  </div>
+                </>
+              )}
+
+              {manualRoleTab === 'vendor' && (
+                <>
+                  <div className={styles.manualActionCards}>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🛎️</span> Live Kitchen Order Stream</h5>
+                      <p>Receive incoming campus food requisitions in real-time with sound and visual alerts.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>✏️</span> Dish Modification Requests</h5>
+                      <p>Request item or quantity substitutions if stock is limited, seamlessly synchronized with coordinators.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🚀</span> Order Dispatch & Completion</h5>
+                      <p>Mark meals as prepared and dispatched for instant bill generation and verification.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>💵</span> Revenue & Settlement Ledger</h5>
+                      <p>Track total revenue, paid amounts, pending dues, and payment references per calendar month.</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.manualTestBox}>
+                    <div className={styles.manualTestInfo}>
+                      <h6>🔑 Canteen Vendor Demo Account</h6>
+                      <p>Gadhvi Bhai (Sharma Canteen) · vendor1@aharsetu.edu.in / Vendor@123</p>
+                    </div>
+                    <UiverseButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        fillDemo(QUICK_TEST_ACCOUNTS.find(a => a.role === 'vendor'));
+                        setShowManualModal(false);
+                      }}
+                    >
+                      Fill & Test Vendor →
+                    </UiverseButton>
+                  </div>
+                </>
+              )}
+
+              {manualRoleTab === 'admin' && (
+                <>
+                  <div className={styles.manualActionCards}>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>👥</span> User & Department Management</h5>
+                      <p>Provision and manage accounts for coordinators, principals, administrative auditors, and canteens.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>📊</span> Executive Reports & Analytics</h5>
+                      <p>Comprehensive institutional analytics on spending, vendor performance, and budget health.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🛡️</span> Security & Immutable Audit Trail</h5>
+                      <p>View system-wide security logs, authentication attempts, and order status transitions.</p>
+                    </div>
+                    <div className={styles.manualActionCard}>
+                      <h5><span>🏥</span> System Health & Telemetry</h5>
+                      <p>Live diagnostics on database connections, API latency, and application performance.</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.manualTestBox}>
+                    <div className={styles.manualTestInfo}>
+                      <h6>🔑 System Admin Demo Account</h6>
+                      <p>Vin Sir (Admin) · admin@aharsetu.edu.in / Admin@123</p>
+                    </div>
+                    <UiverseButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        fillDemo(QUICK_TEST_ACCOUNTS.find(a => a.role === 'admin'));
+                        setShowManualModal(false);
+                      }}
+                    >
+                      Fill & Test Admin →
+                    </UiverseButton>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--gray-200, rgba(255, 255, 255, 0.1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <Link href="/flyer" target="_blank" style={{ fontSize: '0.8rem', color: '#10B981', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                📄 Open Full Institutional Flyer & Printable Guidelines →
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowManualModal(false)}
+                className={styles.quickActionBtn}
+                style={{ padding: '6px 16px', background: 'var(--surface-2, rgba(255, 255, 255, 0.1))', border: '1px solid var(--gray-300, rgba(255, 255, 255, 0.2))', color: 'var(--gray-800, #F8FAFC)', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Close Guide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <PwaInstallPrompt />
     </div>

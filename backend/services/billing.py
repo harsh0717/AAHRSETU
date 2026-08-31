@@ -88,6 +88,8 @@ class BillingService:
                             "vendor": v_name
                         })
                         
+                sched_str = master.scheduled_for.strftime("%d %b %Y, %I:%M %p") if master.scheduled_for else None
+
                 # A. Generate Master Invoice PDF
                 master_inv_no = f"INV-{master.id}-MASTER"
                 master_pdf = generate_invoice_pdf(
@@ -100,7 +102,8 @@ class BillingService:
                     order_id=master.id,
                     items=all_items_data,
                     grand_total=master_total,
-                    approvals=approvals
+                    approvals=approvals,
+                    scheduled_for_str=sched_str
                 )
                 
                 # Create Master Bill record
@@ -142,7 +145,9 @@ class BillingService:
                         items=sub_items_data,
                         grand_total=sub_vo.bill_amount,
                         approvals=approvals,
-                        vendor_name=sub_vo.vendor.name if sub_vo.vendor else None
+                        vendor_name=sub_vo.vendor.name if sub_vo.vendor else None,
+                        vendor_owner_name=sub_vo.vendor.owner_name if sub_vo.vendor else None,
+                        scheduled_for_str=sched_str
                     )
                     
                     sub_bill = Bill(
@@ -222,10 +227,122 @@ class BillingService:
         if not master:
             return None
             
+        now = datetime.now(timezone.utc)
         master.status = "Completed"
-        master.updated_at = datetime.now(timezone.utc)
-        self.db.commit()
-        
+        master.billing_status = "SUCCESS"
+        master.updated_at = now
+        if not master.bill_generated_at:
+            master.bill_generated_at = now
+            
+        # Check if Bill records exist
+        existing_bills = self.db.query(Bill).filter(Bill.order_id == master.id).all()
+        if not existing_bills:
+            calculated_total = 0.0
+            dept_name = master.department.name if master.department else "General"
+            coord_name = master.created_by.name if master.created_by else "System Coordinator"
+            date_str = now.strftime("%Y-%m-%d %H:%M:%S")
+            
+            approvals = []
+            for h in master.history:
+                approvals.append({
+                    "role": h.role.upper(),
+                    "user": h.user.name if h.user else "System",
+                    "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                })
+                
+            all_items_data = []
+            for sub_vo in master.vendor_orders:
+                sub_vo_total = float(sub_vo.bill_amount or 0.0)
+                if sub_vo_total == 0.0 and sub_vo.items:
+                    sub_vo_total = sum(float(item.price or 0.0) * item.quantity for item in sub_vo.items)
+                    sub_vo.bill_amount = sub_vo_total
+                calculated_total += sub_vo_total
+                
+                v_name = sub_vo.vendor.name if sub_vo.vendor else "Unknown Vendor"
+                sub_items_data = []
+                for item in sub_vo.items:
+                    item_data = {
+                        "name": item.name,
+                        "quantity": item.quantity,
+                        "price": float(item.price or 0.0),
+                        "subtotal": float(item.price or 0.0) * item.quantity,
+                        "vendor": v_name
+                    }
+                    all_items_data.append(item_data)
+                    sub_items_data.append(item_data)
+                    
+                sub_inv_no = f"INV-{master.id}-{sub_vo.vendor_id.upper()}"
+                try:
+                    sub_pdf = generate_invoice_pdf(
+                        invoice_number=sub_inv_no,
+                        date_str=date_str,
+                        title=master.title,
+                        purpose=master.purpose,
+                        department=dept_name,
+                        coordinator_name=coord_name,
+                        order_id=master.id,
+                        items=sub_items_data,
+                        grand_total=sub_vo_total,
+                        approvals=approvals,
+                        vendor_name=v_name
+                    )
+                except Exception:
+                    sub_pdf = None
+                    
+                sub_bill = Bill(
+                    id=f"bill-{uuid.uuid4().hex[:8]}",
+                    invoice_number=sub_inv_no,
+                    order_id=master.id,
+                    vendor_id=sub_vo.vendor_id,
+                    department_id=master.department_id,
+                    amount=sub_vo_total,
+                    generated_at=now,
+                    status="PAID",
+                    pdf_data=sub_pdf,
+                    system_generated=True,
+                    settlement_status="PENDING_SETTLEMENT"
+                )
+                self.db.add(sub_bill)
+                
+                # Update vendor revenue
+                if sub_vo.vendor:
+                    sub_vo.vendor.revenue = float(sub_vo.vendor.revenue or 0.0) + sub_vo_total
+                    self.db.add(sub_vo.vendor)
+                    
+            if not master.total_bill_amount or master.total_bill_amount == 0.0:
+                master.total_bill_amount = calculated_total
+                
+            master_inv_no = f"INV-{master.id}-MASTER"
+            try:
+                master_pdf = generate_invoice_pdf(
+                    invoice_number=master_inv_no,
+                    date_str=date_str,
+                    title=master.title,
+                    purpose=master.purpose,
+                    department=dept_name,
+                    coordinator_name=coord_name,
+                    order_id=master.id,
+                    items=all_items_data,
+                    grand_total=master.total_bill_amount,
+                    approvals=approvals
+                )
+            except Exception:
+                master_pdf = None
+                
+            master_bill = Bill(
+                id=f"bill-{uuid.uuid4().hex[:8]}",
+                invoice_number=master_inv_no,
+                order_id=master.id,
+                vendor_id=None,
+                department_id=master.department_id,
+                amount=master.total_bill_amount,
+                generated_at=now,
+                status="PAID",
+                pdf_data=master_pdf,
+                system_generated=True
+            )
+            self.db.add(master_bill)
+
         self.order_repo.create_history_entry(
             ApprovalHistory(
                 master_order_id=master.id,
@@ -235,5 +352,6 @@ class BillingService:
                 remarks="Order marked as completed and closed"
             )
         )
-        
+        self.db.commit()
+        self.db.refresh(master)
         return master

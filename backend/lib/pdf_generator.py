@@ -16,7 +16,9 @@ def generate_invoice_pdf(
     items: list,  # list of {"name": str, "quantity": int, "price": float, "subtotal": float, "vendor": str}
     grand_total: float,
     approvals: list,  # list of {"role": str, "user": str, "timestamp": str}
-    vendor_name: str = None
+    vendor_name: str = None,
+    vendor_owner_name: str = None,
+    scheduled_for_str: str = None
 ) -> bytes:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -104,7 +106,7 @@ def generate_invoice_pdf(
     )
 
     # 1. Header (Brand spelling & title)
-    story.append(Paragraph("Aaharસેતુ (AaharSetu)", title_style))
+    story.append(Paragraph("Aaharसेतु (AaharSetu)", title_style))
     story.append(Paragraph("Connecting People Through Better Food.", subtitle_style))
 
     # 2. Metadata block
@@ -122,6 +124,17 @@ def generate_invoice_pdf(
             Paragraph("Type:", meta_label_style), Paragraph(f"{vendor_name} Split Invoice" if vendor_name else "Master Summary Invoice", meta_val_style)
         ]
     ]
+    if vendor_name:
+        meta_data.append([
+            Paragraph("Vendor:", meta_label_style), Paragraph(vendor_name, meta_val_style),
+            Paragraph("Vendor Owner:", meta_label_style), Paragraph(vendor_owner_name or "N/A", meta_val_style)
+        ])
+    if scheduled_for_str:
+        meta_data.append([
+            Paragraph("Order Type:", meta_label_style), Paragraph("SCHEDULED", meta_val_style),
+            Paragraph("Scheduled For:", meta_label_style), Paragraph(scheduled_for_str, meta_val_style)
+        ])
+
     meta_table = Table(meta_data, colWidths=[100, 160, 80, 180])
     meta_table.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
@@ -136,7 +149,7 @@ def generate_invoice_pdf(
     # 3. Order title and purpose
     story.append(Paragraph("Order Purpose & Description", section_title_style))
     story.append(Paragraph(f"<b>Title:</b> {title}", table_cell_style))
-    story.append(Paragraph(f"<b>Purpose:</b> {purpose}", table_cell_style))
+    story.append(Paragraph(f"<b>Order Purpose:</b> {purpose}", table_cell_style))
     story.append(Spacer(1, 15))
 
     # 4. Itemized List

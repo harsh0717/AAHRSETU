@@ -277,7 +277,6 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
               <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</th>
               <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role</th>
               <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Department Info</th>
-              <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Language</th>
               <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Status</th>
               <th style={{ padding: '12px 16px', color: 'var(--gray-600, #475569)', fontWeight: 800, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center' }}>Actions</th>
             </tr>
@@ -300,9 +299,6 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
                   {user.role === 'principal' && (user.principal_depts && user.principal_depts.length > 0 ? user.principal_depts.map(d => departments.find(x => x.id === d)?.name || d).join(', ') : 'All Departments')}
                   {user.role === 'vendor' && (vendors.find(v => v.id === user.vendor_id)?.name || 'All Canteens')}
                   {['admin','dcr'].includes(user.role) && '— Institutional —'}
-                </td>
-                <td style={{ padding: '12px 16px', fontSize: '0.78rem', textAlign: 'center', textTransform: 'uppercase', fontWeight: 700, color: 'var(--gray-500, #64748B)' }}>
-                  {user.preferred_language || 'en'}
                 </td>
                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                   <UiverseBadge variant={user.active ? 'success' : 'danger'} size="sm">
@@ -334,7 +330,7 @@ export default function UserManager({ accentColor = '#2563EB' }: UserManagerProp
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#94A3B8', fontWeight: 600 }}>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#94A3B8', fontWeight: 600 }}>
                   No users found matching query
                 </td>
               </tr>

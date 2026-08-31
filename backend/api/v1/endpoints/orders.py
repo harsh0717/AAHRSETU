@@ -87,7 +87,8 @@ def read_orders(
                     id=vo.id,
                     master_order_id=vo.master_order_id,
                     vendor_id=vo.vendor_id,
-                    vendor_name=vo.vendor.name,
+                    vendor_name=vo.vendor.name if vo.vendor else None,
+                    vendor_owner_name=vo.vendor.owner_name if vo.vendor else None,
                     status=vo.status,
                     bill_amount=display_vo_amount,
                     invoice_number=vo.invoice_number,
@@ -122,6 +123,9 @@ def read_orders(
                 status=o.status,
                 total_bill_amount=display_master_total,
                 bill_generated_at=o.bill_generated_at,
+                order_type=o.order_type or "IMMEDIATE",
+                scheduled_for=o.scheduled_for,
+                timezone=o.timezone or "Asia/Kolkata",
                 created_at=o.created_at,
                 updated_at=o.updated_at,
                 vendor_orders=vendor_orders_resp,
@@ -138,15 +142,11 @@ def verify_invoice(invoice_no: str, db: Session = Depends(get_db)) -> Any:
     """
     from backend.models.order import MasterOrder, VendorOrder
     
-    # 1. Try to find VendorOrder by explicit invoice_number column
-    v_order = db.query(VendorOrder).filter(VendorOrder.invoice_number == invoice_no).first()
-    
+    # Try direct invoice_number match first
+    vendor_order = db.query(VendorOrder).filter(VendorOrder.invoice_number == invoice_no).first()
     master_order = None
-    vendor_order = None
-    
-    if v_order:
-        vendor_order = v_order
-        master_order = v_order.master_order
+    if vendor_order:
+        master_order = vendor_order.master_order
     else:
         # Parse canonical patterns
         # Master: INV-ORD-XXX-MASTER
@@ -171,6 +171,7 @@ def verify_invoice(invoice_no: str, db: Session = Depends(get_db)) -> Any:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice/Order not found")
         
     items = []
+    vendor_owner_name = None
     if vendor_order:
         for item in vendor_order.items:
             items.append({
@@ -181,6 +182,7 @@ def verify_invoice(invoice_no: str, db: Session = Depends(get_db)) -> Any:
             })
         total_amount = vendor_order.bill_amount
         vendor_name = vendor_order.vendor.name if vendor_order.vendor else "Canteen Vendor"
+        vendor_owner_name = vendor_order.vendor.owner_name if vendor_order.vendor else None
     else:
         for vo in master_order.vendor_orders:
             for item in vo.items:
@@ -193,6 +195,8 @@ def verify_invoice(invoice_no: str, db: Session = Depends(get_db)) -> Any:
                 })
         total_amount = master_order.total_bill_amount
         vendor_name = "All Campus Canteens (Master Invoice)"
+        vendor_owner_names = [vo.vendor.owner_name for vo in master_order.vendor_orders if vo.vendor and vo.vendor.owner_name]
+        vendor_owner_name = ", ".join(vendor_owner_names) if vendor_owner_names else None
         
     return {
         "invoice_number": invoice_no,
@@ -201,8 +205,12 @@ def verify_invoice(invoice_no: str, db: Session = Depends(get_db)) -> Any:
         "purpose": master_order.purpose,
         "department_name": master_order.department.name if master_order.department else "General Department",
         "vendor_name": vendor_name,
+        "vendor_owner_name": vendor_owner_name,
         "total_amount": total_amount,
         "date": master_order.created_at.strftime("%d %b %Y"),
+        "order_type": master_order.order_type or "IMMEDIATE",
+        "scheduled_for": master_order.scheduled_for.isoformat() if master_order.scheduled_for else None,
+        "timezone": master_order.timezone or "Asia/Kolkata",
         "status": "GENUINE",
         "issuer": "AharSetu ERP Institutional Billing System",
         "items": items,
@@ -289,7 +297,8 @@ def read_order_by_id(
                 id=vo.id,
                 master_order_id=vo.master_order_id,
                 vendor_id=vo.vendor_id,
-                vendor_name=vo.vendor.name,
+                vendor_name=vo.vendor.name if vo.vendor else None,
+                vendor_owner_name=vo.vendor.owner_name if vo.vendor else None,
                 status=vo.status,
                 bill_amount=display_vo_amount,
                 invoice_number=vo.invoice_number,
@@ -323,6 +332,9 @@ def read_order_by_id(
         status=o.status,
         total_bill_amount=display_master_total,
         bill_generated_at=o.bill_generated_at,
+        order_type=o.order_type or "IMMEDIATE",
+        scheduled_for=o.scheduled_for,
+        timezone=o.timezone or "Asia/Kolkata",
         created_at=o.created_at,
         updated_at=o.updated_at,
         vendor_orders=vendor_orders_resp,
@@ -355,7 +367,10 @@ async def create_order(
             title=payload.title,
             purpose=payload.purpose,
             items_in=items_in,
-            department_id=payload.department_id
+            department_id=payload.department_id,
+            order_type=payload.order_type or "IMMEDIATE",
+            scheduled_for=payload.scheduled_for,
+            timezone_str=payload.timezone or "Asia/Kolkata"
         )
     except ValueError as e:
         raise HTTPException(
@@ -366,10 +381,14 @@ async def create_order(
     # Notify DCR or Principal immediately on creation
     try:
         notif_service = NotificationService(db)
+        is_scheduled = (order.order_type or "IMMEDIATE").upper() == "SCHEDULED"
+        sched_time_str = order.scheduled_for.strftime("%d %b %Y, %I:%M %p") if order.scheduled_for else ""
+        notif_title = f"{order.title} (Scheduled: {sched_time_str})" if (is_scheduled and sched_time_str) else order.title
+        
         if current_user.role == "principal":
             await notif_service.create_and_send_notification(
                 msg_key="order_submitted",
-                params={"title": order.title},
+                params={"title": notif_title},
                 msg_type="order_submitted",
                 recipient_role="dcr",
                 order_id=order.id
@@ -377,7 +396,7 @@ async def create_order(
         else:
             await notif_service.create_and_send_notification(
                 msg_key="new_order",
-                params={"dept": order.department.name if order.department else "Coordinator", "title": order.title},
+                params={"dept": order.department.name if order.department else "Coordinator", "title": notif_title},
                 msg_type="new_order",
                 recipient_role="principal",
                 order_id=order.id

@@ -144,9 +144,17 @@ export default function VerifyInvoicePage({ params }: { params: Promise<{ id: st
                 <span style={{ fontWeight: 800, color: '#2563EB' }}>{invoice.order_reference}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Purpose:</span>
-                <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)', textAlign: 'right' }}>{invoice.title} ({invoice.purpose})</span>
+                <span style={{ color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Order Purpose:</span>
+                <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)', textAlign: 'right' }}>{invoice.purpose || invoice.title}</span>
               </div>
+              {invoice.order_type === 'SCHEDULED' && invoice.scheduled_for && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Scheduled For:</span>
+                  <span style={{ fontWeight: 700, color: '#2563EB', textAlign: 'right' }}>
+                    {new Date(invoice.scheduled_for).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Department:</span>
                 <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{invoice.department_name}</span>
@@ -155,6 +163,12 @@ export default function VerifyInvoicePage({ params }: { params: Promise<{ id: st
                 <span style={{ color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Canteen Vendor:</span>
                 <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{invoice.vendor_name}</span>
               </div>
+              {invoice.vendor_owner_name && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Vendor Owner:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{invoice.vendor_owner_name}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--gray-500, #64748B)', fontWeight: 600 }}>Issued Date:</span>
                 <span style={{ fontWeight: 700, color: 'var(--gray-900, #0F172A)' }}>{invoice.date}</span>

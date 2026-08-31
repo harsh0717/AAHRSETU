@@ -49,6 +49,7 @@ class VendorOrderResponse(BaseModel):
     master_order_id: str
     vendor_id: str
     vendor_name: Optional[str] = None
+    vendor_owner_name: Optional[str] = None
     status: str
     bill_amount: float
     invoice_number: Optional[str] = None
@@ -91,6 +92,9 @@ class MasterOrderCreate(BaseModel):
     purpose: str
     items: List[OrderItemCreate] # contains menu_item_id + quantity
     department_id: Optional[str] = None
+    order_type: Optional[str] = "IMMEDIATE" # IMMEDIATE, SCHEDULED
+    scheduled_for: Optional[datetime] = None
+    timezone: Optional[str] = "Asia/Kolkata"
 
 
 class MasterOrderResponse(BaseModel):
@@ -104,6 +108,9 @@ class MasterOrderResponse(BaseModel):
     status: str
     total_bill_amount: float
     bill_generated_at: Optional[datetime] = None
+    order_type: Optional[str] = "IMMEDIATE"
+    scheduled_for: Optional[datetime] = None
+    timezone: Optional[str] = "Asia/Kolkata"
     created_at: datetime
     updated_at: datetime
     

@@ -147,6 +147,7 @@ def get_outstanding_settlements(
     if current_user.role == "vendor":
         query_bills = query_bills.filter(Bill.vendor_id == current_user.vendor_id)
     vendor_bills = query_bills.order_by(Bill.generated_at.asc()).all()
+    billed_order_keys = set()
     
     # 2. Fetch recorded payments
     query_payments = db.query(Payment).filter(Payment.status.in_(['SUCCESS', 'PENDING']))
@@ -194,6 +195,7 @@ def get_outstanding_settlements(
         amt = float(b.amount or 0.0)
         vendor_stats[v_id]['total_billed'] += amt
         vendor_stats[v_id]['total_bills_count'] += 1
+        billed_order_keys.add((b.order_id, b.vendor_id))
         
         if b.settlement_status == 'SETTLED':
             vendor_stats[v_id]['settled_bills_count'] += 1
@@ -216,6 +218,23 @@ def get_outstanding_settlements(
                 vendor_stats[v_id]['aging_31_60'] += amt
             else:
                 vendor_stats[v_id]['aging_over_60'] += amt
+
+    # Tally any completed vendor orders that don't have a Bill record yet
+    from backend.models.order import VendorOrder
+    query_completed = db.query(VendorOrder).filter(VendorOrder.status.in_(["Completed", "Vendor Confirmed"]))
+    if current_user.role == "vendor":
+        query_completed = query_completed.filter(VendorOrder.vendor_id == current_user.vendor_id)
+    completed_orders = query_completed.all()
+    for vo in completed_orders:
+        if vo.vendor_id and vo.bill_amount and vo.vendor_id in vendor_stats:
+            if (vo.master_order_id, vo.vendor_id) not in billed_order_keys:
+                amt = float(vo.bill_amount)
+                vendor_stats[vo.vendor_id]['total_billed'] += amt
+                vendor_stats[vo.vendor_id]['pending_billed'] += amt
+                vendor_stats[vo.vendor_id]['total_bills_count'] += 1
+                vendor_stats[vo.vendor_id]['pending_bills_count'] += 1
+                vendor_stats[vo.vendor_id]['aging_0_30'] += amt
+                billed_order_keys.add((vo.master_order_id, vo.vendor_id))
                 
     # Calculate recorded payments
     for p in payments:
@@ -326,24 +345,44 @@ def record_vendor_payment(
         created_by_id=current_user.id
     )
     db.add(payment)
+
+    # Reconcile pending bills for this vendor up to the paid amount
+    pending_bills = db.query(Bill).filter(
+        Bill.vendor_id == vendor.id,
+        Bill.settlement_status != 'SETTLED'
+    ).order_by(Bill.generated_at.asc()).all()
+
+    remaining_to_settle = float(payload.amount)
+    for pb in pending_bills:
+        if remaining_to_settle <= 0:
+            break
+        pb_amount = float(pb.amount or 0.0)
+        if pb_amount <= remaining_to_settle:
+            pb.settlement_status = "SETTLED"
+            if payload.settlement_id:
+                pb.settlement_id = payload.settlement_id
+            db.add(pb)
+            remaining_to_settle -= pb_amount
     
-    # Sync with VendorMonthlySettlement if settlement ID is linked
+    # Sync with VendorMonthlySettlement
+    month_str = f"{pay_date.year:04d}-{pay_date.month:02d}"
     if payload.settlement_id:
         settlement = db.query(Settlement).filter(Settlement.id == payload.settlement_id).first()
         if settlement:
             month_str = f"{settlement.year:04d}-{settlement.month:02d}"
-            vms = db.query(VendorMonthlySettlement).filter(
-                VendorMonthlySettlement.vendor_id == vendor.id,
-                VendorMonthlySettlement.month == month_str
-            ).first()
-            if vms:
-                vms.paid_amount = float(vms.paid_amount or 0.0) + payload.amount
-                vms.due_amount = max(0.0, float(vms.total_amount or 0.0) - vms.paid_amount)
-                if vms.due_amount <= 0:
-                    vms.status = "Settled"
-                else:
-                    vms.status = "Partially Settled"
-                db.add(vms)
+
+    vms = db.query(VendorMonthlySettlement).filter(
+        VendorMonthlySettlement.vendor_id == vendor.id,
+        VendorMonthlySettlement.month == month_str
+    ).first()
+    if vms:
+        vms.paid_amount = float(vms.paid_amount or 0.0) + payload.amount
+        vms.due_amount = max(0.0, float(vms.total_amount or 0.0) - vms.paid_amount)
+        if vms.due_amount <= 0:
+            vms.status = "Settled"
+        else:
+            vms.status = "Partially Settled"
+        db.add(vms)
                 
     db.commit()
     db.refresh(payment)

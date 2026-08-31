@@ -241,6 +241,28 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
     }
   }
 
+  const calculateVendorMonthTotal = useCallback((vId: string, monthStr: string) => {
+    let sum = 0;
+    for (const o of orders) {
+      const isCompleted = ['Completed', 'Vendor Confirmed', 'Bill Generated'].includes(o.status);
+      if (!isCompleted && o.status !== 'Completed') continue;
+      const dateStr = o.created_at || o.bill_generated_at || '';
+      if (dateStr.startsWith(monthStr)) {
+        for (const vo of (o.vendor_orders || [])) {
+          if (vo.vendor_id === vId) {
+            let voAmt = Number(vo.bill_amount || 0);
+            if (voAmt === 0 && Array.isArray(vo.items)) {
+              voAmt = vo.items.reduce((s: number, it: any) => s + (Number(it.price || 0) * Number(it.quantity || 1)), 0);
+            }
+            sum += voAmt;
+          }
+        }
+      }
+    }
+    const existing = settlements.find(s => s.vendor_id === vId && s.month === monthStr);
+    return Math.max(sum, Number(existing?.total_amount || 0));
+  }, [orders, settlements]);
+
   async function handleUpdateSettlementSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedSettlementVendor || !selectedSettlementMonth.trim()) {
@@ -1270,14 +1292,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                                       <button
                                         className={`${styles.quickActionBtn} ${styles.quickActionPrimary}`}
                                         style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                                        onClick={() => router.push(`/bill/${ord.id}`)}
+                                        onClick={() => window.open(`/bill/${ord.id}`, '_blank', 'noopener,noreferrer')}
                                       >
                                         📄 View Voucher
                                       </button>
                                       <button
                                         className={styles.quickActionBtn}
                                         style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                                        onClick={() => window.open(`/bill/${ord.id}`, '_blank')}
+                                        onClick={() => window.open(`/bill/${ord.id}`, '_blank', 'noopener,noreferrer')}
                                       >
                                         🖨️ Print
                                       </button>
@@ -1306,7 +1328,7 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                 {/* SUB-VIEW 2: MONTHLY VENDOR SETTLEMENTS */}
                 {billsSubTab === 'settlements' && (
                   <div className={styles.cardSection}>
-                    <div className={styles.sectionHeader}>
+                    <div className={styles.sectionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                       <div>
                         <div className={styles.sectionTitle}>
                           <AppIcon name="revenue" size={20} color="#10B981" />
@@ -1314,6 +1336,25 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                         </div>
                         <div className={styles.sectionSubtitle}>Track monthly billing disbursement cycles and pending payouts per food vendor</div>
                       </div>
+                      <UiverseButton
+                        variant="primary"
+                        onClick={() => {
+                          const defV = vendors[0]?.id || '';
+                          const defM = new Date().toISOString().slice(0, 7);
+                          setSelectedSettlementVendor(defV);
+                          setSelectedSettlementMonth(defM);
+                          const autoTot = calculateVendorMonthTotal(defV, defM);
+                          const existing = settlements.find(s => s.vendor_id === defV && s.month === defM);
+                          setSettlementTotalAmount(autoTot);
+                          setSettlementPaidAmount(existing?.paid_amount || 0);
+                          setShowSettlementModal(true);
+                        }}
+                      >
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <AppIcon name="plus" size={16} />
+                          <span>Record Settlement</span>
+                        </span>
+                      </UiverseButton>
                     </div>
 
                     <div className={styles.tableContainer}>
@@ -2115,7 +2156,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       className={styles.filterSelect}
                       style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={selectedSettlementVendor}
-                      onChange={e => setSelectedSettlementVendor(e.target.value)}
+                      onChange={e => {
+                        const newV = e.target.value;
+                        setSelectedSettlementVendor(newV);
+                        const autoTot = calculateVendorMonthTotal(newV, selectedSettlementMonth);
+                        const existing = settlements.find(s => s.vendor_id === newV && s.month === selectedSettlementMonth);
+                        setSettlementTotalAmount(autoTot);
+                        setSettlementPaidAmount(existing?.paid_amount || 0);
+                      }}
                       required
                     >
                       {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -2129,7 +2177,14 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       className={styles.filterSelect}
                       style={{ width: '100%', background: 'var(--surface-0)' }}
                       value={selectedSettlementMonth}
-                      onChange={e => setSelectedSettlementMonth(e.target.value)}
+                      onChange={e => {
+                        const newM = e.target.value;
+                        setSelectedSettlementMonth(newM);
+                        const autoTot = calculateVendorMonthTotal(selectedSettlementVendor, newM);
+                        const existing = settlements.find(s => s.vendor_id === selectedSettlementVendor && s.month === newM);
+                        setSettlementTotalAmount(autoTot);
+                        setSettlementPaidAmount(existing?.paid_amount || 0);
+                      }}
                       required
                     />
                   </div>
@@ -2145,6 +2200,9 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       onChange={e => setSettlementTotalAmount(parseFloat(e.target.value) || 0)}
                       required
                     />
+                    <div style={{ fontSize: '0.72rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                      Auto-calculated from all completed orders for this vendor in the billing month.
+                    </div>
                   </div>
 
                   <div>
@@ -2158,6 +2216,39 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                       onChange={e => setSettlementPaidAmount(parseFloat(e.target.value) || 0)}
                       required
                     />
+                  </div>
+
+                  {/* Real-time Financial Breakdown Summary */}
+                  <div style={{
+                    padding: '12px 14px',
+                    background: 'var(--surface-50, #F8FAFC)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--gray-200, #E2E8F0)',
+                    fontSize: '0.82rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <span style={{ color: 'var(--gray-600, #475569)' }}>Total Orders Billed:</span>
+                      <strong>₹{Number(settlementTotalAmount || 0).toLocaleString('en-IN')}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <span style={{ color: 'var(--gray-600, #475569)' }}>Amount Paid / Settled:</span>
+                      <strong style={{ color: '#059669' }}>₹{Number(settlementPaidAmount || 0).toLocaleString('en-IN')}</strong>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      borderTop: '1px dashed var(--gray-300, #CBD5E1)',
+                      paddingTop: '6px',
+                      marginTop: '4px'
+                    }}>
+                      <span style={{ fontWeight: 700, color: 'var(--gray-800, #1E293B)' }}>Calculated Due Remaining:</span>
+                      <strong style={{
+                        color: (settlementTotalAmount - settlementPaidAmount) > 0 ? '#DC2626' : '#059669',
+                        fontWeight: 800
+                      }}>
+                        ₹{Math.max(0, settlementTotalAmount - settlementPaidAmount).toLocaleString('en-IN')}
+                      </strong>
+                    </div>
                   </div>
                 </div>
                 <div className={styles.modalFooter}>

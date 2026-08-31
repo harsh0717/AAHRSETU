@@ -4,7 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getSession, getUsers, getSavedUsers, initializeApplication, UserProfile } from '@/lib/auth';
 import { getOrderById, MasterOrder, VendorOrder, OrderItem } from '@/lib/store';
-import { getMenuItemName } from '@/lib/vendors';
+import { getMenuItemName, getVendors, Vendor } from '@/lib/vendors';
 import { COLLEGE_INFO } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 
@@ -34,6 +34,7 @@ export default function BillPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [loadError, setLoadError] = useState('');
   const [savedUsers, setSavedUsers] = useState<UserProfile[]>([]);
+  const [vendorsList, setVendorsList] = useState<Vendor[]>([]);
 
   const loadOrderRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
@@ -72,6 +73,10 @@ export default function BillPage() {
       if (users && users.length > 0) setSavedUsers(users);
     }).catch(() => {});
 
+    getVendors().then(v => {
+      if (v && v.length > 0) setVendorsList(v);
+    }).catch(() => {});
+
     loadOrder();
 
     // Cross-device sync: poll every 10 seconds silently
@@ -84,14 +89,20 @@ export default function BillPage() {
       getUsers().then(users => {
         if (users && users.length > 0) setSavedUsers(users);
       }).catch(() => setSavedUsers(getSavedUsers()));
+      getVendors().then(v => {
+        if (v && v.length > 0) setVendorsList(v);
+      }).catch(() => {});
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_custom_users') {
+      if (e.key === 'aharsetu_orders_v3' || e.key === 'aharsetu_notifications_v3.7' || e.key === 'aharsetu_custom_users' || e.key === 'aharsetu_vendors_v3') {
         loadOrderRef.current?.(true);
         getUsers().then(users => {
           if (users && users.length > 0) setSavedUsers(users);
         }).catch(() => setSavedUsers(getSavedUsers()));
+        getVendors().then(v => {
+          if (v && v.length > 0) setVendorsList(v);
+        }).catch(() => {});
       }
     };
 
@@ -121,6 +132,27 @@ export default function BillPage() {
     if (selectedVendorId === 'master') return null;
     return allVendorOrders.find(vo => vo?.vendor_id === selectedVendorId) ?? null;
   }, [selectedVendorId, allVendorOrders]);
+
+  const currentVendor = useMemo(() => {
+    if (!selectedVO) return null;
+    return vendorsList.find(v => v.id === selectedVO.vendor_id) || null;
+  }, [selectedVO, vendorsList]);
+
+  const vendorOwnerName = useMemo(() => {
+    if (selectedVO) {
+      return selectedVO.vendor_owner_name || currentVendor?.owner_name || 'Authorized Canteen Manager';
+    }
+    const owners = Array.from(new Set(allVendorOrders.map(vo => vo.vendor_owner_name || vendorsList.find(v => v.id === vo.vendor_id)?.owner_name).filter(Boolean)));
+    return owners.length > 0 ? owners.join(', ') : 'Authorized Canteen Managers';
+  }, [selectedVO, currentVendor, allVendorOrders, vendorsList]);
+
+  const vendorDisplayName = useMemo(() => {
+    if (selectedVO) {
+      return selectedVO.vendor_name || currentVendor?.name || 'Canteen';
+    }
+    const names = Array.from(new Set(allVendorOrders.map(vo => vo.vendor_name || vendorsList.find(v => v.id === vo.vendor_id)?.name || 'Canteen')));
+    return names.length > 0 ? names.join(', ') : 'All Campus Canteens';
+  }, [selectedVO, currentVendor, allVendorOrders, vendorsList]);
 
   const invoiceNo = useMemo(() => {
     if (!order) return '';
@@ -220,31 +252,52 @@ export default function BillPage() {
       doc.text(COLLEGE_INFO.address, 105, 25, { align: 'center' });
       doc.text(`Email: ${COLLEGE_INFO.email} | Contact: ${COLLEGE_INFO.phone}`, 105, 30, { align: 'center' });
 
-      // Decorative line
-      doc.setDrawColor(79, 70, 229);
-      doc.setLineWidth(0.8);
-      doc.line(10, 35, 200, 35);
+      doc.setDrawColor(37, 99, 235);
+      doc.setLineWidth(0.5);
+      doc.line(10, 34, 200, 34);
 
-      // Invoice Title
-      doc.setTextColor(79, 70, 229);
+      // Bill Title
       doc.setFont('Helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.text(title.toUpperCase(), 10, 44);
+      doc.setFontSize(12);
+      doc.setTextColor(37, 99, 235);
+      doc.text(title.toUpperCase(), 10, 42);
 
-      // Metadata
+      // Metadata Left Column
+      doc.setFontSize(8.5);
       doc.setTextColor(82, 82, 91);
-      doc.setFont('Helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.text(`Invoice No: ${invoiceNo}`, 10, 52);
-      doc.text(`Order Ref ID: ${order.id}`, 10, 58);
-      doc.text(`Date: ${new Date(order.bill_generated_at || order.updated_at || order.created_at).toLocaleDateString('en-IN')}`, 10, 64);
-      doc.text(`Department: ${order.department_label || 'All'}`, 10, 70);
-      doc.text(`Coordinator: ${order.created_by_name || 'N/A'}`, 90, 52);
+      doc.setFont('Helvetica', 'bold');
+      doc.text('Invoice No:', 10, 49);
+      doc.text('Order Ref:', 10, 55);
+      doc.text('Order Purpose:', 10, 61);
+      doc.text('Vendor:', 10, 67);
+      doc.text('Vendor Owner:', 10, 73);
 
-      const principalApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'principal') : null;
-      const dcrApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'dcr') : null;
-      doc.text(`Principal: ${principalApproval?.user_name || 'Verified'}`, 90, 58);
-      doc.text(`DCR Audit: ${dcrApproval?.user_name || 'Verified'}`, 90, 64);
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(24, 24, 38);
+      doc.text(String(invoiceNo), 40, 49);
+      doc.text(String(order.id), 40, 55);
+      doc.text(String(order.purpose || 'Institutional Requisition').substring(0, 40), 40, 61);
+      doc.text(String(vendorDisplayName).substring(0, 35), 40, 67);
+      doc.text(String(vendorOwnerName).substring(0, 35), 40, 73);
+
+      // Metadata Right Column
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(82, 82, 91);
+      doc.text('Date:', 105, 49);
+      doc.text('Department:', 105, 55);
+      doc.text('Coordinator:', 105, 61);
+      if (order.order_type === 'SCHEDULED' && order.scheduled_for) {
+        doc.text('Scheduled:', 105, 67);
+      }
+
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(24, 24, 38);
+      doc.text(new Date(order.bill_generated_at || order.updated_at || order.created_at).toLocaleDateString('en-IN'), 130, 49);
+      doc.text(String(order.department_label || 'All Departments').substring(0, 30), 130, 55);
+      doc.text(String(order.created_by_name || 'N/A').substring(0, 30), 130, 61);
+      if (order.order_type === 'SCHEDULED' && order.scheduled_for) {
+        doc.text(new Date(order.scheduled_for).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }), 130, 67);
+      }
 
       // QR Code
       if (qrPngUrl && qrPngUrl.startsWith('data:image/')) {
@@ -316,6 +369,8 @@ export default function BillPage() {
       doc.setFont('Helvetica', 'normal');
       doc.setFontSize(8.5);
       doc.text(`- Coordinator Submitted: ${new Date(order.created_at).toLocaleString('en-IN')}`, 12, y + 10);
+      const principalApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'principal') : null;
+      const dcrApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'dcr' || h.role === 'administration') : null;
       if (principalApproval) doc.text(`- Principal Approved: ${new Date(principalApproval.timestamp).toLocaleString('en-IN')}`, 12, y + 15);
       if (dcrApproval) doc.text(`- DCR Audited: ${new Date(dcrApproval.timestamp).toLocaleString('en-IN')}`, 12, y + 20);
 
@@ -382,7 +437,7 @@ export default function BillPage() {
 
   const roleBackLink = session.role === 'vendor' ? '/vendor' : (session.role === 'admin' ? '/admin' : '/order/' + order.id);
   const principalApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'principal') : null;
-  const dcrApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'dcr') : null;
+  const dcrApproval = Array.isArray(order.history) ? order.history.find(h => h.role === 'dcr' || h.role === 'administration') : null;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--surface-1, #FAFAF9)', padding: '16px 12px', fontFamily: 'var(--font-sans)', transition: 'background 0.2s' }}>
@@ -508,14 +563,25 @@ export default function BillPage() {
                 {[
                   ['Invoice No:', invoiceNo],
                   ['Order Ref:', order.id],
+                  ['Order Purpose:', order.purpose || 'Official Institutional Event'],
+                  ...(order.order_type === 'SCHEDULED' && order.scheduled_for ? [
+                    ['Scheduled For:', `${new Date(order.scheduled_for).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at ${new Date(order.scheduled_for).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} (IST)`]
+                  ] : []),
                   ['Date:', new Date(order.bill_generated_at || order.updated_at || order.created_at).toLocaleDateString('en-IN')],
                   ['Department:', order.department_label || 'All Departments'],
                   ['Coordinator:', order.created_by_name || 'N/A'],
+                  ...(selectedVO ? [
+                    ['Vendor:', vendorDisplayName],
+                    ['Vendor Owner:', vendorOwnerName]
+                  ] : [
+                    ['Vendors:', vendorDisplayName],
+                    ['Vendor Owners:', vendorOwnerName]
+                  ]),
                   ['Principal:', principalApproval ? `Approved by ${principalApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'principal')?.name || 'Principal'}`],
-                  ['DCR Audit:', dcrApproval ? `Approved by ${dcrApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'dcr')?.name || 'DCR Auditor'}`],
+                  ['DCR Audit:', dcrApproval ? `Approved by ${dcrApproval.user_name}` : `Approved by ${savedUsers.find(u => u.role === 'dcr' || u.role === 'administration')?.name || 'DCR Auditor'}`],
                 ].map(([label, value]) => (
                   <div key={label} style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', borderBottom: '1px dashed var(--gray-100)', paddingBottom: '4px' }}>
-                    <span style={{ color: 'var(--gray-500)', fontWeight: 600, minWidth: '95px', flexShrink: 0 }}>{label}</span>
+                    <span style={{ color: 'var(--gray-500)', fontWeight: 600, minWidth: '105px', flexShrink: 0 }}>{label}</span>
                     <span style={{ fontWeight: 700, color: 'var(--gray-900)', flex: 1, minWidth: '140px', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{value}</span>
                   </div>
                 ))}

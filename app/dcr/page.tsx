@@ -915,6 +915,8 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                         </p>
                         <Link
                           href={`/bill/${o.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           style={{
                             display: 'block',
                             textAlign: 'center',
@@ -958,7 +960,7 @@ export default function DCRDashboardPage({ initialTab = 'dashboard' }: { initial
                             <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
                             <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
                             <td style={{ textAlign: 'center' }}>
-                              <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
+                              <Link href={`/bill/${o.id}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
                                 🧾 Print Bill
                               </Link>
                             </td>

@@ -40,6 +40,9 @@ try:
             db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;"))
             db.execute(text("ALTER TABLE vendors ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
             db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS billing_status VARCHAR(50);"))
+            db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS order_type VARCHAR(50) DEFAULT 'IMMEDIATE';"))
+            db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMP WITH TIME ZONE;"))
+            db.execute(text("ALTER TABLE master_orders ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) DEFAULT 'Asia/Kolkata';"))
             db.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS route VARCHAR(250);"))
             db.execute(text("ALTER TABLE bills ADD COLUMN IF NOT EXISTS settlement_status VARCHAR(50) DEFAULT 'PENDING_SETTLEMENT';"))
             db.execute(text("ALTER TABLE bills ADD COLUMN IF NOT EXISTS settlement_id INTEGER;"))
@@ -59,6 +62,7 @@ try:
                 "CREATE INDEX IF NOT EXISTS idx_master_orders_dept_id ON master_orders(department_id);",
                 "CREATE INDEX IF NOT EXISTS idx_master_orders_created_by ON master_orders(created_by_id);",
                 "CREATE INDEX IF NOT EXISTS idx_master_orders_created_at ON master_orders(created_at DESC);",
+                "CREATE INDEX IF NOT EXISTS idx_master_orders_scheduled_for ON master_orders(scheduled_for);",
                 "CREATE INDEX IF NOT EXISTS idx_vendor_orders_master_id ON vendor_orders(master_order_id);",
                 "CREATE INDEX IF NOT EXISTS idx_vendor_orders_vendor_id ON vendor_orders(vendor_id);",
                 "CREATE INDEX IF NOT EXISTS idx_vendor_orders_status ON vendor_orders(status);",
@@ -91,6 +95,9 @@ try:
                 "ALTER TABLE vendors ADD COLUMN active BOOLEAN DEFAULT TRUE;",
                 "ALTER TABLE vendors ADD COLUMN image_url VARCHAR(500);",
                 "ALTER TABLE master_orders ADD COLUMN billing_status VARCHAR(50);",
+                "ALTER TABLE master_orders ADD COLUMN order_type VARCHAR(50) DEFAULT 'IMMEDIATE';",
+                "ALTER TABLE master_orders ADD COLUMN scheduled_for TIMESTAMP;",
+                "ALTER TABLE master_orders ADD COLUMN timezone VARCHAR(50) DEFAULT 'Asia/Kolkata';",
                 "ALTER TABLE notifications ADD COLUMN route VARCHAR(250);",
                 "ALTER TABLE bills ADD COLUMN settlement_status VARCHAR(50) DEFAULT 'PENDING_SETTLEMENT';",
                 "ALTER TABLE bills ADD COLUMN settlement_id INTEGER;",

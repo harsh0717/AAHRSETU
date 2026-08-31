@@ -252,6 +252,10 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
     return myVO && myVO.modification !== null;
   });
 
+  const scheduledOrders = vendorOrdersList
+    .filter(o => o.order_type === 'SCHEDULED' && o.scheduled_for)
+    .sort((a, b) => new Date(a.scheduled_for!).getTime() - new Date(b.scheduled_for!).getTime());
+
   const ordersWithBills = vendorOrdersList.filter(o => ['Bill Generated', 'Completed'].includes(o.status));
 
   // Compute stats
@@ -975,6 +979,104 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
               </div>
             )}
 
+            {/* TAB: SCHEDULED ORDERS */}
+            {activeTab === 'scheduled' && (
+              <div className="card" style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0 }}>📅 Scheduled Future Orders Queue</h3>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '4px 10px', borderRadius: '999px' }}>
+                    {scheduledOrders.length} Scheduled
+                  </span>
+                </div>
+
+                {isMobileDevice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {scheduledOrders.map(o => {
+                      const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                      if (!myVO) return null;
+                      return (
+                        <div key={o.id} style={{ border: '1.5px solid #BFDBFE', padding: '16px', borderRadius: '16px', background: '#F8FAFC', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#2563EB' }}>{o.id}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#EFF6FF', color: '#1D4ED8', padding: '2px 8px', borderRadius: '6px' }}>
+                              ⏰ {new Date(o.scheduled_for!).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                          </div>
+                          <h4 style={{ margin: '0 0 6px 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--gray-800)' }}>{o.title}</h4>
+                          <p style={{ margin: '0 0 8px 0', fontSize: '0.78rem', color: 'var(--gray-500)' }}>Purpose: {o.purpose}</p>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--gray-200)' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--gray-600)' }}>Items: {myVO.items.length} dishes</span>
+                            <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#2563EB' }}>₹{myVO.bill_amount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {scheduledOrders.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>
+                        No scheduled orders queued.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Title & Purpose</th>
+                          <th>Department</th>
+                          <th>Scheduled Fulfillment (IST)</th>
+                          <th>Dishes</th>
+                          <th style={{ textAlign: 'right' }}>Your Amount</th>
+                          <th style={{ textAlign: 'center' }}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scheduledOrders.map(o => {
+                          const myVO = o.vendor_orders.find(vo => vo.vendor_id === vendorId);
+                          if (!myVO) return null;
+                          return (
+                            <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
+                              <td style={{ fontWeight: 700, color: '#2563EB' }}>{o.id}</td>
+                              <td>
+                                <div style={{ fontWeight: 600 }}>{o.title}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>{o.purpose}</div>
+                              </td>
+                              <td>{o.department_label}</td>
+                              <td>
+                                <span style={{ background: '#EFF6FF', color: '#1D4ED8', padding: '4px 8px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700 }}>
+                                  📅 {new Date(o.scheduled_for!).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                                </span>
+                              </td>
+                              <td>{myVO.items.length} items</td>
+                              <td style={{ textAlign: 'right', fontWeight: 800, color: '#2563EB' }}>₹{myVO.bill_amount.toFixed(2)}</td>
+                              <td style={{ textAlign: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); router.push(`/order/${o.id}`); }}
+                                  className="btn btn-ghost btn-sm"
+                                  style={{ color: '#2563EB', fontWeight: 700 }}
+                                >
+                                  View Details
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {scheduledOrders.length === 0 && (
+                          <tr>
+                            <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                              No future scheduled orders in your queue.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* TAB: COMPLETED ORDERS */}
             {activeTab === 'completed' && (
               <div className="card" style={{ padding: '20px' }}>
@@ -1585,6 +1687,8 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                           </p>
                           <Link
                             href={`/bill/${o.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             style={{
                               display: 'block',
                               textAlign: 'center',
@@ -1631,7 +1735,7 @@ export default function VendorDashboardPage({ initialTab = 'dashboard' }: { init
                               <td style={{ fontSize: '0.8rem' }}>{o.bill_generated_at ? new Date(o.bill_generated_at).toLocaleDateString('en-IN') : new Date(o.created_at).toLocaleDateString('en-IN')}</td>
                               <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{myVO ? myVO.bill_amount.toFixed(2) : '0.00'}</td>
                               <td style={{ textAlign: 'center' }}>
-                                <Link href={`/bill/${o.id}`} className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
+                                <Link href={`/bill/${o.id}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ color: colors.accent, fontWeight: 700 }}>
                                   🧾 Print Bill
                                 </Link>
                               </td>

@@ -304,7 +304,7 @@ export default function OrderDetailsPage() {
               </button>
             )}
             {order.status === 'Completed' && (
-              <Link href={`/bill/${order.id}`} className="btn btn-primary" style={{ padding: '8px 18px', borderRadius: '10px' }}>
+              <Link href={`/bill/${order.id}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '8px 18px', borderRadius: '10px' }}>
                 🧾 View Printable A4 Bill
               </Link>
             )}

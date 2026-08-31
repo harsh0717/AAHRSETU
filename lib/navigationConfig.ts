@@ -67,6 +67,7 @@ export const NAVIGATION_CONFIG: Record<string, NavItem[]> = {
     { id: 'dashboard',    labelKey: 'nav.dashboard',        href: '/vendor',                      icon: 'dashboard', role: 'vendor' },
     { id: 'incoming',     labelKey: 'nav.incoming_orders',  href: '/vendor/orders/incoming',      icon: 'incoming', role: 'vendor' },
     { id: 'active',       labelKey: 'nav.active_orders',    href: '/vendor/orders/active',        icon: 'active', role: 'vendor' },
+    { id: 'scheduled',    labelKey: 'nav.scheduled_orders', href: '/vendor/orders/scheduled',     icon: 'clock', role: 'vendor' },
     { id: 'completed',    labelKey: 'nav.completed_orders', href: '/vendor/orders/completed',     icon: 'completed', role: 'vendor' },
     { id: 'modifications',labelKey: 'nav.mod_requests',     href: '/vendor/modifications',        icon: 'modifications', role: 'vendor' },
     { id: 'menu',         labelKey: 'nav.menu_mgmt',        href: '/vendor/menu',                 icon: 'menu', role: 'vendor' },

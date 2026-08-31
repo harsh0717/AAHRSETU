@@ -18,6 +18,7 @@ export interface VendorOrder {
   master_order_id: string;
   vendor_id: string;
   vendor_name?: string;
+  vendor_owner_name?: string | null;
   status: string;
   bill_amount: number;
   invoice_number: string | null;
@@ -55,6 +56,9 @@ export interface MasterOrder {
   status: string;
   total_bill_amount: number;
   bill_generated_at: string | null;
+  order_type?: 'IMMEDIATE' | 'SCHEDULED';
+  scheduled_for?: string | null;
+  timezone?: string;
   created_at: string;
   updated_at: string;
   vendor_orders: VendorOrder[];
@@ -212,6 +216,9 @@ export async function createMasterOrder(orderData: {
   purpose: string;
   items: { menu_item_id: string; quantity: number }[];
   department_id?: string;
+  order_type?: 'IMMEDIATE' | 'SCHEDULED';
+  scheduled_for?: string | null;
+  timezone?: string;
 }): Promise<MasterOrder> {
   const session = getSession();
 
@@ -309,6 +316,9 @@ export async function createMasterOrder(orderData: {
     status: initialStatus,
     total_bill_amount: totalCalculated,
     bill_generated_at: null,
+    order_type: orderData.order_type || 'IMMEDIATE',
+    scheduled_for: orderData.scheduled_for || null,
+    timezone: orderData.timezone || 'Asia/Kolkata',
     created_at: now,
     updated_at: now,
     vendor_orders: vendorOrdersSnapshot,
@@ -327,7 +337,10 @@ export async function createMasterOrder(orderData: {
         quantity: it.quantity,
         name: getMenuItemName(it.menu_item_id)
       })),
-      department_id: orderData.department_id || deptId
+      department_id: orderData.department_id || deptId,
+      order_type: orderData.order_type || 'IMMEDIATE',
+      scheduled_for: orderData.scheduled_for || null,
+      timezone: orderData.timezone || 'Asia/Kolkata'
     });
     if (res) {
       let finalOrder = res;

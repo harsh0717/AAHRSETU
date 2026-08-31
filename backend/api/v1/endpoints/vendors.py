@@ -608,6 +608,7 @@ def sync_monthly_settlements(db: Session):
     bills = db.query(Bill).all()
     billed_by_vendor_month = defaultdict(float)
     settled_billed_by_vendor_month = defaultdict(float)
+    billed_order_keys = set()
     
     for b in bills:
         if b.vendor_id and b.amount:
@@ -615,6 +616,7 @@ def sync_monthly_settlements(db: Session):
             m_str = f"{dt.year:04d}-{dt.month:02d}"
             amt = float(b.amount)
             billed_by_vendor_month[(b.vendor_id, m_str)] += amt
+            billed_order_keys.add((b.order_id, b.vendor_id))
             if b.settlement_status == 'SETTLED':
                 settled_billed_by_vendor_month[(b.vendor_id, m_str)] += amt
             
@@ -622,11 +624,12 @@ def sync_monthly_settlements(db: Session):
     completed_orders = db.query(VendorOrder).filter(VendorOrder.status.in_(["Completed", "Vendor Confirmed"])).all()
     for vo in completed_orders:
         if vo.vendor_id and vo.bill_amount:
-            dt = vo.updated_at or now
-            m_str = f"{dt.year:04d}-{dt.month:02d}"
-            # If no bill exists for this order/vendor in the tally, account for it
-            if billed_by_vendor_month[(vo.vendor_id, m_str)] == 0:
+            # Check if this specific vendor order was already counted from Bills table
+            if (vo.master_order_id, vo.vendor_id) not in billed_order_keys:
+                dt = vo.updated_at or now
+                m_str = f"{dt.year:04d}-{dt.month:02d}"
                 billed_by_vendor_month[(vo.vendor_id, m_str)] += float(vo.bill_amount)
+                billed_order_keys.add((vo.master_order_id, vo.vendor_id))
                 
     # 3. Tally payments from Payment table
     payments = db.query(Payment).filter(Payment.status == "SUCCESS").all()
@@ -721,30 +724,33 @@ def update_monthly_settlement(
     Update or record monthly settlement payment and outstanding dues (Admin/DCR).
     Saves directly to persistent database.
     """
+    sync_monthly_settlements(db)
     s = db.query(VendorMonthlySettlement).filter(
         VendorMonthlySettlement.vendor_id == payload.vendor_id,
         VendorMonthlySettlement.month == payload.month
     ).first()
     
+    target_total = max(float(payload.total_amount or 0.0), float(s.total_amount or 0.0) if s else 0.0)
+    target_paid = float(payload.paid_amount or 0.0)
+    due_amt = max(0.0, target_total - target_paid)
+    status_str = "Settled" if due_amt <= 0.0 and target_total > 0 else ("Partially Settled" if target_paid > 0 else "Pending")
+    if target_total == 0 and target_paid == 0:
+        status_str = "Settled"
+    
     if not s:
         s = VendorMonthlySettlement(
             vendor_id=payload.vendor_id,
             month=payload.month,
-            total_amount=payload.total_amount,
-            paid_amount=payload.paid_amount,
-            due_amount=max(0.0, payload.total_amount - payload.paid_amount)
+            total_amount=target_total,
+            paid_amount=target_paid,
+            due_amount=due_amt,
+            status=status_str
         )
     else:
-        s.total_amount = payload.total_amount
-        s.paid_amount = payload.paid_amount
-        s.due_amount = max(0.0, payload.total_amount - payload.paid_amount)
-        
-    if s.due_amount <= 0.0:
-        s.status = "Settled"
-    elif s.paid_amount > 0.0:
-        s.status = "Partially Settled"
-    else:
-        s.status = "Pending"
+        s.total_amount = target_total
+        s.paid_amount = target_paid
+        s.due_amount = due_amt
+        s.status = status_str
         
     db.add(s)
     db.commit()
@@ -758,7 +764,7 @@ def update_monthly_settlement(
         role=current_user.role,
         department="Settlements",
         action="Vendor Settlement Updated",
-        new_value=f"Vendor: {payload.vendor_id}, Month: {payload.month}, Total: {payload.total_amount}, Paid: {payload.paid_amount}"
+        new_value=f"Vendor: {payload.vendor_id}, Month: {payload.month}, Total: {s.total_amount}, Paid: {s.paid_amount}, Due: {s.due_amount}"
     )
     
     vendor = db.query(Vendor).filter(Vendor.id == s.vendor_id).first()

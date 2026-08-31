@@ -23,11 +23,24 @@ class OrderService:
         title: str,
         purpose: str,
         items_in: List[Dict[str, Any]],
-        department_id: Optional[str] = None
+        department_id: Optional[str] = None,
+        order_type: str = "IMMEDIATE",
+        scheduled_for: Optional[datetime] = None,
+        timezone_str: str = "Asia/Kolkata"
     ) -> MasterOrder:
         now = datetime.now(timezone.utc)
         order_id = f"ORD-{int(now.timestamp()) % 1000000:06d}"
         
+        # Validate scheduling
+        is_scheduled = (order_type or "IMMEDIATE").upper() == "SCHEDULED"
+        if is_scheduled:
+            if not scheduled_for:
+                raise ValueError("Scheduled date and time are required for scheduled orders.")
+            # Ensure scheduled_for is timezone-aware for comparison
+            sched_dt = scheduled_for if scheduled_for.tzinfo else scheduled_for.replace(tzinfo=timezone.utc)
+            if sched_dt <= now:
+                raise ValueError("Scheduled order fulfillment time must be in the future.")
+
         # Resolve department info
         dept_id = department_id or creator.department_id
         dept = self.user_repo.get_department_by_id(dept_id) if dept_id else None
@@ -38,6 +51,8 @@ class OrderService:
         for item in items_in:
             menu_item_id = item["menu_item_id"]
             quantity = item["quantity"]
+            if quantity <= 0:
+                continue
 
             # Direct query — VendorMenuItem has a vendor back-reference
             db_menu_item = self.db.query(VendorMenuItem).filter(
@@ -52,8 +67,11 @@ class OrderService:
             vendor = None
             if db_menu_item and db_menu_item.vendor:
                 vendor = db_menu_item.vendor
+                # Availability validation
+                if db_menu_item.available is False or db_menu_item.active is False:
+                    raise ValueError(f"'{db_menu_item.name}' is currently unavailable.")
                 item_name = db_menu_item.name
-                item_price = db_menu_item.price
+                item_price = float(db_menu_item.price or 0.0)
                 item_unit = db_menu_item.unit
                 item_id = db_menu_item.id
             else:
@@ -68,7 +86,7 @@ class OrderService:
                 if not vendor:
                     vendor = self.db.query(Vendor).first()
                 item_name = item.get("name") or str(menu_item_id)
-                item_price = item.get("price") or 15.0
+                item_price = float(item.get("price") or 15.0)
                 item_unit = item.get("unit") or "per serving"
                 item_id = menu_item_id
 
@@ -84,6 +102,9 @@ class OrderService:
                 "unit": item_unit,
                 "menu_item_id": item_id
             })
+
+        if not by_vendor:
+            raise ValueError("Requisition must contain at least one valid item.")
             
         initial_status = "Principal Approved" if creator.role == "principal" else "Sent for Approval"
         
@@ -94,7 +115,10 @@ class OrderService:
             department_id=dept_id,
             created_by_id=creator.id,
             status=initial_status,
-            total_bill_amount=0.0
+            total_bill_amount=0.0,
+            order_type="SCHEDULED" if is_scheduled else "IMMEDIATE",
+            scheduled_for=scheduled_for if is_scheduled else None,
+            timezone=timezone_str or "Asia/Kolkata"
         )
         self.order_repo.create(master_order)
         

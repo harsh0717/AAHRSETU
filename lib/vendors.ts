@@ -567,6 +567,80 @@ function saveLocalSettlements(list: VendorMonthlySettlement[]) {
   localStorage.setItem(LOCAL_SETTLEMENTS_KEY, next);
 }
 
+function syncLocalMonthlySettlements(): VendorMonthlySettlement[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const rawSettlements = localStorage.getItem(LOCAL_SETTLEMENTS_KEY);
+    const existingList: VendorMonthlySettlement[] = rawSettlements ? JSON.parse(rawSettlements) : [];
+    const settlementMap = new Map<string, VendorMonthlySettlement>();
+    for (const s of existingList) {
+      if (s.vendor_id && s.month) {
+        settlementMap.set(`${s.vendor_id}_${s.month}`, { ...s });
+      }
+    }
+
+    // Tally orders from local storage
+    const rawOrders = localStorage.getItem('aharsetu_orders_v5');
+    const orders = rawOrders ? JSON.parse(rawOrders) : [];
+    const billedByVendorMonth = new Map<string, number>();
+
+    if (Array.isArray(orders)) {
+      for (const order of orders) {
+        const isCompleted = ['Completed', 'Vendor Confirmed', 'Bill Generated'].includes(order.status);
+        if (!isCompleted && order.status !== 'Completed') continue;
+
+        const dateStr = order.created_at || order.bill_generated_at || new Date().toISOString();
+        const month = dateStr.slice(0, 7);
+
+        if (Array.isArray(order.vendor_orders)) {
+          for (const vo of order.vendor_orders) {
+            if (vo.vendor_id && (vo.bill_amount || vo.items)) {
+              let voAmt = Number(vo.bill_amount || 0);
+              if (voAmt === 0 && Array.isArray(vo.items)) {
+                voAmt = vo.items.reduce((s: number, it: any) => s + (Number(it.price || 0) * Number(it.quantity || 1)), 0);
+              }
+              const key = `${vo.vendor_id}_${month}`;
+              billedByVendorMonth.set(key, (billedByVendorMonth.get(key) || 0) + voAmt);
+            }
+          }
+        }
+      }
+    }
+
+    // Merge calculated billed totals into settlements
+    const allKeys = new Set([...settlementMap.keys(), ...billedByVendorMonth.keys()]);
+    const syncedList: VendorMonthlySettlement[] = [];
+
+    allKeys.forEach(key => {
+      const [vendorId, month] = key.split('_');
+      const existing = settlementMap.get(key);
+      const calculatedTotal = billedByVendorMonth.get(key) || 0;
+      const totalAmount = Math.max(Number(existing?.total_amount || 0), calculatedTotal);
+      const paidAmount = Number(existing?.paid_amount || 0);
+      const dueAmount = Math.max(0, totalAmount - paidAmount);
+      const status = dueAmount <= 0 && totalAmount > 0 ? 'Settled' : (paidAmount > 0 ? 'Partially Settled' : (totalAmount === 0 && paidAmount === 0 ? 'Settled' : 'Pending'));
+
+      syncedList.push({
+        id: existing?.id || Math.floor(Math.random() * 100000),
+        vendor_id: vendorId,
+        vendor_name: existing?.vendor_name,
+        month,
+        total_amount: totalAmount,
+        paid_amount: paidAmount,
+        due_amount: dueAmount,
+        status,
+        updated_at: new Date().toISOString()
+      });
+    });
+
+    saveLocalSettlements(syncedList);
+    return syncedList;
+  } catch (err) {
+    console.error('[SETTLEMENTS] Local sync error:', err);
+    return getLocalSettlements();
+  }
+}
+
 export async function getMonthlySettlements(): Promise<VendorMonthlySettlement[]> {
   try {
     const res = await api.get<VendorMonthlySettlement[]>('/vendors/settlements');
@@ -575,9 +649,9 @@ export async function getMonthlySettlements(): Promise<VendorMonthlySettlement[]
       return res;
     }
   } catch (err) {
-    console.warn('[SETTLEMENTS] API fetch failed, serving local fallback');
+    console.warn('[SETTLEMENTS] API fetch failed, serving synced local fallback');
   }
-  return getLocalSettlements();
+  return syncLocalMonthlySettlements();
 }
 
 export async function getVendorMonthlySettlements(vendorId: string): Promise<VendorMonthlySettlement[]> {
@@ -598,7 +672,8 @@ export async function getVendorMonthlySettlements(vendorId: string): Promise<Ven
       }
     } catch {}
   }
-  return getLocalSettlements().filter(s => s.vendor_id === vendorId);
+  const allSynced = syncLocalMonthlySettlements();
+  return allSynced.filter(s => s.vendor_id === vendorId);
 }
 
 export async function updateMonthlySettlement(
@@ -624,8 +699,27 @@ export async function updateMonthlySettlement(
     }
     throw new Error('No response from server');
   } catch (err: any) {
-    console.error('[SETTLEMENTS] API update failed:', err);
-    throw new Error(err?.response?.data?.detail || err?.message || 'Failed to update monthly settlement');
+    console.warn('[SETTLEMENTS] API update failed, applying local update:', err);
+    // Offline local update
+    const list = syncLocalMonthlySettlements();
+    const idx = list.findIndex(s => s.vendor_id === vendorId && s.month === month);
+    const existingTotal = idx >= 0 ? list[idx].total_amount : 0;
+    const finalTotal = Math.max(totalAmount, existingTotal);
+    const due = Math.max(0, finalTotal - paidAmount);
+    const updatedRecord: VendorMonthlySettlement = {
+      id: idx >= 0 ? list[idx].id : Math.floor(Math.random() * 100000),
+      vendor_id: vendorId,
+      month,
+      total_amount: finalTotal,
+      paid_amount: paidAmount,
+      due_amount: due,
+      status: due <= 0 && finalTotal > 0 ? 'Settled' : (paidAmount > 0 ? 'Partially Settled' : 'Pending'),
+      updated_at: new Date().toISOString()
+    };
+    if (idx >= 0) list[idx] = updatedRecord;
+    else list.unshift(updatedRecord);
+    saveLocalSettlements(list);
+    return updatedRecord;
   }
 }
 

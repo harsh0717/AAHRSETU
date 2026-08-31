@@ -17,6 +17,10 @@ class MasterOrder(Base):
     bill_generated_at = Column(DateTime, nullable=True)
     billing_status = Column(String(50), nullable=True) # SUCCESS, FAILED
     
+    order_type = Column(String(50), default="IMMEDIATE", nullable=False) # IMMEDIATE, SCHEDULED
+    scheduled_for = Column(DateTime, nullable=True)
+    timezone = Column(String(50), default="Asia/Kolkata", nullable=False)
+    
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     

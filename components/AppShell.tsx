@@ -76,6 +76,7 @@ export default function AppShell({ children, role }: AppShellProps) {
   const { t } = useI18n();
   const [session, setSession] = useState<UserProfile | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [moreDrawerOpen, setMoreDrawerOpen] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -85,9 +86,25 @@ export default function AppShell({ children, role }: AppShellProps) {
       const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
       checkMobile();
       window.addEventListener('resize', checkMobile);
+
+      const saved = localStorage.getItem('aharsetu_sidebar_minimized');
+      if (saved === 'true') {
+        setSidebarMinimized(true);
+      }
+
       return () => window.removeEventListener('resize', checkMobile);
     }
   }, []);
+
+  const toggleSidebarMinimize = () => {
+    setSidebarMinimized((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('aharsetu_sidebar_minimized', String(next));
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const s = getSession();
@@ -154,13 +171,13 @@ export default function AppShell({ children, role }: AppShellProps) {
     >
       {/* Sidebar */}
       <aside
-        className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}
+        className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''} ${sidebarMinimized ? styles.sidebarMinimized : ''}`}
         style={{ background: colors.sidebar }}
       >
         {/* Logo */}
-        <div className={styles.logo} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', boxShadow: '0 4px 30px rgba(0,0,0,0.03)' }}>
-          <BrandLogo size={46} />
-          {isMobileDevice && (
+        <div className={styles.logo} style={{ display: 'flex', justifyContent: sidebarMinimized ? 'center' : 'space-between', alignItems: 'center', padding: sidebarMinimized ? '14px 10px' : '16px 20px', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', boxShadow: '0 4px 30px rgba(0,0,0,0.03)' }}>
+          <BrandLogo size={sidebarMinimized ? 38 : 46} />
+          {isMobileDevice ? (
             <button
               onClick={() => setSidebarOpen(false)}
               style={{
@@ -175,12 +192,22 @@ export default function AppShell({ children, role }: AppShellProps) {
             >
               ✕
             </button>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleSidebarMinimize}
+              className={styles.minimizeBtn}
+              title={sidebarMinimized ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              aria-label={sidebarMinimized ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            >
+              {sidebarMinimized ? '»' : '«'}
+            </button>
           )}
         </div>
 
         {/* User card */}
         {session && (
-          <div className={styles.userCard}>
+          <div className={styles.userCard} title={sidebarMinimized ? `${session.name} (${ROLE_LABELS[role]})` : undefined}>
             <AvatarImage userId={session.id} name={session.name} size={36} />
             <div className={styles.userInfo}>
               <div className={styles.userName}>{session.name}</div>
@@ -206,6 +233,8 @@ export default function AppShell({ children, role }: AppShellProps) {
                 href={item.href}
                 className={`${styles.navItem} ${isActive ? styles.navActive : ''}`}
                 onClick={() => setSidebarOpen(false)}
+                title={t(item.labelKey)}
+                data-tooltip={t(item.labelKey)}
               >
                 <div
                   className={styles.navIconBadge}
@@ -225,7 +254,7 @@ export default function AppShell({ children, role }: AppShellProps) {
 
         {/* Footer */}
         <div className={styles.sidebarFooter}>
-          <button onClick={handleLogout} className={styles.logoutBtn} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button onClick={handleLogout} className={styles.logoutBtn} title={t('auth.logout')} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
                 width: '28px',
@@ -243,7 +272,7 @@ export default function AppShell({ children, role }: AppShellProps) {
             <span>{t('auth.logout')}</span>
           </button>
 
-          <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.72rem', color: '#94A3B8' }}>
+          <div className={styles.footerLinks} style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.72rem', color: '#94A3B8' }}>
             <Link href="/privacy" style={{ color: '#94A3B8', textDecoration: 'none' }}>Privacy Policy</Link>
             <span>·</span>
             <Link href="/terms" style={{ color: '#94A3B8', textDecoration: 'none' }}>Terms of Service</Link>
@@ -255,7 +284,7 @@ export default function AppShell({ children, role }: AppShellProps) {
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />}
 
       {/* Main content */}
-      <div className={styles.main}>
+      <div className={`${styles.main} ${sidebarMinimized ? styles.mainMinimized : ''}`}>
         {/* Header */}
         <header className={styles.header} style={{ borderBottomColor: colors.accent + '30' }}>
           <div className={styles.headerLeft}>

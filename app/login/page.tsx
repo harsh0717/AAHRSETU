@@ -245,18 +245,11 @@ export default function LoginPage() {
 
         {/* ── Hero Center Content ── */}
         <div className={styles.heroContent}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+          <div style={{ marginBottom: '10px' }}>
             <span className={styles.heroBadge}>
               <span className={styles.heroBadgeDot} />
               {t('login.hero_badge', '100% Pure Veg · Institutional Dining')}
             </span>
-            <button
-              type="button"
-              onClick={() => setShowManualModal(true)}
-              className={styles.manualGuideBtn}
-            >
-              <span>📖</span> User Manual & Demo Guide →
-            </button>
           </div>
 
           <h2 className={styles.heroTitle}>
@@ -364,19 +357,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* ── Footer Copyright & Legal ── */}
+        {/* ── Footer Copyright ── */}
         <div className={styles.heroFooter}>
           <div className={styles.heroFooterText}>
             © 2026 {formatBrandText('AharSetu', lang)} · Institutional Protocol
-          </div>
-          <div className={styles.heroFooterLinks}>
-            <Link href="/privacy" className={styles.footerLink}>
-              <span>🔒</span> Privacy Policy
-            </Link>
-            <span className={styles.footerDot}>·</span>
-            <Link href="/terms" className={styles.footerLink}>
-              <span>📜</span> Terms of Service
-            </Link>
           </div>
         </div>
       </section>
@@ -575,6 +559,18 @@ export default function LoginPage() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* How to Use / User Manual Button */}
+          <div style={{ marginTop: '16px', textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => setShowManualModal(true)}
+              className={styles.manualGuideBtnForm}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              <span>📖</span> How to Use · User Manual & Demo Guide →
+            </button>
           </div>
 
           {/* Form Footer Legal Links */}

@@ -1078,6 +1078,30 @@
   box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
 }
 
+/* Form-panel variant: adapts the guide button for the light right panel */
+.manualGuideBtnForm {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0D9488 0%, #059669 100%);
+  border: none;
+  color: #FFFFFF;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
+}
+
+.manualGuideBtnForm:hover {
+  background: linear-gradient(135deg, #0F766E 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.45);
+}
+
 /* User Manual Modal Overlay & Container */
 .manualModalOverlay {
   position: fixed;

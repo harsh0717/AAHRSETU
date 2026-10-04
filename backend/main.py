@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from backend.core.config import settings
-from backend.core.database import engine, Base, SessionLocal
+from backend.core.database import engine, Base, SessionLocal, db_url
 from backend.api.v1.api import api_router
 from backend.lib.seed_db import seed_all_database
 from backend.models.user import User
@@ -21,6 +21,9 @@ logger = logging.getLogger("aharsetu-api")
 
 # Auto-create database tables on startup (Dev-friendly seeding)
 try:
+    from urllib.parse import urlparse
+    parsed_host = urlparse(db_url).hostname or "unknown"
+    logger.info(f"Connecting to database host: {parsed_host}...")
     logger.info("Initializing database schema...")
     Base.metadata.create_all(bind=engine)
     logger.info("Database schema initialized successfully.")

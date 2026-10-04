@@ -1,12 +1,15 @@
+import os
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from backend.core.config import settings
 
-# Ensure postgres:// URL scheme from Neon/Render/Supabase is mapped to postgresql://
-db_url = settings.DATABASE_URL
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+# Prefer os.environ directly if set, else fallback to settings
+raw_db_url = os.environ.get("DATABASE_URL") or settings.DATABASE_URL
+if raw_db_url.startswith("postgres://"):
+    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+
+db_url = raw_db_url
 
 # Engine configuration (pool size, max overflow for concurrency)
 engine_kwargs = {"pool_pre_ping": True}

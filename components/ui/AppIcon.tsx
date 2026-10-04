@@ -8,6 +8,7 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  Ban,
   Receipt,
   Bell,
   User,
@@ -54,6 +55,7 @@ export type IconName =
   | "completed"
   | "approved"
   | "rejected"
+  | "cancelled"
   | "bills"
   | "notifications"
   | "profile"
@@ -99,6 +101,7 @@ const ICON_MAP: Record<string, React.ComponentType<LucideProps>> = {
   completed: CheckCircle2,
   approved: CheckCircle2,
   rejected: XCircle,
+  cancelled: Ban,
   bills: Receipt,
   notifications: Bell,
   profile: User,
@@ -154,6 +157,7 @@ export const ICON_COLORS: Record<string, IconColorTheme> = {
   completed:    { color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)', glow: 'rgba(16, 185, 129, 0.25)' },
   approved:     { color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)', glow: 'rgba(16, 185, 129, 0.25)' },
   rejected:     { color: '#EF4444', bg: 'rgba(239, 68, 68, 0.12)', glow: 'rgba(239, 68, 68, 0.25)' },
+  cancelled:    { color: '#DC2626', bg: 'rgba(220, 38, 38, 0.12)', glow: 'rgba(220, 38, 38, 0.30)' },
   bills:        { color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.12)', glow: 'rgba(6, 182, 212, 0.25)' }, // Cyan
   reports:      { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.12)', glow: 'rgba(14, 165, 233, 0.25)' }, // Sky
   analytics:    { color: '#D946EF', bg: 'rgba(217, 70, 239, 0.12)', glow: 'rgba(217, 70, 239, 0.25)' }, // Fuchsia

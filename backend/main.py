@@ -165,6 +165,10 @@ app.add_middleware(
 def health_check():
     return {"status": "healthy", "service": settings.PROJECT_NAME}
 
+@app.get("/openapi.json", include_in_schema=False)
+def get_root_openapi():
+    return app.openapi()
+
 # Serve uploaded avatar images as static files
 uploads_dir = os.path.join(os.path.dirname(__file__), "..", "public", "uploads")
 os.makedirs(uploads_dir, exist_ok=True)

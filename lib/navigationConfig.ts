@@ -12,12 +12,13 @@ export interface NavItem {
 
 export const NAVIGATION_CONFIG: Record<string, NavItem[]> = {
   coordinator: [
-    { id: 'dashboard',    labelKey: 'nav.dashboard',        href: '/coordinator',                icon: 'dashboard', role: 'coordinator' },
+    { id: 'dashboard',    labelKey: 'nav.dashboard',        href: '/coordinator',                 icon: 'dashboard', role: 'coordinator' },
     { id: 'create',       labelKey: 'nav.create_order',     href: '/coordinator/orders/create',   icon: 'create', role: 'coordinator' },
     { id: 'orders',       labelKey: 'nav.my_orders',        href: '/coordinator/orders',          icon: 'orders', role: 'coordinator' },
     { id: 'pending',      labelKey: 'nav.pending_orders',   href: '/coordinator/orders/pending',  icon: 'pending', role: 'coordinator' },
     { id: 'completed',    labelKey: 'nav.completed_orders', href: '/coordinator/orders/completed',icon: 'completed', role: 'coordinator' },
     { id: 'rejected',     labelKey: 'nav.rejected_orders',  href: '/coordinator/orders/rejected', icon: 'rejected', role: 'coordinator' },
+    { id: 'cancelled',    labelKey: 'nav.cancelled_orders', href: '/coordinator/orders/cancelled',icon: 'cancelled', role: 'coordinator' },
     { id: 'bills',        labelKey: 'nav.bills',            href: '/coordinator/bills',           icon: 'bills', role: 'coordinator' },
     { id: 'notifications',labelKey: 'nav.notifications',    href: '/coordinator/notifications',   icon: 'notifications', role: 'coordinator' },
     { id: 'profile',      labelKey: 'nav.profile',          href: '/coordinator/profile',         icon: 'profile', role: 'coordinator' },

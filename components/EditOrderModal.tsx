@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { MasterOrder, updateMasterOrder } from '@/lib/store';
-import { getAvailableMenuByVendor, getMenuItem, getMenuItemName, MenuItem } from '@/lib/vendors';
+import { getAvailableMenuByVendor, getCachedAvailableMenuByVendor, getMenuItem, getMenuItemName, MenuItem } from '@/lib/vendors';
 import { showToast } from '@/components/Toast';
 import { useI18n } from '@/lib/i18n';
 
@@ -18,7 +18,12 @@ export default function EditOrderModal({ order, isOpen, onClose, onSaved }: Edit
   const [purpose, setPurpose] = useState(order.purpose || '');
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
-  const [menuByVendor, setMenuByVendor] = useState<Array<{ id: string; name: string; status: string; menu: MenuItem[] }>>([]);
+  const [menuByVendor, setMenuByVendor] = useState<Array<{ id: string; name: string; status: string; menu: MenuItem[] }>>(() => {
+    if (typeof window !== 'undefined') {
+      return getCachedAvailableMenuByVendor();
+    }
+    return [];
+  });
   const [activeVendorTab, setActiveVendorTab] = useState<string>('');
 
   useEffect(() => {

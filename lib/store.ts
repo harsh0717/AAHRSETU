@@ -2,7 +2,7 @@
 import { api } from './api';
 import { getSession } from './auth';
 import { pushNotification } from './notifications';
-import { getMenuItemName, getMenuItem } from './vendors';
+import { getMenuItemName, getMenuItem, isVendorOpen } from './vendors';
 
 export interface OrderItem {
   id?: number;
@@ -254,7 +254,7 @@ export async function createMasterOrder(orderData: {
       try {
         const vendorList = JSON.parse(rawVendors);
         const targetV = vendorList.find((v: any) => v.id === targetVendorId);
-        if (targetV && targetV.status !== 'open') {
+        if (targetV && !isVendorOpen(targetV.status)) {
           throw new Error('Vendor is currently unavailable for new orders.');
         }
       } catch (err: any) {

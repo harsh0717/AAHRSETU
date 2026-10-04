@@ -1766,14 +1766,22 @@ export default function AdminDashboardPage({ initialTab = 'dashboard' }: { initi
                                   className={styles.quickActionBtn}
                                   style={{ fontSize: '0.74rem', padding: '4px 10px' }}
                                   onClick={() => {
-                                    setSelectedBudgetDept({
+                                    const cap = budgetCap;
+                                    const rem = Math.max(0, cap - spent);
+                                    const util = cap > 0 ? (spent / cap) * 100 : 0;
+                                    const thresh = (dept.warning_threshold || 80) > 1 ? (dept.warning_threshold || 80) / 100 : (dept.warning_threshold || 0.8);
+                                    setEditingBudget({
                                       department_id: dept.id,
                                       department_name: dept.name,
-                                      allocated_budget: budgetCap,
-                                      warning_threshold: dept.warning_threshold || 80,
-                                      fiscal_year: '2026-2027'
+                                      budget_year: '2026-2027',
+                                      annual_budget: cap,
+                                      used_amount: spent,
+                                      remaining_amount: rem,
+                                      utilization_pct: util,
+                                      warning_threshold: thresh,
+                                      has_warning: util >= thresh * 100,
+                                      status: util >= 100 ? 'EXCEEDED' : util >= thresh * 100 ? 'WARNING' : 'OPTIMAL'
                                     });
-                                    setShowBudgetModal(true);
                                   }}
                                 >
                                   ⚙️ Edit Cap

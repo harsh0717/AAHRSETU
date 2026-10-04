@@ -4,7 +4,8 @@ from jose import jwt
 from passlib.context import CryptContext
 from backend.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use argon2 for password hashing (supports longer passwords than bcrypt's 72-byte limit)
+pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 ALGORITHM = "HS256"
 

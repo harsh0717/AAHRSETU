@@ -7,7 +7,7 @@ export interface ApiError {
 }
 
 const getBaseUrl = (): string => {
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) {
+  if (process.env.NEXT_PUBLIC_API_URL) {
     return `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}/api/v1`;
   }
   return '/api/v1';

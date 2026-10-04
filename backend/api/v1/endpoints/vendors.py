@@ -454,6 +454,7 @@ def toggle_vendor_active_status(
         old_value=str(not new_active_status),
         new_value=str(new_active_status)
     )
+    return vendor
     
 @router.put("/{vendor_id}", response_model=VendorResponse)
 @router.patch("/{vendor_id}", response_model=VendorResponse)

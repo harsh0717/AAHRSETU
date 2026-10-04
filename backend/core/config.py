@@ -1,7 +1,10 @@
 import json
+from pathlib import Path
 from typing import List, Union, Optional
 from pydantic import AnyHttpUrl, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
@@ -13,8 +16,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # Database (defaults to local sqlite for dev; overridden by DATABASE_URL env on Render / Neon)
-    DATABASE_URL: str = "sqlite:///./aharsetu.db"
+    # Database (configured for local PostgreSQL; can be overridden via DATABASE_URL env)
+    DATABASE_URL: str = "postgresql://postgres:1234@localhost:5432/aharsetu"
     
     BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
@@ -57,10 +60,15 @@ class Settings(BaseSettings):
                 clean_origins.append(clean)
 
         self.BACKEND_CORS_ORIGINS = clean_origins
+
+        # Normalize postgres:// to postgresql:// for SQLAlchemy 2.x cloud compatibility
+        if self.DATABASE_URL and self.DATABASE_URL.startswith("postgres://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
         return self
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(str(BASE_DIR / ".env"), ".env", "backend/.env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

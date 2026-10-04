@@ -43,7 +43,8 @@
 
 /* ── CSS Variables / Design Tokens ─────────────────────────────────────────── */
 :root {
-  --font-sans: 'Okra', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Gujarati', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Semantic shortcuts */
@@ -87,6 +88,14 @@
   --border-radius-sm: 10px;
   --border-radius-lg: 24px;
 
+  /* Sidebar Light Tokens */
+  --sidebar-bg: #EFF6FF;
+  --sidebar-text: #1E3A8A;
+  --sidebar-text-muted: #3B82F6;
+  --sidebar-hover-bg: #DBEAFE;
+  --sidebar-active-bg: #DBEAFE;
+  --sidebar-border: #BFDBFE;
+
   /* Shadows - Minimal Soft Vercel/Linear Shadows */
   --shadow-sm: 0 1px 2px rgba(0,0,0,.02);
   --shadow:    0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02);
@@ -104,6 +113,14 @@
 .dark {
   --bg-main: #0B0F17;
   --primary: #3B82F6;
+
+  /* Sidebar Dark Tokens */
+  --sidebar-bg: #0F172A;
+  --sidebar-text: #F8FAFC;
+  --sidebar-text-muted: #94A3B8;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-active-bg: rgba(37, 99, 235, 0.2);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
 
   /* Neutral scale - Inverted high-contrast Dark Grays */
   --gray-50:  #151F30;
@@ -146,7 +163,7 @@
 /* ── Reset ──────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { font-size: 16px; scroll-behavior: smooth; overflow-x: hidden; max-width: 100vw; }
+html { font-size: 16px; scroll-behavior: smooth; overflow-x: clip; max-width: 100vw; }
 
 body {
   font-family: var(--font-sans);
@@ -156,7 +173,8 @@ body {
   background: var(--surface-1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  letter-spacing: -0.012em;
+  overflow-x: clip;
   max-width: 100vw;
 }
 
@@ -165,13 +183,18 @@ button { font-family: inherit; cursor: pointer; }
 input, textarea, select { font-family: inherit; }
 img { display: block; max-width: 100%; }
 
-/* ── Typography ─────────────────────────────────────────────────────────────── */
+/* ── Typography (Blinkit Modern Crisp Style) ────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.025em;
+}
+
 h1 { font-size: 1.875rem; font-weight: 800; line-height: 1.2; color: var(--gray-900); }
 h2 { font-size: 1.5rem;   font-weight: 700; line-height: 1.3; color: var(--gray-800); }
-h3 { font-size: 1.25rem;  font-weight: 600; line-height: 1.4; color: var(--gray-800); }
-h4 { font-size: 1.125rem; font-weight: 600; line-height: 1.4; color: var(--gray-700); }
-h5 { font-size: 1rem;     font-weight: 600; line-height: 1.5; color: var(--gray-700); }
-h6 { font-size: 0.875rem; font-weight: 600; line-height: 1.5; color: var(--gray-600); }
+h3 { font-size: 1.25rem;  font-weight: 700; line-height: 1.4; color: var(--gray-800); }
+h4 { font-size: 1.125rem; font-weight: 700; line-height: 1.4; color: var(--gray-700); }
+h5 { font-size: 1rem;     font-weight: 700; line-height: 1.5; color: var(--gray-700); }
+h6 { font-size: 0.875rem; font-weight: 700; line-height: 1.5; color: var(--gray-600); }
 
 p  { color: var(--gray-600); line-height: 1.7; }
 

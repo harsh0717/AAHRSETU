@@ -7,7 +7,7 @@ import StatusBadge from '@/components/StatusBadge';
 import AvatarImage from '@/components/AvatarImage';
 import { getSession, initializeApplication, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, createMasterOrder, MasterOrder } from '@/lib/store';
-import { getAvailableMenuByVendor, MenuItem } from '@/lib/vendors';
+import { getAvailableMenuByVendor, getCachedAvailableMenuByVendor, MenuItem } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
@@ -27,13 +27,56 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
 
+  // Sync activeTab whenever initialTab prop changes (e.g. Next.js router navigations)
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  // Sync activeTab with URL hash (#create, #orders, #dashboard, etc.)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '').trim().toLowerCase();
+      if (hash) {
+        if (['create', 'orders', 'pending', 'completed', 'rejected', 'cancelled', 'dashboard', 'notifications', 'profile', 'settings'].includes(hash)) {
+          setActiveTab(hash);
+        } else if (hash === 'new' || hash === 'create-order') {
+          setActiveTab('create');
+        }
+      } else if (initialTab) {
+        setActiveTab(initialTab);
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && activeTab) {
+      const currentHash = window.location.hash.replace('#', '').trim().toLowerCase();
+      if (currentHash !== activeTab) {
+        window.history.replaceState(null, '', `#${activeTab}`);
+      }
+    }
+  }, [activeTab]);
+
   // Edit and Cancel Modal States
   const [editingOrder, setEditingOrder] = useState<MasterOrder | null>(null);
   const [cancellingOrder, setCancellingOrder] = useState<MasterOrder | null>(null);
 
   // API Data
   const [orders, setOrders] = useState<MasterOrder[]>([]);
-  const [menuByVendor, setMenuByVendor] = useState<{ id: string; name: string; image_url?: string | null; status?: string; menu: MenuItem[] }[]>([]);
+  const [menuByVendor, setMenuByVendor] = useState<{ id: string; name: string; image_url?: string | null; status?: string; menu: MenuItem[] }[]>(() => {
+    if (typeof window !== 'undefined') {
+      return getCachedAvailableMenuByVendor();
+    }
+    return [];
+  });
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Create Order States
@@ -49,6 +92,13 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   const [scheduledTime, setScheduledTime] = useState('');
   const [menuCategoryFilter, setMenuCategoryFilter] = useState('All');
   const [menuSearchQuery, setMenuSearchQuery] = useState('');
+
+  // Vendor Menu Dropdown Accordion State (Only one vendor menu open at a time)
+  const [openVendorId, setOpenVendorId] = useState<string | null>(null);
+
+  const toggleVendorDropdown = (vendorId: string) => {
+    setOpenVendorId(prev => (prev === vendorId ? null : vendorId));
+  };
 
   // Profile Edit State
   const [profileName, setProfileName] = useState('');
@@ -194,27 +244,32 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
     };
   }, []);
 
-  // Listen to hash changes for sidebar navigation
+  // Ensure available menus are fresh whenever navigating to or returning to 'create' tab
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleHash = () => {
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        setActiveTab(hash);
-      } else {
-        setActiveTab(initialTab || 'dashboard');
+    if (activeTab === 'create') {
+      getAvailableMenuByVendor().then((mList) => {
+        if (mList && mList.length > 0) {
+          setMenuByVendor(mList);
+        }
+      }).catch((err) => {
+        console.warn('Error refreshing available menu by vendor on tab switch:', err);
+      });
+    }
+  }, [activeTab]);
+
+  // Silently refresh menus when window regains focus
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      if (activeTab === 'create') {
+        getAvailableMenuByVendor().then((mList) => {
+          if (mList && mList.length > 0) {
+            setMenuByVendor(mList);
+          }
+        }).catch(() => {});
       }
     };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, [initialTab]);
-
-  // Sync state changes back to hash
-  useEffect(() => {
-    if (activeTab && window.location.hash !== '#' + activeTab) {
-      window.location.hash = activeTab;
-    }
+    window.addEventListener('focus', handleWindowFocus);
+    return () => window.removeEventListener('focus', handleWindowFocus);
   }, [activeTab]);
 
   function handleQtyChange(itemId: string, qty: number) {
@@ -358,13 +413,18 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   );
 
   // Apply tab filters
-  let displayedOrders = myOrders;
+  // 'orders' (My Orders) excludes Cancelled orders; they are shown in their own 'cancelled' tab
+  let displayedOrders = activeTab === 'orders'
+    ? myOrders.filter(o => o.status !== 'Cancelled')
+    : myOrders;
   if (activeTab === 'pending') {
-    displayedOrders = myOrders.filter(o => !['Completed', 'Principal Rejected', 'DCR Rejected'].includes(o.status));
+    displayedOrders = myOrders.filter(o => !['Completed', 'Principal Rejected', 'DCR Rejected', 'Cancelled'].includes(o.status));
   } else if (activeTab === 'completed') {
     displayedOrders = myOrders.filter(o => o.status === 'Completed');
   } else if (activeTab === 'rejected') {
     displayedOrders = myOrders.filter(o => ['Principal Rejected', 'DCR Rejected'].includes(o.status));
+  } else if (activeTab === 'cancelled') {
+    displayedOrders = myOrders.filter(o => o.status === 'Cancelled');
   }
 
   // Apply search/status filters for orders table
@@ -380,10 +440,11 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   const ordersWithBills = myOrders.filter(o => ['Bill Generated', 'Completed'].includes(o.status) || (o.total_bill_amount > 0 && o.vendor_orders.some(vo => vo.status === 'Vendor Confirmed')));
 
   // Compute Stats for Dashboard tab
-  const totalMyOrders = myOrders.length;
-  const totalPending = myOrders.filter(o => !['Completed', 'Principal Rejected', 'DCR Rejected'].includes(o.status)).length;
+  const totalMyOrders = myOrders.filter(o => o.status !== 'Cancelled').length;
+  const totalPending = myOrders.filter(o => !['Completed', 'Principal Rejected', 'DCR Rejected', 'Cancelled'].includes(o.status)).length;
   const totalCompleted = myOrders.filter(o => o.status === 'Completed').length;
   const totalRejected = myOrders.filter(o => ['Principal Rejected', 'DCR Rejected'].includes(o.status)).length;
+  const totalCancelled = myOrders.filter(o => o.status === 'Cancelled').length;
 
   const ALL_STATUSES = [
     'All', 'Draft', 'Created', 'Sent for Approval', 'Principal Reviewing', 'Principal Approved',
@@ -392,80 +453,92 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
   ];
 
   return (
-    <AppShell role="coordinator" currentPath="/coordinator">
+    <AppShell role="coordinator" activeTab={activeTab} onTabChange={setActiveTab}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         
         {/* Enterprise Institutional Top Banner */}
-        <div style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          borderRadius: '20px',
-          padding: '24px 28px',
-          marginBottom: '20px',
-          color: 'white',
-          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-                {t('coord.dept_requisitions', 'DEPARTMENT REQUISITIONS')}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                {session?.department_id ? `${t('common.department', 'Department')}: ${session.department_id}` : t('common.department', 'Academic Department')} · FY 2026-27
-              </span>
+        {['dashboard', 'orders', 'pending', 'completed', 'rejected', 'cancelled'].includes(activeTab) && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+            borderRadius: '20px',
+            padding: '24px 28px',
+            marginBottom: '20px',
+            color: 'white',
+            boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                  {t('coord.dept_requisitions', 'DEPARTMENT REQUISITIONS')}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                  {session?.department_id ? `${t('common.department', 'Department')}: ${session.department_id}` : t('common.department', 'Academic Department')} · FY 2026-27
+                </span>
+              </div>
+              <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
+                🍽️ {t('coord.orders_hub_title', 'Department Coordinator Orders Hub')}
+              </h1>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
+                {t('coord.orders_hub_desc', 'Draft official canteen food requisitions, monitor Principal approval milestones, and track invoice statuses.')}
+              </p>
             </div>
-            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
-              🍽️ {t('coord.orders_hub_title', 'Department Coordinator Orders Hub')}
-            </h1>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
-              {t('coord.orders_hub_desc', 'Draft official canteen food requisitions, monitor Principal approval milestones, and track invoice statuses.')}
-            </p>
-          </div>
 
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setActiveTab('create')}
-              style={{
-                padding: '9px 16px',
-                borderRadius: '10px',
-                background: '#0D9488',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: 800,
-                fontSize: '0.84rem',
-                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              ➕ {t('coord.create_requisition', 'Create Requisition')}
-            </button>
-            <button
-              onClick={() => setActiveTab('orders')}
-              style={{
-                padding: '9px 16px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: '#E2E8F0',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                cursor: 'pointer',
-                fontWeight: 700,
-                fontSize: '0.84rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              📋 {t('coord.my_orders_btn', 'My Orders')} ({totalMyOrders})
-            </button>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  setActiveTab('create');
+                  if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/coordinator')) {
+                    router.push('/coordinator/orders/create');
+                  }
+                }}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  background: '#0D9488',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                ➕ {t('coord.create_requisition', 'Create Requisition')}
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('orders');
+                  if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/coordinator')) {
+                    router.push('/coordinator/orders');
+                  }
+                }}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#E2E8F0',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                📑 {t('coord.my_orders_btn', 'My Orders')} ({totalMyOrders})
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Loading Spinner */}
         {loading ? (
@@ -478,83 +551,139 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
             {/* TAB: DASHBOARD OVERVIEW */}
             {activeTab === 'dashboard' && (
               <div>
-                {/* Executive 3-Tile KPI Summary Grid */}
+                {/* Executive 4-Tile KPI Summary Grid */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
                   gap: '16px',
                   marginBottom: '24px',
                   width: '100%'
                 }}>
-                  {/* Tile 1: Pending Approvals */}
-                  <div style={{
-                    background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid var(--gray-200, #E2E8F0)',
-                    padding: '20px 24px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                  }}>
+                  {/* Tile 1: Pending Approvals → navigates to pending tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid var(--gray-200, #E2E8F0)',
+                      padding: '20px 24px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('pending')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 18px rgba(217,119,6,0.15)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View Pending Approvals"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
                         {t('coord.pending_approvals', 'PENDING APPROVALS')}
                       </span>
-                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {t('coord.in_review_pipeline', 'IN REVIEW PIPELINE')}
+                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
+                        {t('coord.in_review_pipeline', 'IN REVIEW')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {totalPending}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       {t('coord.pending_sub', 'Requisitions awaiting Principal or Admin sign-off')}
                     </div>
                   </div>
 
-                  {/* Tile 2: Completed Orders */}
-                  <div style={{
-                    background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid #10B981',
-                    padding: '20px 24px',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)'
-                  }}>
+                  {/* Tile 2: Completed Orders → navigates to completed tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid #10B981',
+                      padding: '20px 24px',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('completed')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 20px rgba(16,185,129,0.2)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(16,185,129,0.08)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View Completed Requisitions"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
                         {t('coord.completed_requisitions', 'COMPLETED REQUISITIONS')}
                       </span>
-                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
-                        {t('coord.fulfilled_served', 'FULFILLED & SERVED')}
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
+                        {t('coord.fulfilled_served', 'FULFILLED')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {totalCompleted}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       {t('coord.completed_sub', 'Successfully delivered campus orders')}
                     </div>
                   </div>
 
-                  {/* Tile 3: Total Department Volume */}
-                  <div style={{
-                    background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid var(--gray-200, #E2E8F0)',
-                    padding: '20px 24px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                  }}>
+                  {/* Tile 3: Total Department Volume → navigates to orders tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid var(--gray-200, #E2E8F0)',
+                      padding: '20px 24px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('orders')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 18px rgba(71,85,105,0.12)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View All My Orders"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
                         {t('coord.total_dept_orders', 'TOTAL DEPARTMENT ORDERS')}
                       </span>
-                      <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
                         {totalRejected} {t('common.rejected', 'REJECTED')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
                       {totalMyOrders}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       {t('coord.total_orders_sub', 'Lifetime orders recorded for this department')}
+                    </div>
+                  </div>
+
+                  {/* Tile 4: Cancelled Orders → navigates to cancelled tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid #FECACA',
+                      padding: '20px 24px',
+                      boxShadow: '0 2px 4px rgba(239,68,68,0.06)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('cancelled')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 18px rgba(220,38,38,0.15)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 4px rgba(239,68,68,0.06)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View Cancelled Orders"
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#DC2626', letterSpacing: '0.05em' }}>
+                        {t('coord.cancelled_orders', 'CANCELLED ORDERS')}
+                      </span>
+                      <span style={{ background: '#FEF2F2', color: '#991B1B', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
+                        {t('coord.withdrawn', 'WITHDRAWN')}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: totalCancelled > 0 ? '#DC2626' : '#6B7280', letterSpacing: '-0.5px' }}>
+                      {totalCancelled}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                      {t('coord.cancelled_sub', 'Requisitions withdrawn before DCR processing')}
                     </div>
                   </div>
                 </div>
@@ -598,17 +727,70 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
             {/* TAB: CREATE REQUISITION */}
             {activeTab === 'create' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: '20px' }}>
+                {/* Minimal Top Breadcrumb & Return Bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', paddingBottom: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('dashboard')}
+                    style={{
+                      background: 'var(--surface-0)',
+                      border: '1px solid var(--gray-300)',
+                      borderRadius: '10px',
+                      padding: '7px 14px',
+                      cursor: 'pointer',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      color: 'var(--gray-700)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    ← {t('common.back_to_dashboard', 'Back to Dashboard')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('orders')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      color: 'var(--primary-600, #2563EB)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    📋 {t('coord.my_orders_btn', 'My Orders')} ({totalMyOrders}) →
+                  </button>
+                </div>
                 {isMobileDevice ? (
                   /* Guided Flow on Mobile */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '80px' }}>
                     {/* Visual Progress Steps Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-0)', padding: '16px', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-0)', padding: '14px 16px', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', boxShadow: 'var(--shadow-sm)' }}>
                       {[
                         { step: 1, label: 'Details' },
-                        { step: 2, label: 'Menu' },
+                        { step: 2, label: 'Menu Dropdown' },
                         { step: 3, label: 'Review' }
                       ].map((s) => (
-                        <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          key={s.step}
+                          type="button"
+                          onClick={() => setCreateOrderStep(s.step)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px'
+                          }}
+                        >
                           <div style={{
                             width: '28px',
                             height: '28px',
@@ -626,17 +808,17 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                           }}>
                             {createOrderStep > s.step ? '✓' : s.step}
                           </div>
-                          <span style={{ fontSize: '0.8rem', fontWeight: createOrderStep === s.step ? 800 : 600, color: createOrderStep === s.step ? '#1E3A6F' : '#64748B' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: createOrderStep === s.step ? 800 : 600, color: createOrderStep === s.step ? 'var(--primary)' : 'var(--gray-500)' }}>
                             {s.label}
                           </span>
-                        </div>
+                        </button>
                       ))}
                     </div>
 
                     {/* Step Content */}
                     {createOrderStep === 1 && (
                       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--surface-0)' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 1: Requisition Details</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900)', margin: 0 }}>Step 1: Requisition Details</h3>
                         <div>
                           <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Event / Meeting Title</label>
                           <input type="text" className="form-input" placeholder="e.g. Board of Trustees Lunch" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -646,41 +828,41 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                           <textarea className="form-input" style={{ height: '80px', resize: 'none' }} placeholder="Provide brief official purpose for approval..." value={purpose} onChange={e => setPurpose(e.target.value)} required />
                         </div>
 
-                        {/* Order Type & Scheduling */}
-                        <div style={{ background: 'var(--surface-1)', padding: '14px', borderRadius: '12px', border: '1px solid var(--gray-200)' }}>
-                          <label style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--gray-700)', display: 'block', marginBottom: '8px' }}>Fulfillment Timing</label>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                        {/* Order Type: Immediate vs Scheduled */}
+                        <div style={{ background: 'var(--surface-1)', padding: '12px', borderRadius: '12px', border: '1px solid var(--gray-200)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          <label style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--gray-700)', display: 'block' }}>Delivery Schedule</label>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                             <button
                               type="button"
                               onClick={() => setOrderType('IMMEDIATE')}
                               style={{
-                                padding: '8px 12px',
+                                padding: '8px',
                                 borderRadius: '8px',
-                                border: orderType === 'IMMEDIATE' ? '2px solid #2563EB' : '1px solid var(--gray-300)',
-                                background: orderType === 'IMMEDIATE' ? '#EFF6FF' : 'var(--surface-0)',
-                                color: orderType === 'IMMEDIATE' ? '#1D4ED8' : 'var(--gray-700)',
-                                fontWeight: 700,
-                                fontSize: '0.8rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 800,
+                                border: orderType === 'IMMEDIATE' ? '1.5px solid var(--primary)' : '1px solid var(--gray-300)',
+                                background: orderType === 'IMMEDIATE' ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface-0)',
+                                color: orderType === 'IMMEDIATE' ? 'var(--primary)' : 'var(--gray-600)',
                                 cursor: 'pointer'
                               }}
                             >
-                              ⚡ Order Now
+                              ⚡ Immediate
                             </button>
                             <button
                               type="button"
                               onClick={() => setOrderType('SCHEDULED')}
                               style={{
-                                padding: '8px 12px',
+                                padding: '8px',
                                 borderRadius: '8px',
-                                border: orderType === 'SCHEDULED' ? '2px solid #2563EB' : '1px solid var(--gray-300)',
-                                background: orderType === 'SCHEDULED' ? '#EFF6FF' : 'var(--surface-0)',
-                                color: orderType === 'SCHEDULED' ? '#1D4ED8' : 'var(--gray-700)',
-                                fontWeight: 700,
-                                fontSize: '0.8rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 800,
+                                border: orderType === 'SCHEDULED' ? '1.5px solid var(--primary)' : '1px solid var(--gray-300)',
+                                background: orderType === 'SCHEDULED' ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface-0)',
+                                color: orderType === 'SCHEDULED' ? 'var(--primary)' : 'var(--gray-600)',
                                 cursor: 'pointer'
                               }}
                             >
-                              📅 Schedule Order
+                              📅 Schedule
                             </button>
                           </div>
 
@@ -731,7 +913,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                     {createOrderStep === 2 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 2: Add Food Items</h3>
+                          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900)', margin: 0 }}>Step 2: Add Food Items</h3>
                         </div>
 
                         {/* Search & Category Filter Pills */}
@@ -776,94 +958,153 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                           });
                           if (filteredMenu.length === 0) return null;
 
+                          const isOpen = openVendorId === v.id;
+                          const vendorSelectedItems = v.menu.filter(item => (selectedItems[item.id] || 0) > 0);
+                          const vendorSelectedCount = vendorSelectedItems.reduce((acc, item) => acc + (selectedItems[item.id] || 0), 0);
+                          const vendorSelectedTotal = vendorSelectedItems.reduce((acc, item) => acc + (selectedItems[item.id] || 0) * item.price, 0);
+
                           return (
-                            <div key={v.id} style={{ background: 'var(--surface-0)', padding: '16px', borderRadius: '20px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                                <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  {v.image_url ? (
-                                    <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  ) : (
-                                    <div style={{ width: '100%', height: '100%', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800 }}>{v.name[0]}</div>
+                            <div
+                              key={v.id}
+                              style={{
+                                background: 'var(--surface-0)',
+                                borderRadius: '18px',
+                                border: isOpen ? '1.5px solid var(--primary)' : '1px solid var(--gray-200)',
+                                boxShadow: isOpen ? '0 8px 20px -4px rgba(37, 99, 235, 0.12)' : '0 1px 3px rgba(0,0,0,0.03)',
+                                overflow: 'hidden',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                              }}
+                            >
+                              {/* Vendor Accordion Header (Click to open, closes any other vendor) */}
+                              <button
+                                type="button"
+                                onClick={() => toggleVendorDropdown(v.id)}
+                                style={{
+                                  width: '100%',
+                                  padding: '14px 16px',
+                                  background: isOpen ? 'var(--surface-2)' : 'var(--surface-0)',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  gap: '10px',
+                                  textAlign: 'left'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--surface-2)' }}>
+                                    {v.image_url ? (
+                                      <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                      <div style={{ color: 'var(--primary)', fontSize: '1rem', fontWeight: 800 }}>{v.name[0]}</div>
+                                    )}
+                                  </div>
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.name}</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <span>🟢 Open</span>
+                                      <span style={{ color: 'var(--gray-400)' }}>•</span>
+                                      <span style={{ color: 'var(--gray-500, #64748B)' }}>{filteredMenu.length} items</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                                  {vendorSelectedCount > 0 && (
+                                    <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '3px 8px', borderRadius: '999px', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                      🛍️ {vendorSelectedCount} (₹{vendorSelectedTotal.toFixed(0)})
+                                    </span>
                                   )}
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease',
+                                    color: 'var(--gray-600)'
+                                  }}>
+                                    ▼
+                                  </div>
                                 </div>
-                                <div>
-                                  <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
-                                  <div style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {filteredMenu.length} items</div>
-                                </div>
-                              </div>
+                              </button>
 
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {filteredMenu.map(item => {
-                                  const qty = selectedItems[item.id] || 0;
-                                  const nameKey = `menu.${item.name}`;
-                                  const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
-                                  const categoryEmoji: Record<string, string> = {
-                                    'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞', 'General': '🍽️', 'Sweets': '🍮'
-                                  };
-                                  const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
+                              {/* Accordion Menu Items List (Only open for currently selected vendor) */}
+                              {isOpen && (
+                                <div style={{ padding: '12px 14px 16px', borderTop: '1px solid var(--gray-200)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                  {filteredMenu.map(item => {
+                                    const qty = selectedItems[item.id] || 0;
+                                    const nameKey = `menu.${item.name}`;
+                                    const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
+                                    const categoryEmoji: Record<string, string> = {
+                                      'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞', 'General': '🍽️', 'Sweets': '🍮'
+                                    };
+                                    const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
 
-                                  return (
-                                    <div
-                                      key={item.id}
-                                      style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        background: qty > 0 ? '#EFF6FF' : '#F8FAFC',
-                                        border: qty > 0 ? '1.5px solid #BFDBFE' : '1px solid #F1F5F9',
-                                        borderRadius: '14px',
-                                        padding: '10px',
-                                        transition: 'all 0.15s'
-                                      }}
-                                    >
-                                      <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'var(--surface-0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid var(--gray-200, #E2E8F0)', overflow: 'hidden' }}>
-                                        {item.image_url ? (
-                                          <img src={item.image_url} alt={translatedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : emoji}
-                                      </div>
-                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{translatedName}</div>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
-                                          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2563EB' }}>₹{item.price.toFixed(2)}</span>
-                                          <span style={{ fontSize: '0.7rem', color: '#64748B' }}>/ {item.unit || 'serving'}</span>
+                                    return (
+                                      <div
+                                        key={item.id}
+                                        style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '12px',
+                                          background: qty > 0 ? 'rgba(37, 99, 235, 0.16)' : 'var(--surface-2)',
+                                          border: qty > 0 ? '1.5px solid var(--primary)' : '1px solid var(--gray-200)',
+                                          borderRadius: '14px',
+                                          padding: '10px',
+                                          transition: 'all 0.15s'
+                                        }}
+                                      >
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'var(--surface-0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid var(--gray-200)', overflow: 'hidden', flexShrink: 0 }}>
+                                          {item.image_url ? (
+                                            <img src={item.image_url} alt={translatedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                          ) : emoji}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{translatedName}</div>
+                                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
+                                            <span style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--primary)' }}>₹{item.price.toFixed(2)}</span>
+                                            <span style={{ fontSize: '0.72rem', color: 'var(--gray-500)' }}>/ {item.unit || 'serving'}</span>
+                                          </div>
+                                        </div>
+
+                                        {/* Qty controls */}
+                                        <div style={{ flexShrink: 0 }}>
+                                          {qty === 0 ? (
+                                            <button
+                                              type="button"
+                                              className="btn btn-primary btn-sm"
+                                              onClick={() => handleQtyChange(item.id, 1)}
+                                              style={{ padding: '6px 14px', borderRadius: '8px', minHeight: '36px', fontWeight: 700 }}
+                                            >
+                                              + Add
+                                            </button>
+                                          ) : (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleQtyChange(item.id, qty - 1)}
+                                                style={{ width: '32px', height: '32px', background: 'var(--surface-0)', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                aria-label="Decrease quantity"
+                                              >
+                                                −
+                                              </button>
+                                              <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--gray-900)', minWidth: '16px', textAlign: 'center' }}>{qty}</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleQtyChange(item.id, qty + 1)}
+                                                style={{ width: '32px', height: '32px', background: 'var(--primary)', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                aria-label="Increase quantity"
+                                              >
+                                                +
+                                              </button>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
-
-                                      {/* Qty controls */}
-                                      <div>
-                                        {qty === 0 ? (
-                                          <button
-                                            type="button"
-                                            className="btn btn-primary btn-sm"
-                                            onClick={() => handleQtyChange(item.id, 1)}
-                                            style={{ padding: '6px 14px', borderRadius: '8px', minHeight: '36px' }}
-                                          >
-                                            + Add
-                                          </button>
-                                        ) : (
-                                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleQtyChange(item.id, qty - 1)}
-                                              style={{ width: '32px', height: '32px', background: 'var(--surface-0)', border: '1px solid var(--gray-300, #CBD5E1)', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                              −
-                                            </button>
-                                            <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--gray-900, #0F172A)', minWidth: '16px', textAlign: 'center' }}>{qty}</span>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleQtyChange(item.id, qty + 1)}
-                                              style={{ width: '32px', height: '32px', background: '#2563EB', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                              +
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -876,14 +1117,14 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                               bottom: '64px',
                               left: 0,
                               right: 0,
-                              background: 'rgba(255,255,255,0.96)',
+                              background: 'var(--surface-0)',
                               backdropFilter: 'blur(12px)',
                               borderTop: '1px solid var(--gray-200, #E2E8F0)',
                               padding: '12px 16px',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              boxShadow: '0 -4px 16px rgba(0,0,0,0.08)',
+                              boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
                               zIndex: 900
                             }}
                           >
@@ -919,7 +1160,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
 
                     {createOrderStep === 3 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 3: Review & Submit</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900)', margin: 0 }}>Step 3: Review & Submit</h3>
                         
                         {/* Event specifications */}
                         <div className="card" style={{ background: 'var(--surface-0)' }}>
@@ -950,7 +1191,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                             if (vendorItems.length === 0) return null;
                             const vendorTotal = vendorItems.reduce((sum, item) => sum + (selectedItems[item.id] || 0) * item.price, 0);
                             return (
-                              <div key={v.id} style={{ marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #EFF6FF' }}>
+                              <div key={v.id} style={{ marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid var(--gray-200)' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', marginBottom: '6px' }}>{v.name}</div>
                                 {vendorItems.map(item => (
                                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: 'var(--gray-700, #334155)', marginBottom: '4px' }}>
@@ -1041,170 +1282,228 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                         });
                         if (filteredMenu.length === 0) return null;
 
+                        const isOpen = openVendorId === v.id;
+                        const vendorItemCount = v.menu.reduce((acc, item) => acc + (selectedItems[item.id] || 0), 0);
+                        const vendorTotal = v.menu.reduce((acc, item) => acc + (selectedItems[item.id] || 0) * item.price, 0);
+
                         return (
-                          <div key={v.id} style={{ background: 'var(--surface-0)', padding: '20px', borderRadius: '18px', border: '1px solid var(--gray-200)' }}>
-                            {/* Vendor header */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--gray-100)' }}>
-                              <div style={{ width: '38px', height: '38px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                {v.image_url ? (
-                                  <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                ) : (
-                                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 800 }}>{v.name[0]}</div>
+                          <div
+                            key={v.id}
+                            style={{
+                              background: 'var(--surface-0)',
+                              borderRadius: '20px',
+                              border: isOpen ? '1.5px solid #2563EB' : '1px solid var(--gray-200)',
+                              overflow: 'hidden',
+                              boxShadow: isOpen ? '0 8px 24px rgba(37,99,235,0.08)' : '0 1px 3px rgba(0,0,0,0.02)',
+                              transition: 'all 0.2s cubic-bezier(.4,0,.2,1)'
+                            }}
+                          >
+                            {/* Vendor Accordion Header / Dropdown Trigger */}
+                            <button
+                              type="button"
+                              onClick={() => toggleVendorDropdown(v.id)}
+                              style={{
+                                width: '100%',
+                                padding: '16px 22px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                background: isOpen ? 'var(--surface-2)' : 'var(--surface-0)',
+                                border: 'none',
+                                borderBottom: isOpen ? '1px solid var(--gray-200)' : 'none',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                transition: 'background 0.15s ease'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--surface-2)' }}>
+                                  {v.image_url ? (
+                                    <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 800 }}>{v.name[0]}</div>
+                                  )}
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
+                                  <div style={{ fontSize: '0.75rem', color: '#16A34A', fontWeight: 700 }}>🟢 Available · {filteredMenu.length} items</div>
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {vendorItemCount > 0 && (
+                                  <span style={{ fontSize: '0.8rem', fontWeight: 800, background: 'rgba(37, 99, 235, 0.15)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '4px 12px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    🛍️ {vendorItemCount} added · ₹{vendorTotal.toFixed(2)}
+                                  </span>
                                 )}
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '6px 14px',
+                                  borderRadius: '10px',
+                                  background: isOpen ? 'rgba(37, 99, 235, 0.18)' : 'var(--surface-1)',
+                                  color: isOpen ? 'var(--primary)' : 'var(--gray-700)',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 800,
+                                  border: isOpen ? '1.5px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--gray-300)'
+                                }}>
+                                  <span>{isOpen ? '▲ Close Menu' : '▼ Open Menu'}</span>
+                                </div>
                               </div>
-                              <div>
-                                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#16A34A', fontWeight: 700 }}>🟢 Available · {filteredMenu.length} items</div>
-                              </div>
-                            </div>
+                            </button>
 
-                            {/* Food card grid */}
-                            <div style={{
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))',
-                              gap: '14px',
-                            }}>
-                              {filteredMenu.map(item => {
-                                const qty = selectedItems[item.id] || 0;
-                                const nameKey = `menu.${item.name}`;
-                                const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
-                                const categoryEmoji: Record<string, string> = {
-                                  'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞',
-                                  'General': '🍽️', 'Sweets': '🍮', 'Desserts': '🍮', 'Lunch': '🍱',
-                                };
-                                const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
+                            {/* Food card grid inside the accordion */}
+                            {isOpen && (
+                              <div style={{
+                                padding: '20px',
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))',
+                                gap: '14px',
+                                animation: 'fadeIn 0.2s ease-in-out'
+                              }}>
+                                {filteredMenu.map(item => {
+                                  const qty = selectedItems[item.id] || 0;
+                                  const nameKey = `menu.${item.name}`;
+                                  const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
+                                  const categoryEmoji: Record<string, string> = {
+                                    'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞',
+                                    'General': '🍽️', 'Sweets': '🍮', 'Desserts': '🍮', 'Lunch': '🍱',
+                                  };
+                                  const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
 
-                                return (
-                                  <div
-                                    key={item.id}
-                                    style={{
-                                      background: qty > 0 ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)' : 'var(--surface-0)',
-                                      border: qty > 0 ? '2px solid #3B82F6' : '1px solid var(--gray-200)',
-                                      borderRadius: '16px',
-                                      overflow: 'hidden',
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      transition: 'all 0.18s ease',
-                                      boxShadow: qty > 0 ? '0 4px 12px rgba(37,99,235,0.15)' : '0 1px 3px rgba(0,0,0,0.04)'
-                                    }}
-                                  >
-                                    {/* Food Image / Preview */}
-                                    <div style={{
-                                      height: '110px',
-                                      background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
-                                      position: 'relative',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      overflow: 'hidden'
-                                    }}>
-                                      {item.image_url ? (
-                                        <img
-                                          src={item.image_url}
-                                          alt={translatedName}
-                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                        />
-                                      ) : (
-                                        <span style={{ fontSize: '3rem', opacity: 0.8 }}>{emoji}</span>
-                                      )}
-                                      {item.category && (
-                                        <span style={{ position: 'absolute', top: '8px', left: '8px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', color: 'white', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '6px' }}>
-                                          {item.category}
-                                        </span>
-                                      )}
-                                      {qty > 0 && (
-                                        <span style={{ position: 'absolute', top: '8px', right: '8px', background: '#2563EB', color: 'white', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '999px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                                          {qty} in cart
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    {/* Card Content with Name & Price Beside */}
-                                    <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900)', lineHeight: 1.3 }}>{translatedName}</div>
-                                        <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#2563EB', whiteSpace: 'nowrap' }}>₹{item.price.toFixed(2)}</div>
+                                  return (
+                                    <div
+                                      key={item.id}
+                                      style={{
+                                        background: qty > 0 ? 'rgba(37, 99, 235, 0.12)' : 'var(--surface-0)',
+                                        border: qty > 0 ? '2px solid var(--primary)' : '1px solid var(--gray-200)',
+                                        borderRadius: '16px',
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        transition: 'all 0.18s ease',
+                                        boxShadow: qty > 0 ? '0 4px 12px rgba(37,99,235,0.15)' : '0 1px 3px rgba(0,0,0,0.04)'
+                                      }}
+                                    >
+                                      {/* Food Image / Preview */}
+                                      <div style={{
+                                        height: '110px',
+                                        background: 'var(--surface-2)',
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden'
+                                      }}>
+                                        {item.image_url ? (
+                                          <img
+                                            src={item.image_url}
+                                            alt={translatedName}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                          />
+                                        ) : (
+                                          <span style={{ fontSize: '3rem', opacity: 0.8 }}>{emoji}</span>
+                                        )}
+                                        {item.category && (
+                                          <span style={{ position: 'absolute', top: '8px', left: '8px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', color: 'white', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '6px' }}>
+                                            {item.category}
+                                          </span>
+                                        )}
+                                        {qty > 0 && (
+                                          <span style={{ position: 'absolute', top: '8px', right: '8px', background: '#2563EB', color: 'white', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '999px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                                            {qty} in cart
+                                          </span>
+                                        )}
                                       </div>
-                                      <div style={{ fontSize: '0.72rem', color: 'var(--gray-500)', display: 'flex', justifyContent: 'space-between' }}>
-                                        <span>🏪 {v.name}</span>
-                                        <span>{item.unit || 'per serving'}</span>
-                                      </div>
-                                    </div>
 
-                                    {/* Action Buttons */}
-                                    <div style={{ padding: '0 12px 12px' }}>
-                                      {qty === 0 ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleQtyChange(item.id, 1)}
-                                          style={{
-                                            width: '100%',
-                                            padding: '8px',
-                                            background: '#2563EB',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '10px',
-                                            fontSize: '0.82rem',
-                                            fontWeight: 800,
-                                            cursor: 'pointer',
-                                            transition: 'background 0.15s'
-                                          }}
-                                        >
-                                          + Add to Cart
-                                        </button>
-                                      ) : (
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                      {/* Card Content with Name & Price Beside */}
+                                      <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900)', lineHeight: 1.3 }}>{translatedName}</div>
+                                          <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#2563EB', whiteSpace: 'nowrap' }}>₹{item.price.toFixed(2)}</div>
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--gray-500)', display: 'flex', justifyContent: 'space-between' }}>
+                                          <span>🏪 {v.name}</span>
+                                          <span>{item.unit || 'per serving'}</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Action Buttons */}
+                                      <div style={{ padding: '0 12px 12px' }}>
+                                        {qty === 0 ? (
                                           <button
                                             type="button"
-                                            onClick={() => handleQtyChange(item.id, qty - 1)}
+                                            onClick={() => handleQtyChange(item.id, 1)}
                                             style={{
-                                              width: '34px',
-                                              height: '34px',
-                                              background: 'var(--surface-0)',
-                                              border: '1.5px solid #93C5FD',
-                                              borderRadius: '10px',
-                                              fontSize: '1.1rem',
-                                              fontWeight: 800,
-                                              color: '#2563EB',
-                                              cursor: 'pointer',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center'
-                                            }}
-                                            aria-label="Decrease quantity"
-                                          >
-                                            −
-                                          </button>
-                                          <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--gray-900)', minWidth: '24px', textAlign: 'center' }}>{qty}</span>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleQtyChange(item.id, qty + 1)}
-                                            style={{
-                                              width: '34px',
-                                              height: '34px',
+                                              width: '100%',
+                                              padding: '8px',
                                               background: '#2563EB',
+                                              color: 'white',
                                               border: 'none',
                                               borderRadius: '10px',
-                                              fontSize: '1.1rem',
+                                              fontSize: '0.82rem',
                                               fontWeight: 800,
-                                              color: 'white',
                                               cursor: 'pointer',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center'
+                                              transition: 'background 0.15s'
                                             }}
-                                            aria-label="Increase quantity"
                                           >
-                                            +
+                                            + Add to Cart
                                           </button>
-                                        </div>
-                                      )}
+                                        ) : (
+                                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleQtyChange(item.id, qty - 1)}
+                                              style={{
+                                                width: '34px',
+                                                height: '34px',
+                                                background: 'var(--surface-0)',
+                                                border: '1.5px solid #93C5FD',
+                                                borderRadius: '10px',
+                                                fontSize: '1.1rem',
+                                                fontWeight: 800,
+                                                color: '#2563EB',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                              }}
+                                              aria-label="Decrease quantity"
+                                            >
+                                              −
+                                            </button>
+                                            <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--gray-900)', minWidth: '24px', textAlign: 'center' }}>{qty}</span>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleQtyChange(item.id, qty + 1)}
+                                              style={{
+                                                width: '34px',
+                                                height: '34px',
+                                                background: '#2563EB',
+                                                border: 'none',
+                                                borderRadius: '10px',
+                                                fontSize: '1.1rem',
+                                                fontWeight: 800,
+                                                color: 'white',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                              }}
+                                              aria-label="Increase quantity"
+                                            >
+                                              +
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -1253,9 +1552,9 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                                 style={{
                                   padding: '6px 10px',
                                   borderRadius: '8px',
-                                  border: orderType === 'IMMEDIATE' ? '2px solid #2563EB' : '1px solid var(--gray-300)',
-                                  background: orderType === 'IMMEDIATE' ? '#EFF6FF' : 'var(--surface-0)',
-                                  color: orderType === 'IMMEDIATE' ? '#1D4ED8' : 'var(--gray-700)',
+                                  border: orderType === 'IMMEDIATE' ? '2px solid var(--primary)' : '1px solid var(--gray-300)',
+                                  background: orderType === 'IMMEDIATE' ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface-0)',
+                                  color: orderType === 'IMMEDIATE' ? 'var(--primary)' : 'var(--gray-700)',
                                   fontWeight: 700,
                                   fontSize: '0.75rem',
                                   cursor: 'pointer'
@@ -1269,9 +1568,9 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                                 style={{
                                   padding: '6px 10px',
                                   borderRadius: '8px',
-                                  border: orderType === 'SCHEDULED' ? '2px solid #2563EB' : '1px solid var(--gray-300)',
-                                  background: orderType === 'SCHEDULED' ? '#EFF6FF' : 'var(--surface-0)',
-                                  color: orderType === 'SCHEDULED' ? '#1D4ED8' : 'var(--gray-700)',
+                                  border: orderType === 'SCHEDULED' ? '2px solid var(--primary)' : '1px solid var(--gray-300)',
+                                  background: orderType === 'SCHEDULED' ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface-0)',
+                                  color: orderType === 'SCHEDULED' ? 'var(--primary)' : 'var(--gray-700)',
                                   fontWeight: 700,
                                   fontSize: '0.75rem',
                                   cursor: 'pointer'
@@ -1339,7 +1638,7 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
                               </div>
                             );
                           })}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', borderTop: '2px solid #EFF6FF', paddingTop: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', borderTop: '2px solid var(--gray-200)', paddingTop: '10px' }}>
                             <span>Grand Total</span>
                             <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(2)}</span>
                           </div>
@@ -1361,29 +1660,51 @@ export default function CoordinatorDashboardPage({ initialTab = 'dashboard' }: {
               </div>
             )}
 
-            {/* TAB: LIST REQUISITIONS (My Orders, Pending, Completed, Rejected) */}
-            {['orders', 'pending', 'completed', 'rejected'].includes(activeTab) && (
+            {/* TAB: LIST REQUISITIONS (My Orders, Pending, Completed, Rejected, Cancelled) */}
+            {['orders', 'pending', 'completed', 'rejected', 'cancelled'].includes(activeTab) && (
               <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                  <input
-                    className="form-input"
-                    style={{ maxWidth: '240px' }}
-                    placeholder={t('coord.search_ph', 'Search by title or ID...')}
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                  <select
-                    className="form-input"
-                    style={{ maxWidth: '180px' }}
-                    value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value)}
-                  >
-                    {ALL_STATUSES.map(s => (
-                      <option key={s} value={s}>
-                        {s === 'All' ? t('common.all', 'All Statuses') : (t(`status.${s}`) !== `status.${s}` ? t(`status.${s}`) : s)}
-                      </option>
-                    ))}
-                  </select>
+                {/* Cancelled tab heading */}
+                {activeTab === 'cancelled' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '1.1rem' }}>🚫</span>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#DC2626' }}>{t('coord.cancelled_orders', 'Cancelled Orders')}</h3>
+                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--gray-500)' }}>{t('coord.cancelled_tab_desc', 'Requisitions you withdrew before processing')}</p>
+                    </div>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input
+                      className="form-input"
+                      style={{ maxWidth: '240px' }}
+                      placeholder={t('coord.search_ph', 'Search by title or ID...')}
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                    />
+                    <select
+                      className="form-input"
+                      style={{ maxWidth: '180px' }}
+                      value={statusFilter}
+                      onChange={e => setStatusFilter(e.target.value)}
+                    >
+                      {ALL_STATUSES.map(s => (
+                        <option key={s} value={s}>
+                          {s === 'All' ? t('common.all', 'All Statuses') : (t(`status.${s}`) !== `status.${s}` ? t(`status.${s}`) : s)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {activeTab !== 'cancelled' && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setActiveTab('create')}
+                      style={{ padding: '8px 16px', borderRadius: '10px', fontWeight: 800, fontSize: '0.84rem' }}
+                    >
+                      ➕ {t('coord.create_requisition', 'Create Requisition')}
+                    </button>
+                  )}
                 </div>
 
                 <div className="table-wrapper" style={{ border: '1px solid var(--gray-200)', borderRadius: '10px' }}>

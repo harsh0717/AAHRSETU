@@ -33,8 +33,8 @@ class AuthService:
         if user_role != req_role:
             return None
             
-        # Verify department matches (for coordinator)
-        if role == "coordinator" and user.department_id != department_id:
+        # Verify department matches (for coordinator if department_id is provided)
+        if role == "coordinator" and department_id and user.department_id != department_id:
             return None
             
         # Verify department matches (for principal)

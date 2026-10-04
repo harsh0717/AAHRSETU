@@ -258,24 +258,46 @@ export async function getVendorById(id: string): Promise<Vendor | null> {
   return vendors.find((v) => v.id === id) || null;
 }
 
+export function isVendorOpen(status?: string | null): boolean {
+  if (!status) return true;
+  const s = status.trim().toLowerCase();
+  if (s === 'open' || s === 'opened' || s === 'active' || s === 'available') {
+    return true;
+  }
+  if (s === 'closed' || s === 'temporarily_unavailable' || s === 'inactive' || s === 'disabled') {
+    return false;
+  }
+  return true;
+}
+
 export async function getOpenVendors(): Promise<Vendor[]> {
   const vendors = await getVendors();
-  return vendors.filter((v) => v.status === 'open');
+  return vendors.filter((v) => isVendorOpen(v.status));
 }
 
 export async function getAvailableVendors(): Promise<Vendor[]> {
   const vendors = await getVendors();
-  const openVendors = vendors.filter((v) => v.status === 'open');
-  const result: Vendor[] = [];
-
-  for (const v of openVendors) {
-    const menu = await getVendorMenu(v.id);
-    const hasAvailableItems = menu.some((m) => m.available && m.active);
-    if (hasAvailableItems) {
-      result.push({ ...v, menu_items: menu.filter((m) => m.available && m.active) });
+  const openVendors = vendors.filter((v) => isVendorOpen(v.status));
+  
+  const promises = openVendors.map(async (v) => {
+    try {
+      const menu = await getVendorMenu(v.id);
+      const availableItems = menu.filter((m) => m.active !== false && m.available !== false && Number(m.price) > 0);
+      if (availableItems.length > 0) {
+        return { ...v, menu_items: availableItems };
+      }
+    } catch (err) {
+      console.warn(`[VENDORS] Error fetching menu for available vendor ${v.id}:`, err);
     }
-  }
-  return result;
+    const fallbackItems = (FALLBACK_MENUS[v.id] || []).filter((m) => m.active !== false && m.available !== false && Number(m.price) > 0);
+    if (fallbackItems.length > 0) {
+      return { ...v, menu_items: fallbackItems };
+    }
+    return null;
+  });
+
+  const resolved = await Promise.all(promises);
+  return resolved.filter(Boolean) as Vendor[];
 }
 
 export async function updateVendorStatus(vendorId: string, status: string): Promise<Vendor> {
@@ -503,25 +525,81 @@ export async function deleteVendor(vendorId: string): Promise<void> {
   saveLocalVendors(vendors);
 }
 
-export async function getAvailableMenuByVendor(): Promise<{ id: string; name: string; image_url?: string | null; status: string; menu: MenuItem[] }[]> {
-  const vendors = await getVendors();
-  const open = vendors.filter((v) => v.status === 'open');
-  
-  const result = [];
-  for (const v of open) {
-    const menu = await getVendorMenu(v.id);
-    const available = menu.filter((m) => m.active && m.available && m.price > 0);
-    if (available.length > 0) {
-      result.push({
-        id: v.id,
-        name: v.name,
-        image_url: v.image_url,
-        status: v.status,
-        menu: available,
-      });
+export function getCachedAvailableMenuByVendor(): { id: string; name: string; image_url?: string | null; status: string; menu: MenuItem[] }[] {
+  try {
+    const vendors = getLocalVendors();
+    const open = vendors.filter((v) => isVendorOpen(v.status));
+    const result: { id: string; name: string; image_url?: string | null; status: string; menu: MenuItem[] }[] = [];
+    for (const v of open) {
+      const menu = getLocalMenu(v.id);
+      const available = menu.filter((m) => m.active !== false && m.available !== false && Number(m.price) > 0);
+      if (available.length > 0) {
+        result.push({
+          id: v.id,
+          name: v.name,
+          image_url: v.image_url,
+          status: v.status || 'open',
+          menu: available,
+        });
+      }
     }
+    if (result.length > 0) return result;
+  } catch (err) {
+    console.warn('[VENDORS] Error reading cached available menu:', err);
   }
-  return result;
+  // Ultimate emergency fallback: use FALLBACK_VENDORS with FALLBACK_MENUS
+  return FALLBACK_VENDORS.map((v) => ({
+    id: v.id,
+    name: v.name,
+    image_url: v.image_url,
+    status: v.status || 'open',
+    menu: FALLBACK_MENUS[v.id] || [],
+  }));
+}
+
+export async function getAvailableMenuByVendor(): Promise<{ id: string; name: string; image_url?: string | null; status: string; menu: MenuItem[] }[]> {
+  try {
+    const vendors = await getVendors();
+    const open = vendors.filter((v) => isVendorOpen(v.status));
+    
+    const menuPromises = open.map(async (v) => {
+      try {
+        const menu = await getVendorMenu(v.id);
+        const available = menu.filter((m) => m.active !== false && m.available !== false && Number(m.price) > 0);
+        if (available.length > 0) {
+          return {
+            id: v.id,
+            name: v.name,
+            image_url: v.image_url,
+            status: v.status || 'open',
+            menu: available,
+          };
+        }
+      } catch (err) {
+        console.warn(`[VENDORS] Error fetching menu for vendor ${v.id}:`, err);
+      }
+      const fallbackMenu = (FALLBACK_MENUS[v.id] || []).filter((m) => m.active !== false && m.available !== false && Number(m.price) > 0);
+      if (fallbackMenu.length > 0) {
+        return {
+          id: v.id,
+          name: v.name,
+          image_url: v.image_url,
+          status: v.status || 'open',
+          menu: fallbackMenu,
+        };
+      }
+      return null;
+    });
+
+    const result = (await Promise.all(menuPromises)).filter(Boolean) as { id: string; name: string; image_url?: string | null; status: string; menu: MenuItem[] }[];
+    if (result.length > 0) {
+      return result;
+    }
+  } catch (err) {
+    console.warn('[VENDORS] Error in getAvailableMenuByVendor:', err);
+  }
+
+  return getCachedAvailableMenuByVendor();
 }
 
 export interface VendorMonthlySettlement {

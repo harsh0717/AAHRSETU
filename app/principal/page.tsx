@@ -6,7 +6,7 @@ import AppShell from '@/components/AppShell';
 import StatusBadge from '@/components/StatusBadge';
 import { getSession, initializeApplication, UserProfile, updateSessionLanguage, updateUserProfile, uploadAvatar } from '@/lib/auth';
 import { getOrders, MasterOrder, createMasterOrder } from '@/lib/store';
-import { getAvailableMenuByVendor, MenuItem } from '@/lib/vendors';
+import { getAvailableMenuByVendor, getCachedAvailableMenuByVendor, MenuItem } from '@/lib/vendors';
 import { ROLE_COLORS } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n';
 import { getNotifications, markNotificationRead, markAllRead, NotificationItem, localizeNotificationMessage } from '@/lib/notifications';
@@ -22,6 +22,44 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
   // Active Tab
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync activeTab whenever initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  // Sync activeTab with URL hash (#create, #queue, #dashboard, etc.)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '').trim().toLowerCase();
+      if (hash) {
+        if (['create', 'queue', 'dashboard', 'notifications', 'profile', 'settings', 'my_orders', 'orders'].includes(hash)) {
+          setActiveTab(hash === 'my_orders' || hash === 'orders' ? 'my_orders' : hash);
+        } else if (hash === 'new' || hash === 'create-order') {
+          setActiveTab('create');
+        }
+      } else if (initialTab) {
+        setActiveTab(initialTab);
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && activeTab) {
+      const currentHash = window.location.hash.replace('#', '').trim().toLowerCase();
+      if (currentHash !== activeTab) {
+        window.history.replaceState(null, '', `#${activeTab}`);
+      }
+    }
+  }, [activeTab]);
 
   // Lists
   const [orders, setOrders] = useState<MasterOrder[]>([]);
@@ -46,9 +84,25 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
   const [purpose, setPurpose] = useState('');
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>({});
   const [createOrderStep, setCreateOrderStep] = useState(1);
-  const [menuByVendor, setMenuByVendor] = useState<{ id: string; name: string; image_url?: string | null; status?: string; menu: MenuItem[] }[]>([]);
+  const [menuByVendor, setMenuByVendor] = useState<{ id: string; name: string; image_url?: string | null; status?: string; menu: MenuItem[] }[]>(() => {
+    if (typeof window !== 'undefined') {
+      return getCachedAvailableMenuByVendor();
+    }
+    return [];
+  });
   const [selectedDeptId, setSelectedDeptId] = useState('');
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  // Search & Categories for Menu Catalog
+  const [menuCategoryFilter, setMenuCategoryFilter] = useState('All');
+  const [menuSearchQuery, setMenuSearchQuery] = useState('');
+
+  // Vendor Menu Dropdown Accordion State (Only one vendor menu open at a time)
+  const [openVendorId, setOpenVendorId] = useState<string | null>(null);
+
+  const toggleVendorDropdown = (vendorId: string) => {
+    setOpenVendorId(prev => (prev === vendorId ? null : vendorId));
+  };
 
   const loadDataRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
 
@@ -160,27 +214,32 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
     }
   }, []);
 
-  // Listen to hash changes for sidebar navigation
+  // Ensure available menus are fresh whenever navigating to or returning to 'create' tab
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleHash = () => {
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        setActiveTab(hash);
-      } else {
-        setActiveTab(initialTab || 'dashboard');
+    if (activeTab === 'create') {
+      getAvailableMenuByVendor().then((mList) => {
+        if (mList && mList.length > 0) {
+          setMenuByVendor(mList);
+        }
+      }).catch((err) => {
+        console.warn('Error refreshing available menu by vendor on tab switch:', err);
+      });
+    }
+  }, [activeTab]);
+
+  // Silently refresh menus when window regains focus
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      if (activeTab === 'create') {
+        getAvailableMenuByVendor().then((mList) => {
+          if (mList && mList.length > 0) {
+            setMenuByVendor(mList);
+          }
+        }).catch(() => {});
       }
     };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, [initialTab]);
-
-  // Sync state changes back to hash
-  useEffect(() => {
-    if (activeTab && window.location.hash !== '#' + activeTab) {
-      window.location.hash = activeTab;
-    }
+    window.addEventListener('focus', handleWindowFocus);
+    return () => window.removeEventListener('focus', handleWindowFocus);
   }, [activeTab]);
 
   async function handleUpdateProfile(e: React.FormEvent) {
@@ -315,84 +374,87 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
   // Compute Stats
   const totalPending = pendingQueue.length;
-  const totalMyOrders = myOrders.length;
+  const totalMyOrders = myOrders.filter(o => o.status !== 'Cancelled').length;
   const totalApproved = approvedOrders.length;
+  const totalCancelled = myOrders.filter(o => o.status === 'Cancelled').length;
 
   return (
-    <AppShell role="principal" currentPath="/principal">
+    <AppShell role="principal" activeTab={activeTab} onTabChange={setActiveTab}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         
         {/* Enterprise Institutional Top Banner */}
-        <div style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          borderRadius: '20px',
-          padding: '24px 28px',
-          marginBottom: '20px',
-          color: 'white',
-          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-                {t('principal.approval_badge', 'EXECUTIVE AUTHORIZATION')}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                {session?.department_id ? `${t('common.department', 'Department')}: ${session.department_id}` : t('common.principal', 'Academic Oversight')} · FY 2026-27
-              </span>
+        {activeTab === 'dashboard' && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+            borderRadius: '20px',
+            padding: '24px 28px',
+            marginBottom: '20px',
+            color: 'white',
+            boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.15)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, background: '#0D9488', color: 'white', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                  {t('principal.approval_badge', 'EXECUTIVE AUTHORIZATION')}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                  {session?.department_id ? `${t('common.department', 'Department')}: ${session.department_id}` : t('common.principal', 'Academic Oversight')} · FY 2026-27
+                </span>
+              </div>
+              <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
+                🎓 {t('principal.orders_hub_title', 'Principal Approvals & Department Oversight Hub')}
+              </h1>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
+                {t('principal.orders_hub_desc', 'Review department catering requisitions, audit budget allocations, and approve vendor kitchen orders.')}
+              </p>
             </div>
-            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, margin: '2px 0 6px', letterSpacing: '-0.5px', color: '#F8FAFC' }}>
-              🎓 {t('principal.orders_hub_title', 'Principal Approvals & Department Oversight Hub')}
-            </h1>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', maxWidth: '650px' }}>
-              {t('principal.orders_hub_desc', 'Review department catering requisitions, audit budget allocations, and approve vendor kitchen orders.')}
-            </p>
-          </div>
 
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setActiveTab('create')}
-              style={{
-                padding: '9px 16px',
-                borderRadius: '10px',
-                background: '#0D9488',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: 800,
-                fontSize: '0.84rem',
-                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              ➕ {t('orders.create', 'Create Requisition')}
-            </button>
-            <button
-              onClick={() => setActiveTab('queue')}
-              style={{
-                padding: '9px 16px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: '#E2E8F0',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                cursor: 'pointer',
-                fontWeight: 700,
-                fontSize: '0.84rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              📋 {t('principal.review_queue_btn', 'Review Queue')} ({totalPending})
-            </button>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setActiveTab('create')}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  background: '#0D9488',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                ➕ {t('orders.create', 'Create Requisition')}
+              </button>
+              <button
+                onClick={() => setActiveTab('queue')}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#E2E8F0',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                📋 {t('principal.review_queue_btn', 'Review Queue')} ({totalPending})
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Loading Spinner */}
         {loading ? (
@@ -405,83 +467,139 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
             {/* TAB: DASHBOARD OVERVIEW */}
             {activeTab === 'dashboard' && (
               <div>
-                {/* Executive 3-Tile KPI Summary Grid */}
+                {/* Executive 4-Tile KPI Summary Grid */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
                   gap: '16px',
                   marginBottom: '24px',
                   width: '100%'
                 }}>
-                  {/* Tile 1: Pending Approvals */}
-                  <div style={{
-                    background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid var(--gray-200, #E2E8F0)',
-                    padding: '20px 24px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                  }}>
+                  {/* Tile 1: Pending Approvals → navigates to queue tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid var(--gray-200, #E2E8F0)',
+                      padding: '20px 24px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('queue')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 18px rgba(217,119,6,0.15)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View Pending Approval Queue"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em' }}>
                         {t('principal.pending_tile', 'PENDING PRINCIPAL APPROVAL')}
                       </span>
-                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
                         {totalPending} {t('principal.awaiting_review', 'AWAITING')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: totalPending > 0 ? '#D97706' : '#059669', letterSpacing: '-0.5px' }}>
                       {totalPending}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       {t('principal.pending_tile_sub', 'Requisitions requiring immediate sanction')}
                     </div>
                   </div>
 
-                  {/* Tile 2: Approved Orders */}
-                  <div style={{
-                    background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid #10B981',
-                    padding: '20px 24px',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)'
-                  }}>
+                  {/* Tile 2: Approved Orders → navigates to approved tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid #10B981',
+                      padding: '20px 24px',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.08)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('approved')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 20px rgba(16,185,129,0.2)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(16,185,129,0.08)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View Approved & Dispatched Orders"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#15803D', letterSpacing: '0.05em' }}>
                         {t('principal.approved_tile', 'APPROVED & DISPATCHED')}
                       </span>
-                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
                         {t('principal.active_pipeline', 'ACTIVE PIPELINE')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669', letterSpacing: '-0.5px' }}>
                       {totalApproved}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       {t('principal.approved_tile_sub', 'Orders approved for kitchen fulfillment')}
                     </div>
                   </div>
 
-                  {/* Tile 3: My Requisitions */}
-                  <div style={{
-                    background: 'var(--surface-0)',
-                    borderRadius: '16px',
-                    border: '1.5px solid var(--gray-200, #E2E8F0)',
-                    padding: '20px 24px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                  }}>
+                  {/* Tile 3: My Requisitions → navigates to my_orders tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid var(--gray-200, #E2E8F0)',
+                      padding: '20px 24px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('my_orders')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 18px rgba(71,85,105,0.12)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View My Requisitions"
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--gray-600, #475569)', letterSpacing: '0.05em' }}>
                         {t('principal.total_tile', 'TOTAL REQUISITIONS AUDITED')}
                       </span>
-                      <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ background: '#CCFBF1', color: '#0F766E', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
                         {t('nav.my_orders', 'MY ORDERS')}
                       </span>
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--gray-900, #0F172A)', letterSpacing: '-0.5px' }}>
                       {totalMyOrders}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
                       {t('principal.total_tile_sub', 'Lifetime requisitions reviewed across departments')}
+                    </div>
+                  </div>
+
+                  {/* Tile 4: Cancelled Orders → navigates to my_orders tab */}
+                  <div
+                    style={{
+                      background: 'var(--surface-0)',
+                      borderRadius: '16px',
+                      border: '1.5px solid #FECACA',
+                      padding: '20px 24px',
+                      boxShadow: '0 2px 4px rgba(239,68,68,0.06)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.18s, transform 0.18s'
+                    }}
+                    onClick={() => setActiveTab('my_orders')}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 18px rgba(220,38,38,0.15)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 4px rgba(239,68,68,0.06)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+                    title="View Cancelled Orders"
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#DC2626', letterSpacing: '0.05em' }}>
+                        {t('principal.cancelled_orders', 'CANCELLED ORDERS')}
+                      </span>
+                      <span style={{ background: '#FEF2F2', color: '#991B1B', borderRadius: '8px', padding: '3px 8px', fontSize: '0.68rem', fontWeight: 800 }}>
+                        {t('principal.withdrawn', 'WITHDRAWN')}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: totalCancelled > 0 ? '#DC2626' : '#6B7280', letterSpacing: '-0.5px' }}>
+                      {totalCancelled}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--gray-500, #64748B)', marginTop: '4px' }}>
+                      {t('principal.cancelled_sub', 'Self-created requisitions withdrawn before processing')}
                     </div>
                   </div>
                 </div>
@@ -520,7 +638,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
               <div className="card" style={{ padding: '20px' }}>
                 {isMobileDevice ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {myOrders.map(o => (
+                    {myOrders.filter(o => o.status !== 'Cancelled').map(o => (
                       <div key={o.id} style={{ border: '1px solid var(--gray-200, #E2E8F0)', padding: '16px', borderRadius: '16px', background: 'var(--surface-1)', cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                           <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{o.id}</span>
@@ -534,7 +652,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                         </div>
                       </div>
                     ))}
-                    {myOrders.length === 0 && (
+                    {myOrders.filter(o => o.status !== 'Cancelled').length === 0 && (
                       <div style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)', fontSize: '0.85rem' }}>No requisitions created yet.</div>
                     )}
                   </div>
@@ -551,7 +669,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                         </tr>
                       </thead>
                       <tbody>
-                        {myOrders.map(o => (
+                        {myOrders.filter(o => o.status !== 'Cancelled').map(o => (
                           <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/order/${o.id}`)}>
                             <td style={{ fontWeight: 700 }}>{o.id}</td>
                             <td style={{ fontWeight: 600 }}>{o.title}</td>
@@ -560,7 +678,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                             <td style={{ textAlign: 'right', fontWeight: 700 }}>₹{o.total_bill_amount}</td>
                           </tr>
                         ))}
-                        {myOrders.length === 0 && (
+                        {myOrders.filter(o => o.status !== 'Cancelled').length === 0 && (
                           <tr>
                             <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--gray-400)' }}>
                               No requisitions created yet.
@@ -577,17 +695,70 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
             {/* TAB: CREATE REQUISITION */}
             {activeTab === 'create' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: '20px' }}>
+                {/* Minimal Top Breadcrumb & Return Bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', paddingBottom: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('dashboard')}
+                    style={{
+                      background: 'var(--surface-0)',
+                      border: '1px solid var(--gray-300)',
+                      borderRadius: '10px',
+                      padding: '7px 14px',
+                      cursor: 'pointer',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      color: 'var(--gray-700)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    ← {t('common.back_to_dashboard', 'Back to Dashboard')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('queue')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      color: 'var(--primary-600, #2563EB)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    📋 {t('principal.review_queue_btn', 'Review Queue')} ({totalPending}) →
+                  </button>
+                </div>
                 {isMobileDevice ? (
                   /* Guided Flow on Mobile */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '80px' }}>
                     {/* Visual Progress Steps Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-0)', padding: '16px', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-0)', padding: '14px 16px', borderRadius: '16px', border: '1px solid var(--gray-200, #E2E8F0)', boxShadow: 'var(--shadow-sm)' }}>
                       {[
                         { step: 1, label: 'Details' },
-                        { step: 2, label: 'Menu' },
+                        { step: 2, label: 'Menu Dropdown' },
                         { step: 3, label: 'Review' }
                       ].map((s) => (
-                        <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          key={s.step}
+                          type="button"
+                          onClick={() => setCreateOrderStep(s.step)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px'
+                          }}
+                        >
                           <div style={{
                             width: '28px',
                             height: '28px',
@@ -605,17 +776,17 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                           }}>
                             {createOrderStep > s.step ? '✓' : s.step}
                           </div>
-                          <span style={{ fontSize: '0.8rem', fontWeight: createOrderStep === s.step ? 800 : 600, color: createOrderStep === s.step ? '#1E3A6F' : '#64748B' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: createOrderStep === s.step ? 800 : 600, color: createOrderStep === s.step ? 'var(--primary)' : 'var(--gray-500)' }}>
                             {s.label}
                           </span>
-                        </div>
+                        </button>
                       ))}
                     </div>
 
                     {/* Step Content */}
                     {createOrderStep === 1 && (
                       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--surface-0)' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 1: Requisition Details</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900)', margin: 0 }}>Step 1: Requisition Details</h3>
                         <div>
                           <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--gray-600, #475569)', display: 'block', marginBottom: '6px' }}>Select Target Department</label>
                           <select className="form-input" value={selectedDeptId} onChange={e => setSelectedDeptId(e.target.value)} required>
@@ -646,95 +817,159 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                     )}
 
                     {createOrderStep === 2 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 2: Add Food Items</h3>
-                        {menuByVendor.map(v => (
-                          <div key={v.id} style={{ background: 'var(--surface-0)', padding: '16px', borderRadius: '20px', border: '1px solid var(--gray-200, #E2E8F0)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                              <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                {v.image_url ? (
-                                  <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                ) : (
-                                  <div style={{ width: '100%', height: '100%', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800 }}>{v.name[0]}</div>
-                                )}
-                              </div>
-                              <div>
-                                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
-                                <div style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items</div>
-                              </div>
-                            </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900)', margin: 0 }}>Step 2: Add Food Items</h3>
+                        </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                              {v.menu.map(item => {
-                                const qty = selectedItems[item.id] || 0;
-                                const nameKey = `menu.${item.name}`;
-                                const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
-                                const categoryEmoji: Record<string, string> = {
-                                  'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞', 'General': '🍽️'
-                                };
-                                const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
+                        {menuByVendor.map(v => {
+                          const isOpen = openVendorId === v.id;
+                          const vendorItemCount = v.menu.reduce((acc, item) => acc + (selectedItems[item.id] || 0), 0);
+                          const vendorTotal = v.menu.reduce((acc, item) => acc + (selectedItems[item.id] || 0) * item.price, 0);
 
-                                return (
-                                  <div
-                                    key={item.id}
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '12px',
-                                      background: qty > 0 ? '#EFF6FF' : '#F8FAFC',
-                                      border: qty > 0 ? '1.5px solid #BFDBFE' : '1px solid #F1F5F9',
-                                      borderRadius: '14px',
-                                      padding: '10px',
-                                      transition: 'all 0.15s'
-                                    }}
-                                  >
-                                    <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'var(--surface-0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid var(--gray-200, #E2E8F0)', overflow: 'hidden' }}>
-                                      {item.image_url ? (
-                                        <img src={item.image_url} alt={translatedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                      ) : emoji}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{translatedName}</div>
-                                      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2563EB', marginTop: '2px' }}>₹{item.price}</div>
-                                    </div>
-
-                                    {/* Qty controls */}
-                                    <div>
-                                      {qty === 0 ? (
-                                        <button
-                                          type="button"
-                                          className="btn btn-primary btn-sm"
-                                          onClick={() => handleQtyChange(item.id, 1)}
-                                          style={{ padding: '6px 14px', borderRadius: '8px', minHeight: '36px' }}
-                                        >
-                                          + Add
-                                        </button>
-                                      ) : (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleQtyChange(item.id, qty - 1)}
-                                            style={{ width: '32px', height: '32px', background: 'var(--surface-0)', border: '1px solid var(--gray-300, #CBD5E1)', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                          >
-                                            −
-                                          </button>
-                                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--gray-900, #0F172A)', minWidth: '16px', textAlign: 'center' }}>{qty}</span>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleQtyChange(item.id, qty + 1)}
-                                            style={{ width: '32px', height: '32px', background: '#2563EB', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                          >
-                                            +
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
+                          return (
+                            <div
+                              key={v.id}
+                              style={{
+                                background: 'var(--surface-0)',
+                                borderRadius: '18px',
+                                border: isOpen ? '1.5px solid #2563EB' : '1px solid var(--gray-200, #E2E8F0)',
+                                overflow: 'hidden',
+                                transition: 'all 0.2s ease',
+                                boxShadow: isOpen ? '0 4px 16px rgba(37,99,235,0.08)' : 'none'
+                              }}
+                            >
+                              {/* Vendor Accordion Header / Dropdown Trigger */}
+                              <button
+                                type="button"
+                                onClick={() => toggleVendorDropdown(v.id)}
+                                style={{
+                                  width: '100%',
+                                  padding: '14px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  background: isOpen ? 'var(--surface-2)' : 'var(--surface-0)',
+                                  border: 'none',
+                                  borderBottom: isOpen ? '1px solid var(--gray-200, #E2E8F0)' : 'none',
+                                  cursor: 'pointer',
+                                  textAlign: 'left'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--surface-2)' }}>
+                                    {v.image_url ? (
+                                      <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                      <div style={{ width: '100%', height: '100%', background: 'rgba(37, 99, 235, 0.15)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 800 }}>{v.name[0]}</div>
+                                    )}
                                   </div>
-                                );
-                              })}
+                                  <div>
+                                    <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items</div>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {vendorItemCount > 0 && (
+                                    <span style={{ fontSize: '0.72rem', fontWeight: 800, background: 'rgba(37, 99, 235, 0.15)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '3px 8px', borderRadius: '999px' }}>
+                                      🛍️ {vendorItemCount} (₹{vendorTotal.toFixed(0)})
+                                    </span>
+                                  )}
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '5px 10px',
+                                    borderRadius: '8px',
+                                    background: isOpen ? 'rgba(37, 99, 235, 0.18)' : 'var(--surface-1)',
+                                    color: isOpen ? 'var(--primary)' : 'var(--gray-700)',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 800,
+                                    border: isOpen ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--gray-200)'
+                                  }}>
+                                    <span>{isOpen ? '▲ Close Menu' : '▼ Dropdown Menu'}</span>
+                                  </div>
+                                </div>
+                              </button>
+
+                              {/* Food Item List inside the accordion */}
+                              {isOpen && (
+                                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                  {v.menu.map(item => {
+                                    const qty = selectedItems[item.id] || 0;
+                                    const nameKey = `menu.${item.name}`;
+                                    const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
+                                    const categoryEmoji: Record<string, string> = {
+                                      'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞', 'General': '🍽️'
+                                    };
+                                    const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
+
+                                    return (
+                                      <div
+                                        key={item.id}
+                                        style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '12px',
+                                          background: qty > 0 ? 'rgba(37, 99, 235, 0.16)' : 'var(--surface-2)',
+                                          border: qty > 0 ? '1.5px solid var(--primary)' : '1px solid var(--gray-200)',
+                                          borderRadius: '14px',
+                                          padding: '10px',
+                                          transition: 'all 0.15s'
+                                        }}
+                                      >
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'var(--surface-0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid var(--gray-200)', overflow: 'hidden', flexShrink: 0 }}>
+                                          {item.image_url ? (
+                                            <img src={item.image_url} alt={translatedName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                          ) : emoji}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{translatedName}</div>
+                                          <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--primary)', marginTop: '2px' }}>₹{item.price.toFixed ? item.price.toFixed(2) : item.price}</div>
+                                        </div>
+
+                                        {/* Qty controls */}
+                                        <div style={{ flexShrink: 0 }}>
+                                          {qty === 0 ? (
+                                            <button
+                                              type="button"
+                                              className="btn btn-primary btn-sm"
+                                              onClick={() => handleQtyChange(item.id, 1)}
+                                              style={{ padding: '6px 14px', borderRadius: '8px', minHeight: '36px', fontWeight: 700 }}
+                                            >
+                                              + Add
+                                            </button>
+                                          ) : (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleQtyChange(item.id, qty - 1)}
+                                                style={{ width: '32px', height: '32px', background: 'var(--surface-0)', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                aria-label="Decrease quantity"
+                                              >
+                                                −
+                                              </button>
+                                              <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--gray-900)', minWidth: '16px', textAlign: 'center' }}>{qty}</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleQtyChange(item.id, qty + 1)}
+                                                style={{ width: '32px', height: '32px', background: 'var(--primary)', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 800, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                aria-label="Increase quantity"
+                                              >
+                                                +
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
 
                         {/* Sticky order summary footer */}
                         {Object.values(selectedItems).some(q => q > 0) && (
@@ -744,14 +979,14 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                               bottom: '64px',
                               left: 0,
                               right: 0,
-                              background: 'rgba(255,255,255,0.96)',
+                              background: 'var(--surface-0)',
                               backdropFilter: 'blur(12px)',
                               borderTop: '1px solid var(--gray-200, #E2E8F0)',
                               padding: '12px 16px',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              boxShadow: '0 -4px 16px rgba(0,0,0,0.08)',
+                              boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
                               zIndex: 900
                             }}
                           >
@@ -787,7 +1022,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
 
                     {createOrderStep === 3 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E3A6F', margin: 0 }}>Step 3: Review & Submit</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900)', margin: 0 }}>Step 3: Review & Submit</h3>
                         
                         {/* Event specifications */}
                         <div className="card" style={{ background: 'var(--surface-0)' }}>
@@ -816,7 +1051,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                             if (vendorItems.length === 0) return null;
                             const vendorTotal = vendorItems.reduce((sum, item) => sum + (selectedItems[item.id] || 0) * item.price, 0);
                             return (
-                              <div key={v.id} style={{ marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #EFF6FF' }}>
+                              <div key={v.id} style={{ marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid var(--gray-200)' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', marginBottom: '6px' }}>{v.name}</div>
                                 {vendorItems.map(item => (
                                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: 'var(--gray-700, #334155)', marginBottom: '4px' }}>
@@ -864,171 +1099,275 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                   /* Standard Two-Column Layout on Desktop */
                   <form onSubmit={handleCreateOrder} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: '20px', alignItems: 'start' }}>
                     {/* LEFT: Food menu grouped by vendor */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      {menuByVendor.map(v => (
-                        <div key={v.id}>
-                          {/* Vendor header */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              {v.image_url ? (
-                                <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 800 }}>{v.name[0]}</div>
-                              )}
-                            </div>
-                            <div>
-                              <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
-                              <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700 }}>🟢 Open · {v.menu.length} items available</div>
-                            </div>
-                          </div>
-
-                          {/* Food card grid */}
-                          <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
-                            gap: '12px',
-                          }}>
-                            {v.menu.map(item => {
-                              const qty = selectedItems[item.id] || 0;
-                              const nameKey = `menu.${item.name}`;
-                              const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
-                              const unitKey = `unit.${item.unit.toLowerCase().replace(/ /g,'_')}`;
-                              const translatedUnit = t(unitKey) !== unitKey ? t(unitKey) : item.unit;
-                              const categoryEmoji: Record<string, string> = {
-                                'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞',
-                                'General': '🍽️', 'Sweets': '🍮', 'Desserts': '🍮', 'Lunch': '🍱',
-                              };
-                              const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
-
-                              return (
-                                <div
-                                  key={item.id}
-                                  style={{
-                                    background: qty > 0
-                                      ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)'
-                                      : 'white',
-                                    border: qty > 0 ? '2px solid #93C5FD' : '1px solid var(--gray-200, #E2E8F0)',
-                                    borderRadius: '16px',
-                                    overflow: 'hidden',
-                                    transition: 'all 0.18s cubic-bezier(.4,0,.2,1)',
-                                    boxShadow: qty > 0
-                                      ? '0 4px 16px rgba(37,99,235,0.14)'
-                                      : '0 1px 4px rgba(0,0,0,0.06)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                  }}
-                                >
-                                  {/* Image / Placeholder */}
-                                  <div style={{
-                                    height: '100px',
-                                    background: qty > 0
-                                      ? 'linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%)'
-                                      : 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    overflow: 'hidden',
-                                    position: 'relative',
-                                  }}>
-                                    {item.image_url ? (
-                                      <img
-                                        src={item.image_url}
-                                        alt={translatedName}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                    />
-                                    ) : (
-                                      <span style={{ fontSize: '2.8rem', opacity: 0.7 }}>{emoji}</span>
-                                    )}
-                                    {qty > 0 && (
-                                      <div style={{
-                                        position: 'absolute', top: '8px', right: '8px',
-                                        background: '#2563EB', color: 'white',
-                                        borderRadius: '999px', padding: '2px 8px',
-                                        fontSize: '0.72rem', fontWeight: 800,
-                                      }}>
-                                        {qty} added
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Card body */}
-                                  <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', lineHeight: 1.3 }}>{translatedName}</div>
-                                    <div style={{ fontSize: '0.95rem', color: '#2563EB', fontWeight: 800 }}>₹{item.price}</div>
-                                    <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{translatedUnit}</div>
-                                  </div>
-
-                                  {/* Quantity controls */}
-                                  <div style={{ padding: '8px 12px 12px' }}>
-                                    {qty === 0 ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleQtyChange(item.id, 1)}
-                                        style={{
-                                          width: '100%',
-                                          padding: '7px',
-                                          background: '#2563EB',
-                                          color: 'white',
-                                          border: 'none',
-                                          borderRadius: '10px',
-                                          fontSize: '0.82rem',
-                                          fontWeight: 800,
-                                          cursor: 'pointer',
-                                          transition: 'background 0.15s',
-                                        }}
-                                        aria-label={`Add ${translatedName}`}
-                                      >
-                                        + Add
-                                      </button>
-                                    ) : (
-                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleQtyChange(item.id, qty - 1)}
-                                          style={{
-                                            width: '34px', height: '34px',
-                                            background: 'var(--surface-0)',
-                                            border: '1.5px solid #93C5FD',
-                                            borderRadius: '10px',
-                                            fontSize: '1.1rem',
-                                            fontWeight: 800,
-                                            color: '#2563EB',
-                                            cursor: 'pointer',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                          }}
-                                          aria-label="Decrease quantity"
-                                        >
-                                          −
-                                        </button>
-                                        <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--gray-900, #0F172A)', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleQtyChange(item.id, qty + 1)}
-                                          style={{
-                                            width: '34px', height: '34px',
-                                            background: '#2563EB',
-                                            border: 'none',
-                                            borderRadius: '10px',
-                                            fontSize: '1.1rem',
-                                            fontWeight: 800,
-                                            color: 'white',
-                                            cursor: 'pointer',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                          }}
-                                          aria-label="Increase quantity"
-                                        >
-                                          +
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {/* Catalog Filter Controls */}
+                      <div style={{ background: 'var(--surface-0)', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--gray-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          {['All', 'Snacks', 'Beverages', 'Meals', 'Breakfast', 'Sweets'].map(cat => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setMenuCategoryFilter(cat)}
+                              style={{
+                                padding: '6px 14px',
+                                borderRadius: '999px',
+                                fontSize: '0.8rem',
+                                fontWeight: 700,
+                                border: menuCategoryFilter === cat ? '1.5px solid #2563EB' : '1px solid var(--gray-300)',
+                                background: menuCategoryFilter === cat ? '#2563EB' : 'var(--surface-0)',
+                                color: menuCategoryFilter === cat ? 'white' : 'var(--gray-700)',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                            >
+                              {cat}
+                            </button>
+                          ))}
                         </div>
-                      ))}
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="🔍 Search food or canteen..."
+                          value={menuSearchQuery}
+                          onChange={e => setMenuSearchQuery(e.target.value)}
+                          style={{ maxWidth: '240px', height: '36px', fontSize: '0.82rem' }}
+                        />
+                      </div>
+
+                      {menuByVendor.map(v => {
+                        const filteredMenu = v.menu.filter(item => {
+                          const matchCat = menuCategoryFilter === 'All' || (item.category && item.category.toLowerCase() === menuCategoryFilter.toLowerCase());
+                          const matchSearch = !menuSearchQuery || item.name.toLowerCase().includes(menuSearchQuery.toLowerCase()) || v.name.toLowerCase().includes(menuSearchQuery.toLowerCase());
+                          return matchCat && matchSearch;
+                        });
+                        if (filteredMenu.length === 0) return null;
+
+                        const isOpen = openVendorId === v.id;
+                        const vendorItemCount = v.menu.reduce((acc, item) => acc + (selectedItems[item.id] || 0), 0);
+                        const vendorTotal = v.menu.reduce((acc, item) => acc + (selectedItems[item.id] || 0) * item.price, 0);
+
+                        return (
+                          <div
+                            key={v.id}
+                            style={{
+                              background: 'var(--surface-0)',
+                              borderRadius: '20px',
+                              border: isOpen ? '1.5px solid #2563EB' : '1px solid var(--gray-200)',
+                              overflow: 'hidden',
+                              boxShadow: isOpen ? '0 8px 24px rgba(37,99,235,0.08)' : '0 1px 3px rgba(0,0,0,0.02)',
+                              transition: 'all 0.2s cubic-bezier(.4,0,.2,1)'
+                            }}
+                          >
+                            {/* Vendor Accordion Header / Dropdown Trigger */}
+                            <button
+                              type="button"
+                              onClick={() => toggleVendorDropdown(v.id)}
+                              style={{
+                                width: '100%',
+                                padding: '16px 22px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                background: isOpen ? 'var(--surface-2)' : 'var(--surface-0)',
+                                border: 'none',
+                                borderBottom: isOpen ? '1px solid var(--gray-200)' : 'none',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                transition: 'background 0.15s ease'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--gray-200, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'var(--surface-2)' }}>
+                                  {v.image_url ? (
+                                    <img src={v.image_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2563EB,#1D4ED8)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 800 }}>{v.name[0]}</div>
+                                  )}
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)' }}>{v.name}</div>
+                                  <div style={{ fontSize: '0.75rem', color: '#16A34A', fontWeight: 700 }}>🟢 Available · {filteredMenu.length} items</div>
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {vendorItemCount > 0 && (
+                                  <span style={{ fontSize: '0.8rem', fontWeight: 800, background: 'rgba(37, 99, 235, 0.15)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '4px 12px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    🛍️ {vendorItemCount} added · ₹{vendorTotal.toFixed(0)}
+                                  </span>
+                                )}
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '6px 14px',
+                                  borderRadius: '10px',
+                                  background: isOpen ? 'rgba(37, 99, 235, 0.18)' : 'var(--surface-1)',
+                                  color: isOpen ? 'var(--primary)' : 'var(--gray-700)',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 800,
+                                  border: isOpen ? '1.5px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--gray-300)'
+                                }}>
+                                  <span>{isOpen ? '▲ Close Menu' : '▼ Dropdown Menu'}</span>
+                                </div>
+                              </div>
+                            </button>
+
+                            {/* Food card grid inside the accordion */}
+                            {isOpen && (
+                              <div style={{
+                                padding: '20px',
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
+                                gap: '14px',
+                                animation: 'fadeIn 0.2s ease-in-out'
+                              }}>
+                                {filteredMenu.map(item => {
+                                  const qty = selectedItems[item.id] || 0;
+                                  const nameKey = `menu.${item.name}`;
+                                  const translatedName = t(nameKey) !== nameKey ? t(nameKey) : item.name;
+                                  const unitKey = `unit.${item.unit.toLowerCase().replace(/ /g,'_')}`;
+                                  const translatedUnit = t(unitKey) !== unitKey ? t(unitKey) : item.unit;
+                                  const categoryEmoji: Record<string, string> = {
+                                    'Beverages': '☕', 'Snacks': '🥪', 'Meals': '🍱', 'Breakfast': '🥞',
+                                    'General': '🍽️', 'Sweets': '🍮', 'Desserts': '🍮', 'Lunch': '🍱',
+                                  };
+                                  const emoji = categoryEmoji[item.category || 'General'] || '🍽️';
+
+                                  return (
+                                    <div
+                                      key={item.id}
+                                      style={{
+                                        background: qty > 0
+                                          ? 'rgba(37, 99, 235, 0.12)'
+                                          : 'var(--surface-0)',
+                                        border: qty > 0 ? '2px solid var(--primary)' : '1px solid var(--gray-200)',
+                                        borderRadius: '16px',
+                                        overflow: 'hidden',
+                                        transition: 'all 0.18s cubic-bezier(.4,0,.2,1)',
+                                        boxShadow: qty > 0
+                                          ? '0 4px 16px rgba(37,99,235,0.14)'
+                                          : '0 1px 4px rgba(0,0,0,0.06)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                      }}
+                                    >
+                                      {/* Image / Placeholder */}
+                                      <div style={{
+                                        height: '100px',
+                                        background: 'var(--surface-2)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden',
+                                        position: 'relative',
+                                      }}>
+                                        {item.image_url ? (
+                                          <img
+                                            src={item.image_url}
+                                            alt={translatedName}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                          />
+                                        ) : (
+                                          <span style={{ fontSize: '2.8rem', opacity: 0.7 }}>{emoji}</span>
+                                        )}
+                                        {item.category && (
+                                          <span style={{ position: 'absolute', top: '8px', left: '8px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', color: 'white', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '6px' }}>
+                                            {item.category}
+                                          </span>
+                                        )}
+                                        {qty > 0 && (
+                                          <div style={{
+                                            position: 'absolute', top: '8px', right: '8px',
+                                            background: '#2563EB', color: 'white',
+                                            borderRadius: '999px', padding: '2px 8px',
+                                            fontSize: '0.72rem', fontWeight: 800,
+                                          }}>
+                                            {qty} added
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Card body */}
+                                      <div style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', lineHeight: 1.3 }}>{translatedName}</div>
+                                        <div style={{ fontSize: '0.95rem', color: '#2563EB', fontWeight: 800 }}>₹{item.price}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{translatedUnit}</div>
+                                      </div>
+
+                                      {/* Quantity controls */}
+                                      <div style={{ padding: '8px 12px 12px' }}>
+                                        {qty === 0 ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleQtyChange(item.id, 1)}
+                                            style={{
+                                              width: '100%',
+                                              padding: '7px',
+                                              background: '#2563EB',
+                                              color: 'white',
+                                              border: 'none',
+                                              borderRadius: '10px',
+                                              fontSize: '0.82rem',
+                                              fontWeight: 800,
+                                              cursor: 'pointer',
+                                              transition: 'background 0.15s',
+                                            }}
+                                            aria-label={`Add ${translatedName}`}
+                                          >
+                                            + Add
+                                          </button>
+                                        ) : (
+                                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleQtyChange(item.id, qty - 1)}
+                                              style={{
+                                                width: '34px', height: '34px',
+                                                background: 'var(--surface-0)',
+                                                border: '1.5px solid #93C5FD',
+                                                borderRadius: '10px',
+                                                fontSize: '1.1rem',
+                                                fontWeight: 800,
+                                                color: '#2563EB',
+                                                cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                              }}
+                                              aria-label="Decrease quantity"
+                                            >
+                                              −
+                                            </button>
+                                            <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--gray-900, #0F172A)', minWidth: '20px', textAlign: 'center' }}>{qty}</span>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleQtyChange(item.id, qty + 1)}
+                                              style={{
+                                                width: '34px', height: '34px',
+                                                background: '#2563EB',
+                                                border: 'none',
+                                                borderRadius: '10px',
+                                                fontSize: '1.1rem',
+                                                fontWeight: 800,
+                                                color: 'white',
+                                                cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                              }}
+                                              aria-label="Increase quantity"
+                                            >
+                                              +
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
 
                       {menuByVendor.length === 0 && (
                         <div style={{ padding: '48px 24px', textAlign: 'center', background: 'var(--surface-0)', borderRadius: '20px', border: '1px dashed #CBD5E1' }}>
@@ -1075,7 +1414,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                             const vendorTotal = vendorItems.reduce((sum, item) => sum + (selectedItems[item.id] || 0) * item.price, 0);
                             return (
                               <div key={v.id} style={{ marginBottom: '12px' }}>
-                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #EFF6FF' }}>{v.name}</div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid var(--gray-200)' }}>{v.name}</div>
                                 {vendorItems.map(item => (
                                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.81rem', color: 'var(--gray-700, #334155)', marginBottom: '3px' }}>
                                     <span>{selectedItems[item.id]}× {item.name}</span>
@@ -1089,7 +1428,7 @@ export default function PrincipalDashboardPage({ initialTab = 'dashboard' }: { i
                               </div>
                             );
                           })}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', borderTop: '2px solid #EFF6FF', paddingTop: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-900, #0F172A)', borderTop: '2px solid var(--gray-200)', paddingTop: '10px' }}>
                             <span>Grand Total</span>
                             <span style={{ color: '#2563EB' }}>₹{menuByVendor.reduce((total, v) => total + v.menu.filter(i => selectedItems[i.id] > 0).reduce((s, i) => s + selectedItems[i.id] * i.price, 0), 0).toFixed(0)}</span>
                           </div>

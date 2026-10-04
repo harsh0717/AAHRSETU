@@ -35,26 +35,23 @@ const QUICK_TEST_ACCOUNTS = [
 function formatBrandText(text: string, currentLang: string = 'en') {
   if (!text) return null;
 
-  // Language-aware suffix:
-  // If language is Gujarati ('gu') -> 'સેતુ'
-  // If language is Hindi ('hi') or English ('en') -> 'सेતુ' (English defaults to Hindi 'सेતુ' as requested)
-  const setuSuffix = currentLang === 'gu' ? 'સેતુ' : 'सेતુ';
-  const fontFamily = currentLang === 'gu'
-    ? "'Noto Sans Gujarati', 'Gujarati Sangam MN', sans-serif"
-    : "'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Mukta', 'Inter', sans-serif";
+  // Consistent brand suffix: Devanagari 'सेतु' across all languages
+  const setuSuffix = 'सेतु';
+  const fontFamily = "'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Mukta', 'Inter', sans-serif";
 
-  const brandRegex = /(AaharSetu|AharSetu|Aaharसेતુ|Aharसेતુ|Aaharસેતુ|Aharસેતુ|Setu|સેતુ|सेतु)/g;
+  const brandRegex = /(AaharSetu|AharSetu|Aaharसेतु|Aharसेतु|Aaharસેતુ|Aharસેતુ|Setu|સેતુ|सेतु)/g;
 
   if (brandRegex.test(text)) {
     const parts = text.split(brandRegex);
     return (
       <>
         {parts.map((part, idx) => {
-          if (part.match(/^(AaharSetu|AharSetu|Aaharसेતુ|Aharसेતુ|Aaharસેતુ|Aharસેતુ)$/)) {
+          if (part.match(/^(AaharSetu|AharSetu|Aaharसेतु|Aharसेतु|Aaharસેતુ|Aharસેતુ)$/)) {
             return (
-              <span key={idx} style={{ display: 'inline-flex', alignItems: 'baseline' }}>
+              <span key={idx} suppressHydrationWarning style={{ display: 'inline-flex', alignItems: 'baseline' }}>
                 Aahar
                 <span
+                  suppressHydrationWarning
                   style={{
                     fontSize: '0.86em',
                     color: '#EA580C',
@@ -74,6 +71,7 @@ function formatBrandText(text: string, currentLang: string = 'en') {
             return (
               <span
                 key={idx}
+                suppressHydrationWarning
                 style={{
                   fontSize: '0.86em',
                   color: '#D97706',
@@ -88,7 +86,7 @@ function formatBrandText(text: string, currentLang: string = 'en') {
               </span>
             );
           }
-          return <span key={idx}>{part}</span>;
+          return <span key={idx} suppressHydrationWarning>{part}</span>;
         })}
       </>
     );

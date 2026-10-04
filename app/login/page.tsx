@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login, getSession, UserProfile } from '@/lib/auth';
@@ -99,6 +100,13 @@ function formatBrandText(text: string, currentLang: string = 'en') {
 export default function LoginPage() {
   const router = useRouter();
   const { t, lang, setLang } = useI18n();
+  const formPanelRef = useRef<HTMLElement>(null);
+
+  const handleHeroWheel = (e: React.WheelEvent) => {
+    if (formPanelRef.current) {
+      formPanelRef.current.scrollTop += e.deltaY;
+    }
+  };
 
   // Multi-step form states
   const [role, setRole] = useState('coordinator');
@@ -208,7 +216,7 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       
-      <section className={styles.hero}>
+      <section className={styles.hero} onWheel={handleHeroWheel}>
         {/* Subtle high-tech geometric texture & ambient glows */}
         <div className={styles.heroGridTexture} aria-hidden="true" />
         <div className={styles.heroGlowTop} aria-hidden="true" />
@@ -222,7 +230,18 @@ export default function LoginPage() {
         {/* ── Brand Logo Header & Quick Navigation ── */}
         <div className={styles.heroHeader}>
           <div className={styles.heroLogoGlassWrapper}>
-            <BrandLogo size={46} />
+            <Image
+              src="/images/aharsetu_brand_logo_v3.png"
+              alt="AharSetu — AAHAR सेतु"
+              width={160}
+              height={58}
+              priority
+              style={{
+                width: 'auto',
+                height: '46px',
+                objectFit: 'contain',
+              }}
+            />
           </div>
           
           <div className={styles.heroHeaderRight}>
@@ -273,7 +292,7 @@ export default function LoginPage() {
       </section>
 
       {/* 2. Right Panel - Form Interface */}
-      <section className={styles.formPanel}>
+      <section ref={formPanelRef} className={styles.formPanel}>
         <div className={styles.formCard}>
           
           {/* Stepper Progress */}
@@ -299,6 +318,20 @@ export default function LoginPage() {
           </div>
 
           <div className={styles.formHeader} style={{ textAlign: 'left', marginBottom: '24px' }}>
+            <div style={{ marginBottom: '14px' }}>
+              <Image
+                src="/images/aharsetu_brand_logo_v3.png"
+                alt="AharSetu — AAHAR सेतु"
+                width={150}
+                height={55}
+                priority
+                style={{
+                  width: 'auto',
+                  height: '42px',
+                  objectFit: 'contain',
+                }}
+              />
+            </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#0D9488', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.5px', marginBottom: '10px' }}>
               AHARSETU ENTERPRISE AUTHENTICATION
             </div>
